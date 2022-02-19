@@ -2,13 +2,13 @@
 // Created by Albert Varaksin on 03/07/2020.
 //
 #include "Parser.hpp"
-#include "ParseError.hpp"
 #include "Ast/Ast.hpp"
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
+#include "ParseError.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
 
@@ -1021,7 +1021,7 @@ llvm::Expected<AstExpr*> Parser::factor() {
  *         | "(" expression ")"
  *         | <Left Unary Op> [ factor { <Binary Op> expression } ]
  *         | IfExpr
-  *        .
+ *        .
  */
 llvm::Expected<AstExpr*> Parser::primary() {
     if (m_token.isLiteral()) {

@@ -177,7 +177,7 @@ struct AstIfStmtBlock final {
 struct AstIfStmt final : AstStmt {
     AstIfStmt(
         llvm::SMRange range_,
-        std::vector<AstIfStmtBlock* > blocks_) noexcept
+        std::vector<AstIfStmtBlock*> blocks_) noexcept
     : AstStmt{ AstKind::IfStmt, range_ },
       blocks{ std::move(blocks_) } {};
 
@@ -185,7 +185,7 @@ struct AstIfStmt final : AstStmt {
         return ast->kind == AstKind::IfStmt;
     }
 
-    std::vector<AstIfStmtBlock* > blocks;
+    std::vector<AstIfStmtBlock*> blocks;
 };
 
 struct AstForStmt final : AstStmt {

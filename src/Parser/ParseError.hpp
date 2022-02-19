@@ -4,11 +4,11 @@
 #pragma once
 namespace lbc {
 
-class ParseError: public llvm::ErrorInfo<ParseError> {
+class ParseError : public llvm::ErrorInfo<ParseError> {
 public:
     static char ID;
 
-    void log(llvm::raw_ostream &os) const override {
+    void log(llvm::raw_ostream& os) const override {
         os << "parse error";
     }
 
@@ -16,4 +16,4 @@ public:
         return llvm::inconvertibleErrorCode();
     }
 };
-}
+} // namespace lbc

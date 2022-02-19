@@ -51,12 +51,12 @@ using namespace std::literals::string_literals;
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/Casting.h>
-#include "llvm/Support/Error.h"
+#include <llvm/Support/Error.h>
 #include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/Program.h>
-#include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/SourceMgr.h>
 #if defined(__clang__)
 #    pragma clang diagnostic pop
 #elif defined(_MSC_VER)
@@ -71,6 +71,6 @@ using llvm::Twine;
 } // namespace lbc
 
 // APP
+#include "Utils/Try.hpp"
 #include "Utils/Utils.hpp"
 #include "Utils/Version.hpp"
-#include "Utils/Try.hpp"

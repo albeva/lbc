@@ -90,27 +90,27 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
     }
 }
 
-//void CmdLineParser::processToolchainPath(const fs::path& path) {
-//    if (path.is_absolute()) {
-//        if (fs::exists(path)) {
-//            m_context.getToolchain().setBasePath(path);
-//            return;
-//        }
-//        showError("Toolchain path not found");
-//    }
+// void CmdLineParser::processToolchainPath(const fs::path& path) {
+//     if (path.is_absolute()) {
+//         if (fs::exists(path)) {
+//             m_context.getToolchain().setBasePath(path);
+//             return;
+//         }
+//         showError("Toolchain path not found");
+//     }
 //
-//    if (auto rel = fs::absolute(m_context.getCompilerDir() / path); fs::exists(rel)) {
-//        m_context.getToolchain().setBasePath(rel);
-//        return;
-//    }
+//     if (auto rel = fs::absolute(m_context.getCompilerDir() / path); fs::exists(rel)) {
+//         m_context.getToolchain().setBasePath(rel);
+//         return;
+//     }
 //
-//    if (auto rel = fs::absolute(m_context.getWorkingDir() / path); fs::exists(rel)) {
-//        m_context.getToolchain().setBasePath(rel);
-//        return;
-//    }
+//     if (auto rel = fs::absolute(m_context.getWorkingDir() / path); fs::exists(rel)) {
+//         m_context.getToolchain().setBasePath(rel);
+//         return;
+//     }
 //
-//    fatalError("Toolchain path not found");
-//}
+//     fatalError("Toolchain path not found");
+// }
 
 
 void CmdLineParser::showHelp() {
