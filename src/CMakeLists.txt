@@ -51,6 +51,8 @@ add_library(
     Lexer/Token.cpp
     Lexer/Token.def.hpp
     Lexer/Token.hpp
+    Parser/ParseError.cpp
+    Parser/ParseError.hpp
     Parser/Parser.cpp
     Parser/Parser.hpp
     Sem/Passes/ConstantFoldingPass.cpp
@@ -73,9 +75,11 @@ add_library(
     Type/Type.hpp
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
+    Utils/Try.hpp
     Utils/Utils.cpp
     Utils/Utils.hpp
-    Utils/Version.hpp Utils/Try.hpp)
+    Utils/Version.hpp
+)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)

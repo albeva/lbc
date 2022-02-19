@@ -86,16 +86,14 @@ private:
     }
 
     // expects given token and advances.
-    bool consume(TokenKind kind) noexcept {
-        if (expect(kind)) {
-            advance();
-            return true;
-        }
-        return false;
+    [[nodiscard]] llvm::Expected<bool> consume(TokenKind kind) noexcept {
+        TRY(expect(kind));
+        advance();
+        return true;
     }
 
     // Expects a match, raises error when fails
-    bool expect(TokenKind kind) noexcept;
+    [[nodiscard]] llvm::Expected<bool> expect(TokenKind kind) noexcept;
 
     // advance to the next token from the stream
     void advance();
