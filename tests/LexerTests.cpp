@@ -11,6 +11,7 @@
 #endif
 
 #include "Driver/Context.hpp"
+#include "Driver/CompileOptions.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
 #include <gtest/gtest.h>
@@ -52,7 +53,8 @@ protected:
 
 private:
     std::unique_ptr<lbc::Lexer> m_lexer;
-    lbc::Context m_context{};
+    lbc::CompileOptions m_options{};
+    lbc::Context m_context{m_options};
 };
 
 #define EXPECT_TOKEN(KIND, ...)      \
@@ -66,10 +68,10 @@ TEST_F(LexerTests, NoInput) {
     lbc::Token token;
 
     lexer.next(token);
-    EXPECT_TRUE(token == lbc::TokenKind::EndOfFile);
+    EXPECT_TRUE(token.is(lbc::TokenKind::EndOfFile));
 
     lexer.next(token);
-    EXPECT_TRUE(token == lbc::TokenKind::EndOfFile);
+    EXPECT_TRUE(token.is(lbc::TokenKind::EndOfFile));
 }
 
 TEST_F(LexerTests, EmptyInputs) {

@@ -75,7 +75,7 @@ add_library(
     Type/TypeUdt.hpp
     Utils/Utils.cpp
     Utils/Utils.hpp
-    Utils/Version.hpp)
+    Utils/Version.hpp Utils/Try.hpp)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)

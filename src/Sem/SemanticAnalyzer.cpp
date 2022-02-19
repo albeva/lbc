@@ -155,28 +155,28 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
 void SemanticAnalyzer::visit(AstIfStmt& ast) {
     RESTORE_ON_EXIT(m_table);
     for (auto& block : ast.blocks) {
-        block.symbolTable = m_context.create<SymbolTable>(m_table);
+        block->symbolTable = m_context.create<SymbolTable>(m_table);
     }
 
     for (size_t idx = 0; idx < ast.blocks.size(); idx++) {
         auto& block = ast.blocks[idx];
 
-        m_table = block.symbolTable;
-        for (auto& var : block.decls) {
+        m_table = block->symbolTable;
+        for (auto& var : block->decls) {
             visit(*var);
             for (size_t next = idx + 1; next < ast.blocks.size(); next++) {
-                ast.blocks[next].symbolTable->addReference(var->symbol);
+                ast.blocks[next]->symbolTable->addReference(var->symbol);
             }
         }
-        if (block.expr) {
-            expression(block.expr);
-            if (!block.expr->type->isBoolean()) {
+        if (block->expr) {
+            expression(block->expr);
+            if (!block->expr->type->isBoolean()) {
                 fatalError("type '"_t
-                    + block.expr->type->asString()
+                    + block->expr->type->asString()
                     + "' cannot be used as boolean");
             }
         }
-        visit(*block.stmt);
+        visit(*block->stmt);
     }
 }
 

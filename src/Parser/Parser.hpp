@@ -20,7 +20,7 @@ public:
     Parser(Context& context, unsigned int fileId, bool isMain);
     ~Parser() noexcept;
 
-    [[nodiscard]] AstModule* parse();
+    [[nodiscard]] llvm::Expected<AstModule*> parse();
 
 private:
     enum class Scope {
@@ -36,42 +36,42 @@ private:
         LLVM_MARK_AS_BITMASK_ENUM(/* LargestValue = */ CallWithoutParens)
     };
 
-    [[nodiscard]] AstStmtList* stmtList();
-    [[nodiscard]] AstStmt* statement();
-    [[nodiscard]] AstImport* kwImport();
-    [[nodiscard]] AstStmt* declaration();
-    [[nodiscard]] AstExpr* expression(ExprFlags flags = ExprFlags::None);
-    [[nodiscard]] AstExpr* factor();
-    [[nodiscard]] AstExpr* primary();
-    [[nodiscard]] AstExpr* unary(llvm::SMRange range, TokenKind op, AstExpr* expr);
-    [[nodiscard]] AstExpr* binary(llvm::SMRange range, TokenKind op, AstExpr* lhs, AstExpr* rhs);
-    [[nodiscard]] AstExpr* expression(AstExpr* lhs, int precedence);
-    [[nodiscard]] AstIdentExpr* identifier();
-    [[nodiscard]] AstLiteralExpr* literal();
-    [[nodiscard]] AstCallExpr* callExpr();
-    [[nodiscard]] AstIfExpr* ifExpr();
-    [[nodiscard]] AstExprList* expressionList();
-    [[nodiscard]] AstVarDecl* kwVar(AstAttributeList* attribs);
-    [[nodiscard]] AstIfStmt* kwIf();
-    [[nodiscard]] AstIfStmtBlock ifBlock();
-    [[nodiscard]] AstIfStmtBlock thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr);
-    [[nodiscard]] AstForStmt* kwFor();
-    [[nodiscard]] AstDoLoopStmt* kwDo();
-    [[nodiscard]] AstContinuationStmt* kwContinue();
-    [[nodiscard]] AstContinuationStmt* kwExit();
-    [[nodiscard]] AstAttributeList* attributeList();
-    [[nodiscard]] AstAttribute* attribute();
-    [[nodiscard]] AstExprList* attributeArgList();
-    [[nodiscard]] AstTypeExpr* typeExpr();
-    [[nodiscard]] AstFuncDecl* kwDeclare(AstAttributeList* attribs);
-    [[nodiscard]] AstFuncDecl* funcSignature(llvm::SMLoc start, AstAttributeList* attribs, bool hasImpl);
-    [[nodiscard]] AstFuncParamList* funcParamList(bool& isVariadic);
-    [[nodiscard]] AstFuncParamDecl* funcParam();
-    [[nodiscard]] AstFuncStmt* kwFunction(AstAttributeList* attribs);
-    [[nodiscard]] AstStmt* kwReturn();
-    [[nodiscard]] AstTypeDecl* kwType(AstAttributeList* attribs);
-    [[nodiscard]] AstDeclList* typeDeclList();
-    [[nodiscard]] AstDecl* typeMember(AstAttributeList* attribs);
+    [[nodiscard]] llvm::Expected<AstStmtList*> stmtList();
+    [[nodiscard]] llvm::Expected<AstStmt*> statement();
+    [[nodiscard]] llvm::Expected<AstImport*> kwImport();
+    [[nodiscard]] llvm::Expected<AstStmt*> declaration();
+    [[nodiscard]] llvm::Expected<AstExpr*> expression(ExprFlags flags = ExprFlags::None);
+    [[nodiscard]] llvm::Expected<AstExpr*> factor();
+    [[nodiscard]] llvm::Expected<AstExpr*> primary();
+    [[nodiscard]] llvm::Expected<AstExpr*> unary(llvm::SMRange range, TokenKind op, AstExpr* expr);
+    [[nodiscard]] llvm::Expected<AstExpr*> binary(llvm::SMRange range, TokenKind op, AstExpr* lhs, AstExpr* rhs);
+    [[nodiscard]] llvm::Expected<AstExpr*> expression(AstExpr* lhs, int precedence);
+    [[nodiscard]] llvm::Expected<AstIdentExpr*> identifier();
+    [[nodiscard]] llvm::Expected<AstLiteralExpr*> literal();
+    [[nodiscard]] llvm::Expected<AstCallExpr*> callExpr();
+    [[nodiscard]] llvm::Expected<AstIfExpr*> ifExpr();
+    [[nodiscard]] llvm::Expected<AstExprList*> expressionList();
+    [[nodiscard]] llvm::Expected<AstVarDecl*> kwVar(AstAttributeList* attribs);
+    [[nodiscard]] llvm::Expected<AstIfStmt*> kwIf();
+    [[nodiscard]] llvm::Expected<AstIfStmtBlock*> ifBlock();
+    [[nodiscard]] llvm::Expected<AstIfStmtBlock*> thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr);
+    [[nodiscard]] llvm::Expected<AstForStmt*> kwFor();
+    [[nodiscard]] llvm::Expected<AstDoLoopStmt*> kwDo();
+    [[nodiscard]] llvm::Expected<AstContinuationStmt*> kwContinue();
+    [[nodiscard]] llvm::Expected<AstContinuationStmt*> kwExit();
+    [[nodiscard]] llvm::Expected<AstAttributeList*> attributeList();
+    [[nodiscard]] llvm::Expected<AstAttribute*> attribute();
+    [[nodiscard]] llvm::Expected<AstExprList*> attributeArgList();
+    [[nodiscard]] llvm::Expected<AstTypeExpr*> typeExpr();
+    [[nodiscard]] llvm::Expected<AstFuncDecl*> kwDeclare(AstAttributeList* attribs);
+    [[nodiscard]] llvm::Expected<AstFuncDecl*> funcSignature(llvm::SMLoc start, AstAttributeList* attribs, bool hasImpl);
+    [[nodiscard]] llvm::Expected<AstFuncParamList*> funcParamList(bool& isVariadic);
+    [[nodiscard]] llvm::Expected<AstFuncParamDecl*> funcParam();
+    [[nodiscard]] llvm::Expected<AstFuncStmt*> kwFunction(AstAttributeList* attribs);
+    [[nodiscard]] llvm::Expected<AstStmt*> kwReturn();
+    [[nodiscard]] llvm::Expected<AstTypeDecl*> kwType(AstAttributeList* attribs);
+    [[nodiscard]] llvm::Expected<AstDeclList*> typeDeclList();
+    [[nodiscard]] llvm::Expected<AstDecl*> typeMember(AstAttributeList* attribs);
 
     // replace token kind with another (e.g. Minus to Negate)
     void replace(TokenKind what, TokenKind with) noexcept;

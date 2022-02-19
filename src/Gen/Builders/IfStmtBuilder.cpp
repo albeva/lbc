@@ -20,12 +20,12 @@ void IfStmtBuilder::build() {
         const auto& block = m_ast.blocks[idx];
         llvm::BasicBlock* elseBlock = nullptr;
 
-        for (const auto& decl : block.decls) {
+        for (const auto& decl : block->decls) {
             m_gen.visit(*decl);
         }
 
-        if (block.expr) {
-            auto* condition = m_gen.visit(*block.expr).load();
+        if (block->expr) {
+            auto* condition = m_gen.visit(*block->expr).load();
 
             auto* thenBlock = llvm::BasicBlock::Create(m_llvmContext, "if.then", func);
             if (idx == count - 1) {
@@ -40,7 +40,7 @@ void IfStmtBuilder::build() {
             elseBlock = endBlock;
         }
 
-        m_gen.visit(*block.stmt);
+        m_gen.visit(*block->stmt);
         m_gen.terminateBlock(endBlock);
 
         m_gen.switchBlock(elseBlock);

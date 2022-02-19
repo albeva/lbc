@@ -162,12 +162,22 @@ struct AstIfStmtBlock final {
     SymbolTable* symbolTable;
     AstExpr* expr;
     AstStmt* stmt;
+
+    AstIfStmtBlock(
+        std::vector<AstVarDecl*> decls_,
+        SymbolTable* symbolTable_,
+        AstExpr* expr_,
+        AstStmt* stmt_)
+    : decls{ std::move(decls_) },
+      symbolTable{ symbolTable_ },
+      expr{ expr_ },
+      stmt{ stmt_ } {}
 };
 
 struct AstIfStmt final : AstStmt {
     AstIfStmt(
         llvm::SMRange range_,
-        std::vector<AstIfStmtBlock> blocks_) noexcept
+        std::vector<AstIfStmtBlock* > blocks_) noexcept
     : AstStmt{ AstKind::IfStmt, range_ },
       blocks{ std::move(blocks_) } {};
 
@@ -175,7 +185,7 @@ struct AstIfStmt final : AstStmt {
         return ast->kind == AstKind::IfStmt;
     }
 
-    std::vector<AstIfStmtBlock> blocks;
+    std::vector<AstIfStmtBlock* > blocks;
 };
 
 struct AstForStmt final : AstStmt {

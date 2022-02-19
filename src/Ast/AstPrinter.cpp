@@ -153,21 +153,21 @@ void AstPrinter::visit(AstIfStmt& ast) {
         m_json.attributeArray("blocks", [&] {
             for (const auto& block : ast.blocks) {
                 m_json.object([&] {
-                    if (!block.decls.empty()) {
+                    if (!block->decls.empty()) {
                         m_json.attributeArray("decls", [&] {
-                            for (const auto& decl : block.decls) {
+                            for (const auto& decl : block->decls) {
                                 visit(*decl);
                             }
                         });
                     }
 
-                    writeExpr(block.expr);
+                    writeExpr(block->expr);
 
-                    if (auto* list = dyn_cast<AstStmtList>(block.stmt)) {
+                    if (auto* list = dyn_cast<AstStmtList>(block->stmt)) {
                         writeStmts(list);
                     } else {
                         m_json.attributeBegin("stmt");
-                        visit(*block.stmt);
+                        visit(*block->stmt);
                         m_json.attributeEnd();
                     }
                 });

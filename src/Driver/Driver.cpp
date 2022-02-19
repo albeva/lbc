@@ -336,10 +336,7 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
 
     bool isMain = m_options.isMainFile(path);
     Parser parser{ m_context, ID, isMain };
-    auto ast = parser.parse();
-    if (!ast) {
-        fatalError("Failed to parse '"_t + path.string() + "'");
-    }
+    auto* ast = TRY_FATAL(parser.parse());
 
     // Analyze
     SemanticAnalyzer sem{ m_context };

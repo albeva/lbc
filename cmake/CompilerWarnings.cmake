@@ -58,12 +58,13 @@ function(set_project_warnings project_name)
 
       -Wno-padded
       -Wno-c++98-compat-pedantic
-      -Wno-unused-private-field                   # Remove
-      -Wno-unused-variable                        # Remove
-      -Wno-unused-parameter                       # Remove
-      -Wno-unused-function                        # Remove
-      -Wno-exit-time-destructors                  # Remove
-      -Wno-global-constructors                    # Remove
+      -Wno-unused-private-field
+      -Wno-unused-variable
+      -Wno-unused-parameter
+      -Wno-unused-function
+      -Wno-unused-private-field
+      -Wno-exit-time-destructors
+      -Wno-global-constructors
       -Wno-switch-enum                            # ?
       -Wno-return-std-move-in-c++11
   )

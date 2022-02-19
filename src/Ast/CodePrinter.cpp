@@ -210,25 +210,25 @@ void CodePrinter::visit(AstIfStmt& ast) {
         if (!isFirst) {
             m_os << "ELSE";
         }
-        if (block.expr) {
+        if (block->expr) {
             RESTORE_ON_EXIT(m_indent);
             m_indent = 0;
             if (!isFirst) {
                 m_os << " ";
             }
             m_os << "IF ";
-            for (const auto& var : block.decls) {
+            for (const auto& var : block->decls) {
                 visit(*var);
                 m_os << ", ";
             }
-            visit(*block.expr);
+            visit(*block->expr);
             m_os << " THEN\n";
         } else {
             m_os << "\n";
         }
         m_indent++;
-        visit(*block.stmt);
-        if (block.stmt->kind != AstKind::StmtList) {
+        visit(*block->stmt);
+        if (block->stmt->kind != AstKind::StmtList) {
             m_os << '\n';
         }
         m_indent--;
