@@ -1,10 +1,10 @@
 @echo off
 
-set VERSION=llvm-12.0.1
+set VERSION=llvm-13.0.1
 
 set SRC=%cd%\%VERSION%.src
-set BUILD=%cd%\%VERSION%-build
-set INSTALL=%cd%\%VERSION%-dist
+set BUILD=%cd%\%VERSION%.build
+set INSTALL=%cd%\%VERSION%.dist
 
 if not exist "%BUILD%" mkdir %BUILD%
 

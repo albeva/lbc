@@ -1,5 +1,5 @@
 # This file is based on starter project from https://github.com/lefticus/cpp_starter_project
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)
 
 # Set the project name to your project name
 project(lbc CXX)
