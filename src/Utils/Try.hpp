@@ -7,25 +7,25 @@
 // Idea is copied from Serenity OS
 // https://github.com/SerenityOS/serenity/blob/master/AK/Try.h
 //
-// This breaks MSVC++ compatibility
-//
 // llvm::Expected<int> getValue();
 // Expected<int> foo() {
-//     int val = TRY(getValue());
+//     TRY_DECLARE(val, getValue());
 //     useVal(val);
+//     TRY_ASSIGN(val, getValue());
 // }
 
-#define TRY(expression) ({               \
-    auto resOrErr = (expression);        \
-    if (auto err = resOrErr.takeError()) \
-        return err;                      \
-    *resOrErr;                           \
-})
+#define TRY(expression)                      \
+    if (auto err = (expression).takeError()) \
+        return err;
 
-#define TRY_FATAL(expression) ({             \
-    auto resOrErr = (expression);            \
-    if (auto err = resOrErr.takeError())     \
-        fatalError(                          \
-            llvm::toString(std::move(err))); \
-    *resOrErr;                               \
-})
+#define TRY_ASSIGN(var, expression)                    \
+    {                                                  \
+        auto tryAssignValOrErr_ = (expression);        \
+        if (auto err = tryAssignValOrErr_.takeError()) \
+            return err;                                \
+        var = *tryAssignValOrErr_;                     \
+    }
+
+#define TRY_DECLARE(var, expression)      \
+    decltype(expression)::value_type var; \
+    TRY_ASSIGN(var, expression);

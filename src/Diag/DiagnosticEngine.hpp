@@ -21,19 +21,8 @@ public:
     [[nodiscard]] bool hasErrors() const noexcept { return m_errorCounter > 0; }
 
     template<typename... Args>
-    void report(Diag diag, llvm::SMRange range, Args... args) noexcept {
-        auto formatted = llvm::formatv(
-            getText(diag),
-            std::forward<Args>(args)...);
-        print(diag, range.Start, formatted.str(), range);
-    }
-
-    template<typename... Args>
-    void report(Diag diag, llvm::SMLoc loc, Args... args) noexcept {
-        auto formatted = llvm::formatv(
-            getText(diag),
-            std::forward<Args>(args)...);
-        print(diag, loc, formatted.str());
+    static string format(Diag diag, Args&&... args) noexcept {
+        return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
     }
 
     void print(Diag diag, llvm::SMLoc loc, const string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) noexcept;

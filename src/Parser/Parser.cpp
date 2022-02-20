@@ -30,7 +30,7 @@ Parser::~Parser() noexcept = default;
  *   .
  */
 llvm::Expected<AstModule*> Parser::parse() {
-    auto* stmts = TRY(stmtList());
+    TRY_DECLARE(stmts, stmtList());
     return m_context.create<AstModule>(
         m_fileId,
         stmts->range,
@@ -65,7 +65,8 @@ llvm::Expected<AstStmtList*> Parser::stmtList() {
     std::vector<AstStmt*> stms;
 
     while (isNonTerminator(m_token)) {
-        stms.emplace_back(TRY(statement()));
+        TRY_DECLARE(stmt, statement());
+        stms.emplace_back(stmt);
         TRY(consume(TokenKind::EndOfStmt));
     }
 
@@ -88,7 +89,8 @@ llvm::Expected<AstStmtList*> Parser::stmtList() {
  *   .
  */
 llvm::Expected<AstStmt*> Parser::statement() {
-    if (auto* decl = TRY(declaration())) {
+    TRY_DECLARE(decl, declaration());
+    if (decl != nullptr) {
         return decl;
     }
 
@@ -97,8 +99,7 @@ llvm::Expected<AstStmt*> Parser::statement() {
             return kwImport();
         }
         if (!m_isMain) {
-            m_diag.report(Diag::notAllowedTopLevelStatement, m_token.range());
-            return llvm::make_error<ParseError>();
+            return makeError(Diag::notAllowedTopLevelStatement);
         }
     }
 
@@ -119,7 +120,7 @@ llvm::Expected<AstStmt*> Parser::statement() {
         break;
     }
 
-    auto* expr = TRY(expression(ExprFlags::UseAssign | ExprFlags::CallWithoutParens));
+    TRY_DECLARE(expr, expression(ExprFlags::UseAssign | ExprFlags::CallWithoutParens));
     return m_context.create<AstExprStmt>(expr->range, expr);
 }
 
@@ -145,8 +146,7 @@ llvm::Expected<AstImport*> Parser::kwImport() {
         return m_context.create<AstImport>(llvm::SMRange{ range.Start, m_endLoc }, import);
     }
     if (!fs::exists(source)) {
-        m_diag.report(Diag::moduleNotFound, range, import);
-        return llvm::make_error<ParseError>();
+        return makeError(range, Diag::moduleNotFound, import);
     }
 
     // Load import into Source Mgr
@@ -156,12 +156,11 @@ llvm::Expected<AstImport*> Parser::kwImport() {
         range.Start,
         included);
     if (ID == ~0U) {
-        m_diag.report(Diag::failedToLoadModule, range, source.string());
-        return llvm::make_error<ParseError>();
+        return makeError(range, Diag::failedToLoadModule, source.string());
     }
 
     // parse the module
-    auto* module = TRY(Parser(m_context, ID, false).parse());
+    TRY_DECLARE(module, Parser(m_context, ID, false).parse());
 
     return m_context.create<AstImport>(
         llvm::SMRange{ range.Start, m_endLoc },
@@ -182,7 +181,7 @@ llvm::Expected<AstImport*> Parser::kwImport() {
  *   .
  */
 llvm::Expected<AstStmt*> Parser::declaration() {
-    auto* attribs = TRY(attributeList());
+    TRY_DECLARE(attribs, attributeList());
 
     switch (m_token.getKind()) {
     case TokenKind::Var:
@@ -199,8 +198,7 @@ llvm::Expected<AstStmt*> Parser::declaration() {
     }
 
     if (attribs != nullptr) {
-        m_diag.report(Diag::expectedDeclarationAfterAttribute, m_token.range(), m_token.description());
-        return llvm::make_error<ParseError>();
+        return makeError(Diag::expectedDeclarationAfterAttribute, m_token.description());
     }
     return nullptr;
 }
@@ -223,7 +221,8 @@ llvm::Expected<AstAttributeList*> Parser::attributeList() {
     std::vector<AstAttribute*> attribs;
 
     do {
-        attribs.emplace_back(TRY(attribute()));
+        TRY_DECLARE(attrib, attribute());
+        attribs.emplace_back(attrib);
     } while (accept(TokenKind::Comma));
 
     TRY(consume(TokenKind::BracketClose));
@@ -241,10 +240,10 @@ llvm::Expected<AstAttributeList*> Parser::attributeList() {
 llvm::Expected<AstAttribute*> Parser::attribute() {
     auto start = m_token.range().Start;
 
-    auto* id = TRY(identifier());
+    TRY_DECLARE(id, identifier());
     AstExprList* args = nullptr;
     if (m_token.isOneOf(TokenKind::Assign, TokenKind::ParenOpen)) {
-        args = TRY(attributeArgList());
+        TRY_ASSIGN(args, attributeArgList());
     }
 
     return m_context.create<AstAttribute>(
@@ -264,10 +263,12 @@ llvm::Expected<AstExprList*> Parser::attributeArgList() {
     std::vector<AstExpr*> args;
 
     if (accept(TokenKind::Assign)) {
-        args.emplace_back(TRY(literal()));
+        TRY_DECLARE(lit, literal());
+        args.emplace_back(lit);
     } else if (accept(TokenKind::ParenOpen)) {
         while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
-            args.emplace_back(TRY(literal()));
+            TRY_DECLARE(lit, literal());
+            args.emplace_back(lit);
             if (!accept(TokenKind::Comma)) {
                 break;
             }
@@ -306,13 +307,13 @@ llvm::Expected<AstVarDecl*> Parser::kwVar(AstAttributeList* attribs) {
     AstExpr* expr = nullptr;
 
     if (accept(TokenKind::As)) {
-        type = TRY(typeExpr());
+        TRY_ASSIGN(type, typeExpr());
         if (accept(TokenKind::Assign)) {
-            expr = TRY(expression());
+            TRY_ASSIGN(expr, expression());
         }
     } else {
         TRY(consume(TokenKind::Assign));
-        expr = TRY(expression());
+        TRY_ASSIGN(expr, expression());
     }
 
     return m_context.create<AstVarDecl>(
@@ -336,8 +337,7 @@ llvm::Expected<AstFuncDecl*> Parser::kwDeclare(AstAttributeList* attribs) {
     // assume m_token == DECLARE
     assert(m_token.is(TokenKind::Declare));
     if (m_scope != Scope::Root) {
-        m_diag.report(Diag::unexpectedNestedDeclaration, m_token.range(), m_token.description());
-        return llvm::make_error<ParseError>();
+        return makeError(Diag::unexpectedNestedDeclaration, m_token.description());
     }
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
     advance();
@@ -364,14 +364,14 @@ llvm::Expected<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttribu
     bool isVariadic = false;
     AstFuncParamList* params = nullptr;
     if (accept(TokenKind::ParenOpen)) {
-        params = TRY(funcParamList(isVariadic));
+        TRY_ASSIGN(params, funcParamList(isVariadic));
         TRY(consume(TokenKind::ParenClose));
     }
 
     AstTypeExpr* ret = nullptr;
     if (isFunc) {
         TRY(consume(TokenKind::As));
-        ret = TRY(typeExpr());
+        TRY_ASSIGN(ret, typeExpr());
     }
 
     return m_context.create<AstFuncDecl>(
@@ -397,12 +397,12 @@ llvm::Expected<AstFuncParamList*> Parser::funcParamList(bool& isVariadic) {
         if (accept(TokenKind::Ellipsis)) {
             isVariadic = true;
             if (m_token.is(TokenKind::Comma)) {
-                m_diag.report(Diag::variadicArgumentNotLast, m_token.range());
-                return llvm::make_error<ParseError>();
+                return makeError(Diag::variadicArgumentNotLast);
             }
             break;
         }
-        params.push_back(TRY(funcParam()));
+        TRY_DECLARE(param, funcParam());
+        params.push_back(param);
         if (!accept(TokenKind::Comma)) {
             break;
         }
@@ -426,7 +426,7 @@ llvm::Expected<AstFuncParamDecl*> Parser::funcParam() {
     advance();
 
     TRY(consume(TokenKind::As));
-    auto* type = TRY(typeExpr());
+    TRY_DECLARE(type, typeExpr());
 
     return m_context.create<AstFuncParamDecl>(
         llvm::SMRange{ start, m_endLoc },
@@ -458,7 +458,7 @@ llvm::Expected<AstTypeDecl*> Parser::kwType(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::EndOfStmt));
 
-    auto* decls = TRY(typeDeclList());
+    TRY_DECLARE(decls, typeDeclList());
 
     TRY(consume(TokenKind::End));
     TRY(consume(TokenKind::Type));
@@ -480,14 +480,15 @@ llvm::Expected<AstDeclList*> Parser::typeDeclList() {
     std::vector<AstDecl*> decls;
 
     while (true) {
-        auto* attribs = TRY(attributeList());
+        TRY_DECLARE(attribs, attributeList());
         if (attribs != nullptr) {
             TRY(expect(TokenKind::Identifier));
         } else if (m_token.isNot(TokenKind::Identifier)) {
             break;
         }
 
-        decls.emplace_back(TRY(typeMember(attribs)));
+        TRY_DECLARE(member, typeMember(attribs));
+        decls.emplace_back(member);
         TRY(consume(TokenKind::EndOfStmt));
     }
 
@@ -510,7 +511,7 @@ llvm::Expected<AstDecl*> Parser::typeMember(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::As));
 
-    auto* type = TRY(typeExpr());
+    TRY_DECLARE(type, typeExpr());
 
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
@@ -531,18 +532,17 @@ llvm::Expected<AstDecl*> Parser::typeMember(AstAttributeList* attribs) {
  */
 llvm::Expected<AstFuncStmt*> Parser::kwFunction(AstAttributeList* attribs) {
     if (m_scope != Scope::Root) {
-        m_diag.report(Diag::unexpectedNestedDeclaration, m_token.range(), m_token.description());
-        return llvm::make_error<ParseError>();
+        return makeError(Diag::unexpectedNestedDeclaration, m_token.description());
     }
 
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
-    auto* decl = TRY(funcSignature(start, attribs, true));
+    TRY_DECLARE(decl, funcSignature(start, attribs, true));
     TRY(consume(TokenKind::EndOfStmt));
 
     RESTORE_ON_EXIT(m_scope);
     m_scope = Scope::Function;
 
-    auto* stmts = TRY(stmtList());
+    TRY_DECLARE(stmts, stmtList());
 
     TRY(consume(TokenKind::End));
 
@@ -565,15 +565,14 @@ llvm::Expected<AstStmt*> Parser::kwReturn() {
     // assume m_token == RETURN
     assert(m_token.is(TokenKind::Return));
     if (m_scope == Scope::Root && !m_isMain) {
-        m_diag.report(Diag::unexpectedReturn, m_token.range());
-        return llvm::make_error<ParseError>();
+        return makeError(Diag::unexpectedReturn);
     }
     auto start = m_token.range().Start;
     advance();
 
     AstExpr* expr = nullptr;
     if (m_token.isNot(TokenKind::EndOfStmt)) {
-        expr = TRY(expression());
+        TRY_ASSIGN(expr, expression());
     }
 
     return m_context.create<AstReturnStmt>(
@@ -600,7 +599,8 @@ llvm::Expected<AstIfStmt*> Parser::kwIf() {
     advance();
 
     std::vector<AstIfStmtBlock*> blocks;
-    blocks.emplace_back(TRY(ifBlock()));
+    TRY_DECLARE(block, ifBlock());
+    blocks.emplace_back(block);
 
     if (m_token.is(TokenKind::EndOfStmt)) {
         Token next;
@@ -612,9 +612,11 @@ llvm::Expected<AstIfStmt*> Parser::kwIf() {
 
     while (accept(TokenKind::Else)) {
         if (accept(TokenKind::If)) {
-            blocks.emplace_back(TRY(ifBlock()));
+            TRY_DECLARE(if_, ifBlock());
+            blocks.emplace_back(if_);
         } else {
-            blocks.emplace_back(TRY(thenBlock({}, nullptr)));
+            TRY_DECLARE(else_, thenBlock({}, nullptr));
+            blocks.emplace_back(else_);
         }
 
         if (m_token.is(TokenKind::EndOfStmt)) {
@@ -644,11 +646,12 @@ llvm::Expected<AstIfStmt*> Parser::kwIf() {
 llvm::Expected<AstIfStmtBlock*> Parser::ifBlock() {
     std::vector<AstVarDecl*> decls;
     while (m_token.is(TokenKind::Var)) {
-        decls.emplace_back(TRY(kwVar(nullptr)));
+        TRY_DECLARE(var, kwVar(nullptr));
+        decls.emplace_back(var);
         TRY(consume(TokenKind::Comma));
     }
 
-    auto* expr = TRY(expression(ExprFlags::CommaAsAnd));
+    TRY_DECLARE(expr, expression(ExprFlags::CommaAsAnd));
     TRY(consume(TokenKind::Then));
 
     return thenBlock(std::move(decls), expr);
@@ -665,9 +668,9 @@ llvm::Expected<AstIfStmtBlock*> Parser::ifBlock() {
 llvm::Expected<AstIfStmtBlock*> Parser::thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr) {
     AstStmt* stmt = nullptr;
     if (accept(TokenKind::EndOfStmt)) {
-        stmt = TRY(stmtList());
+        TRY_ASSIGN(stmt, stmtList());
     } else {
-        stmt = TRY(statement());
+        TRY_ASSIGN(stmt, statement());
     }
     // return AstIfStmtBlock{ std::move(decls), nullptr, expr, stmt };
     return m_context.create<AstIfStmtBlock>(
@@ -701,7 +704,8 @@ llvm::Expected<AstForStmt*> Parser::kwFor() {
 
     // [ VAR { "," VAR } "," ]
     while (m_token.is(TokenKind::Var)) {
-        decls.emplace_back(TRY(kwVar(nullptr)));
+        TRY_DECLARE(var, kwVar(nullptr));
+        decls.emplace_back(var);
         TRY(consume(TokenKind::Comma));
     }
 
@@ -713,12 +717,12 @@ llvm::Expected<AstForStmt*> Parser::kwFor() {
 
     AstTypeExpr* type = nullptr;
     if (accept(TokenKind::As)) {
-        type = TRY(typeExpr());
+        TRY_ASSIGN(type, typeExpr());
     }
 
     TRY(consume(TokenKind::Assign));
 
-    auto* expr = TRY(expression());
+    TRY_DECLARE(expr, expression());
     auto* iterator = m_context.create<AstVarDecl>(
         llvm::SMRange{ idStart, m_endLoc },
         id,
@@ -729,22 +733,20 @@ llvm::Expected<AstForStmt*> Parser::kwFor() {
     // "TO" Expression [ "STEP" expression ]
     TRY(consume(TokenKind::To));
 
-    auto* limit = TRY(expression());
+    TRY_DECLARE(limit, expression());
     AstExpr* step = nullptr;
     if (accept(TokenKind::Step)) {
-        step = TRY(expression());
+        TRY_ASSIGN(step, expression());
     }
 
     // "DO" statement ?
     AstStmt* stmt = nullptr;
     StringRef next;
     if (accept(TokenKind::Do)) {
-        stmt = TRY(statement());
+        TRY_ASSIGN(stmt, statement());
     } else {
         TRY(consume(TokenKind::EndOfStmt));
-
-        stmt = TRY(stmtList());
-
+        TRY_ASSIGN(stmt, stmtList());
         TRY(consume(TokenKind::Next));
 
         if (m_token.is(TokenKind::Identifier)) {
@@ -792,41 +794,42 @@ llvm::Expected<AstDoLoopStmt*> Parser::kwDo() {
     auto acceptComma = false;
     while (m_token.is(TokenKind::Var) || (acceptComma && accept(TokenKind::Comma))) {
         acceptComma = true;
-        decls.emplace_back(TRY(kwVar(nullptr)));
+        TRY_DECLARE(var, kwVar(nullptr));
+        decls.emplace_back(var);
     }
 
     // ( EoS StmtList "LOOP" [ Condition ]
     if (accept(TokenKind::EndOfStmt)) {
-        stmt = TRY(stmtList());
+        TRY_ASSIGN(stmt, stmtList());
         TRY(consume(TokenKind::Loop));
 
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PostUntil;
-            expr = TRY(expression(ExprFlags::CommaAsAnd));
+            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd));
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PostWhile;
-            expr = TRY(expression(ExprFlags::CommaAsAnd));
+            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd));
         }
     } else {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PreUntil;
-            expr = TRY(expression(ExprFlags::CommaAsAnd));
+            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd));
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PreWhile;
-            expr = TRY(expression(ExprFlags::CommaAsAnd));
+            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd));
         }
 
         // EoS StmtList "LOOP"
         if (accept(TokenKind::EndOfStmt)) {
-            stmt = TRY(stmtList());
+            TRY_ASSIGN(stmt, stmtList());
             TRY(consume(TokenKind::Loop));
         }
         // "DO" Statement
         else {
             TRY(consume(TokenKind::Do));
-            stmt = TRY(statement());
+            TRY_ASSIGN(stmt, statement());
         }
     }
 
@@ -927,7 +930,7 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
     if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         advance();
     } else {
-        ident = TRY(identifier());
+        TRY_ASSIGN(ident, identifier());
     }
 
     auto deref = 0;
@@ -954,7 +957,7 @@ llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
     RESTORE_ON_EXIT(m_exprFlags);
     m_exprFlags = flags;
 
-    auto* expr = TRY(factor());
+    TRY_DECLARE(expr, factor());
 
     if ((flags & ExprFlags::UseAssign) == 0) {
         replace(TokenKind::Assign, TokenKind::Equal);
@@ -963,13 +966,13 @@ llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
         replace(TokenKind::Comma, TokenKind::CommaAnd);
     }
     if (m_token.isOperator()) {
-        expr = TRY(expression(expr, 1));
+        TRY_ASSIGN(expr, expression(expr, 1));
     }
 
     if ((m_exprFlags & ExprFlags::CallWithoutParens) != 0 && m_token.isNot(TokenKind::EndOfStmt)) {
         if (m_token.is(TokenKind::Identifier) || m_token.isLiteral() || m_token.isUnary()) {
             auto start = expr->range.Start;
-            auto* args = TRY(expressionList());
+            TRY_DECLARE(args, expressionList());
 
             return m_context.create<AstCallExpr>(
                 llvm::SMRange{ start, m_endLoc },
@@ -986,7 +989,7 @@ llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
  */
 llvm::Expected<AstExpr*> Parser::factor() {
     auto start = m_token.range().Start;
-    auto* expr = TRY(primary());
+    TRY_DECLARE(expr, primary());
 
     while (true) {
         // <Right Unary Op>
@@ -994,13 +997,13 @@ llvm::Expected<AstExpr*> Parser::factor() {
             auto kind = m_token.getKind();
             advance();
 
-            expr = TRY(unary({ start, m_endLoc }, kind, expr));
+            TRY_ASSIGN(expr, unary({ start, m_endLoc }, kind, expr));
             continue;
         }
 
         // "AS" TypeExpr
         if (accept(TokenKind::As)) {
-            auto* type = TRY(typeExpr());
+            TRY_DECLARE(type, typeExpr());
             auto* cast = m_context.create<AstCastExpr>(
                 llvm::SMRange{ start, m_endLoc },
                 expr,
@@ -1039,7 +1042,7 @@ llvm::Expected<AstExpr*> Parser::primary() {
     }
 
     if (accept(TokenKind::ParenOpen)) {
-        auto* expr = TRY(expression());
+        TRY_DECLARE(expr, expression());
         TRY(consume(TokenKind::ParenClose));
         return expr;
     }
@@ -1059,13 +1062,13 @@ llvm::Expected<AstExpr*> Parser::primary() {
         if ((m_exprFlags & ExprFlags::UseAssign) == 0) {
             replace(TokenKind::Assign, TokenKind::Equal);
         }
-        auto* expr = TRY(expression(TRY(factor()), prec));
+        TRY_DECLARE(fact, factor());
+        TRY_DECLARE(expr, expression(fact, prec));
 
         return unary({ start, m_endLoc }, kind, expr);
     }
 
-    m_diag.report(Diag::expectedExpression, m_token.range(), m_token.description());
-    return llvm::make_error<ParseError>();
+    return makeError(Diag::unexpectedReturn, m_token.description());
 }
 
 llvm::Expected<AstExpr*> Parser::unary(llvm::SMRange range, TokenKind op, AstExpr* expr) {
@@ -1102,7 +1105,7 @@ llvm::Expected<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
         auto kind = m_token.getKind();
         advance();
 
-        auto* rhs = TRY(factor());
+        TRY_DECLARE(rhs, factor());
         if ((m_exprFlags & ExprFlags::UseAssign) == 0) {
             replace(TokenKind::Assign, TokenKind::Equal);
         }
@@ -1111,11 +1114,11 @@ llvm::Expected<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
         }
 
         while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
-            rhs = TRY(expression(rhs, m_token.getPrecedence()));
+            TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()));
         }
 
         auto start = lhs->range.Start;
-        lhs = TRY(binary({ start, m_endLoc }, kind, lhs, rhs));
+        TRY_ASSIGN(lhs, binary({ start, m_endLoc }, kind, lhs, rhs));
     }
     return lhs;
 }
@@ -1141,10 +1144,10 @@ llvm::Expected<AstIdentExpr*> Parser::identifier() {
  */
 llvm::Expected<AstCallExpr*> Parser::callExpr() {
     auto start = m_token.range().Start;
-    auto* id = TRY(identifier());
+    TRY_DECLARE(id, identifier());
 
     TRY(consume(TokenKind::ParenOpen));
-    auto* args = TRY(expressionList());
+    TRY_DECLARE(args, expressionList());
     TRY(consume(TokenKind::ParenClose));
 
     return m_context.create<AstCallExpr>(
@@ -1162,13 +1165,13 @@ llvm::Expected<AstIfExpr*> Parser::ifExpr() {
     auto start = m_token.range().Start;
     advance();
 
-    auto* expr = TRY(expression(ExprFlags::CommaAsAnd));
+    TRY_DECLARE(expr, expression(ExprFlags::CommaAsAnd));
 
     TRY(consume(TokenKind::Then));
-    auto* trueExpr = TRY(expression());
+    TRY_DECLARE(trueExpr, expression());
 
     TRY(consume(TokenKind::Else));
-    auto* falseExpr = TRY(expression());
+    TRY_DECLARE(falseExpr, expression());
 
     return m_context.create<AstIfExpr>(
         llvm::SMRange{ start, m_endLoc },
@@ -1203,7 +1206,8 @@ llvm::Expected<AstExprList*> Parser::expressionList() {
     std::vector<AstExpr*> exprs;
 
     while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose, TokenKind::EndOfStmt)) {
-        exprs.emplace_back(TRY(expression()));
+        TRY_DECLARE(expr, expression());
+        exprs.emplace_back(expr);
         if (!accept(TokenKind::Comma)) {
             break;
         }
@@ -1229,13 +1233,7 @@ void Parser::replace(TokenKind what, TokenKind with) noexcept {
         return true;
     }
 
-    m_context.getDiag().report(
-        Diag::unexpectedToken,
-        m_token.range(),
-        Token::description(kind),
-        m_token.description());
-
-    return llvm::make_error<ParseError>();
+    return makeError(Diag::unexpectedToken, Token::description(kind), m_token.description());
 }
 
 void Parser::advance() {

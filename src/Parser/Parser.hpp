@@ -3,14 +3,14 @@
 //
 #pragma once
 #include "Ast/Ast.def.hpp"
+#include "Diag/DiagnosticEngine.hpp"
 #include "Lexer/Token.hpp"
+#include "ParseError.hpp"
 
 namespace lbc {
 class Context;
 class Lexer;
-class DiagnosticEngine;
 struct AstIfStmtBlock;
-enum class Diag;
 AST_FORWARD_DECLARE()
 
 class Parser final {
@@ -90,6 +90,17 @@ private:
         TRY(expect(kind));
         advance();
         return true;
+    }
+
+    template<typename... Args>
+    [[nodiscard]] llvm::Error makeError(const llvm::SMRange& range, Diag diag, Args&&... args) const noexcept {
+        return llvm::make_error<ParseError>(
+            diag, m_diag.format(diag, std::forward<Args>(args)...), range);
+    }
+
+    template<typename... Args>
+    [[nodiscard]] llvm::Error makeError(Diag diag, Args&&... args) noexcept {
+        return makeError(m_token.range(), diag, std::forward<Args>(args)...);
     }
 
     // Expects a match, raises error when fails

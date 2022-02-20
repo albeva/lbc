@@ -336,7 +336,19 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
 
     bool isMain = m_options.isMainFile(path);
     Parser parser{ m_context, ID, isMain };
-    auto* ast = TRY_FATAL(parser.parse());
+    
+    auto astOrErr = parser.parse();
+    if (auto err = astOrErr.takeError()) {
+        llvm::handleAllErrors(std::move(err), [&diag = m_context.getDiag()](ParseError& error) {
+            diag.print(
+                error.getDiag(),
+                error.getRange().Start,
+                error.getMessage(),
+                error.getRange());
+        });
+        std::exit(EXIT_FAILURE);
+    }
+    auto* ast = *astOrErr;
 
     // Analyze
     SemanticAnalyzer sem{ m_context };
