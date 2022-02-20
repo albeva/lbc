@@ -13,5 +13,6 @@ cmake -G "Unix Makefiles"           \
   -DLLVM_INSTALL_UTILS=ON           \
   ../$VERSION.src
 
-make -j12 install
+make -j12
+sudo make install
 cd ..

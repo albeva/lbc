@@ -18,13 +18,13 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, StringRef nam
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
-    return { &gen, { var, true } };
+    return { &gen, expr.type, { var, true } };
 }
 
 ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     if (isa<llvm::Constant>(value)) {
-        return { &gen, { value, false } };
+        return { &gen, expr.type, { value, false } };
     }
 
     auto* var = gen.getBuilder().CreateAlloca(
@@ -32,40 +32,37 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, Str
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
-    return { &gen, { var, true } };
+    return { &gen, expr.type, { var, true } };
 }
 
-ValueHandler::ValueHandler(CodeGen* gen, ValuePtr ptr) noexcept
-: PointerUnion{ ptr }, m_gen{ gen } {}
+ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, ValuePtr ptr) noexcept
+: PointerUnion{ ptr }, m_gen{ gen }, m_type{ type } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol) noexcept
-: PointerUnion{ symbol }, m_gen{ gen } {}
-
-ValueHandler::ValueHandler(CodeGen* gen, llvm::Value* value) noexcept
-: PointerUnion{ ValuePtr{ value, false } }, m_gen{ gen } {}
+ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept
+: PointerUnion{ ValuePtr{ value, false } }, m_gen{ gen }, m_type{ type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
-: PointerUnion{ ast.symbol }, m_gen{ gen } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 llvm::Value* ValueHandler::getAddress() const noexcept {
     if (is<ValuePtr>()) {
         return PointerUnion::get<ValuePtr>().getPointer();
     }
 
-    if (auto* symbol = dyn_cast<Symbol*>()) {
-        return symbol->getLlvmValue();
-    }
-
     auto* ast = dyn_cast<AstExpr*>();
+
+    if (auto* ident = llvm::dyn_cast<AstIdentExpr>(ast)) {
+        return ident->symbol->getLlvmValue();
+    }
 
     if (auto* deref = llvm::dyn_cast<AstDereference>(ast)) {
         return m_gen->visit(*deref->expr).load();
@@ -106,14 +103,11 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
     if (is<ValuePtr>()) {
         auto* value = PointerUnion::get<ValuePtr>().getPointer();
         auto* type = value->getType();
-        if (!PointerUnion::get<ValuePtr>().getInt()) {
+        if (!PointerUnion::get<ValuePtr>().getInt()) { // !llvm::isa<llvm::PointerType>(value->getType())
             return type;
         }
-        return type->getPointerElementType();
-    }
 
-    if (auto* symbol = dyn_cast<Symbol*>()) {
-        return symbol->type()->getLlvmType(m_gen->getContext());
+        return type->getPointerElementType();
     }
 
     if (auto* ast = dyn_cast<AstExpr*>()) {
@@ -124,10 +118,12 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
 }
 
 llvm::Value* ValueHandler::getAggregateAddress(llvm::Value* base, IndexArray& idxs) const noexcept {
+    auto* ast = dyn_cast<AstExpr*>();
+
     // end of the member access chain
-    if (auto* symbol = dyn_cast<Symbol*>()) {
+    if (auto* ident = llvm::dyn_cast<AstIdentExpr>(ast)) {
         auto& builder = m_gen->getBuilder();
-        idxs.push_back(builder.getInt32(symbol->getIndex()));
+        idxs.push_back(builder.getInt32(ident->symbol->getIndex()));
         // TODO: if symbol is a pointer, emit pending GEP and recurse to getAddress?
         // if (terminal && symbol->type()->isPointer()) {
         //     base = builder.CreateGEP(base, idxs);
@@ -136,8 +132,6 @@ llvm::Value* ValueHandler::getAggregateAddress(llvm::Value* base, IndexArray& id
         // }
         return base;
     }
-
-    auto* ast = dyn_cast<AstExpr*>();
 
     // middle of the chain
     if (auto* member = llvm::dyn_cast<AstMemberAccess>(ast)) {
@@ -154,13 +148,13 @@ llvm::Value* ValueHandler::load() const noexcept {
         return addr;
     }
 
-    if (is<ValuePtr>() && !PointerUnion::get<ValuePtr>().getInt()) {
+    if (is<ValuePtr>() && !PointerUnion::get<ValuePtr>().getInt()) { // llvm::isa<llvm::Constant>(addr)
         return addr;
     }
 
     if (auto* ast = dyn_cast<AstExpr*>()) {
-        if (auto* addrOf = llvm::dyn_cast<AstAddressOf>(ast)) {
-            return getAddress();
+        if (llvm::isa<AstAddressOf>(ast)) {
+            return addr;
         }
     }
 

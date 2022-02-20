@@ -284,7 +284,7 @@ const TypeFunction* TypeFunction::get(
         }
     }
 
-    auto ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
+    auto *ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
     context.funcTypes.push_back(ty);
     return ty;
 }
@@ -294,8 +294,8 @@ llvm::Type* TypeFunction::genLlvmType(Context& context) const {
 
     std::vector<llvm::Type*> params;
     params.reserve(m_paramTypes.size());
-    for (const auto& p : m_paramTypes) {
-        params.emplace_back(p->getLlvmType(context));
+    for (const auto& param : m_paramTypes) {
+        params.emplace_back(param->getLlvmType(context));
     }
 
     return llvm::FunctionType::get(retTy, params, m_variadic);

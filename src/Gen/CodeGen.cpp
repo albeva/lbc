@@ -217,17 +217,12 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
 }
 
 void CodeGen::declareLocalVar(AstVarDecl& ast) {
-    ValueHandler rvalue{};
     llvm::Type* exprType = ast.symbol->type()->getLlvmType(m_context);
-
-    // has an init expr?
-    if (ast.expr != nullptr) {
-        rvalue = visit(*ast.expr);
-    }
-
     auto* lvalue = m_builder.CreateAlloca(exprType, nullptr, ast.symbol->identifier());
 
-    if (rvalue.isValid()) {
+     // has an init expr?
+    if (ast.expr != nullptr) {
+        auto rvalue = visit(*ast.expr);
         m_builder.CreateStore(rvalue.load(), lvalue);
     }
 
@@ -445,7 +440,7 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
 
     auto* call = m_builder.CreateCall(llvm::FunctionCallee(fn), values, "");
     call->setTailCall(false);
-    return { this, call };
+    return { this, ast.type, call };
 }
 
 ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
@@ -472,7 +467,7 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
             return value ? m_constantTrue : m_constantFalse;
         }
     };
-    return { this, std::visit(visitor, ast.value) };
+    return { this, ast.type, std::visit(visitor, ast.value) };
 }
 
 llvm::Constant* CodeGen::getStringConstant(StringRef str) {
@@ -489,18 +484,18 @@ ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
         auto* value = visit(*ast.expr).load();
 
         if (value->getType()->isIntegerTy()) {
-            return { this, m_builder.CreateNeg(value) };
+            return { this, ast.type, m_builder.CreateNeg(value) };
         }
 
         if (value->getType()->isFloatingPointTy()) {
-            return { this, m_builder.CreateFNeg(value) };
+            return { this, ast.type, m_builder.CreateFNeg(value) };
         }
 
         llvm_unreachable("Unexpected unary operator");
     }
     case TokenKind::LogicalNot: {
         auto value = visit(*ast.expr);
-        return { this, m_builder.CreateNot(value.load(), "lnot") };
+        return { this, ast.type, m_builder.CreateNot(value.load(), "lnot") };
     }
     default:
         llvm_unreachable("Unexpected unary operator");
@@ -532,7 +527,7 @@ ValueHandler CodeGen::visit(AstCastExpr& ast) {
         dstIsSigned);
     auto* casted = m_builder.CreateCast(opcode, value, ast.type->getLlvmType(m_context));
 
-    return { this, casted };
+    return { this, ast.type, casted };
 }
 
 ValueHandler CodeGen::visit(AstIfExpr& ast) {
@@ -541,7 +536,7 @@ ValueHandler CodeGen::visit(AstIfExpr& ast) {
     auto falseValue = visit(*ast.falseExpr);
 
     auto* value = m_builder.CreateSelect(condValue.load(), trueValue.load(), falseValue.load());
-    return { this, value };
+    return { this, ast.type, value };
 }
 
 unique_ptr<llvm::Module> CodeGen::getModule() {

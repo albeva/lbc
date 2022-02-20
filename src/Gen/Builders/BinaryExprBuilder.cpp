@@ -27,7 +27,7 @@ ValueHandler BinaryExprBuilder::comparison() {
 
     const auto* ty = m_ast.lhs->type;
     auto pred = Gen::getCmpPred(ty, m_ast.tokenKind);
-    return { &m_gen, m_builder.CreateCmp(pred, lhsValue, rhsValue) };
+    return { &m_gen, m_ast.type, m_builder.CreateCmp(pred, lhsValue, rhsValue) };
 }
 
 ValueHandler BinaryExprBuilder::arithmetic() {
@@ -35,7 +35,7 @@ ValueHandler BinaryExprBuilder::arithmetic() {
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
     auto op = getBinOpPred(m_ast.lhs->type, m_ast.tokenKind);
-    return { &m_gen, m_builder.CreateBinOp(op, lhsValue, rhsValue) };
+    return { &m_gen, m_ast.type, m_builder.CreateBinOp(op, lhsValue, rhsValue) };
 }
 
 ValueHandler BinaryExprBuilder::logical() {
@@ -70,5 +70,5 @@ ValueHandler BinaryExprBuilder::logical() {
         phi->addIncoming(m_gen.getTrue(), lhsBlock);
     }
     phi->addIncoming(rhsValue, rhsBlock);
-    return { &m_gen, phi };
+    return { &m_gen, m_ast.type, phi };
 }

@@ -35,7 +35,13 @@ void ForStmtBuilder::declareVars() {
     m_type = m_ast.iterator->symbol->type();
     m_llvmType = m_type->getLlvmType(m_gen.getContext());
 
-    m_iterator = ValueHandler{ &m_gen, m_ast.iterator->symbol };
+    auto* ident = m_gen.getContext().create<AstIdentExpr>(
+        m_ast.iterator->range,
+        m_ast.iterator->name);
+    ident->symbol = m_ast.iterator->symbol;
+    ident->type = m_ast.iterator->symbol->type();
+
+    m_iterator = ValueHandler{ &m_gen, *ident };
     m_limit = ValueHandler::createTempOrConstant(m_gen, *m_ast.limit, "for.limit");
 }
 
@@ -69,7 +75,7 @@ void ForStmtBuilder::configureStep() {
         } else {
             llvm_unreachable("Unknown type");
         }
-        m_step = ValueHandler{ &m_gen, stepVal };
+        m_step = ValueHandler{ &m_gen, m_type, stepVal };
         return;
     }
 
@@ -95,7 +101,7 @@ void ForStmtBuilder::configureStep() {
         } else {
             llvm_unreachable("Unkown type");
         }
-        m_step = ValueHandler{ &m_gen, stepVal };
+        m_step = ValueHandler{ &m_gen, stepTy, stepVal };
         return;
     }
 
