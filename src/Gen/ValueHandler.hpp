@@ -11,7 +11,7 @@ struct AstIdentExpr;
 struct AstMemberAccess;
 struct AstDereference;
 struct AstAddressOf;
-struct TypeRoot;
+class TypeRoot;
 class Symbol;
 
 namespace Gen {
