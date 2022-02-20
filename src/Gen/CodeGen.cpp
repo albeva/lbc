@@ -425,13 +425,11 @@ ValueHandler CodeGen::visit(AstMemberAccess& ast) {
 }
 
 ValueHandler CodeGen::visit(AstDereference& ast) {
-    auto value = visit(*ast.expr);
-    return { this, m_builder.CreateLoad(value.load()) };
+    return { this, ast };
 }
 
 ValueHandler CodeGen::visit(AstAddressOf& ast) {
-    auto value = visit(*ast.expr);
-    return { this, value.getAddress() };
+    return { this, ast };
 }
 
 ValueHandler CodeGen::visit(AstCallExpr& ast) {
