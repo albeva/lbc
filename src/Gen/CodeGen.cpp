@@ -220,7 +220,7 @@ void CodeGen::declareLocalVar(AstVarDecl& ast) {
     llvm::Type* exprType = ast.symbol->type()->getLlvmType(m_context);
     auto* lvalue = m_builder.CreateAlloca(exprType, nullptr, ast.symbol->identifier());
 
-     // has an init expr?
+    // has an init expr?
     if (ast.expr != nullptr) {
         auto rvalue = visit(*ast.expr);
         m_builder.CreateStore(rvalue.load(), lvalue);

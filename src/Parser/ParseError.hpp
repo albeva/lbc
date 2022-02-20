@@ -13,7 +13,7 @@ public:
     static const char ID;
 
     explicit ParseError(Diag diag, std::string message, llvm::SMRange range) noexcept
-    : m_diag{ diag }, m_message{std::move(message)}, m_range{ range } {}
+    : m_diag{ diag }, m_message{ std::move(message) }, m_range{ range } {}
 
     [[nodiscard]] Diag getDiag() const noexcept { return m_diag; }
     [[nodiscard]] const string& getMessage() const noexcept { return m_message; }

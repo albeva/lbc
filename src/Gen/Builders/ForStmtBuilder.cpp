@@ -35,13 +35,7 @@ void ForStmtBuilder::declareVars() {
     m_type = m_ast.iterator->symbol->type();
     m_llvmType = m_type->getLlvmType(m_gen.getContext());
 
-    auto* ident = m_gen.getContext().create<AstIdentExpr>(
-        m_ast.iterator->range,
-        m_ast.iterator->name);
-    ident->symbol = m_ast.iterator->symbol;
-    ident->type = m_ast.iterator->symbol->type();
-
-    m_iterator = ValueHandler{ &m_gen, *ident };
+    m_iterator = ValueHandler::createOpaqueIdent(m_gen, m_ast.iterator->symbol, m_ast.iterator->range, m_ast.iterator->name);
     m_limit = ValueHandler::createTempOrConstant(m_gen, *m_ast.limit, "for.limit");
 }
 

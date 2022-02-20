@@ -4,6 +4,7 @@
 #include "ValueHandler.hpp"
 #include "Ast/Ast.hpp"
 #include "CodeGen.hpp"
+#include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
@@ -18,13 +19,14 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, StringRef nam
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
-    return { &gen, expr.type, { var, true } };
+
+    return createOpaqueIdent(gen, expr.type, var, expr.range, name);
 }
 
 ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     if (isa<llvm::Constant>(value)) {
-        return { &gen, expr.type, { value, false } };
+        return { &gen, expr.type, value };
     }
 
     auto* var = gen.getBuilder().CreateAlloca(
@@ -32,30 +34,32 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, Str
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
-    return { &gen, expr.type, { var, true } };
+
+    return createOpaqueIdent(gen, expr.type, var, expr.range, name);
 }
 
-ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, ValuePtr ptr) noexcept
-: PointerUnion{ ptr }, m_gen{ gen }, m_type{ type } {}
+ValueHandler ValueHandler::createOpaqueIdent(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::SMRange range, StringRef name) noexcept {
+    auto* symbol = gen.getContext().create<Symbol>(name, type);
+    symbol->setLlvmValue(value);
+    return createOpaqueIdent(gen, symbol, range, name);
+}
+
+ValueHandler ValueHandler::createOpaqueIdent(CodeGen& gen, Symbol* symbol, llvm::SMRange range, StringRef name) noexcept {
+    auto* ident = gen.getContext().create<AstIdentExpr>(range, name);
+    ident->symbol = symbol;
+    ident->type = symbol->type();
+    return { &gen, *ident };
+}
 
 ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept
-: PointerUnion{ ValuePtr{ value, false } }, m_gen{ gen }, m_type{ type } {}
+: PointerUnion{ value }, m_gen{ gen }, m_type{ type } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
-
-ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
-
-ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
-
-ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, AstExpr& ast) noexcept
 : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 llvm::Value* ValueHandler::getAddress() const noexcept {
-    if (is<ValuePtr>()) {
-        return PointerUnion::get<ValuePtr>().getPointer();
+    if (auto* value = dyn_cast<llvm::Value*>()) {
+        return value;
     }
 
     auto* ast = dyn_cast<AstExpr*>();
@@ -100,14 +104,8 @@ llvm::Value* ValueHandler::getAddress() const noexcept {
 }
 
 llvm::Type* ValueHandler::getLlvmType() const noexcept {
-    if (is<ValuePtr>()) {
-        auto* value = PointerUnion::get<ValuePtr>().getPointer();
-        auto* type = value->getType();
-        if (!PointerUnion::get<ValuePtr>().getInt()) { // !llvm::isa<llvm::PointerType>(value->getType())
-            return type;
-        }
-
-        return type->getPointerElementType();
+    if (auto* value = dyn_cast<llvm::Value*>()) {
+        return value->getType();
     }
 
     if (auto* ast = dyn_cast<AstExpr*>()) {
@@ -144,11 +142,7 @@ llvm::Value* ValueHandler::getAggregateAddress(llvm::Value* base, IndexArray& id
 
 llvm::Value* ValueHandler::load() const noexcept {
     auto* addr = getAddress();
-    if (isa<llvm::Function>(addr)) {
-        return addr;
-    }
-
-    if (is<ValuePtr>() && !PointerUnion::get<ValuePtr>().getInt()) { // llvm::isa<llvm::Constant>(addr)
+    if (isa<llvm::Function>(addr) || is<llvm::Value*>()) {
         return addr;
     }
 
@@ -164,4 +158,8 @@ llvm::Value* ValueHandler::load() const noexcept {
 void ValueHandler::store(llvm::Value* val) const noexcept {
     auto* addr = getAddress();
     m_gen->getBuilder().CreateStore(val, addr);
+}
+
+void ValueHandler::store(ValueHandler& val) const noexcept {
+    store(val.load());
 }

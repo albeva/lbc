@@ -284,7 +284,7 @@ const TypeFunction* TypeFunction::get(
         }
     }
 
-    auto *ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
+    auto* ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
     context.funcTypes.push_back(ty);
     return ty;
 }
