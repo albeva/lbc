@@ -6,6 +6,8 @@ Checks: '*,
         -zircon-*,
         -abseil-*,
         -altera-struct-*,
+        -altera-unroll-loops,
+        -altera-id-dependent-backward-branch,
         -modernize-use-trailing-return-type,
         -llvmlibc-callee-namespace,
         -misc-non-private-member-variables-in-classes,
@@ -21,8 +23,13 @@ Checks: '*,
         -llvm-include-order,
         -misc-no-recursion,
         -misc-unused-using-decls,
-        -misc-unused-alias-decls'
+        -misc-unused-alias-decls,
+        -bugprone-easily-swappable-parameters'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: none
-
+CheckOptions:
+  - key:    readability-identifier-length.MinimumVariableNameLength
+    value:  2
+  - key:    readability-identifier-length.MinimumParameterNameLength
+    value:  2

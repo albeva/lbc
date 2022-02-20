@@ -66,7 +66,6 @@ function(set_project_warnings project_name)
       -Wno-exit-time-destructors
       -Wno-global-constructors
       -Wno-switch-enum                            # ?
-      -Wno-return-std-move-in-c++11
   )
 
   set(GCC_WARNINGS
