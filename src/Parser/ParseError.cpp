@@ -4,4 +4,4 @@
 #include "ParseError.hpp"
 using namespace lbc;
 
-char ParseError::ID;
+const char ParseError::ID{};

@@ -87,7 +87,7 @@ private:
 
     // expects given token and advances.
     [[nodiscard]] llvm::Error consume(TokenKind kind) noexcept {
-        TRY(expect(kind));
+        TRY(expect(kind))
         advance();
         return llvm::Error::success();
     }

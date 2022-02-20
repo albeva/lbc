@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by Albert on 19/02/2022.
 //
@@ -8,20 +10,20 @@ enum class Diag;
 
 class ParseError final : public llvm::ErrorInfo<ParseError> {
 public:
-    static char ID;
+    static const char ID;
 
-    explicit ParseError(Diag diag, const std::string& message, llvm::SMRange range) noexcept
-    : m_diag{ diag }, m_message{ message }, m_range{ range } {}
+    explicit ParseError(Diag diag, std::string message, llvm::SMRange range) noexcept
+    : m_diag{ diag }, m_message{std::move(message)}, m_range{ range } {}
 
-    Diag getDiag() const noexcept { return m_diag; }
-    const string& getMessage() const noexcept { return m_message; }
-    const llvm::SMRange& getRange() const noexcept { return m_range; }
+    [[nodiscard]] Diag getDiag() const noexcept { return m_diag; }
+    [[nodiscard]] const string& getMessage() const noexcept { return m_message; }
+    [[nodiscard]] const llvm::SMRange& getRange() const noexcept { return m_range; }
 
     void log(llvm::raw_ostream& os) const override {
         os << m_message;
     }
 
-    std::error_code convertToErrorCode() const override {
+    [[nodiscard]] std::error_code convertToErrorCode() const override {
         return llvm::inconvertibleErrorCode();
     }
 
