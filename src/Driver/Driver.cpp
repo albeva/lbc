@@ -336,7 +336,7 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
 
     bool isMain = m_options.isMainFile(path);
     Parser parser{ m_context, ID, isMain };
-    
+
     auto astOrErr = parser.parse();
     if (auto err = astOrErr.takeError()) {
         llvm::handleAllErrors(std::move(err), [&diag = m_context.getDiag()](ParseError& error) {

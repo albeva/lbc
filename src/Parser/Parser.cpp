@@ -1228,9 +1228,9 @@ void Parser::replace(TokenKind what, TokenKind with) noexcept {
     }
 }
 
-[[nodiscard]] llvm::Expected<bool> Parser::expect(TokenKind kind) noexcept {
+[[nodiscard]] llvm::Error Parser::expect(TokenKind kind) noexcept {
     if (m_token.is(kind)) {
-        return true;
+        return llvm::Error::success();
     }
 
     return makeError(Diag::unexpectedToken, Token::description(kind), m_token.description());

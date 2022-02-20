@@ -4,6 +4,8 @@
 
 #pragma once
 
+namespace lbc {
+
 // Idea is copied from Serenity OS
 // https://github.com/SerenityOS/serenity/blob/master/AK/Try.h
 //
@@ -14,8 +16,17 @@
 //     TRY_ASSIGN(val, getValue());
 // }
 
-#define TRY(expression)                      \
-    if (auto err = (expression).takeError()) \
+template<typename T>
+inline llvm::Error try_resolve_to_error(llvm::Expected<T> expected) noexcept {
+    return expected.takeError();
+}
+
+inline llvm::Error try_resolve_to_error(llvm::Error error) noexcept {
+    return error;
+}
+
+#define TRY(expression)                              \
+    if (auto err = try_resolve_to_error(expression)) \
         return err;
 
 #define TRY_ASSIGN(var, expression)                    \
@@ -29,3 +40,5 @@
 #define TRY_DECLARE(var, expression)      \
     decltype(expression)::value_type var; \
     TRY_ASSIGN(var, expression);
+
+} // namespace lbc

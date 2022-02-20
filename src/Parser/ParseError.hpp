@@ -2,8 +2,8 @@
 // Created by Albert on 19/02/2022.
 //
 #pragma once
-namespace lbc {
 
+namespace lbc {
 enum class Diag;
 
 class ParseError final : public llvm::ErrorInfo<ParseError> {
@@ -30,4 +30,5 @@ private:
     string m_message;
     llvm::SMRange m_range;
 };
+
 } // namespace lbc

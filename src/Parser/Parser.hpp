@@ -86,11 +86,17 @@ private:
     }
 
     // expects given token and advances.
-    [[nodiscard]] llvm::Expected<bool> consume(TokenKind kind) noexcept {
+    [[nodiscard]] llvm::Error consume(TokenKind kind) noexcept {
         TRY(expect(kind));
         advance();
-        return true;
+        return llvm::Error::success();
     }
+
+    // Expects a match, raises error when fails
+    [[nodiscard]] llvm::Error expect(TokenKind kind) noexcept;
+
+    // advance to the next token from the stream
+    void advance();
 
     template<typename... Args>
     [[nodiscard]] llvm::Error makeError(const llvm::SMRange& range, Diag diag, Args&&... args) const noexcept {
@@ -102,12 +108,6 @@ private:
     [[nodiscard]] llvm::Error makeError(Diag diag, Args&&... args) noexcept {
         return makeError(m_token.range(), diag, std::forward<Args>(args)...);
     }
-
-    // Expects a match, raises error when fails
-    [[nodiscard]] llvm::Expected<bool> expect(TokenKind kind) noexcept;
-
-    // advance to the next token from the stream
-    void advance();
 
     Context& m_context;
     DiagnosticEngine& m_diag;
