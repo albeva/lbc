@@ -8,7 +8,6 @@
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
-#include <llvm/ADT/TypeSwitch.h>
 using namespace lbc;
 using namespace Gen;
 
@@ -20,7 +19,7 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, StringRef nam
         name);
     gen.getBuilder().CreateStore(value, var);
 
-    return createOpaqueIdent(gen, expr.type, var, expr.range, name);
+    return createOpaqueValue(gen, expr.type, var, name);
 }
 
 ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, StringRef name) noexcept {
@@ -35,38 +34,43 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, Str
         name);
     gen.getBuilder().CreateStore(value, var);
 
-    return createOpaqueIdent(gen, expr.type, var, expr.range, name);
+    return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createOpaqueIdent(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::SMRange range, StringRef name) noexcept {
+ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, StringRef name) noexcept {
     auto* symbol = gen.getContext().create<Symbol>(name, type);
     symbol->setLlvmValue(value);
-    return createOpaqueIdent(gen, symbol, range, name);
-}
-
-ValueHandler ValueHandler::createOpaqueIdent(CodeGen& gen, Symbol* symbol, llvm::SMRange range, StringRef name) noexcept {
-    auto* ident = gen.getContext().create<AstIdentExpr>(range, name);
-    ident->symbol = symbol;
-    ident->type = symbol->type();
-    return { &gen, *ident };
+    return { &gen, symbol };
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept
 : PointerUnion{ value }, m_gen{ gen }, m_type{ type } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstExpr& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol) noexcept
+    : PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->type() } {}
+
+ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
+    : ValueHandler{ gen, ast.symbol } {}
+
+ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
+    : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+
+ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
+    : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+
+ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
+    : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 llvm::Value* ValueHandler::getAddress() const noexcept {
     if (auto* value = dyn_cast<llvm::Value*>()) {
         return value;
     }
 
-    auto* ast = dyn_cast<AstExpr*>();
-
-    if (auto* ident = llvm::dyn_cast<AstIdentExpr>(ast)) {
-        return ident->symbol->getLlvmValue();
+    if (auto* symbol = dyn_cast<Symbol*>()) {
+        return symbol->getLlvmValue();
     }
+
+    auto* ast = dyn_cast<AstExpr*>();
 
     if (auto* deref = llvm::dyn_cast<AstDereference>(ast)) {
         return m_gen->visit(*deref->expr).load();
@@ -108,6 +112,10 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
         return value->getType();
     }
 
+    if (auto* symbol = dyn_cast<Symbol*>()) {
+        return symbol->type()->getLlvmType(m_gen->getContext());
+    }
+
     if (auto* ast = dyn_cast<AstExpr*>()) {
         return ast->type->getLlvmType(m_gen->getContext());
     }
@@ -116,12 +124,10 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
 }
 
 llvm::Value* ValueHandler::getAggregateAddress(llvm::Value* base, IndexArray& idxs) const noexcept {
-    auto* ast = dyn_cast<AstExpr*>();
-
     // end of the member access chain
-    if (auto* ident = llvm::dyn_cast<AstIdentExpr>(ast)) {
+    if (auto* symbol = dyn_cast<Symbol*>()) {
         auto& builder = m_gen->getBuilder();
-        idxs.push_back(builder.getInt32(ident->symbol->getIndex()));
+        idxs.push_back(builder.getInt32(symbol->getIndex()));
         // TODO: if symbol is a pointer, emit pending GEP and recurse to getAddress?
         // if (terminal && symbol->type()->isPointer()) {
         //     base = builder.CreateGEP(base, idxs);
@@ -130,6 +136,8 @@ llvm::Value* ValueHandler::getAggregateAddress(llvm::Value* base, IndexArray& id
         // }
         return base;
     }
+
+    auto* ast = dyn_cast<AstExpr*>();
 
     // middle of the chain
     if (auto* member = llvm::dyn_cast<AstMemberAccess>(ast)) {

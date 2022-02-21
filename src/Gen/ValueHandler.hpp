@@ -15,7 +15,9 @@ class TypeRoot;
 class Symbol;
 
 namespace Gen {
-    class ValueHandler final : llvm::PointerUnion<llvm::Value*, AstExpr*> {
+
+
+    class ValueHandler final : llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
     public:
         /// Create temporary allocated variable - it is not inserted into symbol table
         static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, StringRef name = "") noexcept;
@@ -24,12 +26,15 @@ namespace Gen {
         static ValueHandler createTempOrConstant(CodeGen& gen, AstExpr& expr, StringRef name = "") noexcept;
 
         /// Create temporary from given llvm value
-        static ValueHandler createOpaqueIdent(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::SMRange range, StringRef name) noexcept;
-        static ValueHandler createOpaqueIdent(CodeGen& gen, Symbol* symbol, llvm::SMRange range, StringRef name) noexcept;
+        static ValueHandler createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, StringRef name) noexcept;
 
         constexpr ValueHandler() noexcept = default;
         ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept;
-        ValueHandler(CodeGen* gen, AstExpr& ast) noexcept;
+        ValueHandler(CodeGen* gen, Symbol* symbol) noexcept;
+        ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept;
+        ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept;
+        ValueHandler(CodeGen* gen, AstDereference& ast) noexcept;
+        ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept;
 
         [[nodiscard]] llvm::Value* load() const noexcept;
         [[nodiscard]] llvm::Value* getAddress() const noexcept;
