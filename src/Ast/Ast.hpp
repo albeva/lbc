@@ -599,18 +599,15 @@ struct AstAddressOf final : AstExpr {
 struct AstMemberAccess final : AstExpr {
     AstMemberAccess(
         llvm::SMRange range_,
-        AstExpr* lhs_,
-        AstExpr* rhs_) noexcept
+        std::vector<AstExpr*> exprs_) noexcept
     : AstExpr{ AstKind::MemberAccess, range_ },
-      lhs{ lhs_ },
-      rhs{ rhs_ } {};
+      exprs{ std::move(exprs_) } {};
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
         return ast->kind == AstKind::MemberAccess;
     }
 
-    AstExpr* lhs;
-    AstExpr* rhs;
+    std::vector<AstExpr*> exprs;
 };
 
 struct AstBinaryExpr final : AstExpr {

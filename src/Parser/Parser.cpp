@@ -1078,7 +1078,13 @@ llvm::Expected<AstExpr*> Parser::binary(llvm::SMRange range, TokenKind op, AstEx
     case TokenKind::Assign:
         return m_context.create<AstAssignExpr>(range, lhs, rhs);
     case TokenKind::MemberAccess:
-        return m_context.create<AstMemberAccess>(range, lhs, rhs);
+        if (auto* member = llvm::dyn_cast<AstMemberAccess>(lhs)) {
+            member->exprs.push_back(rhs);
+            return member;
+        } else {
+            std::vector<AstExpr*> exprs{lhs, rhs};
+            return m_context.create<AstMemberAccess>(range, std::move(exprs));
+        }
     default:
         return m_context.create<AstBinaryExpr>(range, op, lhs, rhs);
     }

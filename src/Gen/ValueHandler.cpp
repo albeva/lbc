@@ -80,28 +80,8 @@ llvm::Value* ValueHandler::getAddress() const noexcept {
         return m_gen->visit(*addrOf->expr).getAddress();
     }
 
-    // a.b.c.d = { lhs a, { lhs b, { lhs c, rhs d }}}
-    // FIXME: when member is a pointer access, we need to emit GEP and then recursively call getAddress()
     if (auto* member = llvm::dyn_cast<AstMemberAccess>(ast)) {
-        auto& builder = m_gen->getBuilder();
-        const auto* type = member->lhs->type;
-
-        auto* lhs = m_gen->visit(*member->lhs).getAddress();
-        if (const auto* ptr = llvm::dyn_cast<TypePointer>(type)) {
-            lhs = builder.CreateLoad(
-                ptr->getLlvmType(m_gen->getContext()),
-                lhs);
-            type = ptr->getBase();
-        }
-
-        llvm::SmallVector<llvm::Value*, 4> idxs;
-        idxs.push_back(builder.getInt64(0));
-        auto* addr = m_gen->visit(*member->rhs).getAggregateAddress(lhs, idxs);
-
-        return builder.CreateGEP(
-            type->getLlvmType(m_gen->getContext()),
-            addr,
-            idxs);
+        return getAggregageAddress(*member);
     }
 
     llvm_unreachable("Unknown ValueHandler type");
@@ -123,29 +103,50 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
     llvm_unreachable("Unknown type in getLlvmType");
 }
 
-llvm::Value* ValueHandler::getAggregateAddress(llvm::Value* base, IndexArray& idxs) const noexcept {
-    // end of the member access chain
-    if (auto* symbol = dyn_cast<Symbol*>()) {
-        auto& builder = m_gen->getBuilder();
-        idxs.push_back(builder.getInt32(symbol->getIndex()));
-        // TODO: if symbol is a pointer, emit pending GEP and recurse to getAddress?
-        // if (terminal && symbol->type()->isPointer()) {
-        //     base = builder.CreateGEP(base, idxs);
-        //     base = builder.CreateLoad(base);
-        //     idxs.pop_back_n(idxs.size() - 1);
-        // }
-        return base;
+llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const noexcept {
+    auto& builder = m_gen->getBuilder();
+
+    llvm::SmallVector<llvm::Value*> idxs{};
+    idxs.push_back(builder.getInt32(0));
+
+    llvm::Value* addr = nullptr;
+    llvm::Type* type = nullptr;
+
+    const auto createGEP = [&]() {
+        if (idxs.size() < 2) {
+            return;
+        }
+        addr = builder.CreateGEP(type, addr, idxs);
+        idxs.pop_back_n(idxs.size() - 1);
+    };
+
+    // a.b.c.d = [ a, b, c, d ]
+    for (size_t i = 0; i < ast.exprs.size(); i++) {
+        bool last = i == (ast.exprs.size() - 1);
+
+        auto* symbol = m_gen->visit(*ast.exprs[i]).dyn_cast<Symbol*>();
+        if (symbol == nullptr) {
+            fatalError("MemberAccess expressions shoudl be symbols!");
+        }
+
+        if (i == 0) {
+            type = symbol->type()->getLlvmType(m_gen->getContext());
+            addr = symbol->getLlvmValue();
+        } else {
+            idxs.push_back(builder.getInt32(symbol->getIndex()));
+        }
+
+        if (symbol->type()->isPointer() && !last) {
+            createGEP();
+            type = llvm::cast<TypePointer>(symbol->type())->getBase()->getLlvmType(m_gen->getContext());
+            addr = builder.CreateLoad(
+                symbol->type()->getLlvmType(m_gen->getContext()),
+                addr);
+        }
     }
+    createGEP();
 
-    auto* ast = dyn_cast<AstExpr*>();
-
-    // middle of the chain
-    if (auto* member = llvm::dyn_cast<AstMemberAccess>(ast)) {
-        base = m_gen->visit(*member->lhs).getAggregateAddress(base, idxs);
-        return m_gen->visit(*member->rhs).getAggregateAddress(base, idxs);
-    }
-
-    llvm_unreachable("Unknown aggregate member access type");
+    return addr;
 }
 
 llvm::Value* ValueHandler::load() const noexcept {

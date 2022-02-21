@@ -78,7 +78,20 @@ void CodePrinter::visit(AstAttribute& ast) {
 }
 
 void CodePrinter::visit(AstTypeExpr& ast) {
-    m_os << Token::description(ast.tokenKind);
+    if (const auto* type = ast.type) {
+        m_os << type->asString();
+        return;
+    }
+
+    if (auto* ident = ast.ident) {
+        visit(*ast.ident);
+    } else {
+        m_os << Token::description(ast.tokenKind);
+    }
+
+    for (int i = 0; i < ast.dereference; i++) {
+        m_os << " PTR";
+    }
 }
 
 // Declarations
@@ -413,9 +426,12 @@ void CodePrinter::visit(AstAddressOf& ast) {
 }
 
 void CodePrinter::visit(AstMemberAccess& ast) {
-    visit(*ast.lhs);
-    m_os << '.';
-    visit(*ast.rhs);
+    for (size_t i = 0; i < ast.exprs.size(); i++) {
+        if (i != 0) {
+            m_os << '.';
+        }
+        visit(*ast.exprs[i]);
+    }
 }
 
 void CodePrinter::visit(AstBinaryExpr& ast) {

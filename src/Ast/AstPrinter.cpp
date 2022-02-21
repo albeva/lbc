@@ -292,7 +292,21 @@ void AstPrinter::visit(AstAttribute& ast) {
 void AstPrinter::visit(AstTypeExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        m_json.attribute("id", Token::description(ast.tokenKind));
+        string name;
+        if (const auto* type = ast.type) {
+            name = type->asString();
+        } else {
+            if (auto* ident = ast.ident) {
+                name = ast.ident->name;
+            } else {
+                name = Token::description(ast.tokenKind);
+            }
+
+            for (int i = 0; i < ast.dereference; i++) {
+                name += " PTR";
+            }
+        }
+        m_json.attribute("id", name);
     });
 }
 
@@ -374,8 +388,11 @@ void AstPrinter::visit(AstAddressOf& ast) {
 void AstPrinter::visit(AstMemberAccess& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        writeExpr(ast.lhs, "lhs");
-        writeExpr(ast.rhs, "rhs");
+        m_json.attributeArray("exprs", [&](){
+            for (auto& expr: ast.exprs) {
+                visit(*expr);
+            }
+        });
     });
 }
 

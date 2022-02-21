@@ -15,8 +15,6 @@ class TypeRoot;
 class Symbol;
 
 namespace Gen {
-
-
     class ValueHandler final : llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
     public:
         /// Create temporary allocated variable - it is not inserted into symbol table
@@ -47,8 +45,7 @@ namespace Gen {
         }
 
     private:
-        using IndexArray = llvm::SmallVectorImpl<llvm::Value*>;
-        [[nodiscard]] llvm::Value* getAggregateAddress(llvm::Value* base, IndexArray& idxs) const noexcept;
+        [[nodiscard]] llvm::Value* getAggregageAddress(AstMemberAccess& ast) const noexcept;
 
         CodeGen* m_gen = nullptr;
         const TypeRoot* m_type = nullptr;

@@ -398,27 +398,33 @@ void SemanticAnalyzer::visit(AstAddressOf& ast) {
 //------------------------------------------------------------------
 
 void SemanticAnalyzer::visit(AstMemberAccess& ast) {
-    visit(*ast.lhs);
-    const auto* type = ast.lhs->type;
+    RESTORE_ON_EXIT(m_table);
 
-    const TypeUDT* udt = nullptr;
-    if (type->isUDT()) {
-        udt = static_cast<const TypeUDT*>(type);
-    } else if (const auto* ptr = dyn_cast<TypePointer>(type)) {
-        if (ptr->getBase()->isUDT()) {
-            udt = static_cast<const TypeUDT*>(ptr->getBase());
+    for (size_t i = 0; i < ast.exprs.size(); i++) {
+        auto* expr = ast.exprs[i];
+        visit(*expr);
+        const auto* type = expr->type;
+
+        if (i == (ast.exprs.size() - 1)) {
+            ast.type = type;
+            ast.flags = expr->flags;
+        } else {
+            const TypeUDT* udt = nullptr;
+            if (type->isUDT()) {
+                udt = static_cast<const TypeUDT*>(type);
+            } else if (const auto* ptr = dyn_cast<TypePointer>(type)) {
+                if (ptr->getBase()->isUDT()) {
+                    udt = static_cast<const TypeUDT*>(ptr->getBase());
+                }
+            }
+
+            if (udt == nullptr) {
+                fatalError("Accessing member of non UDT type");
+            }
+
+            m_table = &udt->getSymbolTable();
         }
     }
-
-    if (udt == nullptr) {
-        fatalError("Accessing member of non UDT type");
-    }
-
-    RESTORE_ON_EXIT(m_table);
-    m_table = &udt->getSymbolTable();
-    visit(*ast.rhs);
-    ast.type = ast.rhs->type;
-    ast.flags = ast.rhs->flags;
 }
 
 //------------------------------------------------------------------

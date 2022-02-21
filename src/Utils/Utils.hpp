@@ -59,23 +59,9 @@ inline Twine operator"" _t(const char* s, size_t /*len*/) noexcept {
  */
 void warning(const Twine& message, bool prefix = true);
 
-/**
- * Helper class that restores variable value when existing scope
- *
- * Example usage:
- *
- *    int foo = 5;
- *    {
- *        RESTORE_ON_EXIT(foo); // use macro defined below.
- *        foo = 10;
- *        assert(foo == 10);
- *    }
- *    assert(foo == 5);
- */
 template<typename T, std::enable_if_t<std::is_trivially_copyable_v<T> && std::is_trivially_assignable_v<T&, T>, int> = 0>
 struct ValueRestorer final {
     NO_COPY_AND_MOVE(ValueRestorer)
-
     constexpr explicit ValueRestorer(T& value) noexcept : m_target{ value }, m_value{ value } {}
 
     ~ValueRestorer() noexcept {
@@ -87,7 +73,9 @@ private:
     const T m_value;
 };
 
-#define RESTORE_ON_EXIT(V)                                            /* NOLINT */ \
-    ValueRestorer<decltype(V)> MAKE_UNIQUE(tmp_restore_onexit_) { V } /* NOLINT */
+/**
+ * Helper macro that restores variable value when existing scope.
+ */
+#define RESTORE_ON_EXIT(V) ValueRestorer<decltype(V)> MAKE_UNIQUE(tmp_restore_onexit_) { V } /* NOLINT */
 
 } // namespace lbc
