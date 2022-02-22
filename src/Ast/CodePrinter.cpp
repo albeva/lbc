@@ -84,7 +84,7 @@ void CodePrinter::visit(AstTypeExpr& ast) {
     }
 
     if (auto* ident = ast.ident) {
-        visit(*ast.ident);
+        visit(*ident);
     } else {
         m_os << Token::description(ast.tokenKind);
     }

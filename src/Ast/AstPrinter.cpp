@@ -297,7 +297,7 @@ void AstPrinter::visit(AstTypeExpr& ast) {
             name = type->asString();
         } else {
             if (auto* ident = ast.ident) {
-                name = ast.ident->name;
+                name = ident->name;
             } else {
                 name = Token::description(ast.tokenKind);
             }

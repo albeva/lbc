@@ -9,6 +9,8 @@ namespace lbc {
 // Idea is copied from Serenity OS
 // https://github.com/SerenityOS/serenity/blob/master/AK/Try.h
 //
+// However, avoid GNU non-standard expression statement extension.
+//
 // llvm::Expected<int> getValue();
 // Expected<int> foo() {
 //     TRY_DECLARE(val, getValue());
@@ -25,16 +27,17 @@ inline llvm::Error try_resolve_to_error(llvm::Error error) noexcept {
     return error;
 }
 
-#define TRY(expression)                              \
-    if (auto err = try_resolve_to_error(expression)) \
-        return err;
+#define TRY(expression)                                 \
+    if (auto err_ = try_resolve_to_error(expression)) { \
+        return std::forward<llvm::Error>(err_);         \
+    }
 
-#define TRY_ASSIGN(var, expression)                    \
-    {                                                  \
-        auto tryAssignValOrErr_ = (expression);        \
-        if (auto err = tryAssignValOrErr_.takeError()) \
-            return err;                                \
-        var = *tryAssignValOrErr_;                     \
+#define TRY_ASSIGN(var, expression)           \
+    {                                         \
+        auto valOrErr_ = (expression);        \
+        if (auto err = valOrErr_.takeError()) \
+            return std::move(err);            \
+        (var) = *valOrErr_;                   \
     }
 
 #define TRY_DECLARE(var, expression)      \

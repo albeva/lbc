@@ -60,7 +60,7 @@ void ForStmtBuilder::createBlocks() {
 
 void ForStmtBuilder::configureStep() {
     // No step
-    if (!m_ast.step) {
+    if (m_ast.step == nullptr) {
         llvm::Constant* stepVal = nullptr;
         if (const auto* integral = dyn_cast<TypeIntegral>(m_type)) {
             stepVal = llvm::ConstantInt::get(m_llvmType, 1, integral->isSigned());
