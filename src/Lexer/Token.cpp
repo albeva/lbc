@@ -145,8 +145,8 @@ int Token::getPrecedence() const noexcept {
 }
 
 bool Token::isBinary() const noexcept {
-    constexpr bool Binary = true; // NOLINT
-    constexpr bool Unary = false; // NOLINT
+    static constexpr bool Binary = true; // NOLINT
+    static constexpr bool Unary = false; // NOLINT
     #define CASE_OPERATOR(id, ch, prec, binary, ...) \
         case TokenKind::id:                          \
             return binary;
@@ -159,8 +159,8 @@ bool Token::isBinary() const noexcept {
 }
 
 bool Token::isUnary() const noexcept {
-    constexpr bool Binary = false; // NOLINT
-    constexpr bool Unary = true;   // NOLINT
+    static constexpr bool Binary = false; // NOLINT
+    static constexpr bool Unary = true;   // NOLINT
     #define CASE_OPERATOR(id, ch, prec, binary, ...) \
         case TokenKind::id:                          \
             return binary;
@@ -173,7 +173,7 @@ bool Token::isUnary() const noexcept {
 }
 
 bool Token::isLeftToRight() const noexcept {
-    constexpr bool Left = true; // NOLINT
+    static constexpr bool Left = true; // NOLINT
     // constexpr bool Right = true; // NOLINT
     #define CASE_OPERATOR(id, ch, prec, binary, dir, ...) \
         case TokenKind::id:                               \
@@ -187,7 +187,7 @@ bool Token::isLeftToRight() const noexcept {
 }
 
 bool Token::isRightToLeft() const noexcept {
-    constexpr bool Left = false; // NOLINT
+    static constexpr bool Left = false; // NOLINT
     // constexpr bool Right = true; // NOLINT
     #define CASE_OPERATOR(id, ch, prec, binary, dir, ...) \
         case TokenKind::id:                               \

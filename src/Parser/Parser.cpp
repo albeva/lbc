@@ -943,31 +943,42 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
  *            . [ ArgumentList ]
  */
 llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
+    static constexpr auto allowedCallableOperators = [](const Token& token){
+        switch (token.getKind()) {
+        case TokenKind::Multiply:
+        case TokenKind::Minus:
+            return true;
+        default:
+            return !token.isBinary();
+        }
+    };
+
     RESTORE_ON_EXIT(m_exprFlags);
     m_exprFlags = flags;
+    bool callableWithoutParens = (flags & ExprFlags::CallWithoutParens) != 0;
 
     TRY_DECLARE(expr, factor())
 
     if ((flags & ExprFlags::UseAssign) == 0) {
         replace(TokenKind::Assign, TokenKind::Equal);
     }
+
     if ((flags & ExprFlags::CommaAsAnd) != 0) {
         replace(TokenKind::Comma, TokenKind::CommaAnd);
     }
-    if (m_token.isOperator()) {
-        TRY_ASSIGN(expr, expression(expr, 1))
+
+    if (callableWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowedCallableOperators(m_token)) {
+        auto start = expr->range.Start;
+        TRY_DECLARE(args, expressionList())
+
+        return m_context.create<AstCallExpr>(
+            llvm::SMRange{ start, m_endLoc },
+            expr,
+            args);
     }
 
-    if ((m_exprFlags & ExprFlags::CallWithoutParens) != 0 && m_token.isNot(TokenKind::EndOfStmt)) {
-        if (m_token.is(TokenKind::Identifier) || m_token.isLiteral() || m_token.isUnary()) {
-            auto start = expr->range.Start;
-            TRY_DECLARE(args, expressionList())
-
-            return m_context.create<AstCallExpr>(
-                llvm::SMRange{ start, m_endLoc },
-                expr,
-                args);
-        }
+    if (m_token.isOperator()) {
+        TRY_ASSIGN(expr, expression(expr, 1))
     }
 
     return expr;
