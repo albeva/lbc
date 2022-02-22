@@ -1,13 +1,13 @@
 //
 // Created by Albert Varaksin on 01/05/2021.
 //
-#include "TypePass.hpp"
+#include "FuncDeclarerPass.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
-#include "FuncDeclarerPass.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
+#include "TypePass.hpp"
 using namespace lbc;
 using namespace Sem;
 

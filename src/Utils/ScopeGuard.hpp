@@ -12,17 +12,21 @@ struct ScopeGuard final {
     ~ScopeGuard() {
         handler();
     }
+
 private:
     const T handler;
 };
-template<typename F> ScopeGuard(F&&) -> ScopeGuard<F>;
+template<typename F>
+ScopeGuard(F&&) -> ScopeGuard<F>;
 
 /**
  * Execute given statement when existing the scope
  *
  * SCOPE_GAURD(closeFile(file))
  */
-#define SCOPE_GAURD(HANDLER) \
-    ScopeGuard MAKE_UNIQUE(tmp_scope_giard_) { [&]() { HANDLER; } } /* NOLINT */
+#define SCOPE_GAURD(HANDLER)                   \
+    ScopeGuard MAKE_UNIQUE(tmp_scope_giard_) { \
+        [&]() { HANDLER; }                     \
+    } /* NOLINT */
 
 } // namespace lbc

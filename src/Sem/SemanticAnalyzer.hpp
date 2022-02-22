@@ -19,8 +19,6 @@ class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer> {
 public:
     explicit SemanticAnalyzer(Context& context);
 
-    [[nodiscard]] Context& getContext() noexcept { return m_context; }
-
     /// declareMembers the expression, optionally coerce result to given type
     void expression(AstExpr*& ast, const TypeRoot* type = nullptr);
 
@@ -34,6 +32,7 @@ public:
     void cast(AstExpr*& ast, const TypeRoot* type);
 
     [[nodiscard]] Symbol* createNewSymbol(AstDecl& ast);
+    [[nodiscard]] Context& getContext() noexcept { return m_context; }
     [[nodiscard]] SymbolTable* getSymbolTable() { return m_table; }
     [[nodiscard]] auto& getControlStack() { return m_controlStack; }
     [[nodiscard]] Sem::TypePass& getTypePass() { return m_typePass; }
@@ -54,11 +53,9 @@ private:
     [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const noexcept;
 
     Context& m_context;
-    unsigned int m_fileId = ~0U;
     AstModule* m_astRootModule = nullptr;
     AstFuncDecl* m_function = nullptr;
     SymbolTable* m_table = nullptr;
-    SymbolTable* m_rootTable = nullptr;
     Sem::ConstantFoldingPass m_constantFolder;
     Sem::TypePass m_typePass;
 

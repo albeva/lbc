@@ -20,7 +20,7 @@ namespace Sem {
     public:
         NO_COPY_AND_MOVE(FuncDeclarerPass)
 
-        explicit FuncDeclarerPass(SemanticAnalyzer& sem) noexcept: m_sem{ sem } {}
+        explicit FuncDeclarerPass(SemanticAnalyzer& sem) noexcept : m_sem{ sem } {}
         ~FuncDeclarerPass() noexcept = default;
 
         void visit(AstModule& ast);

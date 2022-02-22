@@ -22,9 +22,8 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
 
 void SemanticAnalyzer::visit(AstModule& ast) {
     m_astRootModule = &ast;
-    m_fileId = ast.fileId;
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
-    m_rootTable = m_table = ast.symbolTable;
+    m_table = ast.symbolTable;
 
     Sem::TypeDeclPass(*this).visit(ast);
     Sem::FuncDeclarerPass(*this).visit(ast);
@@ -43,8 +42,6 @@ void SemanticAnalyzer::visit(AstImport& ast) {
         return;
     }
 
-    RESTORE_ON_EXIT(m_fileId);
-    m_fileId = ast.module->fileId;
     visit(*ast.module->stmtList);
 }
 

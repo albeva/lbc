@@ -943,7 +943,7 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
  *            . [ ArgumentList ]
  */
 llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
-    static constexpr auto allowCallWithToken = [](const Token& token){
+    static constexpr auto allowCallWithToken = [](const Token& token) {
         switch (token.getKind()) {
         case TokenKind::Multiply:
         case TokenKind::Minus:
