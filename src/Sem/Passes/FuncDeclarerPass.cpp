@@ -4,6 +4,7 @@
 #include "FuncDeclarerPass.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
+#include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
 #include "TypePass.hpp"
@@ -12,8 +13,9 @@ using namespace lbc;
 using namespace Sem;
 
 void FuncDeclarerPass::visit(AstModule& ast) {
-    m_table = ast.symbolTable;
-    visit(*ast.stmtList);
+    m_sem.with(ast.symbolTable, [&]() {
+        visit(*ast.stmtList);
+    });
 }
 
 void FuncDeclarerPass::visit(AstStmtList& ast) {
@@ -27,7 +29,7 @@ void FuncDeclarerPass::visit(AstStmtList& ast) {
             break;
         case AstKind::Import: {
             auto& import = static_cast<AstImport&>(*stmt);
-            if (import.module) {
+            if (import.module != nullptr) {
                 visit(*import.module->stmtList);
             }
             break;
@@ -39,11 +41,13 @@ void FuncDeclarerPass::visit(AstStmtList& ast) {
 }
 
 void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
+    auto* symbolTale = m_sem.getSymbolTable();
+
     const auto& name = ast.name;
-    if (m_table->exists(name)) {
+    if (symbolTale->exists(name)) {
         fatalError("Redefinition of "_t + name);
     }
-    auto* symbol = m_table->insert(m_context, name);
+    auto* symbol = symbolTale->insert(m_sem.getContext(), name);
     auto flags = symbol->getFlags();
     flags.callable = true;
     flags.addressable = true;
@@ -65,15 +69,15 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
 
     // parameters
     std::vector<const TypeRoot*> paramTypes;
-    ast.symbolTable = m_context.create<SymbolTable>(m_table);
+    ast.symbolTable = m_sem.getContext().create<SymbolTable>(symbolTale);
     if (ast.params != nullptr) {
         paramTypes.reserve(ast.params->params.size());
-        RESTORE_ON_EXIT(m_table);
-        m_table = ast.symbolTable;
-        for (auto& param : ast.params->params) {
-            visitFuncParamDecl(*param);
-            paramTypes.emplace_back(param->symbol->type());
-        }
+        m_sem.with(ast.symbolTable, [&]() {
+            for (auto& param : ast.params->params) {
+                visitFuncParamDecl(*param);
+                paramTypes.emplace_back(param->symbol->type());
+            }
+        });
     }
 
     // return typeExpr. subs don't have one so default to Void
@@ -81,12 +85,15 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
     if (ast.retTypeExpr != nullptr) {
         m_typePass.visit(*ast.retTypeExpr);
         retType = ast.retTypeExpr->type;
+        if (retType->isUDT()) {
+            fatalError("Returning types by values is not implemented");
+        }
     } else {
         retType = TypeVoid::get();
     }
 
     // create function symbol
-    const auto* type = TypeFunction::get(m_context, retType, std::move(paramTypes), ast.variadic);
+    const auto* type = TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
     symbol->setType(type);
     ast.symbol = symbol;
 }
@@ -97,18 +104,22 @@ void FuncDeclarerPass::visitFuncParamDecl(AstFuncParamDecl& ast) {
     m_typePass.visit(*ast.typeExpr);
     symbol->setType(ast.typeExpr->type);
 
+    if (symbol->type()->isUDT()) {
+        fatalError("Passing types by values is not implemented");
+    }
+
     ast.symbol = symbol;
 }
 
 Symbol* FuncDeclarerPass::createParamSymbol(AstFuncParamDecl& ast) {
     const auto& name = ast.name;
-    if (m_table->find(name, false) != nullptr) {
+    if (m_sem.getSymbolTable()->find(name, false) != nullptr) {
         fatalError("Redefinition of "_t + name);
     }
-    auto* symbol = m_table->insert(m_context, name);
+    auto* symbol = m_sem.getSymbolTable()->insert(m_sem.getContext(), name);
 
     // alias?
-    if (ast.attributes) {
+    if (ast.attributes != nullptr) {
         if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
             symbol->setAlias(*alias);
         }

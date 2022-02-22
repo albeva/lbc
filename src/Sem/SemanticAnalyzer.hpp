@@ -36,9 +36,15 @@ public:
     [[nodiscard]] Symbol* createNewSymbol(AstDecl& ast);
 
     [[nodiscard]] SymbolTable* getSymbolTable() { return m_table; }
-    void setSymbolTable(SymbolTable* table) { m_table = table; }
 
     [[nodiscard]] auto& getControlStack() { return m_controlStack; }
+
+    template<typename T>
+    inline void with(SymbolTable* table, T handler) {
+        RESTORE_ON_EXIT(m_table);
+        m_table = table;
+        handler();
+    }
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 private:

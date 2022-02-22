@@ -13,13 +13,11 @@ ForStmtPass::ForStmtPass(SemanticAnalyzer& sem, AstForStmt& ast)
 : m_sem{ sem }, m_ast{ ast } {
     auto* current = sem.getSymbolTable();
     m_ast.symbolTable = sem.getContext().create<SymbolTable>(current);
-    sem.setSymbolTable(m_ast.symbolTable);
-
-    ceclare();
-    analyze();
-    determineForDirection();
-
-    sem.setSymbolTable(current);
+    m_sem.with(m_ast.symbolTable, [&]() {
+        ceclare();
+        analyze();
+        determineForDirection();
+    });
 }
 
 void ForStmtPass::ceclare() {
@@ -37,7 +35,7 @@ void ForStmtPass::ceclare() {
 void ForStmtPass::analyze() {
     m_sem.expression(m_ast.limit);
 
-    if (m_ast.step) {
+    if (m_ast.step != nullptr) {
         m_sem.expression(m_ast.step);
     }
 
@@ -56,7 +54,7 @@ void ForStmtPass::analyze() {
     case TypeComparison::Equal:
         break;
     case TypeComparison::Upcast:
-        if (m_ast.iterator->typeExpr) {
+        if (m_ast.iterator->typeExpr != nullptr) {
             m_sem.convert(m_ast.limit, type);
         } else {
             m_sem.convert(m_ast.iterator->expr, m_ast.limit->type);
@@ -66,7 +64,7 @@ void ForStmtPass::analyze() {
     }
 
     // type STEP type check
-    if (m_ast.step) {
+    if (m_ast.step != nullptr) {
         switch (type->compare(m_ast.step->type)) {
         case TypeComparison::Incompatible:
             fatalError("Incompatible types in STEP");
@@ -156,7 +154,7 @@ void ForStmtPass::determineForDirection() {
         }
     }
 
-    if (!m_ast.step) {
+    if (m_ast.step == nullptr) {
         return;
     }
 

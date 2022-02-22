@@ -35,7 +35,7 @@ void ForStmtBuilder::declareVars() {
     m_type = m_ast.iterator->symbol->type();
     m_llvmType = m_type->getLlvmType(m_gen.getContext());
 
-    m_iterator = ValueHandler{&m_gen, m_ast.iterator->symbol};
+    m_iterator = ValueHandler{ &m_gen, m_ast.iterator->symbol };
     m_limit = ValueHandler::createTempOrConstant(m_gen, *m_ast.limit, "for.limit");
 }
 

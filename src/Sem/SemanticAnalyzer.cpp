@@ -26,7 +26,8 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     m_rootTable = m_table = ast.symbolTable;
 
-    Sem::FuncDeclarerPass(m_context, m_typePass).visit(ast);
+    Sem::TypeDeclPass(*this).visit(ast);
+    Sem::FuncDeclarerPass(*this, m_typePass).visit(ast);
 
     visit(*ast.stmtList);
 }
@@ -38,7 +39,7 @@ void SemanticAnalyzer::visit(AstStmtList& ast) {
 }
 
 void SemanticAnalyzer::visit(AstImport& ast) {
-    if (!ast.module) {
+    if (ast.module == nullptr) {
         return;
     }
 
@@ -58,18 +59,18 @@ void SemanticAnalyzer::visit(AstExprStmt& ast) {
 void SemanticAnalyzer::visit(AstVarDecl& ast) {
     // m_type expr?
     const TypeRoot* type = nullptr;
-    if (ast.typeExpr) {
+    if (ast.typeExpr != nullptr) {
         visit(*ast.typeExpr);
         type = ast.typeExpr->type;
     }
 
     // expression?
-    if (ast.expr) {
+    if (ast.expr != nullptr) {
         expression(ast.expr, type);
-    }
 
-    if (type == nullptr) {
-        type = ast.expr->type;
+        if (type == nullptr) {
+            type = ast.expr->type;
+        }
     }
 
     // The Symbol
@@ -88,7 +89,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
     ast.symbol->setFlags(flags);
 
     // alias?
-    if (ast.attributes) {
+    if (ast.attributes != nullptr) {
         if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
             symbol->setAlias(*alias);
         }
@@ -131,7 +132,7 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
         retType = llvm::cast<TypeFunction>(m_function->symbol->type())->getReturn();
     }
     auto isVoid = retType->isVoid();
-    if (!ast.expr) {
+    if (ast.expr == nullptr) {
         if (!isVoid && !canOmitExpression) {
             fatalError("Expected expression");
         }
@@ -168,7 +169,7 @@ void SemanticAnalyzer::visit(AstIfStmt& ast) {
                 ast.blocks[next]->symbolTable->addReference(var->symbol);
             }
         }
-        if (block->expr) {
+        if (block->expr != nullptr) {
             expression(block->expr);
             if (!block->expr->type->isBoolean()) {
                 fatalError("type '"_t
@@ -193,7 +194,7 @@ void SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
         visit(*var);
     }
 
-    if (ast.expr) {
+    if (ast.expr != nullptr) {
         expression(ast.expr);
         if (!ast.expr->type->isBoolean()) {
             fatalError("type '"_t
@@ -217,8 +218,8 @@ void SemanticAnalyzer::visit(AstContinuationStmt& ast) {
 // Type (user defined)
 //----------------------------------------
 
-void SemanticAnalyzer::visit(AstTypeDecl& ast) {
-    Sem::TypeDeclPass(*this, ast);
+void SemanticAnalyzer::visit(AstTypeDecl& /* ast */) {
+    // NO OP
 }
 
 //----------------------------------------

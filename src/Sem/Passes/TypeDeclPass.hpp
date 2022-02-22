@@ -3,23 +3,29 @@
 //
 #pragma once
 
-
 namespace lbc {
 class SemanticAnalyzer;
+struct AstModule;
+struct AstStmtList;
 struct AstTypeDecl;
-class Symbol;
 
 namespace Sem {
+    class TypePass;
+
     class TypeDeclPass final {
     public:
-        TypeDeclPass(SemanticAnalyzer& sem, AstTypeDecl& ast);
+        NO_COPY_AND_MOVE(TypeDeclPass)
+
+        explicit TypeDeclPass(SemanticAnalyzer& sem) noexcept : m_sem{ sem } {}
+        ~TypeDeclPass() noexcept = default;
+
+        void visit(AstModule& ast) noexcept;
 
     private:
-        void declareMembers();
+        void visit(AstStmtList& ast) noexcept;
+        void visit(AstTypeDecl& ast) noexcept;
 
         SemanticAnalyzer& m_sem;
-        AstTypeDecl& m_ast;
-        Symbol* m_symbol;
     };
 } // namespace Sem
 } // namespace lbc

@@ -3,7 +3,6 @@
 //
 #pragma once
 
-
 namespace lbc {
 class SemanticAnalyzer;
 struct AstForStmt;

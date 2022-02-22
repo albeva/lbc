@@ -59,6 +59,8 @@ public:
     [[nodiscard]] static const TypeRoot* fromTokenKind(TokenKind kind) noexcept;
     [[nodiscard]] virtual string asString() const = 0;
 
+    [[nodiscard]] const TypePointer* getPointer(Context& context) const noexcept;
+
     // Type queries
     [[nodiscard]] constexpr bool isVoid() const noexcept { return m_kind == TypeFamily::Void; }
     [[nodiscard]] constexpr bool isAny() const noexcept { return m_kind == TypeFamily::Any; }

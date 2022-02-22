@@ -135,6 +135,10 @@ TypeComparison TypeRoot::compare(const TypeRoot* other) const noexcept {
     return TypeComparison::Incompatible;
 }
 
+const TypePointer* TypeRoot::getPointer(Context& context) const noexcept {
+    return TypePointer::get(context, this);
+}
+
 // Void
 
 const TypeVoid* TypeVoid::get() noexcept {

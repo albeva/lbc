@@ -388,8 +388,8 @@ void AstPrinter::visit(AstAddressOf& ast) {
 void AstPrinter::visit(AstMemberAccess& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        m_json.attributeArray("exprs", [&](){
-            for (auto& expr: ast.exprs) {
+        m_json.attributeArray("exprs", [&]() {
+            for (auto& expr : ast.exprs) {
                 visit(*expr);
             }
         });

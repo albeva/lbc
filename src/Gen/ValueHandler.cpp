@@ -47,19 +47,19 @@ ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* valu
 : PointerUnion{ value }, m_gen{ gen }, m_type{ type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol) noexcept
-    : PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->type() } {}
+: PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->type() } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
-    : ValueHandler{ gen, ast.symbol } {}
+: ValueHandler{ gen, ast.symbol } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
-    : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
-    : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
-    : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 llvm::Value* ValueHandler::getAddress() const noexcept {
     if (auto* value = dyn_cast<llvm::Value*>()) {

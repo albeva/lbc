@@ -10,29 +10,40 @@
 using namespace lbc;
 using namespace Sem;
 
-TypeDeclPass::TypeDeclPass(SemanticAnalyzer& sem, AstTypeDecl& ast)
-: m_sem(sem),
-  m_ast(ast),
-  m_symbol{ sem.createNewSymbol(ast) } {
-    auto* current = m_sem.getSymbolTable();
+void TypeDeclPass::visit(AstModule& ast) noexcept {
+    m_sem.with(ast.symbolTable, [&]() {
+        visit(*ast.stmtList);
+    });
+}
+
+void TypeDeclPass::visit(AstStmtList& ast) noexcept {
+    for (auto& stmt : ast.stmts) {
+        switch (stmt->kind) {
+        case AstKind::TypeDecl:
+            visit(static_cast<AstTypeDecl&>(*stmt));
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void TypeDeclPass::visit(AstTypeDecl& ast) noexcept {
+    auto* symbol = m_sem.createNewSymbol(ast);
 
     bool packed = false;
     if (ast.attributes != nullptr) {
         packed = ast.attributes->exists("PACKED");
     }
+    ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
 
-    ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
-    m_sem.setSymbolTable(ast.symbolTable);
-    declareMembers();
+    m_sem.with(ast.symbolTable, [&]() {
+        for (const auto& decl : ast.decls->decls) {
+            m_sem.visit(*decl);
+            decl->symbol->setParent(symbol);
+        }
+    });
+
     ast.symbolTable->setParent(nullptr);
-    TypeUDT::get(m_sem.getContext(), *m_symbol, *ast.symbolTable, packed);
-
-    m_sem.setSymbolTable(current);
-}
-
-void TypeDeclPass::declareMembers() {
-    for (const auto& decl : m_ast.decls->decls) {
-        m_sem.visit(*decl);
-        decl->symbol->setParent(m_symbol);
-    }
+    TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
 }

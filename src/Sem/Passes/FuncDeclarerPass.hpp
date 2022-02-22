@@ -2,13 +2,11 @@
 // Created by Albert Varaksin on 01/05/2021.
 //
 #pragma once
-
-
 #include <Ast/Ast.hpp>
+
 namespace lbc {
-class SymbolTable;
 class Symbol;
-class Context;
+class SemanticAnalyzer;
 struct AstModule;
 struct AstFuncDecl;
 struct AstFuncParamDecl;
@@ -25,9 +23,9 @@ namespace Sem {
         NO_COPY_AND_MOVE(FuncDeclarerPass)
 
         explicit FuncDeclarerPass(
-            Context& context,
+            SemanticAnalyzer& sem,
             TypePass& typePass) noexcept
-        : m_context{ context },
+        : m_sem{ sem },
           m_typePass{ typePass } {}
 
         ~FuncDeclarerPass() noexcept = default;
@@ -40,8 +38,7 @@ namespace Sem {
         void visitFuncParamDecl(AstFuncParamDecl& ast);
         [[nodiscard]] Symbol* createParamSymbol(AstFuncParamDecl& ast);
 
-        SymbolTable* m_table{};
-        Context& m_context;
+        SemanticAnalyzer& m_sem;
         TypePass& m_typePass;
     };
 

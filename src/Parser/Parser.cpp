@@ -1082,7 +1082,7 @@ llvm::Expected<AstExpr*> Parser::binary(llvm::SMRange range, TokenKind op, AstEx
             member->exprs.push_back(rhs);
             return member;
         } else {
-            std::vector<AstExpr*> exprs{lhs, rhs};
+            std::vector<AstExpr*> exprs{ lhs, rhs };
             return m_context.create<AstMemberAccess>(range, std::move(exprs));
         }
     default:

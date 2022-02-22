@@ -434,8 +434,8 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
     std::vector<llvm::Value*> values;
     values.reserve(args.size());
     for (const auto& arg : args) {
-        auto value = visit(*arg);
-        values.emplace_back(value.load());
+        auto* value = visit(*arg).load();
+        values.emplace_back(value);
     }
 
     auto* call = m_builder.CreateCall(llvm::FunctionCallee(fn), values, "");

@@ -76,6 +76,25 @@ private:
 /**
  * Helper macro that restores variable value when existing scope.
  */
-#define RESTORE_ON_EXIT(V) ValueRestorer<decltype(V)> MAKE_UNIQUE(tmp_restore_onexit_) { V } /* NOLINT */
+#define RESTORE_ON_EXIT(V) \
+    ValueRestorer<decltype(V)> MAKE_UNIQUE(tmp_restore_onexit_) { V } /* NOLINT */
+
+template<typename T>
+struct ScopeGuard final {
+    NO_COPY_AND_MOVE(ScopeGuard)
+    constexpr explicit ScopeGuard(T&& handler) : handler{ std::forward<T>(handler) } {}
+
+    ~ScopeGuard() {
+        handler();
+    }
+
+private:
+    const T handler;
+};
+template<typename F>
+ScopeGuard(F&& frv) -> ScopeGuard<F>;
+
+#define SCOPE_GAURD(HANDLER) \
+    ScopeGuard MAKE_UNIQUE(tmp_scope_giard_) { [&]() HANDLER } /* NOLINT */
 
 } // namespace lbc
