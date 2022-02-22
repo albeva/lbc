@@ -27,7 +27,7 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     m_rootTable = m_table = ast.symbolTable;
 
     Sem::TypeDeclPass(*this).visit(ast);
-    Sem::FuncDeclarerPass(*this, m_typePass).visit(ast);
+    Sem::FuncDeclarerPass(*this).visit(ast);
 
     visit(*ast.stmtList);
 }

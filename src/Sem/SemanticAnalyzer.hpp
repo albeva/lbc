@@ -34,10 +34,10 @@ public:
     void cast(AstExpr*& ast, const TypeRoot* type);
 
     [[nodiscard]] Symbol* createNewSymbol(AstDecl& ast);
-
     [[nodiscard]] SymbolTable* getSymbolTable() { return m_table; }
-
     [[nodiscard]] auto& getControlStack() { return m_controlStack; }
+    [[nodiscard]] Sem::TypePass& getTypePass() { return m_typePass; }
+    [[nodiscard]] Sem::ConstantFoldingPass& getConstantFoldingPass() { return m_constantFolder; }
 
     template<typename T>
     inline void with(SymbolTable* table, T handler) {

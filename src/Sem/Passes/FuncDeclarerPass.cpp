@@ -1,14 +1,13 @@
 //
 // Created by Albert Varaksin on 01/05/2021.
 //
-#include "FuncDeclarerPass.hpp"
+#include "TypePass.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
+#include "FuncDeclarerPass.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
-#include "TypePass.hpp"
-
 using namespace lbc;
 using namespace Sem;
 
@@ -83,10 +82,10 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
     // return typeExpr. subs don't have one so default to Void
     const TypeRoot* retType = nullptr;
     if (ast.retTypeExpr != nullptr) {
-        m_typePass.visit(*ast.retTypeExpr);
+        m_sem.getTypePass().visit(*ast.retTypeExpr);
         retType = ast.retTypeExpr->type;
         if (retType->isUDT()) {
-            fatalError("Returning types by values is not implemented");
+            fatalError("Returning types by value is not implemented");
         }
     } else {
         retType = TypeVoid::get();
@@ -101,7 +100,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
 void FuncDeclarerPass::visitFuncParamDecl(AstFuncParamDecl& ast) {
     auto* symbol = createParamSymbol(ast);
 
-    m_typePass.visit(*ast.typeExpr);
+    m_sem.getTypePass().visit(*ast.typeExpr);
     symbol->setType(ast.typeExpr->type);
 
     if (symbol->type()->isUDT()) {

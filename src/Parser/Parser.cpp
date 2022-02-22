@@ -943,7 +943,7 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
  *            . [ ArgumentList ]
  */
 llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
-    static constexpr auto allowedCallableOperators = [](const Token& token){
+    static constexpr auto allowCallWithToken = [](const Token& token){
         switch (token.getKind()) {
         case TokenKind::Multiply:
         case TokenKind::Minus:
@@ -967,7 +967,7 @@ llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
         replace(TokenKind::Comma, TokenKind::CommaAnd);
     }
 
-    if (callableWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowedCallableOperators(m_token)) {
+    if (callableWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
         TRY_DECLARE(args, expressionList())
 

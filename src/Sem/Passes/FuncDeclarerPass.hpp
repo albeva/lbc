@@ -12,8 +12,6 @@ struct AstFuncDecl;
 struct AstFuncParamDecl;
 
 namespace Sem {
-    class TypePass;
-
     /**
      * Semantic pass that declares all the functions
      * and declarations in the ast
@@ -22,12 +20,7 @@ namespace Sem {
     public:
         NO_COPY_AND_MOVE(FuncDeclarerPass)
 
-        explicit FuncDeclarerPass(
-            SemanticAnalyzer& sem,
-            TypePass& typePass) noexcept
-        : m_sem{ sem },
-          m_typePass{ typePass } {}
-
+        explicit FuncDeclarerPass(SemanticAnalyzer& sem) noexcept: m_sem{ sem } {}
         ~FuncDeclarerPass() noexcept = default;
 
         void visit(AstModule& ast);
@@ -39,7 +32,6 @@ namespace Sem {
         [[nodiscard]] Symbol* createParamSymbol(AstFuncParamDecl& ast);
 
         SemanticAnalyzer& m_sem;
-        TypePass& m_typePass;
     };
 
 } // namespace Sem
