@@ -75,11 +75,12 @@ add_library(
     Type/Type.hpp
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
+    Utils/ScopeGuard.hpp
     Utils/Try.hpp
     Utils/Utils.cpp
     Utils/Utils.hpp
-    Utils/Version.hpp
-)
+    Utils/ValueRestorer.hpp
+    Utils/Version.hpp)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)

@@ -58,43 +58,7 @@ inline Twine operator"" _t(const char* s, size_t /*len*/) noexcept {
  * @param prefix add standard prefix before the message
  */
 void warning(const Twine& message, bool prefix = true);
-
-template<typename T, std::enable_if_t<std::is_trivially_copyable_v<T> && std::is_trivially_assignable_v<T&, T>, int> = 0>
-struct ValueRestorer final {
-    NO_COPY_AND_MOVE(ValueRestorer)
-    constexpr explicit ValueRestorer(T& value) noexcept : m_target{ value }, m_value{ value } {}
-
-    ~ValueRestorer() noexcept {
-        m_target = m_value;
-    }
-
-private:
-    T& m_target;
-    const T m_value;
-};
-
-/**
- * Helper macro that restores variable value when existing scope.
- */
-#define RESTORE_ON_EXIT(V) \
-    ValueRestorer<decltype(V)> MAKE_UNIQUE(tmp_restore_onexit_) { V } /* NOLINT */
-
-template<typename T>
-struct ScopeGuard final {
-    NO_COPY_AND_MOVE(ScopeGuard)
-    constexpr explicit ScopeGuard(T&& handler) : handler{ std::forward<T>(handler) } {}
-
-    ~ScopeGuard() {
-        handler();
-    }
-
-private:
-    const T handler;
-};
-template<typename F>
-ScopeGuard(F&& frv) -> ScopeGuard<F>;
-
-#define SCOPE_GAURD(HANDLER) \
-    ScopeGuard MAKE_UNIQUE(tmp_scope_giard_) { [&]() HANDLER } /* NOLINT */
-
 } // namespace lbc
+
+#include "ScopeGuard.hpp"
+#include "ValueRestorer.hpp"
