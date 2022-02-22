@@ -1,5 +1,5 @@
 ''------------------------------------------------------------------------------
-'' test-020-type-ptr.bas
+'' test-021-type-ptr.bas
 '' - Pass type by ptr
 ''
 '' CHECK:       name = Albert
