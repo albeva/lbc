@@ -49,7 +49,7 @@ StringRef Token::lexeme() const noexcept {
 }
 
 string Token::asString() const {
-    constexpr auto visitor = lbc::Visitor{
+    static constexpr auto visitor = lbc::Visitor{
         [](std::monostate /*value*/) {
             return "NULL"s;
         },

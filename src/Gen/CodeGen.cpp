@@ -451,7 +451,7 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
 }
 
 ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
-    auto visitor = Visitor{
+    const auto visitor = Visitor{
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
                 llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context)));

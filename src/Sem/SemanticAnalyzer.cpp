@@ -307,7 +307,7 @@ void SemanticAnalyzer::visit(AstCallExpr& ast) {
 }
 
 void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
-    constexpr auto visitor = Visitor{
+    static constexpr auto visitor = Visitor{
         [](const std::monostate& /*value*/) {
             return TokenKind::Null;
         },

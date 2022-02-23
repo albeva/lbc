@@ -64,7 +64,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
 AstLiteralExpr::Value ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) {
     switch (op) {
     case TokenKind::Negate: {
-        constexpr auto visitor = Visitor{
+        static constexpr auto visitor = Visitor{
             [](uint64_t value) -> AstLiteralExpr::Value {
                 return static_cast<uint64_t>(-static_cast<int64_t>(value));
             },
@@ -78,7 +78,7 @@ AstLiteralExpr::Value ConstantFoldingPass::unary(TokenKind op, const AstLiteralE
         return std::visit(visitor, ast.value);
     }
     case TokenKind::LogicalNot: {
-        constexpr auto visitor = Visitor{
+        static constexpr auto visitor = Visitor{
             [](bool value) -> AstLiteralExpr::Value {
                 return !value;
             },
