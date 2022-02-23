@@ -429,7 +429,7 @@ ValueHandler CodeGen::visit(AstAddressOf& ast) {
 
 ValueHandler CodeGen::visit(AstCallExpr& ast) {
     auto* callable = visit(*ast.callable).getAddress();
-    
+
     llvm::FunctionType* fnType = nullptr;
     if (auto* func = llvm::dyn_cast<llvm::Function>(callable)) {
         fnType = func->getFunctionType();
