@@ -374,7 +374,7 @@ void AstPrinter::visit(AstUnaryExpr& ast) {
 void AstPrinter::visit(AstDereference& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        writeExpr(&ast);
+        writeExpr(ast.expr);
     });
 }
 

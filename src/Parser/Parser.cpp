@@ -916,7 +916,9 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
     auto kind = m_token.getKind();
 
     AstIdentExpr* ident = nullptr;
-    if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
+    if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
+        fatalError("function ptr not yet implemented");
+    } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         advance();
     } else {
         TRY_ASSIGN(ident, identifier())
@@ -956,7 +958,6 @@ llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
     RESTORE_ON_EXIT(m_exprFlags);
     m_exprFlags = flags;
     bool callableWithoutParens = (flags & ExprFlags::CallWithoutParens) != 0;
-
     TRY_DECLARE(expr, factor())
 
     if ((flags & ExprFlags::UseAssign) == 0) {
@@ -967,21 +968,63 @@ llvm::Expected<AstExpr*> Parser::expression(ExprFlags flags) {
         replace(TokenKind::Comma, TokenKind::CommaAnd);
     }
 
-    if (callableWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowCallWithToken(m_token)) {
+    // expr op
+    if (m_token.isOperator()) {
+        TRY_ASSIGN(expr, expression(expr, 1))
+    }
+
+    // expr ([params])
+    if (accept(TokenKind::ParenOpen)) {
         auto start = expr->range.Start;
         TRY_DECLARE(args, expressionList())
+        TRY(consume(TokenKind::ParenClose))
 
-        return m_context.create<AstCallExpr>(
+        expr = m_context.create<AstCallExpr>(
             llvm::SMRange{ start, m_endLoc },
             expr,
             args);
     }
 
-    if (m_token.isOperator()) {
-        TRY_ASSIGN(expr, expression(expr, 1))
+    // print "hello"
+    if (callableWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowCallWithToken(m_token)) {
+        auto start = expr->range.Start;
+        TRY_DECLARE(args, expressionList())
+
+        expr = m_context.create<AstCallExpr>(
+            llvm::SMRange{ start, m_endLoc },
+            expr,
+            args);
     }
 
     return expr;
+}
+
+/**
+ * Recursievly climb operator precedence
+ * https://en.wikipedia.org/wiki/Operator-precedence_parser#Precedence_climbing_method
+ */
+llvm::Expected<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
+    while (m_token.getPrecedence() >= precedence) {
+        auto current = m_token.getPrecedence();
+        auto kind = m_token.getKind();
+        advance();
+
+        TRY_DECLARE(rhs, factor())
+        if ((m_exprFlags & ExprFlags::UseAssign) == 0) {
+            replace(TokenKind::Assign, TokenKind::Equal);
+        }
+        if ((m_exprFlags & ExprFlags::CommaAsAnd) != 0) {
+            replace(TokenKind::Comma, TokenKind::CommaAnd);
+        }
+
+        while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
+            TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
+        }
+
+        auto start = lhs->range.Start;
+        TRY_ASSIGN(lhs, binary({ start, m_endLoc }, kind, lhs, rhs))
+    }
+    return lhs;
 }
 
 /**
@@ -1031,13 +1074,7 @@ llvm::Expected<AstExpr*> Parser::primary() {
         return literal();
     }
 
-    // TODO callExpr should be resolved in the expression
     if (m_token.is(TokenKind::Identifier)) {
-        Token next;
-        m_lexer->peek(next);
-        if (next.is(TokenKind::ParenOpen)) {
-            return callExpr();
-        }
         return identifier();
     }
 
@@ -1099,34 +1136,6 @@ llvm::Expected<AstExpr*> Parser::binary(llvm::SMRange range, TokenKind op, AstEx
     default:
         return m_context.create<AstBinaryExpr>(range, op, lhs, rhs);
     }
-}
-
-/**
- * Recursievly climb operator precedence
- * https://en.wikipedia.org/wiki/Operator-precedence_parser#Precedence_climbing_method
- */
-llvm::Expected<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
-    while (m_token.getPrecedence() >= precedence) {
-        auto current = m_token.getPrecedence();
-        auto kind = m_token.getKind();
-        advance();
-
-        TRY_DECLARE(rhs, factor())
-        if ((m_exprFlags & ExprFlags::UseAssign) == 0) {
-            replace(TokenKind::Assign, TokenKind::Equal);
-        }
-        if ((m_exprFlags & ExprFlags::CommaAsAnd) != 0) {
-            replace(TokenKind::Comma, TokenKind::CommaAnd);
-        }
-
-        while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
-            TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
-        }
-
-        auto start = lhs->range.Start;
-        TRY_ASSIGN(lhs, binary({ start, m_endLoc }, kind, lhs, rhs))
-    }
-    return lhs;
 }
 
 /**
