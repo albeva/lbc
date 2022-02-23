@@ -87,6 +87,21 @@ llvm::Value* ValueHandler::getAddress() const noexcept {
     llvm_unreachable("Unknown ValueHandler type");
 }
 
+llvm::Value* ValueHandler::load() const noexcept {
+    auto* addr = getAddress();
+    if (is<llvm::Value*>()) {
+        return addr;
+    }
+
+    if (auto* ast = dyn_cast<AstExpr*>()) {
+        if (llvm::isa<AstAddressOf>(ast)) {
+            return addr;
+        }
+    }
+
+    return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
+}
+
 llvm::Type* ValueHandler::getLlvmType() const noexcept {
     if (auto* value = dyn_cast<llvm::Value*>()) {
         return value->getType();
@@ -147,21 +162,6 @@ llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const noexc
     createGEP();
 
     return addr;
-}
-
-llvm::Value* ValueHandler::load() const noexcept {
-    auto* addr = getAddress();
-    if (isa<llvm::Function>(addr) || is<llvm::Value*>()) {
-        return addr;
-    }
-
-    if (auto* ast = dyn_cast<AstExpr*>()) {
-        if (llvm::isa<AstAddressOf>(ast)) {
-            return addr;
-        }
-    }
-
-    return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
 }
 
 void ValueHandler::store(llvm::Value* val) const noexcept {

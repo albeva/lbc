@@ -34,8 +34,8 @@ namespace Gen {
         ValueHandler(CodeGen* gen, AstDereference& ast) noexcept;
         ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept;
 
-        [[nodiscard]] llvm::Value* load() const noexcept;
         [[nodiscard]] llvm::Value* getAddress() const noexcept;
+        [[nodiscard]] llvm::Value* load() const noexcept;
         [[nodiscard]] llvm::Type* getLlvmType() const noexcept;
         void store(llvm::Value* val) const noexcept;
         void store(ValueHandler& val) const noexcept;
