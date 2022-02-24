@@ -296,11 +296,18 @@ void AstPrinter::visit(AstTypeExpr& ast) {
         if (const auto* type = ast.type) {
             name = type->asString();
         } else {
-            if (auto* ident = ast.ident) {
-                name = ident->name;
-            } else {
-                name = Token::description(ast.tokenKind);
-            }
+            static constexpr auto visitor = Visitor{
+                [](TokenKind kind) -> llvm::StringRef {
+                    return Token::description(kind);
+                },
+                [](AstIdentExpr* ident) -> llvm::StringRef  {
+                    return ident->name;
+                },
+                [](AstFuncDecl* /* decl */) -> llvm::StringRef {
+                    return "PROC PTR (not implemented)";
+                }
+            };
+            name = std::visit(visitor, ast.expr);
 
             for (int i = 0; i < ast.dereference; i++) {
                 name += " PTR";

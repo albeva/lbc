@@ -339,6 +339,7 @@ struct AstDecl : AstStmt {
     const StringRef name;
     AstAttributeList* attributes;
     Symbol* symbol = nullptr;
+    const TypeRoot* type = nullptr;
 };
 
 struct AstDeclList final : AstRoot {
@@ -441,23 +442,21 @@ struct AstTypeDecl final : AstDecl {
 // Types
 //----------------------------------------
 struct AstTypeExpr final : AstRoot {
+    using TypeExpr = std::variant<AstIdentExpr*, AstFuncDecl*, TokenKind>;
+
     AstTypeExpr(
         llvm::SMRange range_,
-        AstIdentExpr* ident_,
-        TokenKind tokenKind_,
+        TypeExpr expr_,
         int deref) noexcept
     : AstRoot{ AstKind::TypeExpr, range_ },
-      ident{ ident_ },
-      tokenKind{ tokenKind_ },
+      expr{ expr_ },
       dereference{ deref } {};
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
         return ast->kind == AstKind::TypeExpr;
     }
 
-    // TODO use AstExpr?
-    AstIdentExpr* ident;
-    const TokenKind tokenKind;
+    std::variant<AstIdentExpr*, AstFuncDecl*, TokenKind> expr;
     const int dereference;
     const TypeRoot* type = nullptr;
 };

@@ -348,20 +348,25 @@ llvm::Expected<AstFuncDecl*> Parser::kwDeclare(AstAttributeList* attribs) {
  *     | "SUB" id [ "(" FuncParamList ")" ]
  *     .
  */
-llvm::Expected<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* attribs, bool hasImpl) {
+llvm::Expected<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* attribs, bool hasImpl, bool isAnonymous) {
     bool isFunc = accept(TokenKind::Function);
     if (!isFunc) {
         TRY(consume(TokenKind::Sub))
     }
 
-    TRY(expect(TokenKind::Identifier))
-    auto id = m_token.getStringValue();
-    advance();
+    llvm::StringRef id;
+    if (isAnonymous) {
+        id = "";
+    } else {
+        TRY(expect(TokenKind::Identifier))
+        id = m_token.getStringValue();
+        advance();
+    }
 
     bool isVariadic = false;
     AstFuncParamList* params = nullptr;
     if (accept(TokenKind::ParenOpen)) {
-        TRY_ASSIGN(params, funcParamList(isVariadic))
+        TRY_ASSIGN(params, funcParamList(isVariadic, isAnonymous))
         TRY(consume(TokenKind::ParenClose))
     }
 
@@ -387,7 +392,7 @@ llvm::Expected<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttribu
  *   | "..."
  *   .
  */
-llvm::Expected<AstFuncParamList*> Parser::funcParamList(bool& isVariadic) {
+llvm::Expected<AstFuncParamList*> Parser::funcParamList(bool& isVariadic, bool isAnonymous) {
     auto start = m_token.range().Start;
     std::vector<AstFuncParamDecl*> params;
     while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
@@ -398,7 +403,7 @@ llvm::Expected<AstFuncParamList*> Parser::funcParamList(bool& isVariadic) {
             }
             break;
         }
-        TRY_DECLARE(param, funcParam())
+        TRY_DECLARE(param, funcParam(isAnonymous))
         params.push_back(param);
         if (!accept(TokenKind::Comma)) {
             break;
@@ -413,16 +418,32 @@ llvm::Expected<AstFuncParamList*> Parser::funcParamList(bool& isVariadic) {
 /**
  * FuncParam
  *  = id "AS" TypeExpr
+ *  | TypeExpr        // if isAnonymous
  *  .
  */
-llvm::Expected<AstFuncParamDecl*> Parser::funcParam() {
+llvm::Expected<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
     auto start = m_token.range().Start;
 
-    TRY(expect(TokenKind::Identifier))
-    auto id = m_token.getStringValue();
-    advance();
+    llvm::StringRef id;
+    if (isAnonymous) {
+        if (m_token.is(TokenKind::Identifier)) {
+            Token next;
+            m_lexer->peek(next);
+            if (next.is(TokenKind::As)) {
+                id = m_token.getStringValue();
+                advance();
+                advance();
+            }
+        } else {
+            id = "";
+        }
+    } else {
+        TRY(expect(TokenKind::Identifier))
+        id = m_token.getStringValue();
+        advance();
+        TRY(consume(TokenKind::As))
+    }
 
-    TRY(consume(TokenKind::As))
     TRY_DECLARE(type, typeExpr())
 
     return m_context.create<AstFuncParamDecl>(
@@ -909,19 +930,30 @@ llvm::Expected<AstContinuationStmt*> Parser::kwExit() {
 //----------------------------------------
 
 /**
- * TypeExpr = ( identExpr | Any ) { "PTR" } .
+ * TypeExpr = ( identExpr | Any ) { "PTR" }
+ *          | "SUB" "(" { FuncParamList } ")" "PTR" { "PTR" }
+ *          | "FUNCTION" "(" { FuncParamList } ")" "AS" TypeExpr "PTR" { "PTR" }
+ *          | "(" TypeExpr ")"
+ *          .
  */
 llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
     auto start = m_token.range().Start;
-    auto kind = m_token.getKind();
+    bool parenthesized = accept(TokenKind::ParenOpen);
+    bool mustBePtr = false;
 
-    AstIdentExpr* ident = nullptr;
+    AstTypeExpr::TypeExpr expr;
     if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        fatalError("function ptr not yet implemented");
+        TRY_ASSIGN(expr, funcSignature(start, nullptr, false, true));
+        mustBePtr = true;
     } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
+        expr = m_token.getKind();
         advance();
     } else {
-        TRY_ASSIGN(ident, identifier())
+        TRY_ASSIGN(expr, identifier())
+    }
+
+    if (parenthesized) {
+        TRY(consume(TokenKind::ParenClose));
     }
 
     auto deref = 0;
@@ -929,10 +961,13 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
         deref++;
     }
 
+    if (mustBePtr && deref == 0) {
+        deref = 1;
+    }
+
     return m_context.create<AstTypeExpr>(
         llvm::SMRange{ start, m_endLoc },
-        ident,
-        kind,
+        expr,
         deref);
 }
 

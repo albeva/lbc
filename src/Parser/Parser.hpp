@@ -64,9 +64,13 @@ private:
     [[nodiscard]] llvm::Expected<AstExprList*> attributeArgList();
     [[nodiscard]] llvm::Expected<AstTypeExpr*> typeExpr();
     [[nodiscard]] llvm::Expected<AstFuncDecl*> kwDeclare(AstAttributeList* attribs);
-    [[nodiscard]] llvm::Expected<AstFuncDecl*> funcSignature(llvm::SMLoc start, AstAttributeList* attribs, bool hasImpl);
-    [[nodiscard]] llvm::Expected<AstFuncParamList*> funcParamList(bool& isVariadic);
-    [[nodiscard]] llvm::Expected<AstFuncParamDecl*> funcParam();
+    [[nodiscard]] llvm::Expected<AstFuncDecl*> funcSignature(
+        llvm::SMLoc start,
+        AstAttributeList* attribs,
+        bool hasImpl,
+        bool isAnonymous = false);
+    [[nodiscard]] llvm::Expected<AstFuncParamList*> funcParamList(bool& isVariadic, bool isAnonymous);
+    [[nodiscard]] llvm::Expected<AstFuncParamDecl*> funcParam(bool isAnonymous);
     [[nodiscard]] llvm::Expected<AstFuncStmt*> kwFunction(AstAttributeList* attribs);
     [[nodiscard]] llvm::Expected<AstStmt*> kwReturn();
     [[nodiscard]] llvm::Expected<AstTypeDecl*> kwType(AstAttributeList* attribs);

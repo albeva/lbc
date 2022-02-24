@@ -93,6 +93,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
 
     // create function symbol
     const auto* type = TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
+    ast.type = type;
     symbol->setType(type);
     ast.symbol = symbol;
 }
@@ -108,6 +109,7 @@ void FuncDeclarerPass::visitFuncParamDecl(AstFuncParamDecl& ast) {
     }
 
     ast.symbol = symbol;
+    ast.type = symbol->type();
 }
 
 Symbol* FuncDeclarerPass::createParamSymbol(AstFuncParamDecl& ast) {

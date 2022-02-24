@@ -45,5 +45,5 @@ void TypeDeclPass::visit(AstTypeDecl& ast) noexcept {
     });
 
     ast.symbolTable->setParent(nullptr);
-    TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
+    ast.type = TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
 }

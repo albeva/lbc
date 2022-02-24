@@ -84,6 +84,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
         flags.dereferencable = true;
     }
     ast.symbol->setFlags(flags);
+    ast.type = type;
 
     // alias?
     if (ast.attributes != nullptr) {

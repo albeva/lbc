@@ -83,11 +83,18 @@ void CodePrinter::visit(AstTypeExpr& ast) {
         return;
     }
 
-    if (auto* ident = ast.ident) {
-        visit(*ident);
-    } else {
-        m_os << Token::description(ast.tokenKind);
-    }
+    const auto visitor = Visitor{
+        [&](TokenKind kind) {
+            m_os << Token::description(kind);
+        },
+        [&](AstIdentExpr* ident) {
+            visit(*ident);
+        },
+        [&](AstFuncDecl* decl) {
+            visit(*decl);
+        }
+    };
+    std::visit(visitor, ast.expr);
 
     for (int i = 0; i < ast.dereference; i++) {
         m_os << " PTR";
