@@ -19,10 +19,10 @@ namespace Sem {
         ~TypePass() noexcept = default;
 
         void visit(AstTypeExpr& ast) const noexcept;
+        void visit(AstFuncDecl& ast) const noexcept;
 
     private:
         void visit(AstIdentExpr& ast) const noexcept;
-        void visit(AstFuncDecl& ast) const noexcept;
 
         SemanticAnalyzer& m_sem;
     };

@@ -280,7 +280,7 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
 }
 
 void CodeGen::visit(AstFuncParamDecl& /*ast*/) {
-    llvm_unreachable("visitFuncParamDecl");
+    llvm_unreachable("visit");
 }
 
 void CodeGen::visit(AstFuncStmt& ast) {

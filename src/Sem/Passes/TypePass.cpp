@@ -57,6 +57,7 @@ void TypePass::visit(AstFuncDecl& ast) const noexcept {
         for (auto& param : ast.params->params) {
             visit(*param->typeExpr);
             paramTypes.emplace_back(param->typeExpr->type);
+            param->type = param->typeExpr->type;
         }
     }
 

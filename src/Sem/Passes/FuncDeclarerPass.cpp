@@ -66,50 +66,30 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         symbol->setExternal(external);
     }
 
+    m_sem.getTypePass().visit(ast);
+
     // parameters
-    std::vector<const TypeRoot*> paramTypes;
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(symbolTale);
     if (ast.params != nullptr) {
-        paramTypes.reserve(ast.params->params.size());
         m_sem.with(ast.symbolTable, [&]() {
             for (auto& param : ast.params->params) {
-                visitFuncParamDecl(*param);
-                paramTypes.emplace_back(param->symbol->type());
+                visit(*param);
             }
         });
     }
 
-    // return typeExpr. subs don't have one so default to Void
-    const TypeRoot* retType = nullptr;
-    if (ast.retTypeExpr != nullptr) {
-        m_sem.getTypePass().visit(*ast.retTypeExpr);
-        retType = ast.retTypeExpr->type;
-        if (retType->isUDT()) {
-            fatalError("Returning types by value is not implemented");
-        }
-    } else {
-        retType = TypeVoid::get();
-    }
-
-    // create function symbol
-    const auto* type = TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
-    ast.type = type;
-    symbol->setType(type);
+    symbol->setType(ast.type);
     ast.symbol = symbol;
 }
 
-void FuncDeclarerPass::visitFuncParamDecl(AstFuncParamDecl& ast) {
-    auto* symbol = createParamSymbol(ast);
-
-    m_sem.getTypePass().visit(*ast.typeExpr);
-    symbol->setType(ast.typeExpr->type);
-
-    if (symbol->type()->isUDT()) {
+void FuncDeclarerPass::visit(AstFuncParamDecl& ast) {
+    if (ast.type->isUDT()) {
         fatalError("Passing types by values is not implemented");
     }
 
+    auto* symbol = createParamSymbol(ast);
+    symbol->setType(ast.type);
     ast.symbol = symbol;
-    ast.type = symbol->type();
 }
 
 Symbol* FuncDeclarerPass::createParamSymbol(AstFuncParamDecl& ast) {

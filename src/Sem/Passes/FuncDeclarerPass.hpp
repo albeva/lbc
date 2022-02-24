@@ -28,7 +28,7 @@ namespace Sem {
     private:
         void visit(lbc::AstStmtList& ast);
         void visitFuncDecl(AstFuncDecl& ast, bool external);
-        void visitFuncParamDecl(AstFuncParamDecl& ast);
+        void visit(AstFuncParamDecl& ast);
         [[nodiscard]] Symbol* createParamSymbol(AstFuncParamDecl& ast);
 
         SemanticAnalyzer& m_sem;

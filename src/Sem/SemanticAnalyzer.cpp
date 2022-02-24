@@ -106,7 +106,7 @@ void SemanticAnalyzer::visit(AstFuncDecl& /*ast*/) {
 }
 
 void SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
-    llvm_unreachable("visitFuncParamDecl");
+    llvm_unreachable("visit");
 }
 
 void SemanticAnalyzer::visit(AstFuncStmt& ast) {
