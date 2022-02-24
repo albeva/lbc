@@ -1042,7 +1042,9 @@ llvm::Expected<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
     while (m_token.getPrecedence() >= precedence) {
         auto current = m_token.getPrecedence();
         auto kind = m_token.getKind();
-        auto isBinary = m_token.isBinary();
+        if (!m_token.isBinary()) {
+            return makeError(Diag::unexpectedToken, "binary operator", m_token.description());
+        }
         advance();
 
         TRY_DECLARE(rhs, factor())
@@ -1058,9 +1060,6 @@ llvm::Expected<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
         }
 
         auto start = lhs->range.Start;
-        if (!isBinary) {
-            return makeError(Diag::unexpectedToken, "binary operator", Token::description(kind));
-        }
         TRY_ASSIGN(lhs, binary({ start, m_endLoc }, kind, lhs, rhs))
     }
     return lhs;
