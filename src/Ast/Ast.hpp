@@ -438,7 +438,7 @@ struct AstUdtDecl final : AstDecl {
     SymbolTable* symbolTable = nullptr;
 };
 
-struct AstTypeAlias final: AstDecl {
+struct AstTypeAlias final : AstDecl {
     AstTypeAlias(
         llvm::SMRange range_,
         StringRef name_,

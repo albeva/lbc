@@ -17,7 +17,7 @@ void TypePass::visit(AstTypeExpr& ast) const noexcept {
         [](TokenKind kind) -> const TypeRoot* {
             return TypeRoot::fromTokenKind(kind);
         },
-        [&](AstIdentExpr* ident) -> const TypeRoot*  {
+        [&](AstIdentExpr* ident) -> const TypeRoot* {
             visit(*ident);
             return ident->type;
         },

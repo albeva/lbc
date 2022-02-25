@@ -36,10 +36,6 @@ public:
     [[nodiscard]] StringRef alias() const noexcept { return m_alias; }
     void setAlias(StringRef alias) noexcept { m_alias = alias; }
 
-    [[nodiscard]] bool isType() const noexcept {
-        return m_flags.type;
-    }
-
     [[nodiscard]] StringRef identifier() const noexcept {
         if (m_alias.empty()) {
             return m_name;

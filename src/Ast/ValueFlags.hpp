@@ -10,8 +10,8 @@ struct ValueFlags final {
     uint8_t dereferencable : 1;
     uint8_t assignable : 1;
     uint8_t callable : 1;
-    uint8_t type: 1;
-    uint8_t external: 1;
+    uint8_t type : 1;
+    uint8_t external : 1;
 };
 
 } // namespace lbc

@@ -316,7 +316,7 @@ void AstPrinter::visit(AstTypeExpr& ast) {
                 [](TokenKind kind) -> llvm::StringRef {
                     return Token::description(kind);
                 },
-                [](AstIdentExpr* ident) -> llvm::StringRef  {
+                [](AstIdentExpr* ident) -> llvm::StringRef {
                     return ident->name;
                 },
                 [](AstFuncDecl* /* decl */) -> llvm::StringRef {
