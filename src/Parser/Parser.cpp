@@ -1315,7 +1315,7 @@ void Parser::replace(TokenKind what, TokenKind with) noexcept {
     }
 }
 
-[[nodiscard]] ParseResult<void> Parser::expect(TokenKind kind) noexcept {
+[[nodiscard]] ParseResult<void> Parser::expect(TokenKind kind) const noexcept {
     if (m_token.is(kind)) {
         return {};
     }

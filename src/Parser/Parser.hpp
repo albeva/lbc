@@ -99,7 +99,7 @@ private:
     }
 
     // Expects a match, raises error when fails
-    [[nodiscard]] ParseResult<void> expect(TokenKind kind) noexcept;
+    [[nodiscard]] ParseResult<void> expect(TokenKind kind) const noexcept;
 
     // advance to the next token from the stream
     void advance();
@@ -115,7 +115,7 @@ private:
     }
 
     template<typename... Args>
-    [[nodiscard]] ParseResult<void> makeError(Diag diag, Args&&... args) noexcept {
+    [[nodiscard]] ParseResult<void> makeError(Diag diag, Args&&... args) const noexcept {
         return makeError(m_token.range(), diag, std::forward<Args>(args)...);
     }
 
