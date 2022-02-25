@@ -400,9 +400,9 @@ struct AstFuncParamDecl final : AstDecl {
         llvm::SMRange range_,
         StringRef name_,
         AstAttributeList* attrs,
-        AstTypeExpr* type) noexcept
+        AstTypeExpr* type_) noexcept
     : AstDecl{ AstKind::FuncParamDecl, range_, name_, attrs },
-      typeExpr{ type } {};
+      typeExpr{ type_ } {};
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
         return ast->kind == AstKind::FuncParamDecl;
