@@ -492,7 +492,7 @@ llvm::Expected<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
  *    .
  */
 llvm::Expected<AstTypeAlias*> Parser::alias(StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
-    TRY_DECLARE(type, typeExpr());
+    TRY_DECLARE(type, typeExpr())
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange{ start, m_endLoc },
@@ -978,7 +978,7 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
 
     AstTypeExpr::TypeExpr expr;
     if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        TRY_ASSIGN(expr, funcSignature(start, nullptr, false, true));
+        TRY_ASSIGN(expr, funcSignature(start, nullptr, false, true))
         mustBePtr = true;
     } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         expr = m_token.getKind();
@@ -988,7 +988,7 @@ llvm::Expected<AstTypeExpr*> Parser::typeExpr() {
     }
 
     if (parenthesized) {
-        TRY(consume(TokenKind::ParenClose));
+        TRY(consume(TokenKind::ParenClose))
     }
 
     auto deref = 0;
