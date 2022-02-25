@@ -41,3 +41,4 @@ _deps
 /samples/*.dump.bas
 /bin/lbc
 /bin/lbc.exe
+.run/
