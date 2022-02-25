@@ -74,7 +74,7 @@ private:
     [[nodiscard]] llvm::Expected<AstFuncStmt*> kwFunction(AstAttributeList* attribs);
     [[nodiscard]] llvm::Expected<AstStmt*> kwReturn();
     [[nodiscard]] llvm::Expected<AstDecl*> kwType(AstAttributeList* attribs);
-    [[nodiscard]] llvm::Expected<AstUdtDecl*> udt(AstAttributeList* attribs);
+    [[nodiscard]] llvm::Expected<AstUdtDecl*> udt(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs);
     [[nodiscard]] llvm::Expected<AstDeclList*> udtDeclList();
     [[nodiscard]] llvm::Expected<AstDecl*> udtMember(AstAttributeList* attribs);
 

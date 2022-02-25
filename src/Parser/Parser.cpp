@@ -460,22 +460,13 @@ llvm::Expected<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
 
 /**
  * TYPE
- *   = UDT
+ *   = "TYPE" id
+ *   ( UDT
  *   | TypeAlias
+ *   )
  *   .
  */
 llvm::Expected<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
-    return udt(attribs);
-}
-
-/**
- * UDT
- *   = "TYPE" id EoS
- *     udtDeclList
- *     "END" "TYPE"
- *   .
- */
-llvm::Expected<AstUdtDecl*> Parser::udt(AstAttributeList* attribs) {
     // assume m_token == TYPE
     auto start = m_token.range().Start;
     advance();
@@ -484,8 +475,26 @@ llvm::Expected<AstUdtDecl*> Parser::udt(AstAttributeList* attribs) {
     auto id = m_token.getStringValue();
     advance();
 
-    TRY(consume(TokenKind::EndOfStmt))
+    if (accept(TokenKind::EndOfStmt)) {
+        return udt(id, start, attribs);
+    }
 
+    if (accept(TokenKind::Assign)) {
+        fatalError("type alias not implemented yet");
+    }
+
+    return makeError(Diag::unexpectedToken, "'=' or end of statement", m_token.description());
+}
+
+/**
+ * UDT
+ *   = EoS
+ *     udtDeclList
+ *     "END" "TYPE"
+ *   .
+ */
+llvm::Expected<AstUdtDecl*> Parser::udt(StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
+    // assume m_token == declaration || "end"
     TRY_DECLARE(decls, udtDeclList())
 
     TRY(consume(TokenKind::End))
