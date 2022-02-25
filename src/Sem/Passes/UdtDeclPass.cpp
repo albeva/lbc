@@ -1,7 +1,7 @@
 //
 // Created by Albert on 29/05/2021.
 //
-#include "TypeDeclPass.hpp"
+#include "UdtDeclPass.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
@@ -10,17 +10,17 @@
 using namespace lbc;
 using namespace Sem;
 
-void TypeDeclPass::visit(AstModule& ast) noexcept {
+void UdtDeclPass::visit(AstModule& ast) noexcept {
     m_sem.with(ast.symbolTable, [&]() {
         visit(*ast.stmtList);
     });
 }
 
-void TypeDeclPass::visit(AstStmtList& ast) noexcept {
+void UdtDeclPass::visit(AstStmtList& ast) noexcept {
     for (auto& stmt : ast.stmts) {
         switch (stmt->kind) {
-        case AstKind::TypeDecl:
-            visit(static_cast<AstTypeDecl&>(*stmt));
+        case AstKind::UdtDecl:
+            visit(static_cast<AstUdtDecl&>(*stmt));
             break;
         default:
             break;
@@ -28,7 +28,7 @@ void TypeDeclPass::visit(AstStmtList& ast) noexcept {
     }
 }
 
-void TypeDeclPass::visit(AstTypeDecl& ast) noexcept {
+void UdtDeclPass::visit(AstUdtDecl& ast) noexcept {
     auto* symbol = m_sem.createNewSymbol(ast);
 
     bool packed = false;

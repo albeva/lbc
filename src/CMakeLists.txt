@@ -61,8 +61,8 @@ add_library(
     Sem/Passes/ForStmtPass.hpp
     Sem/Passes/FuncDeclarerPass.cpp
     Sem/Passes/FuncDeclarerPass.hpp
-    Sem/Passes/TypeDeclPass.cpp
-    Sem/Passes/TypeDeclPass.hpp
+    Sem/Passes/UdtDeclPass.cpp
+    Sem/Passes/UdtDeclPass.hpp
     Sem/Passes/TypePass.cpp
     Sem/Passes/TypePass.hpp
     Sem/SemanticAnalyzer.cpp

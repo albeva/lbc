@@ -457,14 +457,25 @@ llvm::Expected<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
 // TYPE
 //----------------------------------------
 
+
 /**
  * TYPE
+ *   = UDT
+ *   | TypeAlias
+ *   .
+ */
+llvm::Expected<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
+    return udt(attribs);
+}
+
+/**
+ * UDT
  *   = "TYPE" id EoS
- *     typeDeclList
+ *     udtDeclList
  *     "END" "TYPE"
  *   .
  */
-llvm::Expected<AstTypeDecl*> Parser::kwType(AstAttributeList* attribs) {
+llvm::Expected<AstUdtDecl*> Parser::udt(AstAttributeList* attribs) {
     // assume m_token == TYPE
     auto start = m_token.range().Start;
     advance();
@@ -475,12 +486,12 @@ llvm::Expected<AstTypeDecl*> Parser::kwType(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::EndOfStmt))
 
-    TRY_DECLARE(decls, typeDeclList())
+    TRY_DECLARE(decls, udtDeclList())
 
     TRY(consume(TokenKind::End))
     TRY(consume(TokenKind::Type))
 
-    return m_context.create<AstTypeDecl>(
+    return m_context.create<AstUdtDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
         attribs,
@@ -488,11 +499,11 @@ llvm::Expected<AstTypeDecl*> Parser::kwType(AstAttributeList* attribs) {
 }
 
 /**
- * typeDeclList
- *   = { [ AttributeList ] typeMember EoS }
+ * udtDeclList
+ *   = { [ AttributeList ] udtMember EoS }
  *   .
  */
-llvm::Expected<AstDeclList*> Parser::typeDeclList() {
+llvm::Expected<AstDeclList*> Parser::udtDeclList() {
     auto start = m_token.range().Start;
     std::vector<AstDecl*> decls;
 
@@ -504,7 +515,7 @@ llvm::Expected<AstDeclList*> Parser::typeDeclList() {
             break;
         }
 
-        TRY_DECLARE(member, typeMember(attribs))
+        TRY_DECLARE(member, udtMember(attribs))
         decls.emplace_back(member);
         TRY(consume(TokenKind::EndOfStmt))
     }
@@ -515,11 +526,11 @@ llvm::Expected<AstDeclList*> Parser::typeDeclList() {
 }
 
 /**
- * typeMember
+ * udtMember
  *   = id "AS" TypeExpr
  *   .
  */
-llvm::Expected<AstDecl*> Parser::typeMember(AstAttributeList* attribs) {
+llvm::Expected<AstDecl*> Parser::udtMember(AstAttributeList* attribs) {
     // assume m_token == Identifier
     auto start = m_token.range().Start;
     auto id = m_token.getStringValue();

@@ -7,23 +7,23 @@ namespace lbc {
 class SemanticAnalyzer;
 struct AstModule;
 struct AstStmtList;
-struct AstTypeDecl;
+struct AstUdtDecl;
 
 namespace Sem {
     class TypePass;
 
-    class TypeDeclPass final {
+    class UdtDeclPass final {
     public:
-        NO_COPY_AND_MOVE(TypeDeclPass)
+        NO_COPY_AND_MOVE(UdtDeclPass)
 
-        explicit TypeDeclPass(SemanticAnalyzer& sem) noexcept : m_sem{ sem } {}
-        ~TypeDeclPass() noexcept = default;
+        explicit UdtDeclPass(SemanticAnalyzer& sem) noexcept : m_sem{ sem } {}
+        ~UdtDeclPass() noexcept = default;
 
         void visit(AstModule& ast) noexcept;
 
     private:
         void visit(AstStmtList& ast) noexcept;
-        void visit(AstTypeDecl& ast) noexcept;
+        void visit(AstUdtDecl& ast) noexcept;
 
         SemanticAnalyzer& m_sem;
     };

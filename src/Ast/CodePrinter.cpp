@@ -201,7 +201,7 @@ void CodePrinter::visit(AstReturnStmt& ast) {
 // Type (user defined)
 //----------------------------------------
 
-void CodePrinter::visit(AstTypeDecl& ast) {
+void CodePrinter::visit(AstUdtDecl& ast) {
     RESTORE_ON_EXIT(emitVARkeyword);
     emitVARkeyword = false;
 

@@ -131,7 +131,7 @@ void AstPrinter::visit(AstReturnStmt& ast) {
 // Type (user defined)
 //----------------------------------------
 
-void AstPrinter::visit(AstTypeDecl& ast) {
+void AstPrinter::visit(AstUdtDecl& ast) {
     m_json.object([&] {
         writeHeader(ast);
         writeAttributes(ast.attributes);

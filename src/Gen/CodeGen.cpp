@@ -343,7 +343,7 @@ void CodeGen::visit(AstReturnStmt& ast) {
 // Type (user defined)
 //------------------------------------------------------------------
 
-void CodeGen::visit(AstTypeDecl& /*ast*/) {
+void CodeGen::visit(AstUdtDecl& /*ast*/) {
     // NOOP
 }
 

@@ -421,17 +421,17 @@ struct AstFuncParamList final : AstRoot {
     std::vector<AstFuncParamDecl*> params;
 };
 
-struct AstTypeDecl final : AstDecl {
-    AstTypeDecl(
+struct AstUdtDecl final : AstDecl {
+    AstUdtDecl(
         llvm::SMRange range_,
         StringRef name_,
         AstAttributeList* attrs,
         AstDeclList* decls_) noexcept
-    : AstDecl{ AstKind::TypeDecl, range_, name_, attrs },
+    : AstDecl{ AstKind::UdtDecl, range_, name_, attrs },
       decls{ decls_ } {}
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
-        return ast->kind == AstKind::TypeDecl;
+        return ast->kind == AstKind::UdtDecl;
     }
 
     AstDeclList* decls;

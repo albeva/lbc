@@ -7,7 +7,7 @@
 #include "Lexer/Token.hpp"
 #include "Passes/ForStmtPass.hpp"
 #include "Passes/FuncDeclarerPass.hpp"
-#include "Passes/TypeDeclPass.hpp"
+#include "Passes/UdtDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
@@ -25,7 +25,7 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     m_table = ast.symbolTable;
 
-    Sem::TypeDeclPass(*this).visit(ast);
+    Sem::UdtDeclPass(*this).visit(ast);
     Sem::FuncDeclarerPass(*this).visit(ast);
 
     visit(*ast.stmtList);
@@ -216,7 +216,7 @@ void SemanticAnalyzer::visit(AstContinuationStmt& ast) {
 // Type (user defined)
 //----------------------------------------
 
-void SemanticAnalyzer::visit(AstTypeDecl& /* ast */) {
+void SemanticAnalyzer::visit(AstUdtDecl& /* ast */) {
     // NO OP
 }
 
