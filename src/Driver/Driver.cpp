@@ -338,17 +338,10 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     Parser parser{ m_context, ID, isMain };
 
     auto astOrErr = parser.parse();
-    if (auto err = astOrErr.takeError()) {
-        llvm::handleAllErrors(std::move(err), [&diag = m_context.getDiag()](ParseError& error) {
-            diag.print(
-                error.getDiag(),
-                error.getRange().Start,
-                error.getMessage(),
-                error.getRange());
-        });
+    if (astOrErr.isError()) {
         std::exit(EXIT_FAILURE);
     }
-    auto* ast = *astOrErr;
+    auto* ast = astOrErr.getPointer();
 
     // Analyze
     SemanticAnalyzer sem{ m_context };

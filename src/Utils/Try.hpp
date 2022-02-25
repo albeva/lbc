@@ -11,33 +11,25 @@ namespace lbc {
 //
 // However, avoid GNU non-standard expression statement extension.
 //
-// llvm::Expected<int> getValue();
-// Expected<int> foo() {
+// ParseError<int> getValue();
+// ParseError<int> foo() {
 //     TRY_DECLARE(val, getValue());
 //     useVal(val);
 //     TRY_ASSIGN(val, getValue());
+//     return val;
 // }
 
-template<typename T>
-inline llvm::Error try_resolve_to_error(llvm::Expected<T> expected) noexcept {
-    return expected.takeError();
-}
-
-inline llvm::Error try_resolve_to_error(llvm::Error error) noexcept {
-    return error;
-}
-
-#define TRY(expression)                                 \
-    if (auto err_ = try_resolve_to_error(expression)) { \
-        return std::forward<llvm::Error>(err_);         \
+#define TRY(expression)           \
+    if ((expression).isError()) { \
+        return { true };          \
     }
 
-#define TRY_ASSIGN(var, expression)           \
-    {                                         \
-        auto valOrErr_ = (expression);        \
-        if (auto err = valOrErr_.takeError()) \
-            return std::move(err);            \
-        (var) = *valOrErr_;                   \
+#define TRY_ASSIGN(var, expression)     \
+    {                                   \
+        auto valOrErr_ = (expression);  \
+        if (valOrErr_.isError())        \
+            return { true };            \
+        (var) = valOrErr_.getPointer(); \
     }
 
 #define TRY_DECLARE(var, expression)      \
