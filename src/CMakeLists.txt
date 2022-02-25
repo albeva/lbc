@@ -51,8 +51,7 @@ add_library(
     Lexer/Token.cpp
     Lexer/Token.def.hpp
     Lexer/Token.hpp
-    Parser/ParseError.cpp
-    Parser/ParseError.hpp
+    Parser/ParseResult.hpp
     Parser/Parser.cpp
     Parser/Parser.hpp
     Sem/Passes/ConstantFoldingPass.cpp
