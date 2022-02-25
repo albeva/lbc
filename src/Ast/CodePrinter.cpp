@@ -220,6 +220,20 @@ void CodePrinter::visit(AstUdtDecl& ast) {
 }
 
 //----------------------------------------
+// Type (user defined)
+//----------------------------------------
+
+void CodePrinter::visit(AstTypeAlias& ast) {
+    if (ast.attributes != nullptr) {
+        visit(*ast.attributes);
+        m_os << " _" << '\n';
+    }
+
+    m_os << indent() << "TYPE " << ast.name << " = ";
+    visit(*ast.typeExpr);
+}
+
+//----------------------------------------
 // IF statement
 //----------------------------------------
 

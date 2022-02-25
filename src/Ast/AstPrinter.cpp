@@ -144,6 +144,22 @@ void AstPrinter::visit(AstUdtDecl& ast) {
 }
 
 //----------------------------------------
+// Type alias
+//----------------------------------------
+
+void AstPrinter::visit(AstTypeAlias& ast) {
+    m_json.object([&] {
+        writeHeader(ast);
+        writeAttributes(ast.attributes);
+        m_json.attribute("id", ast.name);
+
+        m_json.attributeBegin("type");
+        visit(*ast.typeExpr);
+        m_json.attributeEnd();
+    });
+}
+
+//----------------------------------------
 // IF statement
 //----------------------------------------
 

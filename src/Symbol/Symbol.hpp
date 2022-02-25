@@ -16,8 +16,8 @@ public:
 
     ~Symbol() noexcept = default;
 
-    [[nodiscard]] ValueFlags getFlags() const noexcept { return m_flags; }
-    void setFlags(ValueFlags flags) noexcept { m_flags = flags; }
+    [[nodiscard]] inline ValueFlags& getFlags() noexcept { return m_flags; }
+    void inline setFlags(ValueFlags flags) noexcept { m_flags = flags; }
 
     [[nodiscard]] Symbol* getParent() const noexcept { return m_parent; }
     void setParent(Symbol* parent) noexcept { m_parent = parent; }
@@ -28,9 +28,6 @@ public:
     [[nodiscard]] const TypeRoot* type() const noexcept { return m_type; }
     void setType(const TypeRoot* type) noexcept { m_type = type; }
 
-    [[nodiscard]] bool isExternal() const noexcept { return m_external; }
-    void setExternal(bool external) noexcept { m_external = external; }
-
     [[nodiscard]] StringRef name() const noexcept { return m_name; }
 
     [[nodiscard]] llvm::Value* getLlvmValue() const noexcept { return m_llvmValue; }
@@ -38,6 +35,10 @@ public:
 
     [[nodiscard]] StringRef alias() const noexcept { return m_alias; }
     void setAlias(StringRef alias) noexcept { m_alias = alias; }
+
+    [[nodiscard]] bool isType() const noexcept {
+        return m_flags.type;
+    }
 
     [[nodiscard]] StringRef identifier() const noexcept {
         if (m_alias.empty()) {
@@ -47,7 +48,7 @@ public:
     }
 
     [[nodiscard]] llvm::GlobalValue::LinkageTypes getLlvmLinkage() const noexcept {
-        if (m_external) {
+        if (m_flags.external) {
             return llvm::GlobalValue::LinkageTypes::ExternalLinkage;
         }
         return llvm::GlobalValue::LinkageTypes::InternalLinkage;
@@ -69,7 +70,6 @@ private:
 
     StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
-    bool m_external = false;
     Symbol* m_parent = nullptr;
     unsigned int m_index = 0;
     ValueFlags m_flags{};

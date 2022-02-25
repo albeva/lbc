@@ -438,6 +438,21 @@ struct AstUdtDecl final : AstDecl {
     SymbolTable* symbolTable = nullptr;
 };
 
+struct AstTypeAlias final: AstDecl {
+    AstTypeAlias(
+        llvm::SMRange range_,
+        StringRef name_,
+        AstAttributeList* attrs,
+        AstTypeExpr* typeExpr_) noexcept
+    : AstDecl{ AstKind::TypeAlias, range_, name_, attrs }, typeExpr{ typeExpr_ } {}
+
+    constexpr static bool classof(const AstRoot* ast) noexcept {
+        return ast->kind == AstKind::TypeAlias;
+    }
+
+    AstTypeExpr* typeExpr;
+};
+
 //----------------------------------------
 // Types
 //----------------------------------------

@@ -41,8 +41,8 @@ void TypePass::visit(AstIdentExpr& ast) const noexcept {
         fatalError("Undefined type "_t + ast.name);
     }
 
-    if (const auto* udt = dyn_cast<TypeUDT>(sym->type())) {
-        ast.type = udt;
+    if (sym->getFlags().type) {
+        ast.type = sym->type();
         return;
     }
 

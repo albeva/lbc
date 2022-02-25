@@ -479,11 +479,26 @@ llvm::Expected<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
         return udt(id, start, attribs);
     }
 
-    if (accept(TokenKind::Assign)) {
-        fatalError("type alias not implemented yet");
+    if (accept(TokenKind::As)) {
+        return alias(id, start, attribs);
     }
 
     return makeError(Diag::unexpectedToken, "'=' or end of statement", m_token.description());
+}
+
+/**
+ *  alias
+ *    = TypeExpr
+ *    .
+ */
+llvm::Expected<AstTypeAlias*> Parser::alias(StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
+    TRY_DECLARE(type, typeExpr());
+
+    return m_context.create<AstTypeAlias>(
+        llvm::SMRange{ start, m_endLoc },
+        id,
+        attribs,
+        type);
 }
 
 /**

@@ -61,9 +61,9 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
 
     if (symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
-        symbol->setExternal(true);
+        symbol->getFlags().external = true;
     } else {
-        symbol->setExternal(external);
+        symbol->getFlags().external = external;
     }
 
     m_sem.getTypePass().visit(ast);

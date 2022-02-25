@@ -48,9 +48,10 @@
     _( VarDecl       ) \
     _( FuncDecl      ) \
     _( FuncParamDecl ) \
-    _( UdtDecl       )
+    _( UdtDecl       ) \
+    _( TypeAlias     )
 
-#define AST_DECL_RANGE(_) _(VarDecl, UdtDecl)
+#define AST_DECL_RANGE(_) _(VarDecl, TypeAlias)
 
 //----------------------------------------
 // Type nodes extending AstRoot

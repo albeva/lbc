@@ -8,6 +8,7 @@
 #include "Passes/ForStmtPass.hpp"
 #include "Passes/FuncDeclarerPass.hpp"
 #include "Passes/UdtDeclPass.hpp"
+#include "Passes/TypeAliasDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
@@ -26,6 +27,7 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     m_table = ast.symbolTable;
 
     Sem::UdtDeclPass(*this).visit(ast);
+    Sem::TypeAliasDeclPass(*this).visit(ast);
     Sem::FuncDeclarerPass(*this).visit(ast);
 
     visit(*ast.stmtList);
@@ -72,7 +74,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
 
     // The Symbol
     auto* symbol = createNewSymbol(ast);
-    symbol->setExternal(false);
+    symbol->getFlags().external = false;
 
     // create function symbol
     symbol->setType(type);
@@ -217,6 +219,14 @@ void SemanticAnalyzer::visit(AstContinuationStmt& ast) {
 //----------------------------------------
 
 void SemanticAnalyzer::visit(AstUdtDecl& /* ast */) {
+    // NO OP
+}
+
+//----------------------------------------
+// Type alias
+//----------------------------------------
+
+void SemanticAnalyzer::visit(AstTypeAlias& /* ast */) {
     // NO OP
 }
 
