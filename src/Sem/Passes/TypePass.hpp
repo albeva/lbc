@@ -6,6 +6,7 @@
 
 namespace lbc {
 class SemanticAnalyzer;
+class TypeRoot;
 struct AstTypeExpr;
 struct AstIdentExpr;
 struct AstFuncDecl;
@@ -18,11 +19,11 @@ namespace Sem {
         explicit TypePass(SemanticAnalyzer& sem) noexcept : m_sem{ sem } {}
         ~TypePass() noexcept = default;
 
-        void visit(AstTypeExpr& ast) const noexcept;
-        void visit(AstFuncDecl& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstTypeExpr& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstFuncDecl& ast) const noexcept;
 
     private:
-        void visit(AstIdentExpr& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstIdentExpr& ast) const noexcept;
 
         SemanticAnalyzer& m_sem;
     };

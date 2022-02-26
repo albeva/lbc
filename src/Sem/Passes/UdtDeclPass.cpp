@@ -45,5 +45,5 @@ void UdtDeclPass::visit(AstUdtDecl& ast) noexcept {
     });
 
     ast.symbolTable->setParent(nullptr);
-    ast.type = TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
+    TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
 }

@@ -12,18 +12,16 @@
 using namespace lbc;
 using namespace Sem;
 
-void TypePass::visit(AstTypeExpr& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstTypeExpr& ast) const noexcept {
     const auto visitor = Visitor{
         [](TokenKind kind) -> const TypeRoot* {
             return TypeRoot::fromTokenKind(kind);
         },
         [&](AstIdentExpr* ident) -> const TypeRoot* {
-            visit(*ident);
-            return ident->type;
+            return visit(*ident);
         },
         [&](AstFuncDecl* decl) -> const TypeRoot* {
-            visit(*decl);
-            return decl->type;
+            return visit(*decl);
         }
     };
     const TypeRoot* type = std::visit(visitor, ast.expr);
@@ -31,11 +29,11 @@ void TypePass::visit(AstTypeExpr& ast) const noexcept {
     for (auto deref = 0; deref < ast.dereference; deref++) {
         type = TypePointer::get(m_sem.getContext(), type);
     }
-
     ast.type = type;
+    return ast.type;
 }
 
-void TypePass::visit(AstIdentExpr& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
     auto* sym = m_sem.getSymbolTable()->find(ast.name);
     if (sym == nullptr) {
         fatalError("Undefined type "_t + ast.name);
@@ -43,29 +41,26 @@ void TypePass::visit(AstIdentExpr& ast) const noexcept {
 
     if (sym->getFlags().type) {
         ast.type = sym->type();
-        return;
+        return ast.type;
     }
 
     fatalError(""_t + sym->name() + " is not a type");
 }
 
-void TypePass::visit(AstFuncDecl& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstFuncDecl& ast) const noexcept {
     // parameters
     std::vector<const TypeRoot*> paramTypes;
     if (ast.params != nullptr) {
         paramTypes.reserve(ast.params->params.size());
         for (auto& param : ast.params->params) {
-            visit(*param->typeExpr);
-            paramTypes.emplace_back(param->typeExpr->type);
-            param->type = param->typeExpr->type;
+            paramTypes.emplace_back(visit(*param->typeExpr));
         }
     }
 
     // return type
     const TypeRoot* retType = nullptr;
     if (ast.retTypeExpr != nullptr) {
-        visit(*ast.retTypeExpr);
-        retType = ast.retTypeExpr->type;
+        retType = visit(*ast.retTypeExpr);
         if (retType->isUDT()) {
             fatalError("Returning types by value is not implemented");
         }
@@ -74,5 +69,5 @@ void TypePass::visit(AstFuncDecl& ast) const noexcept {
     }
 
     // function
-    ast.type = TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
+    return TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
 }

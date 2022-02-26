@@ -339,7 +339,6 @@ struct AstDecl : AstStmt {
     const llvm::StringRef name;
     AstAttributeList* attributes;
     Symbol* symbol = nullptr;
-    const TypeRoot* type = nullptr;
 };
 
 struct AstDeclList final : AstRoot {

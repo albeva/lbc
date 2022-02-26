@@ -59,8 +59,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
     // m_type expr?
     const TypeRoot* type = nullptr;
     if (ast.typeExpr != nullptr) {
-        visit(*ast.typeExpr);
-        type = ast.typeExpr->type;
+        type = m_typePass.visit(*ast.typeExpr);
     }
 
     // expression?
@@ -86,7 +85,6 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
         flags.dereferencable = true;
     }
     ast.symbol->setFlags(flags);
-    ast.type = type;
 
     // alias?
     if (ast.attributes != nullptr) {
@@ -247,7 +245,7 @@ void SemanticAnalyzer::visit(AstAttribute& /*ast*/) {
 //----------------------------------------
 
 void SemanticAnalyzer::visit(AstTypeExpr& ast) {
-    m_typePass.visit(ast);
+    // NOOP
 }
 
 //----------------------------------------
@@ -537,8 +535,7 @@ bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 //------------------------------------------------------------------
 
 void SemanticAnalyzer::visit(AstCastExpr& ast) {
-    visit(*ast.typeExpr);
-    ast.type = ast.typeExpr->type;
+    ast.type = m_typePass.visit(*ast.typeExpr);
     expression(ast.expr);
 
     if (ast.expr->type->compare(ast.type) == TypeComparison::Incompatible) {

@@ -22,7 +22,7 @@ void TypeAliasDeclPass::visit(AstModule& ast) const noexcept {
 }
 
 void TypeAliasDeclPass::visit(AstTypeAlias& ast) const noexcept {
-    m_sem.getTypePass().visit(*ast.typeExpr);
+    const auto* type = m_sem.getTypePass().visit(*ast.typeExpr);
 
     auto* symbol = m_sem.createNewSymbol(ast);
     static constexpr auto getSymbol = Visitor{
@@ -43,7 +43,6 @@ void TypeAliasDeclPass::visit(AstTypeAlias& ast) const noexcept {
         symbol->getFlags().type = true;
     }
 
-    symbol->setType(ast.typeExpr->type);
-    ast.type = ast.typeExpr->type;
+    symbol->setType(type);
     ast.symbol = symbol;
 }

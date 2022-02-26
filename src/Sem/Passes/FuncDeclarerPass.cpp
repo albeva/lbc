@@ -66,7 +66,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         symbol->getFlags().external = external;
     }
 
-    m_sem.getTypePass().visit(ast);
+    const auto* type = m_sem.getTypePass().visit(ast);
 
     // parameters
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(symbolTale);
@@ -78,17 +78,18 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         });
     }
 
-    symbol->setType(ast.type);
+    symbol->setType(type);
     ast.symbol = symbol;
 }
 
 void FuncDeclarerPass::visit(AstFuncParamDecl& ast) {
-    if (ast.type->isUDT()) {
+    const auto* type = ast.typeExpr->type;
+    if (type->isUDT()) {
         fatalError("Passing types by values is not implemented");
     }
 
     auto* symbol = createParamSymbol(ast);
-    symbol->setType(ast.type);
+    symbol->setType(type);
     ast.symbol = symbol;
 }
 
