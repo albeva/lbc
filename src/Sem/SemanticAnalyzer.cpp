@@ -18,7 +18,7 @@ using namespace lbc;
 
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : m_context{ context },
-  m_constantFolder{ context },
+  m_constantFolder{ *this },
   m_typePass{ *this } {}
 
 void SemanticAnalyzer::visit(AstModule& ast) {
@@ -180,7 +180,7 @@ void SemanticAnalyzer::visit(AstIfStmt& ast) {
 }
 
 void SemanticAnalyzer::visit(AstForStmt& ast) {
-    Sem::ForStmtPass(*this, ast);
+    Sem::ForStmtPass(*this).visit(ast);
 }
 
 void SemanticAnalyzer::visit(AstDoLoopStmt& ast) {

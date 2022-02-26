@@ -58,8 +58,11 @@ add_library(
     Sem/Passes/ConstantFoldingPass.hpp
     Sem/Passes/ForStmtPass.cpp
     Sem/Passes/ForStmtPass.hpp
+    Sem/Passes/ForwardDeclPass.cpp
+    Sem/Passes/ForwardDeclPass.hpp
     Sem/Passes/FuncDeclarerPass.cpp
     Sem/Passes/FuncDeclarerPass.hpp
+    Sem/Passes/Pass.hpp
     Sem/Passes/TypeAliasDeclPass.cpp
     Sem/Passes/TypeAliasDeclPass.hpp
     Sem/Passes/TypePass.cpp
@@ -81,7 +84,8 @@ add_library(
     Utils/Utils.cpp
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
-    Utils/Version.hpp)
+    Utils/Version.hpp
+)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)

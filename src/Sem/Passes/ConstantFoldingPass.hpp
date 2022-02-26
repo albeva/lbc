@@ -2,21 +2,19 @@
 // Created by Albert Varaksin on 05/05/2021.
 //
 #pragma once
+#include "Pass.hpp"
 #include "Ast/Ast.hpp"
 
 namespace lbc {
-class Context;
 class TypeRoot;
 
 namespace Sem {
-
-    class ConstantFoldingPass final {
+    /**
+     * Fold constant expressions
+     */
+    class ConstantFoldingPass final: public Pass {
     public:
-        NO_COPY_AND_MOVE(ConstantFoldingPass)
-
-        explicit ConstantFoldingPass(Context& context) noexcept : m_context{ context } {}
-        ~ConstantFoldingPass() noexcept = default;
-
+        using Pass::Pass;
         void fold(AstExpr*& ast);
 
     private:
@@ -27,9 +25,6 @@ namespace Sem {
         AstExpr* visitBinaryExpr(AstBinaryExpr& ast);
         AstExpr* visitCastExpr(const AstCastExpr& ast);
         AstLiteralExpr::Value cast(const TypeRoot* type, const AstLiteralExpr& ast);
-
-        Context& m_context;
     };
-
 } // namespace Sem
 } // namespace lbc

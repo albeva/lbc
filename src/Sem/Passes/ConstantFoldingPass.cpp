@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 05/05/2021.
 //
 #include "ConstantFoldingPass.hpp"
+#include "Sem/SemanticAnalyzer.hpp"
 #include "Driver/Context.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
@@ -26,7 +27,6 @@ void ConstantFoldingPass::fold(AstExpr*& ast) {
     //    if (m_context.getOptimizationLevel() == Context::OptimizationLevel::O0) {
     //        return;
     //    }
-
     AstExpr* replace = nullptr;
     switch (ast->kind) {
     case AstKind::UnaryExpr:
@@ -56,7 +56,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
     }
 
     auto value = unary(ast.tokenKind, *literal);
-    auto* repl = m_context.create<AstLiteralExpr>(ast.range, value);
+    auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
     repl->type = ast.type;
     return repl;
 }
@@ -129,7 +129,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
     }
 
     if (*lval == 1 && *rval == 0) {
-        auto* cast = m_context.create<AstCastExpr>(
+        auto* cast = m_sem.getContext().create<AstCastExpr>(
             ast.range,
             ast.expr,
             nullptr,
@@ -139,12 +139,12 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
     }
 
     if (*lval == 0 && *rval == 1) {
-        auto* unary = m_context.create<AstUnaryExpr>(
+        auto* unary = m_sem.getContext().create<AstUnaryExpr>(
             ast.range,
             TokenKind::LogicalNot,
             ast.expr);
 
-        auto* cast = m_context.create<AstCastExpr>(
+        auto* cast = m_sem.getContext().create<AstCastExpr>(
             ast.range,
             unary,
             nullptr,
@@ -168,7 +168,7 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
     }
 
     auto value = cast(ast.type, *literal);
-    auto* repl = m_context.create<AstLiteralExpr>(ast.range, value);
+    auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
     repl->type = ast.type;
     return repl;
 }

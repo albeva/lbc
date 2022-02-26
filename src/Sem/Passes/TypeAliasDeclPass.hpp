@@ -2,25 +2,20 @@
 // Created by Albert on 25/02/2022.
 //
 #pragma once
+#include "Pass.hpp"
+
 namespace lbc {
-class SemanticAnalyzer;
 struct AstModule;
 struct AstTypeAlias;
 
 namespace Sem {
-    class TypeAliasDeclPass final {
+    class TypeAliasDeclPass final: public Pass {
     public:
-        NO_COPY_AND_MOVE(TypeAliasDeclPass)
-        explicit TypeAliasDeclPass(SemanticAnalyzer& sem) noexcept : m_sem{ sem } {}
-        ~TypeAliasDeclPass() noexcept = default;
-
+        using Pass::Pass;
         void visit(AstModule& ast) const noexcept;
 
     private:
         void visit(AstTypeAlias& ast) const noexcept;
-
-        SemanticAnalyzer& m_sem;
     };
 } // namespace Sem
-
 } // namespace lbc

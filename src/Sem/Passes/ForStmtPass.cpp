@@ -9,63 +9,62 @@
 using namespace lbc;
 using namespace Sem;
 
-ForStmtPass::ForStmtPass(SemanticAnalyzer& sem, AstForStmt& ast)
-: m_sem{ sem }, m_ast{ ast } {
-    auto* current = sem.getSymbolTable();
-    m_ast.symbolTable = sem.getContext().create<SymbolTable>(current);
-    m_sem.with(m_ast.symbolTable, [&]() {
-        ceclare();
-        analyze();
-        determineForDirection();
+void ForStmtPass::visit(AstForStmt& ast) const noexcept {
+    auto* current = m_sem.getSymbolTable();
+    ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
+    m_sem.with(ast.symbolTable, [&]() {
+        ceclare(ast);
+        analyze(ast);
+        determineForDirection(ast);
     });
 }
 
-void ForStmtPass::ceclare() {
-    for (auto& var : m_ast.decls) {
+void ForStmtPass::ceclare(AstForStmt& ast) const noexcept {
+    for (auto& var : ast.decls) {
         m_sem.visit(*var);
     }
-    m_sem.visit(*m_ast.iterator);
-    auto flags = m_ast.iterator->symbol->getFlags();
+    m_sem.visit(*ast.iterator);
+    auto flags = ast.iterator->symbol->getFlags();
     flags.dereferencable = false;
     flags.addressable = false;
     flags.assignable = false;
-    m_ast.iterator->symbol->setFlags(flags);
+    ast.iterator->symbol->setFlags(flags);
 }
 
-void ForStmtPass::analyze() {
-    m_sem.expression(m_ast.limit);
+void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
+    m_sem.expression(ast.limit);
 
-    if (m_ast.step != nullptr) {
-        m_sem.expression(m_ast.step);
+    if (ast.step != nullptr) {
+        m_sem.expression(ast.step);
     }
 
-    const auto* type = m_ast.iterator->symbol->type();
+    const auto* type = ast.iterator->symbol->type();
     if (!type->isNumeric()) {
         fatalError("NEXT iterator must be of numeric type");
     }
 
     // type TO type check
-    switch (type->compare(m_ast.limit->type)) {
+    switch (type->compare(ast.limit->type)) {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
     case TypeComparison::Downcast:
-        m_sem.convert(m_ast.limit, type);
+        m_sem.convert(ast.limit, type);
         break;
     case TypeComparison::Equal:
         break;
     case TypeComparison::Upcast:
-        if (m_ast.iterator->typeExpr != nullptr) {
-            m_sem.convert(m_ast.limit, type);
+        if (ast.iterator->typeExpr != nullptr) {
+            m_sem.convert(ast.limit, type);
         } else {
-            m_sem.convert(m_ast.iterator->expr, m_ast.limit->type);
-            m_ast.iterator->symbol->setType(m_ast.limit->type);
+            m_sem.convert(ast.iterator->expr, ast.limit->type);
+            ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
     }
 
     // type STEP type check
-    if (m_ast.step != nullptr) {
-        switch (type->compare(m_ast.step->type)) {
+    if (ast.step != nullptr) {
+        switch (type->compare(ast.step->type)) {
         case TypeComparison::Incompatible:
             fatalError("Incompatible types in STEP");
         case TypeComparison::Downcast:
@@ -73,9 +72,9 @@ void ForStmtPass::analyze() {
             const auto* dstTy = type;
             const auto* iterTy = llvm::dyn_cast<TypeIntegral>(type);
             if (iterTy != nullptr && !iterTy->isSigned()) {
-                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(m_ast.step->type)) {
+                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(ast.step->type)) {
                     if (stepIntTy->isSigned()) {
-                        if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
+                        if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
                             if (static_cast<int64_t>(std::get<uint64_t>(literal->value)) < 0) {
                                 dstTy = iterTy->getSigned();
                             }
@@ -83,8 +82,8 @@ void ForStmtPass::analyze() {
                             dstTy = iterTy->getSigned();
                         }
                     }
-                } else if (llvm::isa<TypeFloatingPoint>(m_ast.step->type)) {
-                    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
+                } else if (llvm::isa<TypeFloatingPoint>(ast.step->type)) {
+                    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
                         if (std::get<double>(literal->value) < 0.0) {
                             dstTy = iterTy->getSigned();
                         }
@@ -93,7 +92,7 @@ void ForStmtPass::analyze() {
                     }
                 }
             }
-            m_sem.convert(m_ast.step, dstTy);
+            m_sem.convert(ast.step, dstTy);
             break;
         }
         case TypeComparison::Equal:
@@ -102,20 +101,20 @@ void ForStmtPass::analyze() {
     }
 
     m_sem.getControlStack().push(ControlFlowStatement::For);
-    m_sem.visit(*m_ast.stmt);
+    m_sem.visit(*ast.stmt);
     m_sem.getControlStack().pop();
 
-    if (!m_ast.next.empty()) {
-        if (m_ast.next != m_ast.iterator->name) {
+    if (!ast.next.empty()) {
+        if (ast.next != ast.iterator->name) {
             fatalError("NEXT iterator names must match");
         }
     }
 }
 
-void ForStmtPass::determineForDirection() {
-    auto* from = llvm::dyn_cast<AstLiteralExpr>(m_ast.iterator->expr);
-    auto* to = llvm::dyn_cast<AstLiteralExpr>(m_ast.limit);
-    const auto* type = m_ast.iterator->symbol->type();
+void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
+    auto* from = llvm::dyn_cast<AstLiteralExpr>(ast.iterator->expr);
+    auto* to = llvm::dyn_cast<AstLiteralExpr>(ast.limit);
+    const auto* type = ast.iterator->symbol->type();
     bool equal = false;
 
     if (from != nullptr && to != nullptr) {
@@ -123,42 +122,42 @@ void ForStmtPass::determineForDirection() {
             auto lhs = std::get<uint64_t>(from->value);
             auto rhs = std::get<uint64_t>(to->value);
             if (lhs == rhs) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+                ast.direction = AstForStmt::Direction::Increment;
                 equal = true;
             } else if (integral->isSigned()) {
                 auto slhs = static_cast<int64_t>(lhs);
                 auto srhs = static_cast<int64_t>(rhs);
                 if (slhs < srhs) {
-                    m_ast.direction = AstForStmt::Direction::Increment;
+                    ast.direction = AstForStmt::Direction::Increment;
                 } else if (slhs > srhs) {
-                    m_ast.direction = AstForStmt::Direction::Decrement;
+                    ast.direction = AstForStmt::Direction::Decrement;
                 }
             } else {
                 if (lhs < rhs) {
-                    m_ast.direction = AstForStmt::Direction::Increment;
+                    ast.direction = AstForStmt::Direction::Increment;
                 } else if (lhs > rhs) {
-                    m_ast.direction = AstForStmt::Direction::Decrement;
+                    ast.direction = AstForStmt::Direction::Decrement;
                 }
             }
         } else if (llvm::isa<TypeFloatingPoint>(type)) {
             auto lhs = std::get<double>(from->value);
             auto rhs = std::get<double>(to->value);
             if (lhs == rhs) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+                ast.direction = AstForStmt::Direction::Increment;
                 equal = true;
             } else if (lhs < rhs) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+                ast.direction = AstForStmt::Direction::Increment;
             } else {
-                m_ast.direction = AstForStmt::Direction::Decrement;
+                ast.direction = AstForStmt::Direction::Decrement;
             }
         }
     }
 
-    if (m_ast.step == nullptr) {
+    if (ast.step == nullptr) {
         return;
     }
 
-    auto* step = llvm::dyn_cast<AstLiteralExpr>(m_ast.step);
+    auto* step = llvm::dyn_cast<AstLiteralExpr>(ast.step);
     if (step == nullptr) {
         return;
     }
@@ -166,56 +165,56 @@ void ForStmtPass::determineForDirection() {
     if (step->type->isSignedIntegral()) {
         auto val = static_cast<int64_t>(std::get<uint64_t>(step->value));
         if (val < 0) {
-            if (m_ast.direction == AstForStmt::Direction::Increment) {
+            if (ast.direction == AstForStmt::Direction::Increment) {
                 if (equal) {
-                    m_ast.direction = AstForStmt::Direction::Decrement;
+                    ast.direction = AstForStmt::Direction::Decrement;
                 } else {
-                    m_ast.direction = AstForStmt::Direction::Skip;
+                    ast.direction = AstForStmt::Direction::Skip;
                 }
-            } else if (m_ast.direction == AstForStmt::Direction::Unknown) {
-                m_ast.direction = AstForStmt::Direction::Decrement;
+            } else if (ast.direction == AstForStmt::Direction::Unknown) {
+                ast.direction = AstForStmt::Direction::Decrement;
             }
         } else if (val > 0) {
-            if (m_ast.direction == AstForStmt::Direction::Decrement) {
-                m_ast.direction = AstForStmt::Direction::Skip;
-            } else if (m_ast.direction == AstForStmt::Direction::Unknown) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+            if (ast.direction == AstForStmt::Direction::Decrement) {
+                ast.direction = AstForStmt::Direction::Skip;
+            } else if (ast.direction == AstForStmt::Direction::Unknown) {
+                ast.direction = AstForStmt::Direction::Increment;
             }
         } else {
             // TODO emit warning
-            if (m_ast.direction == AstForStmt::Direction::Unknown) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+            if (ast.direction == AstForStmt::Direction::Unknown) {
+                ast.direction = AstForStmt::Direction::Increment;
             }
         }
     } else if (step->type->isUnsignedIntegral()) {
         auto val = std::get<uint64_t>(step->value);
-        if (val == 0 || m_ast.direction == AstForStmt::Direction::Decrement) {
-            m_ast.direction = AstForStmt::Direction::Skip;
-        } else if (m_ast.direction == AstForStmt::Direction::Unknown) {
-            m_ast.direction = AstForStmt::Direction::Increment;
+        if (val == 0 || ast.direction == AstForStmt::Direction::Decrement) {
+            ast.direction = AstForStmt::Direction::Skip;
+        } else if (ast.direction == AstForStmt::Direction::Unknown) {
+            ast.direction = AstForStmt::Direction::Increment;
         }
     } else if (step->type->isFloatingPoint()) {
         auto val = std::get<double>(step->value);
         if (val < 0.0) {
-            if (m_ast.direction == AstForStmt::Direction::Increment) {
+            if (ast.direction == AstForStmt::Direction::Increment) {
                 if (equal) {
-                    m_ast.direction = AstForStmt::Direction::Decrement;
+                    ast.direction = AstForStmt::Direction::Decrement;
                 } else {
-                    m_ast.direction = AstForStmt::Direction::Skip;
+                    ast.direction = AstForStmt::Direction::Skip;
                 }
-            } else if (m_ast.direction == AstForStmt::Direction::Unknown) {
-                m_ast.direction = AstForStmt::Direction::Decrement;
+            } else if (ast.direction == AstForStmt::Direction::Unknown) {
+                ast.direction = AstForStmt::Direction::Decrement;
             }
         } else if (val > 0.0) {
-            if (m_ast.direction == AstForStmt::Direction::Decrement) {
-                m_ast.direction = AstForStmt::Direction::Skip;
-            } else if (m_ast.direction == AstForStmt::Direction::Unknown) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+            if (ast.direction == AstForStmt::Direction::Decrement) {
+                ast.direction = AstForStmt::Direction::Skip;
+            } else if (ast.direction == AstForStmt::Direction::Unknown) {
+                ast.direction = AstForStmt::Direction::Increment;
             }
         } else {
             // TODO emit warning
-            if (m_ast.direction == AstForStmt::Direction::Unknown) {
-                m_ast.direction = AstForStmt::Direction::Increment;
+            if (ast.direction == AstForStmt::Direction::Unknown) {
+                ast.direction = AstForStmt::Direction::Increment;
             }
         }
     }
