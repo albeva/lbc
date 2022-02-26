@@ -16,7 +16,7 @@ namespace Sem {
      * Semantic pass that declares all the functions
      * and declarations in the ast
      */
-    class FuncDeclarerPass final: public Pass {
+    class FuncDeclarerPass final : public Pass {
     public:
         using Pass::Pass;
         void visit(AstModule& ast);

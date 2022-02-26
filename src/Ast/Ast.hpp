@@ -37,7 +37,7 @@ struct AstRoot {
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
-    void operator delete(void* /*unused*/) { /* no op */ }; // NOLINT(cert-dcl54-cpp,hicpp-new-delete-operators,misc-new-delete-overloads)
+    void operator delete(void* /*unused*/){ /* no op */ }; // NOLINT(cert-dcl54-cpp,hicpp-new-delete-operators,misc-new-delete-overloads)
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {

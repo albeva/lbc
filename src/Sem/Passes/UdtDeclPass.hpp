@@ -12,7 +12,7 @@ struct AstUdtDecl;
 namespace Sem {
     class TypePass;
 
-    class UdtDeclPass final: public Pass {
+    class UdtDeclPass final : public Pass {
     public:
         using Pass::Pass;
         void visit(AstModule& ast) noexcept;

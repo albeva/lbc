@@ -11,7 +11,7 @@ struct AstIdentExpr;
 struct AstFuncDecl;
 
 namespace Sem {
-    class TypePass final: public Pass {
+    class TypePass final : public Pass {
     public:
         using Pass::Pass;
 

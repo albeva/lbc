@@ -2,8 +2,8 @@
 // Created by Albert Varaksin on 05/05/2021.
 //
 #pragma once
-#include "Pass.hpp"
 #include "Ast/Ast.hpp"
+#include "Pass.hpp"
 
 namespace lbc {
 class TypeRoot;
@@ -12,7 +12,7 @@ namespace Sem {
     /**
      * Fold constant expressions
      */
-    class ConstantFoldingPass final: public Pass {
+    class ConstantFoldingPass final : public Pass {
     public:
         using Pass::Pass;
         void fold(AstExpr*& ast);

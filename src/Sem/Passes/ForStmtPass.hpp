@@ -8,7 +8,7 @@ namespace lbc {
 struct AstForStmt;
 
 namespace Sem {
-    class ForStmtPass final: public Pass {
+    class ForStmtPass final : public Pass {
     public:
         using Pass::Pass;
         void visit(AstForStmt& ast) const noexcept;

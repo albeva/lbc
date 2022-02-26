@@ -6,5 +6,4 @@ using namespace lbc;
 using namespace Sem;
 
 void ForwardDeclPass::visit(AstModule&) const noexcept {
-
 }

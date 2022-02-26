@@ -9,7 +9,7 @@ struct AstModule;
 struct AstTypeAlias;
 
 namespace Sem {
-    class TypeAliasDeclPass final: public Pass {
+    class TypeAliasDeclPass final : public Pass {
     public:
         using Pass::Pass;
         void visit(AstModule& ast) const noexcept;
