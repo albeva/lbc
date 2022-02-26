@@ -23,8 +23,12 @@ enum class AstKind {
  * and should never be used as type for ast node directly
  */
 struct AstRoot {
+    NO_COPY_AND_MOVE(AstRoot)
+
     constexpr AstRoot(AstKind kind_, llvm::SMRange range_) noexcept
     : kind{ kind_ }, range{ range_ } {}
+
+    virtual ~AstRoot() noexcept = default;
 
     [[nodiscard]] llvm::StringRef getClassName() const noexcept;
 
@@ -33,7 +37,6 @@ struct AstRoot {
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {
