@@ -10,7 +10,7 @@
 
 namespace lbc {
 class TypeRoot;
-AST_FORWARD_DECLARE()
+AST_FORWARD_DECLARE() // NOLINT(cppcoreguidelines-virtual-class-destructor)
 
 enum class AstKind {
 #define KIND_ENUM(id, ...) id,
@@ -37,6 +37,7 @@ struct AstRoot {
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
+    void operator delete(void* /*unused*/) { /* no op */ }; // NOLINT(cert-dcl54-cpp,hicpp-new-delete-operators,misc-new-delete-overloads)
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {
