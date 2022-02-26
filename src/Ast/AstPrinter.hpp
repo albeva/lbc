@@ -20,7 +20,7 @@ private:
 
     void writeAttributes(AstAttributeList* ast);
     void writeStmts(AstStmtList* ast);
-    void writeExpr(AstExpr* ast, StringRef name = "expr");
+    void writeExpr(AstExpr* ast, llvm::StringRef name = "expr");
     void writeIdent(AstIdentExpr* ast);
     void writeType(AstTypeExpr* ast);
 

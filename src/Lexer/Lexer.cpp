@@ -229,7 +229,7 @@ void Lexer::stringLiteral(Token& result) {
     m_hasStmt = true;
     const auto* start = m_input;
 
-    string literal;
+    std::string literal;
     const auto* begin = m_input + 1;
     while (true) {
         auto ch = *++m_input;

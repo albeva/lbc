@@ -17,9 +17,6 @@
 #include <vector>
 
 namespace lbc {
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
 namespace fs = std::filesystem;
 using namespace std::literals::string_literals;
 } // namespace lbc
@@ -62,13 +59,6 @@ using namespace std::literals::string_literals;
 #elif defined(_MSC_VER)
 #    pragma warning(pop)
 #endif
-
-namespace lbc {
-using llvm::dyn_cast;
-using llvm::isa;
-using llvm::StringRef;
-using llvm::Twine;
-} // namespace lbc
 
 // APP
 #include "Utils/Try.hpp"

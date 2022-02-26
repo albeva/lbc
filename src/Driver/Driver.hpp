@@ -23,7 +23,7 @@ public:
     void drive();
 
 private:
-    using SourceVector = std::vector<unique_ptr<Source>>;
+    using SourceVector = std::vector<std::unique_ptr<Source>>;
 
     void processInputs();
     [[nodiscard]] std::unique_ptr<Source> deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const noexcept;
@@ -49,7 +49,7 @@ private:
     const CompileOptions& m_options;
 
     std::array<SourceVector, CompileOptions::FILETYPE_COUNT> m_sources{};
-    std::vector<unique_ptr<TranslationUnit>> m_modules{};
+    std::vector<std::unique_ptr<TranslationUnit>> m_modules{};
     void dumpCode();
 };
 

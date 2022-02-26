@@ -50,7 +50,7 @@ void ConstantFoldingPass::fold(AstExpr*& ast) {
 }
 
 AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
-    auto* literal = dyn_cast<AstLiteralExpr>(ast.expr);
+    auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.expr);
     if (literal == nullptr) {
         return nullptr;
     }
@@ -95,7 +95,7 @@ AstLiteralExpr::Value ConstantFoldingPass::unary(TokenKind op, const AstLiteralE
 
 
 AstExpr* ConstantFoldingPass::visitIfExpr(AstIfExpr& ast) {
-    if (auto* expr = dyn_cast<AstLiteralExpr>(ast.expr)) {
+    if (auto* expr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
         if (std::get<bool>(expr->value)) {
             return ast.trueExpr;
         }
@@ -110,7 +110,7 @@ AstExpr* ConstantFoldingPass::visitIfExpr(AstIfExpr& ast) {
 }
 
 AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
-    auto* lhs = dyn_cast<AstLiteralExpr>(ast.trueExpr);
+    auto* lhs = llvm::dyn_cast<AstLiteralExpr>(ast.trueExpr);
     if (lhs == nullptr) {
         return nullptr;
     }
@@ -119,7 +119,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
         return nullptr;
     }
 
-    auto* rhs = dyn_cast<AstLiteralExpr>(ast.falseExpr);
+    auto* rhs = llvm::dyn_cast<AstLiteralExpr>(ast.falseExpr);
     if (rhs == nullptr) {
         return nullptr;
     }
@@ -162,7 +162,7 @@ AstExpr* ConstantFoldingPass::visitBinaryExpr(AstBinaryExpr& /*ast*/) {
 }
 
 AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
-    auto* literal = dyn_cast<AstLiteralExpr>(ast.expr);
+    auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.expr);
     if (literal == nullptr) {
         return nullptr;
     }
@@ -175,14 +175,14 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
 
 AstLiteralExpr::Value ConstantFoldingPass::cast(const TypeRoot* type, const AstLiteralExpr& ast) {
     // clang-format off
-    if (const auto* integral = dyn_cast<TypeIntegral>(type)) {
+    if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
         #define INTEGRAL(ID, STR, KIND, BITS, SIGNED, TYPE)                          \
             if (integral->getBits() == (BITS) && integral->isSigned() == (SIGNED)) { \
                 return castLiteral<uint64_t, TYPE>(ast);                         \
             }
         INTEGRAL_TYPES(INTEGRAL)
         #undef INTEGRAL
-    } else if (const auto* fp = dyn_cast<TypeFloatingPoint>(type)) {
+    } else if (const auto* fp = llvm::dyn_cast<TypeFloatingPoint>(type)) {
         #define FLOATINGPOINT(ID, STR, KIND, BITS, TYPE)   \
             if (fp->getBits() == (BITS)) {                 \
                 return castLiteral<double, TYPE>(ast); \

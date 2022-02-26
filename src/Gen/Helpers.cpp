@@ -8,7 +8,7 @@ using namespace lbc;
 using namespace Gen;
 
 llvm::CmpInst::Predicate lbc::Gen::getCmpPred(const TypeRoot* type, TokenKind op) noexcept {
-    if (const auto* integral = dyn_cast<TypeIntegral>(type)) {
+    if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
         bool isSigned = integral->isSigned();
         switch (op) {
         case TokenKind::Equal:

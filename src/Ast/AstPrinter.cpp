@@ -179,7 +179,7 @@ void AstPrinter::visit(AstIfStmt& ast) {
 
                     writeExpr(block->expr);
 
-                    if (auto* list = dyn_cast<AstStmtList>(block->stmt)) {
+                    if (auto* list = llvm::dyn_cast<AstStmtList>(block->stmt)) {
                         writeStmts(list);
                     } else {
                         m_json.attributeBegin("stmt");
@@ -209,7 +209,7 @@ void AstPrinter::visit(AstForStmt& ast) {
         writeExpr(ast.limit, "limit");
         writeExpr(ast.step, "step");
 
-        if (auto* list = dyn_cast<AstStmtList>(ast.stmt)) {
+        if (auto* list = llvm::dyn_cast<AstStmtList>(ast.stmt)) {
             writeStmts(list);
         } else {
             m_json.attributeBegin("stmt");
@@ -245,7 +245,7 @@ void AstPrinter::visit(AstDoLoopStmt& ast) {
         }
         writeExpr(ast.expr);
 
-        if (auto* list = dyn_cast<AstStmtList>(ast.stmt)) {
+        if (auto* list = llvm::dyn_cast<AstStmtList>(ast.stmt)) {
             writeStmts(list);
         } else {
             m_json.attributeBegin("stmt");
@@ -308,7 +308,7 @@ void AstPrinter::visit(AstAttribute& ast) {
 void AstPrinter::visit(AstTypeExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        string name;
+        std::string name;
         if (const auto* type = ast.type) {
             name = type->asString();
         } else {
@@ -352,12 +352,12 @@ void AstPrinter::visit(AstCallExpr& ast) {
 }
 
 void AstPrinter::visit(AstLiteralExpr& ast) {
-    using Ret = std::pair<TokenKind, string>;
+    using Ret = std::pair<TokenKind, std::string>;
     const auto visitor = Visitor{
         [](std::monostate /*value*/) -> Ret {
             return { TokenKind::NullLiteral, "null" };
         },
-        [](StringRef value) -> Ret {
+        [](llvm::StringRef value) -> Ret {
             return { TokenKind::StringLiteral, value.str() };
         },
         [&](uint64_t value) -> Ret {
@@ -482,7 +482,7 @@ void AstPrinter::writeStmts(AstStmtList* ast) {
     m_json.attributeEnd();
 }
 
-void AstPrinter::writeExpr(AstExpr* ast, StringRef name) {
+void AstPrinter::writeExpr(AstExpr* ast, llvm::StringRef name) {
     if (ast == nullptr) {
         return;
     }

@@ -18,7 +18,7 @@ Parser::Parser(Context& context, unsigned int fileId, bool isMain)
   m_fileId{ fileId },
   m_isMain{ isMain },
   m_scope{ Scope::Root } {
-    m_lexer = make_unique<Lexer>(m_context, m_fileId);
+    m_lexer = std::make_unique<Lexer>(m_context, m_fileId);
     advance();
 }
 
@@ -149,7 +149,7 @@ ParseResult<AstImport> Parser::kwImport() {
     }
 
     // Load import into Source Mgr
-    string included;
+    std::string included;
     auto ID = m_context.getSourceMrg().AddIncludeFile(
         source.string(),
         range.Start,
@@ -491,7 +491,7 @@ ParseResult<AstDecl> Parser::kwType(AstAttributeList* attribs) {
  *    = TypeExpr
  *    .
  */
-ParseResult<AstTypeAlias> Parser::alias(StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
+ParseResult<AstTypeAlias> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
     TRY_DECLARE(type, typeExpr())
 
     return m_context.create<AstTypeAlias>(
@@ -508,7 +508,7 @@ ParseResult<AstTypeAlias> Parser::alias(StringRef id, llvm::SMLoc start, AstAttr
  *     "END" "TYPE"
  *   .
  */
-ParseResult<AstUdtDecl> Parser::udt(StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
+ParseResult<AstUdtDecl> Parser::udt(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
     // assume m_token == declaration || "end"
     TRY_DECLARE(decls, udtDeclList())
 
@@ -789,7 +789,7 @@ ParseResult<AstForStmt> Parser::kwFor() {
 
     // "DO" statement ?
     AstStmt* stmt = nullptr;
-    StringRef next;
+    llvm::StringRef next;
     if (accept(TokenKind::Do)) {
         TRY_ASSIGN(stmt, statement())
     } else {

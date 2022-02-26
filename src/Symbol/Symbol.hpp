@@ -11,7 +11,7 @@ class Symbol final {
 public:
     NO_COPY_AND_MOVE(Symbol)
 
-    explicit Symbol(StringRef name, const TypeRoot* type = nullptr) noexcept
+    explicit Symbol(llvm::StringRef name, const TypeRoot* type = nullptr) noexcept
     : m_name{ name }, m_type{ type }, m_alias{ "" } {}
 
     ~Symbol() noexcept = default;
@@ -28,15 +28,15 @@ public:
     [[nodiscard]] const TypeRoot* type() const noexcept { return m_type; }
     void setType(const TypeRoot* type) noexcept { m_type = type; }
 
-    [[nodiscard]] StringRef name() const noexcept { return m_name; }
+    [[nodiscard]] llvm::StringRef name() const noexcept { return m_name; }
 
     [[nodiscard]] llvm::Value* getLlvmValue() const noexcept { return m_llvmValue; }
     void setLlvmValue(llvm::Value* value) noexcept { m_llvmValue = value; }
 
-    [[nodiscard]] StringRef alias() const noexcept { return m_alias; }
-    void setAlias(StringRef alias) noexcept { m_alias = alias; }
+    [[nodiscard]] llvm::StringRef alias() const noexcept { return m_alias; }
+    void setAlias(llvm::StringRef alias) noexcept { m_alias = alias; }
 
-    [[nodiscard]] StringRef identifier() const noexcept {
+    [[nodiscard]] llvm::StringRef identifier() const noexcept {
         if (m_alias.empty()) {
             return m_name;
         }
@@ -61,10 +61,10 @@ public:
     }
 
 private:
-    const StringRef m_name;
+    const llvm::StringRef m_name;
     const TypeRoot* m_type;
 
-    StringRef m_alias;
+    llvm::StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
     Symbol* m_parent = nullptr;
     unsigned int m_index = 0;

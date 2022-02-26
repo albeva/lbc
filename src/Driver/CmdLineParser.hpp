@@ -24,7 +24,7 @@ public:
 private:
     void processOption(const Args& args, size_t& index);
 
-    [[noreturn]] static void showError(const string& message);
+    [[noreturn]] static void showError(const std::string& message);
     [[noreturn]] static void showHelp();
     [[noreturn]] static void showVersion();
 

@@ -31,17 +31,17 @@ public:
     [[nodiscard]] llvm::LLVMContext& getLlvmContext() noexcept { return m_llvmContext; }
 
     /**
-     * Retain a copy of the string in the context and return a StringRef that
+     * Retain a copy of the string in the context and return a llvm::StringRef that
      * we can pass around safely without worry of it expiring (as long as context lives)
      * @param str string to retain
      */
-    [[nodiscard]] StringRef retainCopy(StringRef str);
+    [[nodiscard]] llvm::StringRef retainCopy(llvm::StringRef str);
 
     /**
      * Store imported modules
      * @return true if module is newly added, false otherwise
      */
-    [[nodiscard]] bool import(StringRef module);
+    [[nodiscard]] bool import(llvm::StringRef module);
 
     /**
      * Allocate memory, this memory is not expected to be deallocated
@@ -67,7 +67,7 @@ public:
 
 private:
     struct Pimpl;
-    unique_ptr<Pimpl> m_pimpl;
+    std::unique_ptr<Pimpl> m_pimpl;
     const CompileOptions& m_options;
 
     DiagnosticEngine& m_diag;

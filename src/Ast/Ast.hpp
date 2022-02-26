@@ -26,7 +26,7 @@ struct AstRoot {
     constexpr AstRoot(AstKind kind_, llvm::SMRange range_) noexcept
     : kind{ kind_ }, range{ range_ } {}
 
-    [[nodiscard]] StringRef getClassName() const noexcept;
+    [[nodiscard]] llvm::StringRef getClassName() const noexcept;
 
     const AstKind kind;
     const llvm::SMRange range;
@@ -98,7 +98,7 @@ struct AstStmtList final : AstStmt {
 struct AstImport final : AstStmt {
     AstImport(
         llvm::SMRange range_,
-        StringRef import_,
+        llvm::StringRef import_,
         AstModule* module_ = nullptr) noexcept
     : AstStmt{ AstKind::Import, range_ },
       import{ import_ },
@@ -108,7 +108,7 @@ struct AstImport final : AstStmt {
         return ast->kind == AstKind::Import;
     }
 
-    const StringRef import;
+    const llvm::StringRef import;
     AstModule* module;
 };
 
@@ -203,7 +203,7 @@ struct AstForStmt final : AstStmt {
         AstExpr* limit_,
         AstExpr* step_,
         AstStmt* stmt_,
-        StringRef next_) noexcept
+        llvm::StringRef next_) noexcept
     : AstStmt{ AstKind::ForStmt, range_ },
       decls{ std::move(decls_) },
       iterator{ iter_ },
@@ -221,7 +221,7 @@ struct AstForStmt final : AstStmt {
     AstExpr* limit;
     AstExpr* step;
     AstStmt* stmt;
-    const StringRef next;
+    const llvm::StringRef next;
 
     Direction direction = Direction::Unknown;
     SymbolTable* symbolTable = nullptr;
@@ -296,8 +296,8 @@ struct AstAttributeList final : AstRoot {
         return ast->kind == AstKind::AttributeList;
     }
 
-    [[nodiscard]] bool exists(StringRef name) const noexcept;
-    [[nodiscard]] std::optional<StringRef> getStringLiteral(StringRef key) const noexcept;
+    [[nodiscard]] bool exists(llvm::StringRef name) const noexcept;
+    [[nodiscard]] std::optional<llvm::StringRef> getStringLiteral(llvm::StringRef key) const noexcept;
 
     std::vector<AstAttribute*> attribs;
 };
@@ -326,7 +326,7 @@ struct AstDecl : AstStmt {
     AstDecl(
         AstKind kind_,
         llvm::SMRange range_,
-        StringRef name_,
+        llvm::StringRef name_,
         AstAttributeList* attribs) noexcept
     : AstStmt{ kind_, range_ },
       name{ name_ },
@@ -336,7 +336,7 @@ struct AstDecl : AstStmt {
         return AST_DECL_RANGE(IS_AST_CLASSOF)
     }
 
-    const StringRef name;
+    const llvm::StringRef name;
     AstAttributeList* attributes;
     Symbol* symbol = nullptr;
     const TypeRoot* type = nullptr;
@@ -353,7 +353,7 @@ struct AstDeclList final : AstRoot {
 struct AstVarDecl final : AstDecl {
     AstVarDecl(
         llvm::SMRange range_,
-        StringRef name_,
+        llvm::StringRef name_,
         AstAttributeList* attrs_,
         AstTypeExpr* type_,
         AstExpr* expr_) noexcept
@@ -372,7 +372,7 @@ struct AstVarDecl final : AstDecl {
 struct AstFuncDecl final : AstDecl {
     AstFuncDecl(
         llvm::SMRange range_,
-        StringRef name_,
+        llvm::StringRef name_,
         AstAttributeList* attrs_,
         AstFuncParamList* params_,
         bool variadic_,
@@ -398,7 +398,7 @@ struct AstFuncDecl final : AstDecl {
 struct AstFuncParamDecl final : AstDecl {
     AstFuncParamDecl(
         llvm::SMRange range_,
-        StringRef name_,
+        llvm::StringRef name_,
         AstAttributeList* attrs,
         AstTypeExpr* type_) noexcept
     : AstDecl{ AstKind::FuncParamDecl, range_, name_, attrs },
@@ -424,7 +424,7 @@ struct AstFuncParamList final : AstRoot {
 struct AstUdtDecl final : AstDecl {
     AstUdtDecl(
         llvm::SMRange range_,
-        StringRef name_,
+        llvm::StringRef name_,
         AstAttributeList* attrs,
         AstDeclList* decls_) noexcept
     : AstDecl{ AstKind::UdtDecl, range_, name_, attrs },
@@ -441,7 +441,7 @@ struct AstUdtDecl final : AstDecl {
 struct AstTypeAlias final : AstDecl {
     AstTypeAlias(
         llvm::SMRange range_,
-        StringRef name_,
+        llvm::StringRef name_,
         AstAttributeList* attrs,
         AstTypeExpr* typeExpr_) noexcept
     : AstDecl{ AstKind::TypeAlias, range_, name_, attrs }, typeExpr{ typeExpr_ } {}
@@ -520,7 +520,7 @@ struct AstAssignExpr final : AstExpr {
 struct AstIdentExpr final : AstExpr {
     AstIdentExpr(
         llvm::SMRange range_,
-        StringRef name_) noexcept
+        llvm::StringRef name_) noexcept
     : AstExpr{ AstKind::IdentExpr, range_ },
       name{ name_ } {};
 
@@ -528,7 +528,7 @@ struct AstIdentExpr final : AstExpr {
         return ast->kind == AstKind::IdentExpr;
     }
 
-    StringRef name;
+    llvm::StringRef name;
     Symbol* symbol = nullptr;
 };
 

@@ -18,11 +18,11 @@ public:
     [[nodiscard]] SymbolTable* getParent() const noexcept { return m_parent; }
     void setParent(SymbolTable* parent) noexcept { m_parent = parent; }
 
-    Symbol* insert(Context& context, StringRef name);
+    Symbol* insert(Context& context, llvm::StringRef name);
     void addReference(Symbol*);
 
-    [[nodiscard]] bool exists(StringRef name, bool recursive = false) const noexcept;
-    [[nodiscard]] Symbol* find(StringRef id, bool recursive = true) const noexcept;
+    [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const noexcept;
+    [[nodiscard]] Symbol* find(llvm::StringRef id, bool recursive = true) const noexcept;
     [[nodiscard]] std::vector<Symbol*> getSymbols() const;
 
     [[nodiscard]] auto size() const noexcept { return m_symbols.size(); }

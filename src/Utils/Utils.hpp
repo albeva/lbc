@@ -40,8 +40,8 @@ Visitor(Base...) -> Visitor<Base...>;
 /**
  * Get Twine from "literal"_t
  */
-inline Twine operator"" _t(const char* s, size_t /*len*/) noexcept {
-    return { s };
+inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) noexcept {
+    return { str };
 }
 
 /**
@@ -50,14 +50,14 @@ inline Twine operator"" _t(const char* s, size_t /*len*/) noexcept {
  * @param message to print
  * @param prefix add standard prefix before the message
  */
-[[noreturn]] void fatalError(const Twine& message, bool prefix = true);
+[[noreturn]] void fatalError(const llvm::Twine& message, bool prefix = true);
 
 /**
  * Emit compiler warning, but continue compilation process
  * @param message to print
  * @param prefix add standard prefix before the message
  */
-void warning(const Twine& message, bool prefix = true);
+void warning(const llvm::Twine& message, bool prefix = true);
 } // namespace lbc
 
 #include "ScopeGuard.hpp"

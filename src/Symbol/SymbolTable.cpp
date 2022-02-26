@@ -6,7 +6,7 @@
 #include "Symbol.hpp"
 using namespace lbc;
 
-Symbol* SymbolTable::insert(Context& context, StringRef name) {
+Symbol* SymbolTable::insert(Context& context, llvm::StringRef name) {
     auto* symbol = context.create<Symbol>(name);
     symbol->setIndex(m_symbols.size());
     return m_symbols.insert({ name, symbol }).first->second;
@@ -16,7 +16,7 @@ void SymbolTable::addReference(Symbol* symbol) {
     m_references.insert({ symbol->name(), symbol });
 }
 
-bool SymbolTable::exists(StringRef name, bool recursive) const noexcept {
+bool SymbolTable::exists(llvm::StringRef name, bool recursive) const noexcept {
     if (m_symbols.find(name) != m_symbols.end()) {
         return true;
     }
@@ -28,7 +28,7 @@ bool SymbolTable::exists(StringRef name, bool recursive) const noexcept {
     return recursive && m_parent != nullptr && m_parent->exists(name, recursive);
 }
 
-Symbol* SymbolTable::find(StringRef id, bool recursive) const noexcept {
+Symbol* SymbolTable::find(llvm::StringRef id, bool recursive) const noexcept {
     if (auto iter = m_symbols.find(id); iter != m_symbols.end()) {
         return iter->second;
     }

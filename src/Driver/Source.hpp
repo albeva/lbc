@@ -18,8 +18,8 @@ struct Source final {
 
     ~Source() noexcept = default;
 
-    [[nodiscard]] static unique_ptr<Source> create(CompileOptions::FileType type, fs::path path, bool generated, const Source* origin = nullptr) {
-        return make_unique<Source>(type, std::forward<fs::path>(path), generated, origin);
+    [[nodiscard]] static std::unique_ptr<Source> create(CompileOptions::FileType type, fs::path path, bool generated, const Source* origin = nullptr) {
+        return std::make_unique<Source>(type, std::forward<fs::path>(path), generated, origin);
     }
 
     const CompileOptions::FileType type;
@@ -30,7 +30,7 @@ struct Source final {
     /**
      * Derive new generated Source with the same origin
      */
-    [[nodiscard]] unique_ptr<Source> derive(CompileOptions::FileType ty, fs::path p) const {
+    [[nodiscard]] std::unique_ptr<Source> derive(CompileOptions::FileType ty, fs::path p) const {
         return create(ty, std::move(p), true, &origin);
     }
 };

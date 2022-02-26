@@ -62,9 +62,9 @@ void ForStmtBuilder::configureStep() {
     // No step
     if (m_ast.step == nullptr) {
         llvm::Constant* stepVal = nullptr;
-        if (const auto* integral = dyn_cast<TypeIntegral>(m_type)) {
+        if (const auto* integral = llvm::dyn_cast<TypeIntegral>(m_type)) {
             stepVal = llvm::ConstantInt::get(m_llvmType, 1, integral->isSigned());
-        } else if (isa<TypeFloatingPoint>(m_type)) {
+        } else if (llvm::isa<TypeFloatingPoint>(m_type)) {
             stepVal = llvm::ConstantFP::get(m_llvmType, 1);
         } else {
             llvm_unreachable("Unknown type");
@@ -74,10 +74,10 @@ void ForStmtBuilder::configureStep() {
     }
 
     // Literal value
-    if (auto* literal = dyn_cast<AstLiteralExpr>(m_ast.step)) {
+    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
         const auto* stepTy = literal->type;
         llvm::Constant* stepVal = nullptr;
-        if (const auto* integral = dyn_cast<TypeIntegral>(stepTy)) {
+        if (const auto* integral = llvm::dyn_cast<TypeIntegral>(stepTy)) {
             auto stepLit = std::get<uint64_t>(literal->value);
             if (integral->isSigned()) {
                 auto sstepLit = static_cast<int64_t>(stepLit);
@@ -86,7 +86,7 @@ void ForStmtBuilder::configureStep() {
                 }
             }
             stepVal = llvm::ConstantInt::get(m_llvmType, stepLit, false);
-        } else if (isa<TypeFloatingPoint>(stepTy)) {
+        } else if (llvm::isa<TypeFloatingPoint>(stepTy)) {
             auto stepLit = std::get<double>(literal->value);
             if (stepLit < 0) {
                 stepLit = -stepLit;

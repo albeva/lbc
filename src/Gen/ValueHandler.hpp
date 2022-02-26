@@ -18,13 +18,13 @@ namespace Gen {
     class ValueHandler final : llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
     public:
         /// Create temporary allocated variable - it is not inserted into symbol table
-        static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, StringRef name = "") noexcept;
+        static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") noexcept;
 
         /// Create temporary variable if expression is not a constant
-        static ValueHandler createTempOrConstant(CodeGen& gen, AstExpr& expr, StringRef name = "") noexcept;
+        static ValueHandler createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") noexcept;
 
         /// Create temporary from given llvm value
-        static ValueHandler createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, StringRef name) noexcept;
+        static ValueHandler createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept;
 
         constexpr ValueHandler() noexcept = default;
         ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept;

@@ -393,26 +393,26 @@ void CodePrinter::visit(AstCallExpr& ast) {
 
 void CodePrinter::visit(AstLiteralExpr& ast) {
     const auto visitor = Visitor{
-        [](std::monostate /*value*/) -> string {
+        [](std::monostate /*value*/) -> std::string {
             return "NULL";
         },
-        [](StringRef value) -> string {
-            string result;
+        [](llvm::StringRef value) -> std::string {
+            std::string result;
             llvm::raw_string_ostream str{ result };
             llvm::printEscapedString(value, str);
             return '"' + result + '"';
         },
-        [&](uint64_t value) -> string {
+        [&](uint64_t value) -> std::string {
             if (ast.type == nullptr || ast.type->isSignedIntegral()) {
                 auto sval = static_cast<int64_t>(value);
                 return std::to_string(sval);
             }
             return std::to_string(value);
         },
-        [](double value) -> string {
+        [](double value) -> std::string {
             return std::to_string(value);
         },
-        [](bool value) -> string {
+        [](bool value) -> std::string {
             return value ? "TRUE" : "FALSE";
         }
     };
@@ -494,6 +494,6 @@ void CodePrinter::visit(AstIfExpr& ast) {
     m_os << ")";
 }
 
-string CodePrinter::indent() const noexcept {
-    return string(m_indent * SPACES, ' ');
+std::string CodePrinter::indent() const noexcept {
+    return std::string(m_indent * SPACES, ' ');
 }

@@ -29,12 +29,12 @@ constexpr std::array kindToDescription {
 
 } // namespace
 
-StringRef Token::description(TokenKind kind) noexcept {
+llvm::StringRef Token::description(TokenKind kind) noexcept {
     auto index = static_cast<size_t>(kind);
     return kindToDescription.at(index);
 }
 
-TokenKind Token::findKind(StringRef str) noexcept {
+TokenKind Token::findKind(llvm::StringRef str) noexcept {
     auto iter = keywordsToKind.find(str);
     if (iter != keywordsToKind.end()) {
         return iter->second;
@@ -42,18 +42,18 @@ TokenKind Token::findKind(StringRef str) noexcept {
     return TokenKind::Identifier;
 }
 
-StringRef Token::lexeme() const noexcept {
+llvm::StringRef Token::lexeme() const noexcept {
     const auto* start = m_range.Start.getPointer();
     const auto* end = m_range.End.getPointer();
     return { start, static_cast<size_t>(std::distance(start, end)) };
 }
 
-string Token::asString() const {
+std::string Token::asString() const {
     static constexpr auto visitor = lbc::Visitor{
         [](std::monostate /*value*/) {
             return "NULL"s;
         },
-        [](StringRef value) {
+        [](llvm::StringRef value) {
             return value.str();
         },
         [](uint64_t value) {

@@ -142,7 +142,7 @@ void Driver::emitObjects(bool temporary) {
 void Driver::emitNative(CompileOptions::FileType type, bool temporary) {
     const auto& bcFiles = getSources(CompileOptions::FileType::BitCode);
     auto& dstFiles = getSources(type);
-    string filetype;
+    std::string filetype;
     if (type == CompileOptions::FileType::Object) {
         filetype = "obj";
     } else {
@@ -281,7 +281,7 @@ void Driver::emitExecutable() {
             linker.addPath(obj->path);
         }
     } else if (triple.isOSLinux()) {
-        string linuxSysPath = "/usr/lib/x86_64-linux-gnu";
+        std::string linuxSysPath = "/usr/lib/x86_64-linux-gnu";
         linker
             .addArg("-m", "elf_x86_64")
             .addArg("-dynamic-linker", "/lib64/ld-linux-x86-64.so.2")
@@ -315,7 +315,7 @@ void Driver::compileSources() {
     const auto& sources = getSources(CompileOptions::FileType::Source);
     m_modules.reserve(m_modules.size() + sources.size());
     for (const auto& source : sources) {
-        string included;
+        std::string included;
         auto ID = m_context.getSourceMrg().AddIncludeFile(source->path.string(), {}, included);
         if (ID == ~0U) {
             fatalError("Failed to load '"_t + source->path.string() + "'");

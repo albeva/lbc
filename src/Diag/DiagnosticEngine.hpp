@@ -21,11 +21,11 @@ public:
     [[nodiscard]] bool hasErrors() const noexcept { return m_errorCounter > 0; }
 
     template<typename... Args>
-    static string format(Diag diag, Args&&... args) noexcept {
+    static std::string format(Diag diag, Args&&... args) noexcept {
         return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
     }
 
-    void print(Diag diag, llvm::SMLoc loc, const string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) noexcept;
+    void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) noexcept;
 
 private:
     static const char* getText(Diag diag) noexcept;

@@ -11,7 +11,7 @@
 using namespace lbc;
 using namespace Gen;
 
-ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, StringRef name) noexcept {
+ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     auto* var = gen.getBuilder().CreateAlloca(
         expr.type->getLlvmType(gen.getContext()),
@@ -22,9 +22,9 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, StringRef nam
     return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, StringRef name) noexcept {
+ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
-    if (isa<llvm::Constant>(value)) {
+    if (llvm::isa<llvm::Constant>(value)) {
         return { &gen, expr.type, value };
     }
 
@@ -37,7 +37,7 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, Str
     return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, StringRef name) noexcept {
+ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept {
     auto* symbol = gen.getContext().create<Symbol>(name, type);
     symbol->setLlvmValue(value);
     return { &gen, symbol };

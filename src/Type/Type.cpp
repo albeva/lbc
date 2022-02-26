@@ -88,8 +88,8 @@ TypeComparison TypeRoot::compare(const TypeRoot* other) const noexcept {
         return TypeComparison::Equal;
     }
 
-    if (const auto* left = dyn_cast<TypePointer>(this)) {
-        if (const auto* right = dyn_cast<TypePointer>(other)) {
+    if (const auto* left = llvm::dyn_cast<TypePointer>(this)) {
+        if (const auto* right = llvm::dyn_cast<TypePointer>(other)) {
             if (left->getBase()->isAny()) {
                 return TypeComparison::Upcast;
             }
@@ -100,8 +100,8 @@ TypeComparison TypeRoot::compare(const TypeRoot* other) const noexcept {
         return TypeComparison::Incompatible;
     }
 
-    if (const auto* left = dyn_cast<TypeIntegral>(this)) {
-        if (const auto* right = dyn_cast<TypeIntegral>(other)) {
+    if (const auto* left = llvm::dyn_cast<TypeIntegral>(this)) {
+        if (const auto* right = llvm::dyn_cast<TypeIntegral>(other)) {
             if (left->getBits() > right->getBits()) {
                 return TypeComparison::Downcast;
             }
@@ -120,11 +120,11 @@ TypeComparison TypeRoot::compare(const TypeRoot* other) const noexcept {
         return TypeComparison::Incompatible;
     }
 
-    if (const auto& left = dyn_cast<TypeFloatingPoint>(this)) {
+    if (const auto& left = llvm::dyn_cast<TypeFloatingPoint>(this)) {
         if (other->isIntegral()) {
             return TypeComparison::Downcast;
         }
-        if (const auto* right = dyn_cast<TypeFloatingPoint>(other)) {
+        if (const auto* right = llvm::dyn_cast<TypeFloatingPoint>(other)) {
             if (left->getBits() > right->getBits()) {
                 return TypeComparison::Downcast;
             }
@@ -149,7 +149,7 @@ llvm::Type* TypeVoid::genLlvmType(Context& context) const {
     return llvm::Type::getVoidTy(context.getLlvmContext());
 }
 
-string TypeVoid::asString() const {
+std::string TypeVoid::asString() const {
     return "VOID";
 }
 
@@ -162,7 +162,7 @@ llvm::Type* TypeAny::genLlvmType(Context& context) const {
     return llvm::Type::getInt8Ty(context.getLlvmContext());
 }
 
-string TypeAny::asString() const {
+std::string TypeAny::asString() const {
     return "ANY";
 }
 
@@ -188,7 +188,7 @@ llvm::Type* TypePointer::genLlvmType(Context& context) const {
     return llvm::PointerType::get(m_base->getLlvmType(context), 0);
 }
 
-string TypePointer::asString() const {
+std::string TypePointer::asString() const {
     return m_base->asString() + " PTR";
 }
 
@@ -202,7 +202,7 @@ llvm::Type* TypeBoolean::genLlvmType(Context& context) const {
     return llvm::Type::getInt1Ty(context.getLlvmContext());
 }
 
-string TypeBoolean::asString() const {
+std::string TypeBoolean::asString() const {
     return "BOOL";
 }
 
@@ -215,7 +215,7 @@ const TypeIntegral* TypeIntegral::get(unsigned bits, bool isSigned) noexcept {
     INTEGRAL_TYPES(USE_TYPE)
 #undef USE_TYPE
 
-    fatalError("Invalid integer type size: "_t + Twine(bits), false);
+    fatalError("Invalid integer type size: "_t + llvm::Twine(bits), false);
 }
 
 const TypeIntegral* TypeIntegral::getSigned() const noexcept {
@@ -230,7 +230,7 @@ llvm::Type* TypeIntegral::genLlvmType(Context& context) const {
     return llvm::IntegerType::get(context.getLlvmContext(), getBits());
 }
 
-string TypeIntegral::asString() const {
+std::string TypeIntegral::asString() const {
 #define GET_TYPE(ID, STR, KIND, BITS, SIGNED, ...) \
     if (getBits() == BITS && isSigned() == SIGNED) \
         return STR;
@@ -250,7 +250,7 @@ const TypeFloatingPoint* TypeFloatingPoint::get(unsigned bits) noexcept {
         FLOATINGPOINT_TYPES(USE_TYPE)
 #undef USE_TYPE
     default:
-        fatalError("Invalid floating point type size: "_t + Twine(bits), false);
+        fatalError("Invalid floating point type size: "_t + llvm::Twine(bits), false);
     }
 }
 
@@ -261,11 +261,11 @@ llvm::Type* TypeFloatingPoint::genLlvmType(Context& context) const {
     case 64: // NOLINT
         return llvm::Type::getDoubleTy(context.getLlvmContext());
     default:
-        fatalError("Invalid floating point type size: "_t + Twine(getBits()), false);
+        fatalError("Invalid floating point type size: "_t + llvm::Twine(getBits()), false);
     }
 }
 
-string TypeFloatingPoint::asString() const {
+std::string TypeFloatingPoint::asString() const {
 #define GET_TYPE(ID, STR, kind, BITS, ...) \
     if (getBits() == BITS)                 \
         return STR;
@@ -305,8 +305,8 @@ llvm::Type* TypeFunction::genLlvmType(Context& context) const {
     return llvm::FunctionType::get(retTy, params, m_variadic);
 }
 
-string TypeFunction::asString() const {
-    string out = m_retType != nullptr ? "FUNCTION(" : "SUB(";
+std::string TypeFunction::asString() const {
+    std::string out = m_retType != nullptr ? "FUNCTION(" : "SUB(";
     for (size_t i = 0; i < m_paramTypes.size(); i++) {
         if (i > 0) {
             out += ", ";
@@ -329,6 +329,6 @@ llvm::Type* TypeZString::genLlvmType(Context& context) const {
     return llvm::Type::getInt8PtrTy(context.getLlvmContext());
 }
 
-string TypeZString::asString() const {
+std::string TypeZString::asString() const {
     return "ZSTRING";
 }

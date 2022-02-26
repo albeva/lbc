@@ -23,7 +23,7 @@ public:
         return type->getKind() == TypeFamily::UDT;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
     [[nodiscard]] Symbol& getSymbol() const noexcept { return m_symbol; }
     [[nodiscard]] SymbolTable& getSymbolTable() const noexcept { return m_symbolTable; }

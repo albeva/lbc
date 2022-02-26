@@ -36,10 +36,10 @@ Context::Context(const CompileOptions& options)
 
 Context::~Context() noexcept = default;
 
-StringRef Context::retainCopy(StringRef str) {
+llvm::StringRef Context::retainCopy(llvm::StringRef str) {
     return m_retainedStrings.insert(str).first->first();
 }
 
-bool Context::import(StringRef module) {
+bool Context::import(llvm::StringRef module) {
     return m_imports.insert(module).second;
 }

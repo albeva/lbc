@@ -57,7 +57,7 @@ void CodeGen::visit(AstModule& ast) {
     m_scope = Scope::Root;
     auto file = m_context.getSourceMrg().getMemoryBuffer(m_fileId)->getBufferIdentifier();
 
-    m_module = make_unique<llvm::Module>(file, m_llvmContext);
+    m_module = std::make_unique<llvm::Module>(file, m_llvmContext);
     m_module->setTargetTriple(m_context.getTriple().str());
 
     declareFuncs(*ast.stmtList);
@@ -186,7 +186,7 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
 
     // has an init expr?
     if (ast.expr != nullptr) {
-        if (auto* litExpr = dyn_cast<AstLiteralExpr>(ast.expr)) {
+        if (auto* litExpr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
             auto rvalue = visit(*litExpr);
             constant = llvm::cast<llvm::Constant>(rvalue.load());
         } else {
@@ -464,7 +464,7 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
             return llvm::ConstantPointerNull::get(
                 llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context)));
         },
-        [&](StringRef str) -> llvm::Value* {
+        [&](llvm::StringRef str) -> llvm::Value* {
             return getStringConstant(str);
         },
         [&](uint64_t value) -> llvm::Value* {
@@ -485,7 +485,7 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
     return { this, ast.type, std::visit(visitor, ast.value) };
 }
 
-llvm::Constant* CodeGen::getStringConstant(StringRef str) {
+llvm::Constant* CodeGen::getStringConstant(llvm::StringRef str) {
     auto [iter, inserted] = m_stringLiterals.try_emplace(str, nullptr);
     if (inserted) {
         iter->second = m_builder.CreateGlobalStringPtr(str);
@@ -554,6 +554,6 @@ ValueHandler CodeGen::visit(AstIfExpr& ast) {
     return { this, ast.type, value };
 }
 
-unique_ptr<llvm::Module> CodeGen::getModule() {
+std::unique_ptr<llvm::Module> CodeGen::getModule() {
     return std::move(m_module);
 }

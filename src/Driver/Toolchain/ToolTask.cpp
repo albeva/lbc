@@ -15,12 +15,12 @@ ToolTask& ToolTask::reset() {
     return *this;
 }
 
-ToolTask& ToolTask::addArg(const string& arg) {
+ToolTask& ToolTask::addArg(const std::string& arg) {
     m_args.push_back(arg);
     return *this;
 }
 
-ToolTask& ToolTask::addArg(const string& name, const string& value) {
+ToolTask& ToolTask::addArg(const std::string& name, const std::string& value) {
     m_args.push_back(name);
     m_args.push_back(value);
     return *this;
@@ -31,13 +31,13 @@ ToolTask& ToolTask::addPath(const fs::path& path) {
     return *this;
 }
 
-ToolTask& ToolTask::addPath(const string& name, const fs::path& value) {
+ToolTask& ToolTask::addPath(const std::string& name, const fs::path& value) {
     m_args.push_back(name);
     addPath(value);
     return *this;
 }
 
-ToolTask& ToolTask::addArgs(std::initializer_list<string> args) {
+ToolTask& ToolTask::addArgs(std::initializer_list<std::string> args) {
     if (m_args.capacity() < m_args.size() + args.size()) {
         m_args.reserve(m_args.size() + args.size());
     }
@@ -46,7 +46,7 @@ ToolTask& ToolTask::addArgs(std::initializer_list<string> args) {
 }
 
 int ToolTask::execute() const noexcept {
-    std::vector<StringRef> args;
+    std::vector<llvm::StringRef> args;
     args.reserve(m_args.size() + 1);
 
     auto program = m_path.string();

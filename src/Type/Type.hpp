@@ -57,7 +57,7 @@ public:
     }
     virtual ~TypeRoot() noexcept = default;
     [[nodiscard]] static const TypeRoot* fromTokenKind(TokenKind kind) noexcept;
-    [[nodiscard]] virtual string asString() const = 0;
+    [[nodiscard]] virtual std::string asString() const = 0;
 
     [[nodiscard]] const TypePointer* getPointer(Context& context) const noexcept;
 
@@ -110,7 +110,7 @@ public:
         return type->getKind() == TypeFamily::Void;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;
@@ -128,7 +128,7 @@ public:
         return type->getKind() == TypeFamily::Any;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;
@@ -148,7 +148,7 @@ public:
         return type->getKind() == TypeFamily::Pointer;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
     [[nodiscard]] constexpr const TypeRoot* getBase() const noexcept { return m_base; }
 
@@ -172,7 +172,7 @@ public:
         return type->getKind() == TypeFamily::Boolean;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;
@@ -218,7 +218,7 @@ public:
     [[nodiscard]] const TypeIntegral* getSigned() const noexcept;
     [[nodiscard]] const TypeIntegral* getUnsigned() const noexcept;
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;
@@ -241,7 +241,7 @@ public:
         return type->getKind() == TypeFamily::FloatingPoint;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;
@@ -268,7 +268,7 @@ public:
         return type->getKind() == TypeFamily::Function;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
     [[nodiscard]] const TypeRoot* getReturn() const noexcept { return m_retType; }
     [[nodiscard]] const std::vector<const TypeRoot*>& getParams() const noexcept { return m_paramTypes; }
@@ -298,7 +298,7 @@ public:
         return type->getKind() == TypeFamily::ZString;
     }
 
-    [[nodiscard]] string asString() const final;
+    [[nodiscard]] std::string asString() const final;
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;

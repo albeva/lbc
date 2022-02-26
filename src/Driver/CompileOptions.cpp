@@ -4,7 +4,7 @@
 using namespace lbc;
 #include "CompileOptions.hpp"
 
-string CompileOptions::getFileExt(FileType type) {
+std::string CompileOptions::getFileExt(FileType type) {
     switch (type) {
     case FileType::Source:
         return ".bas";
@@ -175,7 +175,7 @@ bool CompileOptions::isMainFile(const fs::path& file) const noexcept { // NOLINT
     return resolveFilePath(sources[0]) == file;
 }
 
-fs::path CompileOptions::resolveOutputPath(const fs::path& path, const string& ext) const {
+fs::path CompileOptions::resolveOutputPath(const fs::path& path, const std::string& ext) const {
     if (!fs::exists(path)) {
         fatalError("File '"_t + path.string() + "' not found");
     }

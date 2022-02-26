@@ -34,7 +34,7 @@ public:
         BitCode   // .bc
     };
     static constexpr size_t FILETYPE_COUNT = 5;
-    [[nodiscard]] static string getFileExt(FileType type);
+    [[nodiscard]] static std::string getFileExt(FileType type);
 
 public:
     NO_COPY_AND_MOVE(CompileOptions)
@@ -112,7 +112,7 @@ public:
 
 public:
     [[nodiscard]] bool isMainFile(const fs::path& file) const noexcept;
-    [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, const string& ext) const;
+    [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, const std::string& ext) const;
     [[nodiscard]] fs::path resolveFilePath(const fs::path& path) const;
 
 private:

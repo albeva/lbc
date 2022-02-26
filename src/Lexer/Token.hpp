@@ -22,13 +22,13 @@ enum class OperatorType {
 
 class Token final {
 public:
-    using Value = std::variant<std::monostate, StringRef, uint64_t, double, bool>;
+    using Value = std::variant<std::monostate, llvm::StringRef, uint64_t, double, bool>;
 
     // Describe given token kind
-    static StringRef description(TokenKind kind) noexcept;
+    static llvm::StringRef description(TokenKind kind) noexcept;
 
     // find matching token for string or return TokenKind::Identifier
-    static TokenKind findKind(StringRef str) noexcept;
+    static TokenKind findKind(llvm::StringRef str) noexcept;
 
     // set token values
     void set(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{}) noexcept {
@@ -41,12 +41,12 @@ public:
     [[nodiscard]] TokenKind getKind() const noexcept { return m_kind; }
     void setKind(TokenKind kind) noexcept { m_kind = kind; }
 
-    [[nodiscard]] StringRef lexeme() const noexcept;
-    [[nodiscard]] string asString() const;
+    [[nodiscard]] llvm::StringRef lexeme() const noexcept;
+    [[nodiscard]] std::string asString() const;
     [[nodiscard]] const Value& getValue() const noexcept { return m_value; }
-    [[nodiscard]] StringRef getStringValue() const { return std::get<StringRef>(m_value); }
+    [[nodiscard]] llvm::StringRef getStringValue() const { return std::get<llvm::StringRef>(m_value); }
     [[nodiscard]] const llvm::SMRange& range() const noexcept { return m_range; };
-    [[nodiscard]] StringRef description() const noexcept { return description(m_kind); }
+    [[nodiscard]] llvm::StringRef description() const noexcept { return description(m_kind); }
 
     // Info about operators
     [[nodiscard]] bool isGeneral() const noexcept;

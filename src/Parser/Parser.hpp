@@ -74,7 +74,7 @@ private:
     [[nodiscard]] ParseResult<AstFuncStmt> kwFunction(AstAttributeList* attribs);
     [[nodiscard]] ParseResult<AstStmt> kwReturn();
     [[nodiscard]] ParseResult<AstDecl> kwType(AstAttributeList* attribs);
-    [[nodiscard]] ParseResult<AstTypeAlias> alias(StringRef id, llvm::SMLoc start, AstAttributeList* attribs);
+    [[nodiscard]] ParseResult<AstTypeAlias> alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs);
     [[nodiscard]] ParseResult<AstUdtDecl> udt(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs);
     [[nodiscard]] ParseResult<AstDeclList> udtDeclList();
     [[nodiscard]] ParseResult<AstDecl> udtMember(AstAttributeList* attribs);
@@ -124,7 +124,7 @@ private:
     const unsigned m_fileId;
     const bool m_isMain;
     Scope m_scope;
-    unique_ptr<Lexer> m_lexer;
+    std::unique_ptr<Lexer> m_lexer;
     Token m_token{};
     llvm::SMLoc m_endLoc{};
     ExprFlags m_exprFlags{};

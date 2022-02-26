@@ -18,7 +18,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
 
 const TypeUDT* TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) {
     if (const auto* type = symbol.type()) {
-        if (const auto* udt = dyn_cast<TypeUDT>(type)) {
+        if (const auto* udt = llvm::dyn_cast<TypeUDT>(type)) {
             return udt;
         }
         fatalError("Symbol should hold UDT type pointer!");
@@ -27,7 +27,7 @@ const TypeUDT* TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbo
     return context.create<TypeUDT>(symbol, symbolTable, packed);
 }
 
-string TypeUDT::asString() const {
+std::string TypeUDT::asString() const {
     return m_symbol.name().str();
 }
 

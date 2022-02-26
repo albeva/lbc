@@ -19,16 +19,16 @@ public:
 
     ToolTask& reset();
 
-    ToolTask& addArg(const string& arg);
-    ToolTask& addArg(const string& name, const string& value);
+    ToolTask& addArg(const std::string& arg);
+    ToolTask& addArg(const std::string& name, const std::string& value);
     ToolTask& addPath(const fs::path& path);
-    ToolTask& addPath(const string& name, const fs::path& value);
-    ToolTask& addArgs(std::initializer_list<string> arghs);
+    ToolTask& addPath(const std::string& name, const fs::path& value);
+    ToolTask& addArgs(std::initializer_list<std::string> arghs);
 
     [[nodiscard]] int execute() const noexcept;
 
 private:
-    std::vector<string> m_args;
+    std::vector<std::string> m_args;
     Context& m_context;
     const fs::path m_path;
     const ToolKind m_kind;

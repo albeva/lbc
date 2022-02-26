@@ -71,11 +71,11 @@ void ForStmtPass::analyze() {
         case TypeComparison::Downcast:
         case TypeComparison::Upcast: {
             const auto* dstTy = type;
-            const auto* iterTy = dyn_cast<TypeIntegral>(type);
+            const auto* iterTy = llvm::dyn_cast<TypeIntegral>(type);
             if (iterTy != nullptr && !iterTy->isSigned()) {
-                if (const auto* stepIntTy = dyn_cast<TypeIntegral>(m_ast.step->type)) {
+                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(m_ast.step->type)) {
                     if (stepIntTy->isSigned()) {
-                        if (auto* literal = dyn_cast<AstLiteralExpr>(m_ast.step)) {
+                        if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
                             if (static_cast<int64_t>(std::get<uint64_t>(literal->value)) < 0) {
                                 dstTy = iterTy->getSigned();
                             }
@@ -83,8 +83,8 @@ void ForStmtPass::analyze() {
                             dstTy = iterTy->getSigned();
                         }
                     }
-                } else if (isa<TypeFloatingPoint>(m_ast.step->type)) {
-                    if (auto* literal = dyn_cast<AstLiteralExpr>(m_ast.step)) {
+                } else if (llvm::isa<TypeFloatingPoint>(m_ast.step->type)) {
+                    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
                         if (std::get<double>(literal->value) < 0.0) {
                             dstTy = iterTy->getSigned();
                         }
@@ -113,13 +113,13 @@ void ForStmtPass::analyze() {
 }
 
 void ForStmtPass::determineForDirection() {
-    auto* from = dyn_cast<AstLiteralExpr>(m_ast.iterator->expr);
-    auto* to = dyn_cast<AstLiteralExpr>(m_ast.limit);
+    auto* from = llvm::dyn_cast<AstLiteralExpr>(m_ast.iterator->expr);
+    auto* to = llvm::dyn_cast<AstLiteralExpr>(m_ast.limit);
     const auto* type = m_ast.iterator->symbol->type();
     bool equal = false;
 
     if (from != nullptr && to != nullptr) {
-        if (const auto* integral = dyn_cast<TypeIntegral>(type)) {
+        if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
             auto lhs = std::get<uint64_t>(from->value);
             auto rhs = std::get<uint64_t>(to->value);
             if (lhs == rhs) {
@@ -140,7 +140,7 @@ void ForStmtPass::determineForDirection() {
                     m_ast.direction = AstForStmt::Direction::Decrement;
                 }
             }
-        } else if (isa<TypeFloatingPoint>(type)) {
+        } else if (llvm::isa<TypeFloatingPoint>(type)) {
             auto lhs = std::get<double>(from->value);
             auto rhs = std::get<double>(to->value);
             if (lhs == rhs) {
@@ -158,7 +158,7 @@ void ForStmtPass::determineForDirection() {
         return;
     }
 
-    auto* step = dyn_cast<AstLiteralExpr>(m_ast.step);
+    auto* step = llvm::dyn_cast<AstLiteralExpr>(m_ast.step);
     if (step == nullptr) {
         return;
     }

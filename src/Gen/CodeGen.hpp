@@ -13,7 +13,7 @@ class CodeGen final : public AstVisitor<CodeGen, Gen::ValueHandler> {
 public:
     explicit CodeGen(Context& context);
 
-    [[nodiscard]] unique_ptr<llvm::Module> getModule();
+    [[nodiscard]] std::unique_ptr<llvm::Module> getModule();
 
     [[nodiscard]] bool validate() const noexcept;
 
@@ -40,14 +40,14 @@ private:
     void declareFunc(AstFuncDecl& ast);
     void declareGlobalVar(AstVarDecl& ast);
     void declareLocalVar(AstVarDecl& ast);
-    llvm::Constant* getStringConstant(StringRef str);
+    llvm::Constant* getStringConstant(llvm::StringRef str);
 
     Context& m_context;
     llvm::LLVMContext& m_llvmContext;
     AstModule* m_astRootModule = nullptr;
     unsigned int m_fileId = ~0U;
     Scope m_scope = Scope::Root;
-    unique_ptr<llvm::Module> m_module;
+    std::unique_ptr<llvm::Module> m_module;
     llvm::Function* m_globalCtorFunc = nullptr;
     llvm::IRBuilder<> m_builder;
     llvm::StringMap<llvm::Constant*> m_stringLiterals;

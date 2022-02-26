@@ -12,7 +12,7 @@ public:
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 
 private:
-    [[nodiscard]] string indent() const noexcept;
+    [[nodiscard]] std::string indent() const noexcept;
     size_t m_indent = 0;
     llvm::raw_ostream& m_os;
     static constexpr auto SPACES = 4;

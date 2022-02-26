@@ -8,7 +8,7 @@
 
 
 namespace lbc::TempFileCache {
-[[nodiscard]] fs::path createUniquePath(StringRef suffix);
-[[nodiscard]] fs::path createUniquePath(const fs::path& file, StringRef suffix);
+[[nodiscard]] fs::path createUniquePath(llvm::StringRef suffix);
+[[nodiscard]] fs::path createUniquePath(const fs::path& file, llvm::StringRef suffix);
 void removeTemporaryFiles();
 } // namespace lbc::TempFileCache

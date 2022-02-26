@@ -32,7 +32,7 @@ void CmdLineParser::parse(const Args& args) {
 }
 
 void CmdLineParser::processOption(const Args& args, size_t& index) {
-    const StringRef arg{ args[index] };
+    const llvm::StringRef arg{ args[index] };
     if (arg == "-v") {
         m_options.setVerbose(true);
     } else if (arg == "-o") {
@@ -86,7 +86,7 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
     } else if (arg == "-no-main") {
         m_options.setImplicitMain(false);
     } else {
-        showError("Unrecognized option "s + string(arg) + ".");
+        showError("Unrecognized option "s + std::string(arg) + ".");
     }
 }
 
@@ -150,7 +150,7 @@ void CmdLineParser::showVersion() {
     std::exit(EXIT_SUCCESS);
 }
 
-void CmdLineParser::showError(const string& message) {
+void CmdLineParser::showError(const std::string& message) {
     llvm::errs() << message
                  << " Use --help for more info"
                  << '\n';

@@ -290,7 +290,7 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
 void SemanticAnalyzer::visit(AstCallExpr& ast) {
     visit(*ast.callable);
 
-    const auto* type = dyn_cast<TypeFunction>(ast.callable->type);
+    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->type);
     if (type == nullptr) {
         fatalError("Trying to call a non callable");
     }
@@ -322,7 +322,7 @@ void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
         [](const std::monostate& /*value*/) {
             return TokenKind::Null;
         },
-        [](StringRef /*value*/) {
+        [](llvm::StringRef /*value*/) {
             return TokenKind::ZString;
         },
         [](uint64_t value) {
@@ -376,7 +376,7 @@ void SemanticAnalyzer::visit(AstDereference& ast) {
     // TODO dereference needs to return a reference to value, NOT value itself
 
     visit(*ast.expr);
-    if (const auto* type = dyn_cast<TypePointer>(ast.expr->type)) {
+    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->type)) {
         ast.type = type->getBase();
     } else {
         fatalError("dereferencing a non pointer");
@@ -421,7 +421,7 @@ void SemanticAnalyzer::visit(AstMemberAccess& ast) {
             const TypeUDT* udt = nullptr;
             if (type->isUDT()) {
                 udt = static_cast<const TypeUDT*>(type);
-            } else if (const auto* ptr = dyn_cast<TypePointer>(type)) {
+            } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type)) {
                 if (ptr->getBase()->isUDT()) {
                     udt = static_cast<const TypeUDT*>(ptr->getBase());
                 }
