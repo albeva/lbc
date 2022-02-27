@@ -14,11 +14,10 @@ struct AstDecl;
 class TypeProxy final {
 public:
     NO_COPY_AND_MOVE(TypeProxy)
-
-    TypeProxy() noexcept = default;
+    constexpr TypeProxy() noexcept = default;
     ~TypeProxy() noexcept = default;
 
-    explicit TypeProxy(const TypeRoot* type, AstDecl* decl = nullptr) noexcept
+    constexpr explicit TypeProxy(const TypeRoot* type, AstDecl* decl = nullptr) noexcept
         : m_decl{ decl }, m_type{ type } {}
 
     // no new / delete. Must be allocated in the context
@@ -32,13 +31,13 @@ public:
     }
 
     /// get Decl node (for UDT types)
-    [[nodiscard]] AstDecl* getDecl() const noexcept { return m_decl; }
+    [[nodiscard]] constexpr AstDecl* getDecl() const noexcept { return m_decl; }
 
     /// Get type
-    [[nodiscard]] const TypeRoot* getType() const noexcept { return m_type; }
+    [[nodiscard]] const constexpr TypeRoot* getType() const noexcept { return m_type; }
 
     /// Set Type
-    void setType(const TypeRoot* type) noexcept { m_type = type; }
+    constexpr void setType(const TypeRoot* type) noexcept { m_type = type; }
 
 private:
     AstDecl* m_decl = nullptr;

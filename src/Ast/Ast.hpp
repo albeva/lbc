@@ -10,7 +10,7 @@
 
 namespace lbc {
 class TypeProxy;
-AST_FORWARD_DECLARE() // NOLINT(cppcoreguidelines-virtual-class-destructor)
+AST_FORWARD_DECLARE()
 
 enum class AstKind {
 #define KIND_ENUM(id, ...) id,

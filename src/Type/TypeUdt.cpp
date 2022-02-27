@@ -13,8 +13,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
   m_symbol{ symbol },
   m_symbolTable{ symbolTable },
   m_packed(packed) {
-    //symbol.setT(this);
-    symbol.getTypeProxy()->setType(this);
+    setProxy(symbol.getTypeProxy());
     symbol.getFlags().type = true;
 }
 

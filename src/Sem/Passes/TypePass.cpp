@@ -31,7 +31,7 @@ const TypeRoot* TypePass::visit(AstTypeExpr& ast) const noexcept {
     for (auto deref = 0; deref < ast.dereference; deref++) {
         type = TypePointer::get(m_sem.getContext(), type);
     }
-    ast.typeProxy = m_sem.getContext().create<TypeProxy>(type);
+    ast.typeProxy = type->getProxy();
     return ast.typeProxy->getType();
 }
 

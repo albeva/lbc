@@ -315,7 +315,7 @@ void SemanticAnalyzer::visit(AstCallExpr& ast) {
         }
     }
 
-    ast.typeProxy = m_context.create<TypeProxy>(type->getReturn());
+    ast.typeProxy = type->getReturn()->getProxy();
 }
 
 void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
@@ -340,7 +340,7 @@ void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
         }
     };
     auto typeKind = std::visit(visitor, ast.value);
-    ast.typeProxy = m_context.create<TypeProxy>(TypeRoot::fromTokenKind(typeKind));
+    ast.typeProxy = TypeRoot::fromTokenKind(typeKind)->getProxy();
 }
 
 //------------------------------------------------------------------
@@ -378,7 +378,7 @@ void SemanticAnalyzer::visit(AstDereference& ast) {
 
     visit(*ast.expr);
     if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->typeProxy->getType())) {
-        ast.typeProxy = m_context.create<TypeProxy>(type->getBase());
+        ast.typeProxy = type->getBase()->getProxy();
     } else {
         fatalError("dereferencing a non pointer");
     }
@@ -398,7 +398,7 @@ void SemanticAnalyzer::visit(AstAddressOf& ast) {
     if (!ast.expr->flags.addressable) {
         fatalError("Cannot take address");
     }
-    ast.typeProxy = m_context.create<TypeProxy>(TypePointer::get(m_context, ast.expr->typeProxy->getType()));
+    ast.typeProxy = TypePointer::get(m_context, ast.expr->typeProxy->getType())->getProxy();
     ast.flags = ast.expr->flags;
     ast.flags.dereferencable = true;
 }
@@ -468,7 +468,7 @@ void SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) {
         cast(expr, ty);
         m_constantFolder.fold(expr);
-        ast.typeProxy = m_context.create<TypeProxy>(ty);
+        ast.typeProxy = ty->getProxy();
     };
 
     switch (left->getType()->compare(right->getType())) {
@@ -505,7 +505,7 @@ void SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) {
         cast(expr, ty);
         m_constantFolder.fold(expr);
-        ast.typeProxy = m_context.create<TypeProxy>(TypeBoolean::get());
+        ast.typeProxy = TypeBoolean::get()->getProxy();
     };
 
     switch (left->getType()->compare(right->getType())) {
@@ -514,7 +514,7 @@ void SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     case TypeComparison::Downcast:
         return convert(ast.rhs, left->getType());
     case TypeComparison::Equal:
-        ast.typeProxy = m_context.create<TypeProxy>(TypeBoolean::get());
+        ast.typeProxy = TypeBoolean::get()->getProxy();
         return;
     case TypeComparison::Upcast:
         return convert(ast.lhs, right->getType());
@@ -582,7 +582,7 @@ void SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
         ast,
         nullptr,
         true);
-    cast->typeProxy = m_context.create<TypeProxy>(type);
+    cast->typeProxy = type->getProxy();
     cast->flags = category;
     ast = cast; // NOLINT
 }
@@ -599,7 +599,7 @@ void SemanticAnalyzer::visit(AstIfExpr& ast) {
     const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) {
         cast(expr, ty);
         m_constantFolder.fold(expr);
-        ast.typeProxy = m_context.create<TypeProxy>(ty);
+        ast.typeProxy = ty->getProxy();
     };
 
     auto* left = ast.trueExpr->typeProxy;

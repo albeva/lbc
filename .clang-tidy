@@ -24,7 +24,8 @@ Checks: '*,
         -misc-no-recursion,
         -misc-unused-using-decls,
         -misc-unused-alias-decls,
-        -bugprone-easily-swappable-parameters'
+        -bugprone-easily-swappable-parameters,
+        -cppcoreguidelines-virtual-class-destructor'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: none

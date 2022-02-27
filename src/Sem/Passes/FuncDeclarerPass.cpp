@@ -79,7 +79,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         });
     }
 
-    symbol->setTypeProxy( m_sem.getContext().create<TypeProxy>(type));
+    symbol->setTypeProxy(type->getProxy());
     ast.symbol = symbol;
 }
 
