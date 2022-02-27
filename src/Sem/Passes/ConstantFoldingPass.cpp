@@ -5,6 +5,7 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -57,7 +58,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
 
     auto value = unary(ast.tokenKind, *literal);
     auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
-    repl->type = ast.type;
+    repl->typeProxy = ast.typeProxy;
     return repl;
 }
 
@@ -134,7 +135,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
             ast.expr,
             nullptr,
             true);
-        cast->type = ast.type;
+        cast->typeProxy = ast.typeProxy;
         return cast;
     }
 
@@ -149,7 +150,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
             unary,
             nullptr,
             true);
-        cast->type = ast.type;
+        cast->typeProxy = ast.typeProxy;
         return cast;
     }
 
@@ -167,9 +168,9 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
         return nullptr;
     }
 
-    auto value = cast(ast.type, *literal);
+    auto value = cast(ast.typeProxy->getType(), *literal);
     auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
-    repl->type = ast.type;
+    repl->typeProxy = ast.typeProxy;
     return repl;
 }
 
@@ -191,7 +192,7 @@ AstLiteralExpr::Value ConstantFoldingPass::cast(const TypeRoot* type, const AstL
         #undef INTEGRAL
     } else if (type->isBoolean()) {
         return castLiteral<bool, bool>(ast);
-    } else if (ast.type->isAnyPointer()) {
+    } else if (ast.typeProxy->getType()->isAnyPointer()) {
         return ast.value;
     }
     // clang-format on

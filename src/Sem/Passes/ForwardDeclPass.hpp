@@ -5,7 +5,14 @@
 #include "Pass.hpp"
 
 namespace lbc {
+class Symbol;
 struct AstModule;
+struct AstStmtList;
+struct AstDecl;
+struct AstDeclList;
+struct AstFuncDecl;
+struct AstUdtDecl;
+struct AstTypeAlias;
 
 namespace Sem {
 
@@ -15,7 +22,12 @@ namespace Sem {
     class ForwardDeclPass final : public Pass {
     public:
         using Pass::Pass;
-        void visit(AstModule&) const noexcept;
+        void visit(AstModule&) noexcept;
+
+    private:
+        void declare(AstDecl& ast) noexcept;
+        std::vector<Symbol*> m_types{};
+        std::vector<Symbol*> m_procs{};
     };
 
 } // namespace Sem

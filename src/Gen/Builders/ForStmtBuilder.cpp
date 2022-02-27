@@ -9,6 +9,7 @@
 #include "Gen/ValueHandler.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Gen;
 
@@ -32,7 +33,7 @@ void ForStmtBuilder::declareVars() {
     }
     m_gen.visit(*m_ast.iterator);
 
-    m_type = m_ast.iterator->symbol->type();
+    m_type = m_ast.iterator->symbol->getTypeProxy()->getType();
     m_llvmType = m_type->getLlvmType(m_gen.getContext());
 
     m_iterator = ValueHandler{ &m_gen, m_ast.iterator->symbol };
@@ -75,7 +76,7 @@ void ForStmtBuilder::configureStep() {
 
     // Literal value
     if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
-        const auto* stepTy = literal->type;
+        const auto* stepTy = literal->typeProxy->getType();
         llvm::Constant* stepVal = nullptr;
         if (const auto* integral = llvm::dyn_cast<TypeIntegral>(stepTy)) {
             auto stepLit = std::get<uint64_t>(literal->value);
@@ -104,7 +105,7 @@ void ForStmtBuilder::configureStep() {
     auto* stepValue = m_step.load();
 
     auto* isStepNeg = m_builder.CreateCmp(
-        getCmpPred(m_ast.step->type, TokenKind::LessThan),
+        getCmpPred(m_ast.step->typeProxy->getType(), TokenKind::LessThan),
         stepValue,
         llvm::Constant::getNullValue(m_llvmType),
         "for.isStepNeg");

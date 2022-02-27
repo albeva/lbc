@@ -7,6 +7,7 @@
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 #include "TypePass.hpp"
 using namespace lbc;
 using namespace Sem;
@@ -78,18 +79,18 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         });
     }
 
-    symbol->setType(type);
+    symbol->setTypeProxy( m_sem.getContext().create<TypeProxy>(type));
     ast.symbol = symbol;
 }
 
 void FuncDeclarerPass::visit(AstFuncParamDecl& ast) {
-    const auto* type = ast.typeExpr->type;
+    const auto* type = ast.typeExpr->typeProxy->getType();
     if (type->isUDT()) {
         fatalError("Passing types by values is not implemented");
     }
 
     auto* symbol = createParamSymbol(ast);
-    symbol->setType(type);
+    symbol->setTypeProxy(ast.typeExpr->typeProxy);
     ast.symbol = symbol;
 }
 

@@ -5,6 +5,7 @@
 #include "Ast.hpp"
 #include "Lexer/Token.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 
 void CodePrinter::visit(AstModule& ast) {
@@ -78,7 +79,7 @@ void CodePrinter::visit(AstAttribute& ast) {
 }
 
 void CodePrinter::visit(AstTypeExpr& ast) {
-    if (const auto* type = ast.type) {
+    if (const auto* type = ast.typeProxy->getType()) {
         m_os << type->asString();
         return;
     }
@@ -403,7 +404,8 @@ void CodePrinter::visit(AstLiteralExpr& ast) {
             return '"' + result + '"';
         },
         [&](uint64_t value) -> std::string {
-            if (ast.type == nullptr || ast.type->isSignedIntegral()) {
+            const auto* type = ast.typeProxy->getType();
+            if (type == nullptr || type->isSignedIntegral()) {
                 auto sval = static_cast<int64_t>(value);
                 return std::to_string(sval);
             }
@@ -472,8 +474,9 @@ void CodePrinter::visit(AstCastExpr& ast) {
     visit(*ast.expr);
     m_os << " AS ";
     if (ast.implicit) {
-        if (ast.type != nullptr) {
-            m_os << ast.type->asString();
+        const auto* type = ast.typeProxy->getType();
+        if (type != nullptr) {
+            m_os << type->asString();
         } else {
             m_os << "ANY";
         }

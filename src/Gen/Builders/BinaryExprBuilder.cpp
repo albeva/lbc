@@ -5,6 +5,7 @@
 #include "Driver/Context.hpp"
 #include "Gen/Helpers.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Gen;
 
@@ -25,17 +26,17 @@ ValueHandler BinaryExprBuilder::comparison() {
     auto* lhsValue = m_gen.visit(*m_ast.lhs).load();
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
-    const auto* ty = m_ast.lhs->type;
+    const auto* ty = m_ast.lhs->typeProxy->getType();
     auto pred = Gen::getCmpPred(ty, m_ast.tokenKind);
-    return { &m_gen, m_ast.type, m_builder.CreateCmp(pred, lhsValue, rhsValue) };
+    return { &m_gen, m_ast.typeProxy->getType(), m_builder.CreateCmp(pred, lhsValue, rhsValue) };
 }
 
 ValueHandler BinaryExprBuilder::arithmetic() {
     auto* lhsValue = m_gen.visit(*m_ast.lhs).load();
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
-    auto op = getBinOpPred(m_ast.lhs->type, m_ast.tokenKind);
-    return { &m_gen, m_ast.type, m_builder.CreateBinOp(op, lhsValue, rhsValue) };
+    auto op = getBinOpPred(m_ast.lhs->typeProxy->getType(), m_ast.tokenKind);
+    return { &m_gen, m_ast.typeProxy->getType(), m_builder.CreateBinOp(op, lhsValue, rhsValue) };
 }
 
 ValueHandler BinaryExprBuilder::logical() {
@@ -62,7 +63,7 @@ ValueHandler BinaryExprBuilder::logical() {
 
     // phi
     m_gen.switchBlock(endBlock);
-    auto* phi = m_builder.CreatePHI(m_ast.type->getLlvmType(m_gen.getContext()), 2);
+    auto* phi = m_builder.CreatePHI(m_ast.typeProxy->getType()->getLlvmType(m_gen.getContext()), 2);
 
     if (isAnd) {
         phi->addIncoming(m_gen.getFalse(), lhsBlock);
@@ -70,5 +71,5 @@ ValueHandler BinaryExprBuilder::logical() {
         phi->addIncoming(m_gen.getTrue(), lhsBlock);
     }
     phi->addIncoming(rhsValue, rhsBlock);
-    return { &m_gen, m_ast.type, phi };
+    return { &m_gen, m_ast.typeProxy->getType(), phi };
 }

@@ -15,8 +15,8 @@ namespace Sem {
     public:
         using Pass::Pass;
 
-        [[nodiscard]] const TypeRoot* visit(AstTypeExpr& ast) const noexcept;
-        [[nodiscard]] const TypeRoot* visit(AstFuncDecl& ast) const noexcept;
+        const TypeRoot* visit(AstTypeExpr& ast) const noexcept;
+        const TypeRoot* visit(AstFuncDecl& ast) const noexcept;
 
     private:
         [[nodiscard]] const TypeRoot* visit(AstIdentExpr& ast) const noexcept;

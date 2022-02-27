@@ -6,6 +6,8 @@
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
 #include "TypePass.hpp"
+#include "Type/TypeProxy.hpp"
+#include "Driver/Context.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -43,6 +45,6 @@ void TypeAliasDeclPass::visit(AstTypeAlias& ast) const noexcept {
         symbol->getFlags().type = true;
     }
 
-    symbol->setType(type);
+    symbol->setTypeProxy(ast.typeExpr->typeProxy);
     ast.symbol = symbol;
 }

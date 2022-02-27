@@ -8,6 +8,8 @@
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
+#include "Type/TypeProxy.hpp"
+#include "Driver/Context.hpp"
 
 using namespace lbc;
 using namespace Sem;
@@ -29,8 +31,8 @@ const TypeRoot* TypePass::visit(AstTypeExpr& ast) const noexcept {
     for (auto deref = 0; deref < ast.dereference; deref++) {
         type = TypePointer::get(m_sem.getContext(), type);
     }
-    ast.type = type;
-    return ast.type;
+    ast.typeProxy = m_sem.getContext().create<TypeProxy>(type);
+    return ast.typeProxy->getType();
 }
 
 const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
@@ -40,8 +42,8 @@ const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
     }
 
     if (sym->getFlags().type) {
-        ast.type = sym->type();
-        return ast.type;
+        ast.typeProxy = sym->getTypeProxy();
+        return ast.typeProxy->getType();
     }
 
     fatalError(""_t + sym->name() + " is not a type");

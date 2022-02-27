@@ -85,7 +85,7 @@ add_library(
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
     Utils/Version.hpp
-)
+    Type/TypeProxy.hpp)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)

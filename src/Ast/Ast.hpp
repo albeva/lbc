@@ -9,7 +9,7 @@
 #include "ValueFlags.hpp"
 
 namespace lbc {
-class TypeRoot;
+class TypeProxy;
 AST_FORWARD_DECLARE() // NOLINT(cppcoreguidelines-virtual-class-destructor)
 
 enum class AstKind {
@@ -41,7 +41,7 @@ struct AstRoot {
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {
-        assert(ptr);
+        assert(ptr); // NOLINT
         return ptr;
     }
 };
@@ -476,7 +476,8 @@ struct AstTypeExpr final : AstRoot {
 
     std::variant<AstIdentExpr*, AstFuncDecl*, TokenKind> expr;
     const int dereference;
-    const TypeRoot* type = nullptr;
+    // const TypeRoot* type = nullptr;
+    TypeProxy* typeProxy = nullptr;
 };
 
 //----------------------------------------
@@ -489,7 +490,8 @@ struct AstExpr : AstRoot {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
     }
 
-    const TypeRoot* type = nullptr;
+    // const TypeRoot* type = nullptr;
+    TypeProxy* typeProxy = nullptr;
     ValueFlags flags{};
 };
 

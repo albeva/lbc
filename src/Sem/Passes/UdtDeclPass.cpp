@@ -7,6 +7,7 @@
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -30,6 +31,7 @@ void UdtDeclPass::visit(AstStmtList& ast) noexcept {
 
 void UdtDeclPass::visit(AstUdtDecl& ast) noexcept {
     auto* symbol = m_sem.createNewSymbol(ast);
+    symbol->setTypeProxy(m_sem.getContext().create<TypeProxy>());
 
     bool packed = false;
     if (ast.attributes != nullptr) {
