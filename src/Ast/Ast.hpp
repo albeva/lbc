@@ -476,7 +476,6 @@ struct AstTypeExpr final : AstRoot {
 
     std::variant<AstIdentExpr*, AstFuncDecl*, TokenKind> expr;
     const int dereference;
-    // const TypeRoot* type = nullptr;
     TypeProxy* typeProxy = nullptr;
 };
 
@@ -489,8 +488,7 @@ struct AstExpr : AstRoot {
     static constexpr bool classof(const AstRoot* ast) noexcept {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
     }
-
-    // const TypeRoot* type = nullptr;
+    
     TypeProxy* typeProxy = nullptr;
     ValueFlags flags{};
 };
