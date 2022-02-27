@@ -7,8 +7,8 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeUdt.hpp"
 #include "Type/TypeProxy.hpp"
+#include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Gen;
 

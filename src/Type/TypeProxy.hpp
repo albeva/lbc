@@ -18,7 +18,7 @@ public:
     ~TypeProxy() noexcept = default;
 
     constexpr explicit TypeProxy(const TypeRoot* type, AstDecl* decl = nullptr) noexcept
-        : m_decl{ decl }, m_type{ type } {}
+    : m_decl{ decl }, m_type{ type } {}
 
     // no new / delete. Must be allocated in the context
     void* operator new(size_t) = delete;

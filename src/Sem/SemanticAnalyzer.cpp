@@ -6,15 +6,15 @@
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
 #include "Passes/ForStmtPass.hpp"
+#include "Passes/ForwardDeclPass.hpp"
 #include "Passes/FuncDeclarerPass.hpp"
 #include "Passes/TypeAliasDeclPass.hpp"
 #include "Passes/UdtDeclPass.hpp"
-#include "Passes/ForwardDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeUdt.hpp"
 #include "Type/TypeProxy.hpp"
+#include "Type/TypeUdt.hpp"
 
 using namespace lbc;
 
@@ -31,7 +31,7 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     Sem::UdtDeclPass(*this).visit(ast);
     Sem::TypeAliasDeclPass(*this).visit(ast);
     Sem::FuncDeclarerPass(*this).visit(ast);
-//    Sem::ForwardDeclPass(*this).visit(ast);
+    //    Sem::ForwardDeclPass(*this).visit(ast);
 
     visit(*ast.stmtList);
 }
@@ -67,13 +67,13 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
 
     // expression?
     if (ast.expr != nullptr) {
-        expression(ast.expr, type == nullptr ? nullptr: type->getType());
+        expression(ast.expr, type == nullptr ? nullptr : type->getType());
         if (type == nullptr) {
             type = ast.expr->typeProxy;
         }
     }
 
-    if(type == nullptr) {
+    if (type == nullptr) {
         fatalError("no type for var declaration");
     }
 
@@ -250,8 +250,8 @@ void SemanticAnalyzer::visit(AstAttribute& /*ast*/) {
 // Types
 //----------------------------------------
 
-void SemanticAnalyzer::visit(AstTypeExpr& ast) {
-    // NOOP
+void SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) {
+    llvm_unreachable("AstTypeExpr");
 }
 
 //----------------------------------------

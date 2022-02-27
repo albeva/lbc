@@ -3,14 +3,13 @@
 //
 #include "TypePass.hpp"
 #include "Ast/Ast.hpp"
+#include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
-#include "Type/TypeProxy.hpp"
-#include "Driver/Context.hpp"
-#include "Type/TypeProxy.hpp"
 
 using namespace lbc;
 using namespace Sem;

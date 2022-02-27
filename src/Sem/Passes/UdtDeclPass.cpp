@@ -6,8 +6,8 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeUdt.hpp"
 #include "Type/TypeProxy.hpp"
+#include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Sem;
 

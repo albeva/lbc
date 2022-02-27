@@ -6,6 +6,8 @@
 using namespace lbc;
 
 const TypeRoot* Symbol::getType() const noexcept {
-    if (m_typeProxy == nullptr) { return nullptr; }
+    if (m_typeProxy == nullptr) {
+        return nullptr;
+    }
     return m_typeProxy->getType();
 }

@@ -52,7 +52,7 @@ public:
 
     [[nodiscard]] TypeProxy* getProxy() const noexcept { return m_proxy; }
     void setProxy(TypeProxy* proxy) const {
-        assert(proxy->getType() == nullptr &&  // NOLINT
+        assert(proxy->getType() == nullptr && // NOLINT
             "When setting type proxy, it should not override another type");
         m_proxy = proxy;
         m_proxy->setType(this);
@@ -98,7 +98,7 @@ public:
 
 protected:
     constexpr explicit TypeRoot(TypeFamily kind) noexcept
-    : m_kind{ kind }, m_proxyDefault{this, nullptr}, m_proxy{ &m_proxyDefault } {}
+    : m_kind{ kind }, m_proxyDefault{ this, nullptr }, m_proxy{ &m_proxyDefault } {}
 
     [[nodiscard]] virtual llvm::Type* genLlvmType(Context& context) const = 0;
 

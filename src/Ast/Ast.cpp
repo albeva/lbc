@@ -45,11 +45,15 @@ bool AstAttributeList::exists(llvm::StringRef name) const noexcept {
 }
 
 const TypeRoot* AstTypeExpr::getType() const noexcept {
-    if (typeProxy == nullptr) { return nullptr; }
+    if (typeProxy == nullptr) {
+        return nullptr;
+    }
     return typeProxy->getType();
 }
 
 const TypeRoot* AstExpr::getType() const noexcept {
-    if (typeProxy == nullptr) { return nullptr; }
+    if (typeProxy == nullptr) {
+        return nullptr;
+    }
     return typeProxy->getType();
 }
