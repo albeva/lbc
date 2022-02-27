@@ -6,6 +6,7 @@
 
 namespace lbc {
 class TypeProxy;
+class TypeRoot;
 struct AstDecl;
 
 class Symbol final {
@@ -28,6 +29,8 @@ public:
 
     [[nodiscard]] TypeProxy* getTypeProxy() const noexcept { return m_typeProxy; }
     void setTypeProxy(TypeProxy* proxy) noexcept { m_typeProxy = proxy; }
+
+    [[nodiscard]] const TypeRoot* getType() const noexcept;
 
     [[nodiscard]] llvm::StringRef name() const noexcept { return m_name; }
 

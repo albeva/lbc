@@ -84,7 +84,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
 }
 
 void FuncDeclarerPass::visit(AstFuncParamDecl& ast) {
-    const auto* type = ast.typeExpr->typeProxy->getType();
+    const auto* type = ast.typeExpr->getType();
     if (type->isUDT()) {
         fatalError("Passing types by values is not implemented");
     }

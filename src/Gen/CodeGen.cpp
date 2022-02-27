@@ -182,7 +182,7 @@ void CodeGen::visit(AstVarDecl& ast) {
 void CodeGen::declareGlobalVar(AstVarDecl& ast) {
     auto* sym = ast.symbol;
     llvm::Constant* constant = nullptr;
-    llvm::Type* exprType = sym->getTypeProxy()->getType()->getLlvmType(m_context);
+    llvm::Type* exprType = sym->getType()->getLlvmType(m_context);
     bool generateStoreInCtror = false;
 
     // has an init expr?
@@ -218,7 +218,7 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
 }
 
 void CodeGen::declareLocalVar(AstVarDecl& ast) {
-    llvm::Type* exprType = ast.symbol->getTypeProxy()->getType()->getLlvmType(m_context);
+    llvm::Type* exprType = ast.symbol->getType()->getLlvmType(m_context);
     auto* lvalue = m_builder.CreateAlloca(exprType, nullptr, ast.symbol->identifier());
 
     // has an init expr?
@@ -260,7 +260,7 @@ void CodeGen::declareFuncs(AstStmtList& ast) {
 
 void CodeGen::declareFunc(AstFuncDecl& ast) {
     auto* sym = ast.symbol;
-    auto* fnTy = llvm::cast<llvm::FunctionType>(ast.symbol->getTypeProxy()->getType()->getLlvmType(m_context));
+    auto* fnTy = llvm::cast<llvm::FunctionType>(ast.symbol->getType()->getLlvmType(m_context));
     auto* fn = llvm::Function::Create(
         fnTy,
         sym->getLlvmLinkage(),
@@ -302,7 +302,7 @@ void CodeGen::visit(AstFuncStmt& ast) {
             auto* sym = param->symbol;
             auto* value = sym->getLlvmValue();
             sym->setLlvmValue(m_builder.CreateAlloca(
-                sym->getTypeProxy()->getType()->getLlvmType(m_context),
+                sym->getType()->getLlvmType(m_context),
                 nullptr,
                 sym->identifier() + ".addr"));
             m_builder.CreateStore(value, sym->getLlvmValue());
@@ -456,34 +456,34 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
 
     auto* call = m_builder.CreateCall(fnType, callable, values, "");
     call->setTailCall(false);
-    return { this, ast.typeProxy->getType(), call };
+    return { this, ast.getType(), call };
 }
 
 ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
     const auto visitor = Visitor{
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
-                llvm::cast<llvm::PointerType>(ast.typeProxy->getType()->getLlvmType(m_context)));
+                llvm::cast<llvm::PointerType>(ast.getType()->getLlvmType(m_context)));
         },
         [&](llvm::StringRef str) -> llvm::Value* {
             return getStringConstant(str);
         },
         [&](uint64_t value) -> llvm::Value* {
             return llvm::ConstantInt::get(
-                ast.typeProxy->getType()->getLlvmType(m_context),
+                ast.getType()->getLlvmType(m_context),
                 value,
-                static_cast<const TypeIntegral*>(ast.typeProxy->getType())->isSigned());
+                static_cast<const TypeIntegral*>(ast.getType())->isSigned());
         },
         [&](double value) -> llvm::Value* {
             return llvm::ConstantFP::get(
-                ast.typeProxy->getType()->getLlvmType(m_context),
+                ast.getType()->getLlvmType(m_context),
                 value);
         },
         [&](bool value) -> llvm::Value* {
             return value ? m_constantTrue : m_constantFalse;
         }
     };
-    return { this, ast.typeProxy->getType(), std::visit(visitor, ast.value) };
+    return { this, ast.getType(), std::visit(visitor, ast.value) };
 }
 
 llvm::Constant* CodeGen::getStringConstant(llvm::StringRef str) {
@@ -500,18 +500,18 @@ ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
         auto* value = visit(*ast.expr).load();
 
         if (value->getType()->isIntegerTy()) {
-            return { this, ast.typeProxy->getType(), m_builder.CreateNeg(value) };
+            return { this, ast.getType(), m_builder.CreateNeg(value) };
         }
 
         if (value->getType()->isFloatingPointTy()) {
-            return { this, ast.typeProxy->getType(), m_builder.CreateFNeg(value) };
+            return { this, ast.getType(), m_builder.CreateFNeg(value) };
         }
 
         llvm_unreachable("Unexpected unary operator");
     }
     case TokenKind::LogicalNot: {
         auto value = visit(*ast.expr);
-        return { this, ast.typeProxy->getType(), m_builder.CreateNot(value.load(), "lnot") };
+        return { this, ast.getType(), m_builder.CreateNot(value.load(), "lnot") };
     }
     default:
         llvm_unreachable("Unexpected unary operator");
@@ -533,17 +533,17 @@ ValueHandler CodeGen::visit(AstBinaryExpr& ast) {
 ValueHandler CodeGen::visit(AstCastExpr& ast) {
     auto* value = visit(*ast.expr).load();
 
-    bool srcIsSigned = ast.expr->typeProxy->getType()->isSignedIntegral();
-    bool dstIsSigned = ast.typeProxy->getType()->isSignedIntegral();
+    bool srcIsSigned = ast.expr->getType()->isSignedIntegral();
+    bool dstIsSigned = ast.getType()->isSignedIntegral();
 
     auto opcode = llvm::CastInst::getCastOpcode(
         value,
         srcIsSigned,
-        ast.typeProxy->getType()->getLlvmType(m_context),
+        ast.getType()->getLlvmType(m_context),
         dstIsSigned);
-    auto* casted = m_builder.CreateCast(opcode, value, ast.typeProxy->getType()->getLlvmType(m_context));
+    auto* casted = m_builder.CreateCast(opcode, value, ast.getType()->getLlvmType(m_context));
 
-    return { this, ast.typeProxy->getType(), casted };
+    return { this, ast.getType(), casted };
 }
 
 ValueHandler CodeGen::visit(AstIfExpr& ast) {
@@ -552,7 +552,7 @@ ValueHandler CodeGen::visit(AstIfExpr& ast) {
     auto falseValue = visit(*ast.falseExpr);
 
     auto* value = m_builder.CreateSelect(condValue.load(), trueValue.load(), falseValue.load());
-    return { this, ast.typeProxy->getType(), value };
+    return { this, ast.getType(), value };
 }
 
 std::unique_ptr<llvm::Module> CodeGen::getModule() {

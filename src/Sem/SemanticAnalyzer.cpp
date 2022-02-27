@@ -73,6 +73,10 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
         }
     }
 
+    if(type == nullptr) {
+        fatalError("no type for var declaration");
+    }
+
     // The Symbol
     auto* symbol = createNewSymbol(ast);
     symbol->getFlags().external = false;
@@ -129,7 +133,7 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
         retType = TypeIntegral::fromTokenKind(TokenKind::Integer);
         canOmitExpression = true;
     } else {
-        retType = llvm::cast<TypeFunction>(m_function->symbol->getTypeProxy()->getType())->getReturn();
+        retType = llvm::cast<TypeFunction>(m_function->symbol->getType())->getReturn();
     }
     auto isVoid = retType->isVoid();
     if (ast.expr == nullptr) {
@@ -145,11 +149,11 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
 
     expression(ast.expr);
 
-    if (ast.expr->typeProxy->getType() != retType) {
+    if (ast.expr->getType() != retType) {
         fatalError(
             "Return expression type mismatch."_t
             + " Expected (" + retType->asString() + ")"
-            + " got (" + ast.expr->typeProxy->getType()->asString() + ")");
+            + " got (" + ast.expr->getType()->asString() + ")");
     }
 }
 
@@ -171,9 +175,9 @@ void SemanticAnalyzer::visit(AstIfStmt& ast) {
         }
         if (block->expr != nullptr) {
             expression(block->expr);
-            if (!block->expr->typeProxy->getType()->isBoolean()) {
+            if (!block->expr->getType()->isBoolean()) {
                 fatalError("type '"_t
-                    + block->expr->typeProxy->getType()->asString()
+                    + block->expr->getType()->asString()
                     + "' cannot be used as boolean");
             }
         }
@@ -196,9 +200,9 @@ void SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
 
     if (ast.expr != nullptr) {
         expression(ast.expr);
-        if (!ast.expr->typeProxy->getType()->isBoolean()) {
+        if (!ast.expr->getType()->isBoolean()) {
             fatalError("type '"_t
-                + ast.expr->typeProxy->getType()->asString()
+                + ast.expr->getType()->asString()
                 + "' cannot be used as boolean");
         }
     }
@@ -268,7 +272,7 @@ void SemanticAnalyzer::visit(AstAssignExpr& ast) {
     if (!ast.lhs->flags.assignable) {
         fatalError("Cannot assign");
     }
-    expression(ast.rhs, ast.lhs->typeProxy->getType());
+    expression(ast.rhs, ast.lhs->getType());
 }
 
 void SemanticAnalyzer::visit(AstIdentExpr& ast) {
@@ -277,12 +281,12 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
         fatalError("Unknown identifier "_t + ast.name);
     }
 
-    auto* type = symbol->getTypeProxy();
-    if (type == nullptr) {
+    auto* proxy = symbol->getTypeProxy();
+    if (proxy == nullptr) {
         fatalError("Identifier "_t + ast.name + " has unresolved type");
     }
 
-    ast.typeProxy = type;
+    ast.typeProxy = proxy;
     ast.symbol = symbol;
     ast.flags = symbol->getFlags();
 }
@@ -290,7 +294,7 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
 void SemanticAnalyzer::visit(AstCallExpr& ast) {
     visit(*ast.callable);
 
-    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->typeProxy->getType());
+    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->getType());
     if (type == nullptr) {
         fatalError("Trying to call a non callable");
     }
@@ -376,14 +380,14 @@ void SemanticAnalyzer::visit(AstDereference& ast) {
     // TODO dereference needs to return a reference to value, NOT value itself
 
     visit(*ast.expr);
-    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->typeProxy->getType())) {
+    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->getType())) {
         ast.typeProxy = type->getBase()->getProxy();
     } else {
         fatalError("dereferencing a non pointer");
     }
 
     ast.flags = ast.expr->flags;
-    if (!ast.typeProxy->getType()->isPointer()) {
+    if (!ast.getType()->isPointer()) {
         ast.flags.dereferencable = false;
     }
 }
@@ -397,7 +401,7 @@ void SemanticAnalyzer::visit(AstAddressOf& ast) {
     if (!ast.expr->flags.addressable) {
         fatalError("Cannot take address");
     }
-    ast.typeProxy = TypePointer::get(m_context, ast.expr->typeProxy->getType())->getProxy();
+    ast.typeProxy = TypePointer::get(m_context, ast.expr->getType())->getProxy();
     ast.flags = ast.expr->flags;
     ast.flags.dereferencable = true;
 }
@@ -540,7 +544,7 @@ void SemanticAnalyzer::visit(AstCastExpr& ast) {
     ast.typeProxy = m_typePass.visit(*ast.typeExpr);
     expression(ast.expr);
 
-    if (ast.expr->typeProxy->getType()->compare(ast.typeProxy->getType()) == TypeComparison::Incompatible) {
+    if (ast.expr->getType()->compare(ast.getType()) == TypeComparison::Incompatible) {
         fatalError("Incompatible cast");
     }
 
@@ -553,18 +557,18 @@ void SemanticAnalyzer::convert(AstExpr*& ast, const TypeRoot* type) {
 }
 
 void SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
-    if (ast->typeProxy->getType() == type) {
+    if (ast->getType() == type) {
         return;
     }
     const auto* src = type;
-    const auto* dst = ast->typeProxy->getType();
+    const auto* dst = ast->getType();
 
     switch (src->compare(dst)) {
     case TypeComparison::Incompatible:
         fatalError(
             "Type mismatch."_t
             + " Expected '" + type->asString() + "'"
-            + " got '" + ast->typeProxy->getType()->asString() + "'");
+            + " got '" + ast->getType()->asString() + "'");
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);

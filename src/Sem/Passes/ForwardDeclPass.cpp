@@ -4,8 +4,8 @@
 #include "ForwardDeclPass.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Ast/Ast.hpp"
-#include <functional>
-#include <llvm/ADT/TypeSwitch.h>
+#include "Type/TypeProxy.hpp"
+#include "Driver/Context.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -38,6 +38,7 @@ void ForwardDeclPass::declare(AstDecl& ast) noexcept {
 
     auto* symbol = m_sem.createNewSymbol(ast);
     symbol->setDecl(&ast);
+    symbol->setTypeProxy(m_sem.getContext().create<TypeProxy>());
     ast.symbol = symbol;
 
     if (llvm::isa<AstFuncDecl>(ast)) {

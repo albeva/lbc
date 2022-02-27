@@ -10,6 +10,7 @@
 
 namespace lbc {
 class TypeProxy;
+class TypeRoot;
 AST_FORWARD_DECLARE()
 
 enum class AstKind {
@@ -474,6 +475,8 @@ struct AstTypeExpr final : AstRoot {
         return ast->kind == AstKind::TypeExpr;
     }
 
+    [[nodiscard]] const TypeRoot* getType() const noexcept;
+
     std::variant<AstIdentExpr*, AstFuncDecl*, TokenKind> expr;
     const int dereference;
     TypeProxy* typeProxy = nullptr;
@@ -488,6 +491,8 @@ struct AstExpr : AstRoot {
     static constexpr bool classof(const AstRoot* ast) noexcept {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
     }
+
+    [[nodiscard]] const TypeRoot* getType() const noexcept;
 
     TypeProxy* typeProxy = nullptr;
     ValueFlags flags{};

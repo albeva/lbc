@@ -168,7 +168,7 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
         return nullptr;
     }
 
-    auto value = cast(ast.typeProxy->getType(), *literal);
+    auto value = cast(ast.getType(), *literal);
     auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
     repl->typeProxy = ast.typeProxy;
     return repl;
@@ -192,7 +192,7 @@ AstLiteralExpr::Value ConstantFoldingPass::cast(const TypeRoot* type, const AstL
         #undef INTEGRAL
     } else if (type->isBoolean()) {
         return castLiteral<bool, bool>(ast);
-    } else if (ast.typeProxy->getType()->isAnyPointer()) {
+    } else if (ast.getType()->isAnyPointer()) {
         return ast.value;
     }
     // clang-format on
