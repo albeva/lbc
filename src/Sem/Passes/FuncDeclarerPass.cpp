@@ -67,7 +67,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         symbol->getFlags().external = external;
     }
 
-    const auto* type = m_sem.getTypePass().visit(ast);
+    auto* type = m_sem.getTypePass().visit(ast);
 
     // parameters
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(symbolTale);
@@ -79,7 +79,7 @@ void FuncDeclarerPass::visitFuncDecl(AstFuncDecl& ast, bool external) {
         });
     }
 
-    symbol->setTypeProxy(type->getProxy());
+    symbol->setTypeProxy(type);
     ast.symbol = symbol;
 }
 

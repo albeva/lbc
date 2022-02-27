@@ -488,7 +488,7 @@ struct AstExpr : AstRoot {
     static constexpr bool classof(const AstRoot* ast) noexcept {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
     }
-    
+
     TypeProxy* typeProxy = nullptr;
     ValueFlags flags{};
 };

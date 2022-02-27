@@ -5,7 +5,7 @@
 #include "Pass.hpp"
 
 namespace lbc {
-class TypeRoot;
+class TypeProxy;
 struct AstTypeExpr;
 struct AstIdentExpr;
 struct AstFuncDecl;
@@ -14,12 +14,11 @@ namespace Sem {
     class TypePass final : public Pass {
     public:
         using Pass::Pass;
-
-        const TypeRoot* visit(AstTypeExpr& ast) const noexcept;
-        const TypeRoot* visit(AstFuncDecl& ast) const noexcept;
+        [[nodiscard]] TypeProxy* visit(AstTypeExpr& ast) const noexcept;
+        [[nodiscard]] TypeProxy* visit(AstFuncDecl& ast) const noexcept;
 
     private:
-        [[nodiscard]] const TypeRoot* visit(AstIdentExpr& ast) const noexcept;
+        [[nodiscard]] TypeProxy* visit(AstIdentExpr& ast) const noexcept;
     };
 } // namespace Sem
 } // namespace lbc

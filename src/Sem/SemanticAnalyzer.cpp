@@ -62,8 +62,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
     // m_type expr?
     TypeProxy* type = nullptr;
     if (ast.typeExpr != nullptr) {
-        m_typePass.visit(*ast.typeExpr);
-        type = ast.typeExpr->typeProxy;
+        type = m_typePass.visit(*ast.typeExpr);
     }
 
     // expression?
@@ -538,8 +537,7 @@ bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 //------------------------------------------------------------------
 
 void SemanticAnalyzer::visit(AstCastExpr& ast) {
-    m_typePass.visit(*ast.typeExpr);
-    ast.typeProxy = ast.typeExpr->typeProxy;
+    ast.typeProxy = m_typePass.visit(*ast.typeExpr);
     expression(ast.expr);
 
     if (ast.expr->typeProxy->getType()->compare(ast.typeProxy->getType()) == TypeComparison::Incompatible) {
