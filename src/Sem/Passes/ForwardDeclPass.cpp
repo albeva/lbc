@@ -31,6 +31,10 @@ void ForwardDeclPass::declare(AstStmtList& ast) noexcept {
     for (auto& stmt : ast.stmts) {
         if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
             declare(*decl);
+            continue;
+        }
+        if (auto* import = llvm::dyn_cast<AstImport>(stmt)) {
+            declare(*import->module->stmtList);
         }
     }
 }
