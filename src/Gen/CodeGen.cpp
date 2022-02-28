@@ -443,7 +443,7 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
     if (auto* func = llvm::dyn_cast<llvm::Function>(callable)) {
         fnType = func->getFunctionType();
     } else if (const auto* ptr = llvm::dyn_cast<llvm::PointerType>(callable->getType())) {
-        fnType = llvm::cast<llvm::FunctionType>(ptr->getElementType());
+        fnType = llvm::cast<llvm::FunctionType>(ptr->getPointerElementType());
     }
 
     const auto& args = ast.args->exprs;

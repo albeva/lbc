@@ -11,6 +11,8 @@ cmake -G "Unix Makefiles"           \
   -DLLVM_TARGETS_TO_BUILD=X86       \
   -DLLVM_OPTIMIZED_TABLEGEN=ON      \
   -DLLVM_INSTALL_UTILS=ON           \
+  -DLLVM_INCLUDE_BENCHMARKS=OFF     \
+  -DLLVM_INCLUDE_TESTS=OFF          \
   ../$VERSION.src/llvm
 
 make -j12

@@ -47,7 +47,7 @@ public:
     : m_value{ pointer, false } {}
 
     /// Downcast from derived type to base type
-    template<typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+    template<std::derived_from<T> U>
     ParseResult(ParseResult<U> other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ other.getPointer(), other.isError() } {}
 

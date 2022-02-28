@@ -4,7 +4,8 @@
 #pragma once
 namespace lbc {
 
-template<typename T, std::enable_if_t<std::is_trivially_copyable_v<T> && std::is_trivially_assignable_v<T&, T>, int> = 0>
+template<typename T>
+requires std::is_trivial_v<T>
 struct ValueRestorer final {
     NO_COPY_AND_MOVE(ValueRestorer)
     constexpr explicit ValueRestorer(T& value) noexcept : m_target{ value }, m_value{ value } {}
