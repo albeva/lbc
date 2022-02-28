@@ -71,5 +71,6 @@ TypeProxy* TypePass::visit(AstFuncDecl& ast) const noexcept {
     }
 
     // function
-    return TypeFunction::get(m_sem.getContext(), retType->getType(), std::move(paramTypes), ast.variadic)->getProxy();
+    const auto* type = TypeFunction::get(m_sem.getContext(), retType->getType(), std::move(paramTypes), ast.variadic);
+    return type->getProxy();
 }
