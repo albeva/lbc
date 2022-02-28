@@ -6,12 +6,14 @@
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
 #include "Passes/ForStmtPass.hpp"
+#include "Passes/ForwardDeclPass.hpp"
 #include "Passes/FuncDeclarerPass.hpp"
 #include "Passes/TypeAliasDeclPass.hpp"
 #include "Passes/UdtDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
 
 using namespace lbc;
@@ -29,6 +31,7 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     Sem::UdtDeclPass(*this).visit(ast);
     Sem::TypeAliasDeclPass(*this).visit(ast);
     Sem::FuncDeclarerPass(*this).visit(ast);
+    //    Sem::ForwardDeclPass(*this).visit(ast);
 
     visit(*ast.stmtList);
 }
@@ -57,18 +60,21 @@ void SemanticAnalyzer::visit(AstExprStmt& ast) {
 
 void SemanticAnalyzer::visit(AstVarDecl& ast) {
     // m_type expr?
-    const TypeRoot* type = nullptr;
+    TypeProxy* type = nullptr;
     if (ast.typeExpr != nullptr) {
         type = m_typePass.visit(*ast.typeExpr);
     }
 
     // expression?
     if (ast.expr != nullptr) {
-        expression(ast.expr, type);
-
+        expression(ast.expr, type == nullptr ? nullptr : type->getType());
         if (type == nullptr) {
-            type = ast.expr->type;
+            type = ast.expr->typeProxy;
         }
+    }
+
+    if (type == nullptr) {
+        fatalError("no type for var declaration");
     }
 
     // The Symbol
@@ -76,12 +82,12 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
     symbol->getFlags().external = false;
 
     // create function symbol
-    symbol->setType(type);
+    symbol->setTypeProxy(type);
     ast.symbol = symbol;
     auto flags = ast.symbol->getFlags();
     flags.addressable = true;
     flags.assignable = true;
-    if (type->isPointer()) {
+    if (type->getType()->isPointer()) {
         flags.dereferencable = true;
     }
     ast.symbol->setFlags(flags);
@@ -127,7 +133,7 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
         retType = TypeIntegral::fromTokenKind(TokenKind::Integer);
         canOmitExpression = true;
     } else {
-        retType = llvm::cast<TypeFunction>(m_function->symbol->type())->getReturn();
+        retType = llvm::cast<TypeFunction>(m_function->symbol->getType())->getReturn();
     }
     auto isVoid = retType->isVoid();
     if (ast.expr == nullptr) {
@@ -143,11 +149,11 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
 
     expression(ast.expr);
 
-    if (ast.expr->type != retType) {
+    if (ast.expr->getType() != retType) {
         fatalError(
             "Return expression type mismatch."_t
             + " Expected (" + retType->asString() + ")"
-            + " got (" + ast.expr->type->asString() + ")");
+            + " got (" + ast.expr->getType()->asString() + ")");
     }
 }
 
@@ -169,9 +175,9 @@ void SemanticAnalyzer::visit(AstIfStmt& ast) {
         }
         if (block->expr != nullptr) {
             expression(block->expr);
-            if (!block->expr->type->isBoolean()) {
+            if (!block->expr->getType()->isBoolean()) {
                 fatalError("type '"_t
-                    + block->expr->type->asString()
+                    + block->expr->getType()->asString()
                     + "' cannot be used as boolean");
             }
         }
@@ -194,9 +200,9 @@ void SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
 
     if (ast.expr != nullptr) {
         expression(ast.expr);
-        if (!ast.expr->type->isBoolean()) {
+        if (!ast.expr->getType()->isBoolean()) {
             fatalError("type '"_t
-                + ast.expr->type->asString()
+                + ast.expr->getType()->asString()
                 + "' cannot be used as boolean");
         }
     }
@@ -244,8 +250,8 @@ void SemanticAnalyzer::visit(AstAttribute& /*ast*/) {
 // Types
 //----------------------------------------
 
-void SemanticAnalyzer::visit(AstTypeExpr& ast) {
-    // NOOP
+void SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) {
+    llvm_unreachable("AstTypeExpr");
 }
 
 //----------------------------------------
@@ -266,7 +272,7 @@ void SemanticAnalyzer::visit(AstAssignExpr& ast) {
     if (!ast.lhs->flags.assignable) {
         fatalError("Cannot assign");
     }
-    expression(ast.rhs, ast.lhs->type);
+    expression(ast.rhs, ast.lhs->getType());
 }
 
 void SemanticAnalyzer::visit(AstIdentExpr& ast) {
@@ -275,12 +281,12 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
         fatalError("Unknown identifier "_t + ast.name);
     }
 
-    const auto* type = symbol->type();
-    if (type == nullptr) {
+    auto* proxy = symbol->getTypeProxy();
+    if (proxy == nullptr) {
         fatalError("Identifier "_t + ast.name + " has unresolved type");
     }
 
-    ast.type = type;
+    ast.typeProxy = proxy;
     ast.symbol = symbol;
     ast.flags = symbol->getFlags();
 }
@@ -288,7 +294,7 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
 void SemanticAnalyzer::visit(AstCallExpr& ast) {
     visit(*ast.callable);
 
-    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->type);
+    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->getType());
     if (type == nullptr) {
         fatalError("Trying to call a non callable");
     }
@@ -312,7 +318,7 @@ void SemanticAnalyzer::visit(AstCallExpr& ast) {
         }
     }
 
-    ast.type = type->getReturn();
+    ast.typeProxy = type->getReturn()->getProxy();
 }
 
 void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
@@ -337,7 +343,7 @@ void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
         }
     };
     auto typeKind = std::visit(visitor, ast.value);
-    ast.type = TypeRoot::fromTokenKind(typeKind);
+    ast.typeProxy = TypeRoot::fromTokenKind(typeKind)->getProxy();
 }
 
 //------------------------------------------------------------------
@@ -346,18 +352,18 @@ void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
 
 void SemanticAnalyzer::visit(AstUnaryExpr& ast) {
     expression(ast.expr);
-    const auto* type = ast.expr->type;
+    auto* type = ast.expr->typeProxy;
 
     switch (ast.tokenKind) {
     case TokenKind::LogicalNot:
-        if (type->isBoolean()) {
-            ast.type = type;
+        if (type->getType()->isBoolean()) {
+            ast.typeProxy = type;
             return;
         }
         fatalError("Applying unary NOT to non bool type");
     case TokenKind::Negate:
-        if (type->isNumeric()) {
-            ast.type = type;
+        if (type->getType()->isNumeric()) {
+            ast.typeProxy = type;
             return;
         }
         fatalError("Applying unary negate to non-numeric type");
@@ -374,14 +380,14 @@ void SemanticAnalyzer::visit(AstDereference& ast) {
     // TODO dereference needs to return a reference to value, NOT value itself
 
     visit(*ast.expr);
-    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->type)) {
-        ast.type = type->getBase();
+    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->getType())) {
+        ast.typeProxy = type->getBase()->getProxy();
     } else {
         fatalError("dereferencing a non pointer");
     }
 
     ast.flags = ast.expr->flags;
-    if (!ast.type->isPointer()) {
+    if (!ast.getType()->isPointer()) {
         ast.flags.dereferencable = false;
     }
 }
@@ -395,7 +401,7 @@ void SemanticAnalyzer::visit(AstAddressOf& ast) {
     if (!ast.expr->flags.addressable) {
         fatalError("Cannot take address");
     }
-    ast.type = TypePointer::get(m_context, ast.expr->type);
+    ast.typeProxy = TypePointer::get(m_context, ast.expr->getType())->getProxy();
     ast.flags = ast.expr->flags;
     ast.flags.dereferencable = true;
 }
@@ -410,16 +416,16 @@ void SemanticAnalyzer::visit(AstMemberAccess& ast) {
     for (size_t i = 0; i < ast.exprs.size(); i++) {
         auto* expr = ast.exprs[i];
         visit(*expr);
-        const auto* type = expr->type;
+        auto* type = expr->typeProxy;
 
         if (i == (ast.exprs.size() - 1)) {
-            ast.type = type;
+            ast.typeProxy = type;
             ast.flags = expr->flags;
         } else {
             const TypeUDT* udt = nullptr;
-            if (type->isUDT()) {
-                udt = static_cast<const TypeUDT*>(type);
-            } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type)) {
+            if (type->getType()->isUDT()) {
+                udt = static_cast<const TypeUDT*>(type->getType());
+            } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type->getType())) {
                 if (ptr->getBase()->isUDT()) {
                     udt = static_cast<const TypeUDT*>(ptr->getBase());
                 }
@@ -455,66 +461,66 @@ void SemanticAnalyzer::visit(AstBinaryExpr& ast) {
 }
 
 void SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
-    const auto* left = ast.lhs->type;
-    const auto* right = ast.rhs->type;
+    auto* left = ast.lhs->typeProxy;
+    auto* right = ast.rhs->typeProxy;
 
-    if (!left->isNumeric() || !right->isNumeric()) {
+    if (!left->getType()->isNumeric() || !right->getType()->isNumeric()) {
         fatalError("Applying artithmetic operation to non numeric type");
     }
 
     const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) {
         cast(expr, ty);
         m_constantFolder.fold(expr);
-        ast.type = ty;
+        ast.typeProxy = ty->getProxy();
     };
 
-    switch (left->compare(right)) {
+    switch (left->getType()->compare(right->getType())) {
     case TypeComparison::Incompatible:
         fatalError("Operator on incompatible types");
     case TypeComparison::Downcast:
-        return convert(ast.rhs, left);
+        return convert(ast.rhs, left->getType());
     case TypeComparison::Equal:
-        ast.type = left;
+        ast.typeProxy = left;
         return;
     case TypeComparison::Upcast:
-        return convert(ast.lhs, right);
+        return convert(ast.lhs, right->getType());
     }
 }
 
 void SemanticAnalyzer::logical(AstBinaryExpr& ast) {
-    const auto* left = ast.lhs->type;
-    const auto* right = ast.rhs->type;
+    auto* left = ast.lhs->typeProxy;
+    auto* right = ast.rhs->typeProxy;
 
-    if (!left->isBoolean() || !right->isBoolean()) {
+    if (!left->getType()->isBoolean() || !right->getType()->isBoolean()) {
         fatalError("Applying logical operator to non boolean type");
     }
-    ast.type = left;
+    ast.typeProxy = left;
 }
 
 void SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
-    const auto* left = ast.lhs->type;
-    const auto* right = ast.rhs->type;
+    auto* left = ast.lhs->typeProxy;
+    auto* right = ast.rhs->typeProxy;
 
-    if (!canPerformBinary(ast.tokenKind, left, right)) {
+    if (!canPerformBinary(ast.tokenKind, left->getType(), right->getType())) {
         fatalError("Cannot apply operationg to types");
     }
 
     const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) {
         cast(expr, ty);
         m_constantFolder.fold(expr);
-        ast.type = TypeBoolean::get();
+        ast.typeProxy = TypeBoolean::get()->getProxy();
     };
 
-    switch (left->compare(right)) {
+    switch (left->getType()->compare(right->getType())) {
     case TypeComparison::Incompatible:
         fatalError("Operator on incompatible types");
     case TypeComparison::Downcast:
-        return convert(ast.rhs, left);
+        return convert(ast.rhs, left->getType());
     case TypeComparison::Equal:
-        ast.type = TypeBoolean::get();
+        ast.typeProxy = TypeBoolean::get()->getProxy();
         return;
     case TypeComparison::Upcast:
-        return convert(ast.lhs, right);
+        return convert(ast.lhs, right->getType());
     }
 }
 
@@ -535,10 +541,10 @@ bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 //------------------------------------------------------------------
 
 void SemanticAnalyzer::visit(AstCastExpr& ast) {
-    ast.type = m_typePass.visit(*ast.typeExpr);
+    ast.typeProxy = m_typePass.visit(*ast.typeExpr);
     expression(ast.expr);
 
-    if (ast.expr->type->compare(ast.type) == TypeComparison::Incompatible) {
+    if (ast.expr->getType()->compare(ast.getType()) == TypeComparison::Incompatible) {
         fatalError("Incompatible cast");
     }
 
@@ -551,18 +557,18 @@ void SemanticAnalyzer::convert(AstExpr*& ast, const TypeRoot* type) {
 }
 
 void SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
-    if (ast->type == type) {
+    if (ast->getType() == type) {
         return;
     }
     const auto* src = type;
-    const auto* dst = ast->type;
+    const auto* dst = ast->getType();
 
     switch (src->compare(dst)) {
     case TypeComparison::Incompatible:
         fatalError(
             "Type mismatch."_t
             + " Expected '" + type->asString() + "'"
-            + " got '" + ast->type->asString() + "'");
+            + " got '" + ast->getType()->asString() + "'");
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);
@@ -578,7 +584,7 @@ void SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
         ast,
         nullptr,
         true);
-    cast->type = type;
+    cast->typeProxy = type->getProxy();
     cast->flags = category;
     ast = cast; // NOLINT
 }
@@ -595,21 +601,21 @@ void SemanticAnalyzer::visit(AstIfExpr& ast) {
     const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) {
         cast(expr, ty);
         m_constantFolder.fold(expr);
-        ast.type = ty;
+        ast.typeProxy = ty->getProxy();
     };
 
-    const auto* left = ast.trueExpr->type;
-    const auto* right = ast.falseExpr->type;
-    switch (left->compare(right)) {
+    auto* left = ast.trueExpr->typeProxy;
+    auto* right = ast.falseExpr->typeProxy;
+    switch (left->getType()->compare(right->getType())) {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types");
     case TypeComparison::Downcast:
-        return convert(ast.falseExpr, left);
+        return convert(ast.falseExpr, left->getType());
     case TypeComparison::Equal:
-        ast.type = left;
+        ast.typeProxy = left;
         return;
     case TypeComparison::Upcast:
-        return convert(ast.trueExpr, right);
+        return convert(ast.trueExpr, right->getType());
     }
 }
 

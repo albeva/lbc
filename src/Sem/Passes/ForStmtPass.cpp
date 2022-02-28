@@ -6,6 +6,7 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -38,13 +39,13 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
         m_sem.expression(ast.step);
     }
 
-    const auto* type = ast.iterator->symbol->type();
+    const auto* type = ast.iterator->symbol->getType();
     if (!type->isNumeric()) {
         fatalError("NEXT iterator must be of numeric type");
     }
 
     // type TO type check
-    switch (type->compare(ast.limit->type)) {
+    switch (type->compare(ast.limit->getType())) {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
     case TypeComparison::Downcast:
@@ -56,15 +57,15 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
         if (ast.iterator->typeExpr != nullptr) {
             m_sem.convert(ast.limit, type);
         } else {
-            m_sem.convert(ast.iterator->expr, ast.limit->type);
-            ast.iterator->symbol->setType(ast.limit->type);
+            m_sem.convert(ast.iterator->expr, ast.limit->getType());
+            ast.iterator->symbol->setTypeProxy(ast.limit->typeProxy);
         }
         break;
     }
 
     // type STEP type check
     if (ast.step != nullptr) {
-        switch (type->compare(ast.step->type)) {
+        switch (type->compare(ast.step->getType())) {
         case TypeComparison::Incompatible:
             fatalError("Incompatible types in STEP");
         case TypeComparison::Downcast:
@@ -72,7 +73,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
             const auto* dstTy = type;
             const auto* iterTy = llvm::dyn_cast<TypeIntegral>(type);
             if (iterTy != nullptr && !iterTy->isSigned()) {
-                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(ast.step->type)) {
+                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(ast.step->getType())) {
                     if (stepIntTy->isSigned()) {
                         if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
                             if (static_cast<int64_t>(std::get<uint64_t>(literal->value)) < 0) {
@@ -82,7 +83,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
                             dstTy = iterTy->getSigned();
                         }
                     }
-                } else if (llvm::isa<TypeFloatingPoint>(ast.step->type)) {
+                } else if (llvm::isa<TypeFloatingPoint>(ast.step->getType())) {
                     if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
                         if (std::get<double>(literal->value) < 0.0) {
                             dstTy = iterTy->getSigned();
@@ -114,7 +115,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
 void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
     auto* from = llvm::dyn_cast<AstLiteralExpr>(ast.iterator->expr);
     auto* to = llvm::dyn_cast<AstLiteralExpr>(ast.limit);
-    const auto* type = ast.iterator->symbol->type();
+    const auto* type = ast.iterator->symbol->getType();
     bool equal = false;
 
     if (from != nullptr && to != nullptr) {
@@ -162,7 +163,7 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
         return;
     }
 
-    if (step->type->isSignedIntegral()) {
+    if (step->getType()->isSignedIntegral()) {
         auto val = static_cast<int64_t>(std::get<uint64_t>(step->value));
         if (val < 0) {
             if (ast.direction == AstForStmt::Direction::Increment) {
@@ -186,14 +187,14 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
                 ast.direction = AstForStmt::Direction::Increment;
             }
         }
-    } else if (step->type->isUnsignedIntegral()) {
+    } else if (step->getType()->isUnsignedIntegral()) {
         auto val = std::get<uint64_t>(step->value);
         if (val == 0 || ast.direction == AstForStmt::Direction::Decrement) {
             ast.direction = AstForStmt::Direction::Skip;
         } else if (ast.direction == AstForStmt::Direction::Unknown) {
             ast.direction = AstForStmt::Direction::Increment;
         }
-    } else if (step->type->isFloatingPoint()) {
+    } else if (step->getType()->isFloatingPoint()) {
         auto val = std::get<double>(step->value);
         if (val < 0.0) {
             if (ast.direction == AstForStmt::Direction::Increment) {

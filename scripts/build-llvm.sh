@@ -1,17 +1,19 @@
-VERSION="llvm-13.0.1"
+VERSION="llvm-14.0.0-rc1"
 
 mkdir $VERSION.build
 cd $VERSION.build/
 
 cmake -G "Unix Makefiles"           \
   -DCMAKE_INSTALL_PREFIX=/usr/local \
-  -DCMAKE_CXX_STANDARD=17           \
+  -DCMAKE_CXX_STANDARD=20           \
   -DCMAKE_BUILD_TYPE=Release        \
   -DLLVM_ENABLE_ASSERTIONS=ON       \
   -DLLVM_TARGETS_TO_BUILD=X86       \
   -DLLVM_OPTIMIZED_TABLEGEN=ON      \
   -DLLVM_INSTALL_UTILS=ON           \
-  ../$VERSION.src
+  -DLLVM_INCLUDE_BENCHMARKS=OFF     \
+  -DLLVM_INCLUDE_TESTS=OFF          \
+  ../$VERSION.src/llvm
 
 make -j12
 sudo make install

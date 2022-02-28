@@ -7,6 +7,7 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Gen;
@@ -14,31 +15,32 @@ using namespace Gen;
 ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     auto* var = gen.getBuilder().CreateAlloca(
-        expr.type->getLlvmType(gen.getContext()),
+        expr.getType()->getLlvmType(gen.getContext()),
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
 
-    return createOpaqueValue(gen, expr.type, var, name);
+    return createOpaqueValue(gen, expr.getType(), var, name);
 }
 
 ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     if (llvm::isa<llvm::Constant>(value)) {
-        return { &gen, expr.type, value };
+        return { &gen, expr.getType(), value };
     }
 
     auto* var = gen.getBuilder().CreateAlloca(
-        expr.type->getLlvmType(gen.getContext()),
+        expr.getType()->getLlvmType(gen.getContext()),
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
 
-    return createOpaqueValue(gen, expr.type, var, name);
+    return createOpaqueValue(gen, expr.getType(), var, name);
 }
 
 ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept {
-    auto* symbol = gen.getContext().create<Symbol>(name, type);
+    auto* typeProxy = type->getProxy();
+    auto* symbol = gen.getContext().create<Symbol>(name, typeProxy);
     symbol->setLlvmValue(value);
     return { &gen, symbol };
 }
@@ -47,19 +49,19 @@ ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* valu
 : PointerUnion{ value }, m_gen{ gen }, m_type{ type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol) noexcept
-: PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->type() } {}
+: PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->getType() } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
 : ValueHandler{ gen, ast.symbol } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.getType() } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.getType() } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.getType() } {}
 
 llvm::Value* ValueHandler::getAddress() const noexcept {
     if (auto* value = dyn_cast<llvm::Value*>()) {
@@ -108,11 +110,11 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
     }
 
     if (auto* symbol = dyn_cast<Symbol*>()) {
-        return symbol->type()->getLlvmType(m_gen->getContext());
+        return symbol->getType()->getLlvmType(m_gen->getContext());
     }
 
     if (auto* ast = dyn_cast<AstExpr*>()) {
-        return ast->type->getLlvmType(m_gen->getContext());
+        return ast->getType()->getLlvmType(m_gen->getContext());
     }
 
     llvm_unreachable("Unknown type in getLlvmType");
@@ -145,17 +147,17 @@ llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const noexc
         }
 
         if (i == 0) {
-            type = symbol->type()->getLlvmType(m_gen->getContext());
+            type = symbol->getType()->getLlvmType(m_gen->getContext());
             addr = symbol->getLlvmValue();
         } else {
             idxs.push_back(builder.getInt32(symbol->getIndex()));
         }
 
-        if (symbol->type()->isPointer() && !last) {
+        if (symbol->getType()->isPointer() && !last) {
             createGEP();
-            type = llvm::cast<TypePointer>(symbol->type())->getBase()->getLlvmType(m_gen->getContext());
+            type = llvm::cast<TypePointer>(symbol->getType())->getBase()->getLlvmType(m_gen->getContext());
             addr = builder.CreateLoad(
-                symbol->type()->getLlvmType(m_gen->getContext()),
+                symbol->getType()->getLlvmType(m_gen->getContext()),
                 addr);
         }
     }

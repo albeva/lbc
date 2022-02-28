@@ -5,14 +5,16 @@
 #include "Ast/ValueFlags.hpp"
 
 namespace lbc {
+class TypeProxy;
 class TypeRoot;
+struct AstDecl;
 
 class Symbol final {
 public:
     NO_COPY_AND_MOVE(Symbol)
 
-    explicit Symbol(llvm::StringRef name, const TypeRoot* type = nullptr) noexcept
-    : m_name{ name }, m_type{ type }, m_alias{ "" } {}
+    explicit Symbol(llvm::StringRef name, TypeProxy* proxy = nullptr) noexcept
+    : m_name{ name }, m_typeProxy{ proxy }, m_alias{ "" } {}
 
     ~Symbol() noexcept = default;
 
@@ -25,8 +27,10 @@ public:
     [[nodiscard]] unsigned int getIndex() const noexcept { return m_index; }
     void setIndex(unsigned int index) noexcept { m_index = index; }
 
-    [[nodiscard]] const TypeRoot* type() const noexcept { return m_type; }
-    void setType(const TypeRoot* type) noexcept { m_type = type; }
+    [[nodiscard]] TypeProxy* getTypeProxy() const noexcept { return m_typeProxy; }
+    void setTypeProxy(TypeProxy* proxy) noexcept { m_typeProxy = proxy; }
+
+    [[nodiscard]] const TypeRoot* getType() const noexcept;
 
     [[nodiscard]] llvm::StringRef name() const noexcept { return m_name; }
 
@@ -35,6 +39,9 @@ public:
 
     [[nodiscard]] llvm::StringRef alias() const noexcept { return m_alias; }
     void setAlias(llvm::StringRef alias) noexcept { m_alias = alias; }
+
+    [[nodiscard]] AstDecl* getDecl() const noexcept { return m_decl; }
+    void setDecl(AstDecl* decl) noexcept { m_decl = decl; }
 
     [[nodiscard]] llvm::StringRef identifier() const noexcept {
         if (m_alias.empty()) {
@@ -56,14 +63,15 @@ public:
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {
-        assert(ptr);
+        assert(ptr); // NOLINT
         return ptr;
     }
 
 private:
     const llvm::StringRef m_name;
-    const TypeRoot* m_type;
+    TypeProxy* m_typeProxy;
 
+    AstDecl* m_decl = nullptr;
     llvm::StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
     Symbol* m_parent = nullptr;

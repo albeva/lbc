@@ -5,6 +5,7 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
+#include "Type/TypeProxy.hpp"
 using namespace lbc;
 
 TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
@@ -12,12 +13,12 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
   m_symbol{ symbol },
   m_symbolTable{ symbolTable },
   m_packed(packed) {
-    symbol.setType(this);
+    setProxy(symbol.getTypeProxy());
     symbol.getFlags().type = true;
 }
 
 const TypeUDT* TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) {
-    if (const auto* type = symbol.type()) {
+    if (const auto* type = symbol.getType()) {
         if (const auto* udt = llvm::dyn_cast<TypeUDT>(type)) {
             return udt;
         }
@@ -35,7 +36,7 @@ llvm::Type* TypeUDT::genLlvmType(Context& context) const {
     llvm::SmallVector<llvm::Type*> elems;
     elems.reserve(m_symbolTable.size());
     for (auto* symbol : m_symbolTable.getSymbols()) {
-        auto* ty = symbol->type()->getLlvmType(context);
+        auto* ty = symbol->getType()->getLlvmType(context);
         elems.emplace_back(ty);
     }
     return llvm::StructType::create(

@@ -3,8 +3,10 @@
 //
 #include "TypeAliasDeclPass.hpp"
 #include "Ast/Ast.hpp"
+#include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
+#include "Type/TypeProxy.hpp"
 #include "TypePass.hpp"
 using namespace lbc;
 using namespace Sem;
@@ -22,7 +24,7 @@ void TypeAliasDeclPass::visit(AstModule& ast) const noexcept {
 }
 
 void TypeAliasDeclPass::visit(AstTypeAlias& ast) const noexcept {
-    const auto* type = m_sem.getTypePass().visit(*ast.typeExpr);
+    auto* proxy = m_sem.getTypePass().visit(*ast.typeExpr);
 
     auto* symbol = m_sem.createNewSymbol(ast);
     static constexpr auto getSymbol = Visitor{
@@ -43,6 +45,6 @@ void TypeAliasDeclPass::visit(AstTypeAlias& ast) const noexcept {
         symbol->getFlags().type = true;
     }
 
-    symbol->setType(type);
+    symbol->setTypeProxy(proxy);
     ast.symbol = symbol;
 }
