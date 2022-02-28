@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <concepts>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -15,7 +16,6 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include <concepts>
 
 namespace lbc {
 namespace fs = std::filesystem;
