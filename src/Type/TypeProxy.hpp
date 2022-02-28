@@ -39,7 +39,7 @@ public:
 
     /// Set Type
     void setType(const TypeRoot* type) noexcept {
-        assert(!hasValue() && "Proxy must be empty when setting a type"); // NOLINT
+        assert(empty() && "Proxy must be empty when setting a type"); // NOLINT
         m_storage = type;
     }
 
@@ -48,7 +48,7 @@ public:
 
     /// Set nested proxy
     void setNestedProxy(TypeProxy* proxy) noexcept {
-        assert(!hasValue() && "Proxy must be empty when setting a proxy"); // NOLINT
+        assert(empty() && "Proxy must be empty when setting a proxy"); // NOLINT
         m_storage = proxy;
     }
 
@@ -59,9 +59,9 @@ public:
         m_dereference = dereference;
     }
 
-    /// Return true if this proxy holds a nested proxy or a type
-    [[nodiscard]] constexpr bool hasValue() const noexcept {
-        return not std::holds_alternative<std::monostate>(m_storage);
+    /// Return true if this proxy holds no type nor nested proxy
+    [[nodiscard]] constexpr bool empty() const noexcept {
+        return std::holds_alternative<std::monostate>(m_storage);
     }
 
 private:
