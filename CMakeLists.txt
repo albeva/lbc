@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 # Set the project name to your project name
-project(lbc CXX)
+project(lbc C CXX)
 include(cmake/StandardProjectSettings.cmake)
 include(cmake/PreventInSourceBuilds.cmake)
 include(cmake/llvm.cmake)
