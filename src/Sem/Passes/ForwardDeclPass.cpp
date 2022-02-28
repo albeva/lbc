@@ -96,11 +96,11 @@ void ForwardDeclPass::define(AstUdtDecl& ast) noexcept {
 // Utils
 //----------------------------------------
 bool ForwardDeclPass::isCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
-    while (aliased != nullptr) {
+    do {
         if (proxy == aliased) {
             return true;
         }
         aliased = aliased->getNestedProxy();
-    }
+    } while (aliased != nullptr);
     return false;
 }
