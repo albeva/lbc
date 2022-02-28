@@ -65,8 +65,6 @@ add_library(
     Sem/Passes/Pass.hpp
     Sem/Passes/TypePass.cpp
     Sem/Passes/TypePass.hpp
-    Sem/Passes/UdtDeclPass.cpp
-    Sem/Passes/UdtDeclPass.hpp
     Sem/SemanticAnalyzer.cpp
     Sem/SemanticAnalyzer.hpp
     Symbol/Symbol.cpp

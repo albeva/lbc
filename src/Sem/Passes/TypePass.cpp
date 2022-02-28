@@ -29,8 +29,17 @@ TypeProxy* TypePass::visit(AstTypeExpr& ast, TypeProxy* owner) const noexcept {
     auto* proxy = std::visit(visitor, ast.expr);
 
     if (ast.dereference > 0) {
-        auto* wrapper = owner != nullptr ? owner : m_sem.getContext().create<TypeProxy>(proxy);
-        wrapper->setDereference(ast.dereference, &m_sem.getContext());
+        if (const auto* type = proxy->getType()) {
+            for (int i = 0; i < ast.dereference; i++) {
+                type = type->getPointer(m_sem.getContext());
+            }
+            proxy = type->getProxy();
+        } else if (owner == nullptr) {
+            proxy = m_sem.getContext().create<TypeProxy>(proxy);
+            proxy->setDereference(ast.dereference, &m_sem.getContext());
+        } else {
+            owner->setDereference(ast.dereference, &m_sem.getContext());
+        }
     }
 
     ast.typeProxy = proxy;

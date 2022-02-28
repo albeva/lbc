@@ -7,6 +7,7 @@
 namespace lbc {
 class Symbol;
 class TypeProxy;
+class TypeRoot;
 struct AstModule;
 struct AstStmtList;
 struct AstDecl;
@@ -34,9 +35,15 @@ namespace Sem {
         void define(AstTypeAlias& ast) noexcept;
         void define(AstUdtDecl& ast) noexcept;
 
+        void implement(AstUdtDecl& ast) noexcept;
+
         [[nodiscard]] bool isCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept;
+        void checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept;
 
         std::vector<AstDecl*> m_nodes{};
+        std::vector<AstUdtDecl*> m_udts{};
+        using RelKey = std::pair<const TypeRoot*, const TypeRoot*>;
+        llvm::DenseMap<RelKey, const TypeRoot*> m_typeRelations{};
     };
 
 } // namespace Sem

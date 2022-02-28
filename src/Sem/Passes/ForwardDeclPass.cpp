@@ -5,14 +5,21 @@
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
+#include "Type/Type.hpp"
 #include "Type/TypeProxy.hpp"
+#include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Sem;
 
 void ForwardDeclPass::visit(AstModule& ast) noexcept {
     declare(*ast.stmtList);
+
     for (auto* node : m_nodes) {
         define(*node);
+    }
+
+    for (auto* udt : m_udts) {
+        implement(*udt);
     }
 }
 
@@ -90,6 +97,32 @@ void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
 }
 
 void ForwardDeclPass::define(AstUdtDecl& ast) noexcept {
+    auto* symbol = ast.symbol;
+    bool packed = false;
+    if (ast.attributes != nullptr) {
+        packed = ast.attributes->exists("PACKED");
+    }
+    ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
+    TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
+    m_udts.push_back(&ast);
+}
+
+//----------------------------------------
+// Implement
+//----------------------------------------
+
+void ForwardDeclPass::implement(AstUdtDecl& ast) noexcept {
+    const auto* udt = ast.symbol->getType();
+    m_sem.with(ast.symbolTable, [&]() {
+        for (auto& decl : ast.decls->decls) {
+            m_sem.visit(*decl);
+            decl->symbol->setParent(ast.symbol);
+            const auto* nested = decl->symbol->getType();
+            if (nested->isUDT()) {
+                checkCircularDependency(udt, nested);
+            }
+        }
+    });
 }
 
 //----------------------------------------
@@ -103,4 +136,15 @@ bool ForwardDeclPass::isCircularAlias(TypeProxy* proxy, TypeProxy* aliased) cons
         aliased = aliased->getNestedProxy();
     } while (aliased != nullptr);
     return false;
+}
+
+void ForwardDeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept {
+    const auto* lower = std::min(udt, nested);
+    const auto* higher = std::max(udt, nested);
+    auto key = RelKey{ lower, higher };
+
+    auto result = m_typeRelations.try_emplace(key, udt);
+    if (result.first->getSecond() != udt) {
+        fatalError("Nested type declarations");
+    }
 }
