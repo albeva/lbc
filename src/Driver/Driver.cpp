@@ -12,6 +12,7 @@
 #include "TempFileCache.hpp"
 #include "Toolchain/ToolTask.hpp"
 #include <llvm/IR/IRPrintingPasses.h>
+#include <llvm/Pass.h>
 #include <llvm/Support/FileSystem.h>
 
 using namespace lbc;
