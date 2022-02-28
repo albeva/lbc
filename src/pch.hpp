@@ -15,6 +15,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <concepts>
 
 namespace lbc {
 namespace fs = std::filesystem;
