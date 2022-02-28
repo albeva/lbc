@@ -48,8 +48,8 @@ public:
 
     /// Downcast from derived type to base type
     template<typename U>
-    requires std::is_base_of_v<T, U>
-    ParseResult(ParseResult<U> other) noexcept // NOLINT(hicpp-explicit-conversions)
+    requires std::is_base_of_v<T, U> ParseResult(ParseResult<U> other) // NOLINT(hicpp-explicit-conversions)
+    noexcept
     : m_value{ other.getPointer(), other.isError() } {}
 
     /// cast from ParseResult<void>, null value and copy the error state

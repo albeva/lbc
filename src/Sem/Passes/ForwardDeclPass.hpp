@@ -6,6 +6,7 @@
 
 namespace lbc {
 class Symbol;
+class TypeProxy;
 struct AstModule;
 struct AstStmtList;
 struct AstDecl;
@@ -25,9 +26,17 @@ namespace Sem {
         void visit(AstModule&) noexcept;
 
     private:
+        void declare(AstStmtList& ast) noexcept;
+        void declare(AstDeclList& ast) noexcept;
         void declare(AstDecl& ast) noexcept;
-        std::vector<Symbol*> m_types{};
-        std::vector<Symbol*> m_procs{};
+
+        void define(AstDecl& ast) noexcept;
+        void define(AstTypeAlias& ast) noexcept;
+        void define(AstUdtDecl& ast) noexcept;
+
+        [[nodiscard]] bool isCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept;
+
+        std::vector<AstDecl*> m_nodes{};
     };
 
 } // namespace Sem

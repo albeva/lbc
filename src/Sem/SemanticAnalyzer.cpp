@@ -8,7 +8,6 @@
 #include "Passes/ForStmtPass.hpp"
 #include "Passes/ForwardDeclPass.hpp"
 #include "Passes/FuncDeclarerPass.hpp"
-#include "Passes/TypeAliasDeclPass.hpp"
 #include "Passes/UdtDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
@@ -28,11 +27,9 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     m_table = ast.symbolTable;
 
-    Sem::UdtDeclPass(*this).visit(ast);
-    Sem::TypeAliasDeclPass(*this).visit(ast);
+    //    Sem::UdtDeclPass(*this).visit(ast);
+    Sem::ForwardDeclPass(*this).visit(ast);
     Sem::FuncDeclarerPass(*this).visit(ast);
-    //    Sem::ForwardDeclPass(*this).visit(ast);
-
     visit(*ast.stmtList);
 }
 

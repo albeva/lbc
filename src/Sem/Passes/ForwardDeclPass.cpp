@@ -9,41 +9,98 @@
 using namespace lbc;
 using namespace Sem;
 
-namespace {
-template<typename Callable>
-inline void iterate(AstStmtList& ast, Callable callable) noexcept {
+void ForwardDeclPass::visit(AstModule& ast) noexcept {
+    declare(*ast.stmtList);
+    for (auto* node : m_nodes) {
+        define(*node);
+    }
+}
+
+//----------------------------------------
+// Declare symbol
+//----------------------------------------
+
+void ForwardDeclPass::declare(AstStmtList& ast) noexcept {
     for (auto& stmt : ast.stmts) {
         if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
-            callable(*decl);
+            declare(*decl);
         }
     }
 }
 
-template<typename Callable>
-inline void iterate(AstDeclList& ast, Callable callable) noexcept {
+void ForwardDeclPass::declare(AstDeclList& ast) noexcept {
     for (auto& decl : ast.decls) {
-        callable(*decl);
+        declare(*decl);
     }
-}
-} // namespace
-
-void ForwardDeclPass::visit(AstModule& ast) noexcept {
-    iterate(*ast.stmtList, [&](auto& decl) { declare(decl); });
 }
 
 void ForwardDeclPass::declare(AstDecl& ast) noexcept {
-    if (not llvm::isa<AstFuncDecl, AstUdtDecl, AstTypeAlias>(ast)) {
+    if (not llvm::isa<AstUdtDecl, AstTypeAlias>(ast)) {
         return;
     }
 
     auto* symbol = m_sem.createNewSymbol(ast);
     symbol->setDecl(&ast);
+    symbol->getFlags().type = true;
     symbol->setTypeProxy(m_sem.getContext().create<TypeProxy>());
     ast.symbol = symbol;
+    m_nodes.emplace_back(&ast);
+}
 
-    if (llvm::isa<AstFuncDecl>(ast)) {
-        m_types.push_back(symbol);
-    } else {
-        m_procs.push_back(symbol);
+//----------------------------------------
+// Define symbol type
+//----------------------------------------
+
+void ForwardDeclPass::define(AstDecl& ast) noexcept {
+    if (auto* alias = llvm::dyn_cast<AstTypeAlias>(&ast)) {
+        return define(*alias);
     }
+    if (auto* udt = llvm::dyn_cast<AstUdtDecl>(&ast)) {
+        return define(*udt);
+    }
+}
+
+void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
+    static constexpr auto getSymbol = Visitor{
+        [](AstIdentExpr* ident) -> Symbol* {
+            return ident->symbol;
+        },
+        [](AstFuncDecl* decl) -> Symbol* {
+            return decl->symbol;
+        },
+        [](TokenKind) -> Symbol* {
+            return nullptr;
+        }
+    };
+
+    auto* symbol = ast.symbol;
+    auto* proxy = symbol->getTypeProxy();
+    auto* aliasedProxy = m_sem.getTypePass().visit(*ast.typeExpr, proxy);
+    if (isCircularAlias(proxy, aliasedProxy)) {
+        fatalError("Circular reference for '"_t + symbol->name() + "'");
+    }
+    proxy->setNestedProxy(aliasedProxy);
+
+    if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
+        symbol->setFlags(parent->getFlags());
+        symbol->setParent(parent->getParent());
+    } else {
+        symbol->getFlags().type = true;
+    }
+}
+
+void ForwardDeclPass::define(AstUdtDecl& ast) noexcept {
+}
+
+//----------------------------------------
+// Utils
+//----------------------------------------
+bool ForwardDeclPass::isCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
+    while (aliased != nullptr) {
+        if (proxy == aliased) {
+            return true;
+        }
+        aliased = aliased->getNestedProxy();
+    }
+    return false;
 }
