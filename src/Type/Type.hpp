@@ -98,7 +98,7 @@ public:
 
 protected:
     constexpr explicit TypeRoot(TypeFamily kind) noexcept
-    : m_kind{ kind }, m_proxyDefault{ this, nullptr }, m_proxy{ &m_proxyDefault } {}
+    : m_kind{ kind }, m_proxyDefault{ this }, m_proxy{ &m_proxyDefault } {}
 
     [[nodiscard]] virtual llvm::Type* genLlvmType(Context& context) const = 0;
 

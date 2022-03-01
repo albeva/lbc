@@ -6,6 +6,8 @@
 
 namespace lbc {
 class Symbol;
+class TypeProxy;
+class TypeRoot;
 struct AstModule;
 struct AstStmtList;
 struct AstDecl;
@@ -13,6 +15,7 @@ struct AstDeclList;
 struct AstFuncDecl;
 struct AstUdtDecl;
 struct AstTypeAlias;
+struct AstFuncParamDecl;
 
 namespace Sem {
 
@@ -25,9 +28,26 @@ namespace Sem {
         void visit(AstModule&) noexcept;
 
     private:
+        void declare(AstStmtList& ast) noexcept;
         void declare(AstDecl& ast) noexcept;
-        std::vector<Symbol*> m_types{};
-        std::vector<Symbol*> m_procs{};
+
+        void define(AstDecl& ast) noexcept;
+        void define(AstTypeAlias& ast) noexcept;
+        void define(AstUdtDecl& ast) noexcept;
+
+        void implement(AstUdtDecl& ast) noexcept;
+        void implement(AstFuncDecl& ast) noexcept;
+        void implement(AstFuncParamDecl& ast) noexcept;
+
+        Symbol* createParamSymbol(AstFuncParamDecl& ast) noexcept;
+        void checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept;
+        void checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept;
+
+        std::vector<AstDecl*> m_nodes{};
+        std::vector<AstUdtDecl*> m_udts{};
+        std::vector<AstFuncDecl*> m_funcs{};
+        using RelKey = std::pair<const TypeRoot*, const TypeRoot*>;
+        llvm::DenseMap<RelKey, const TypeRoot*> m_typeRelations{};
     };
 
 } // namespace Sem

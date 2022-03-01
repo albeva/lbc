@@ -38,12 +38,12 @@ do
         ./$output | $FILECHECK $file --dump-input=never
         if [ $? = 0 ]; then
             $ECHO "$reset\c"
-            printf "%s%*s${green}Ok$reset\n" $file "$((25-${#file}))";
+            printf "%s%*s${green}Ok$reset\n" $file "$((30-${#file}))";
         else
             $ECHO "$reset\c"
         fi
         rm $output
     else
-        printf "%s%*s${red}Failed$reset\n" $file "$((25-${#file}))";
+        printf "%s%*s${red}Failed$reset\n" $file "$((30-${#file}))";
     fi
 done

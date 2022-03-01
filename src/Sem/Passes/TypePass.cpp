@@ -14,7 +14,7 @@
 using namespace lbc;
 using namespace Sem;
 
-TypeProxy* TypePass::visit(AstTypeExpr& ast) const noexcept {
+TypeProxy* TypePass::visit(AstTypeExpr& ast, TypeProxy* owner) const noexcept {
     const auto visitor = Visitor{
         [](TokenKind kind) -> TypeProxy* {
             return TypeRoot::fromTokenKind(kind)->getProxy();
@@ -28,9 +28,20 @@ TypeProxy* TypePass::visit(AstTypeExpr& ast) const noexcept {
     };
     auto* proxy = std::visit(visitor, ast.expr);
 
-    for (auto deref = 0; deref < ast.dereference; deref++) {
-        proxy = TypePointer::get(m_sem.getContext(), proxy->getType())->getProxy();
+    if (ast.dereference > 0) {
+        if (const auto* type = proxy->getType()) {
+            for (int i = 0; i < ast.dereference; i++) {
+                type = type->getPointer(m_sem.getContext());
+            }
+            proxy = type->getProxy();
+        } else if (owner == nullptr) {
+            proxy = m_sem.getContext().create<TypeProxy>(proxy);
+            proxy->setDereference(ast.dereference, &m_sem.getContext());
+        } else {
+            owner->setDereference(ast.dereference, &m_sem.getContext());
+        }
     }
+
     ast.typeProxy = proxy;
     return proxy;
 }
@@ -60,7 +71,7 @@ TypeProxy* TypePass::visit(AstFuncDecl& ast) const noexcept {
     }
 
     // return type
-    const TypeProxy* retType = nullptr;
+    TypeProxy* retType = nullptr;
     if (ast.retTypeExpr != nullptr) {
         retType = visit(*ast.retTypeExpr);
         if (retType->getType()->isUDT()) {

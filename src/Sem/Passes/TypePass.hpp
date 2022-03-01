@@ -14,7 +14,9 @@ namespace Sem {
     class TypePass final : public Pass {
     public:
         using Pass::Pass;
-        [[nodiscard]] TypeProxy* visit(AstTypeExpr& ast) const noexcept;
+        /// Resolve type of given type expression. If owner is provided then
+        /// certain avoid creating extra proxies for pointers
+        [[nodiscard]] TypeProxy* visit(AstTypeExpr& ast, TypeProxy* owner = nullptr) const noexcept;
         [[nodiscard]] TypeProxy* visit(AstFuncDecl& ast) const noexcept;
 
     private:

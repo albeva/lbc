@@ -60,23 +60,20 @@ add_library(
     Sem/Passes/ForStmtPass.hpp
     Sem/Passes/ForwardDeclPass.cpp
     Sem/Passes/ForwardDeclPass.hpp
-    Sem/Passes/FuncDeclarerPass.cpp
-    Sem/Passes/FuncDeclarerPass.hpp
     Sem/Passes/Pass.hpp
-    Sem/Passes/TypeAliasDeclPass.cpp
-    Sem/Passes/TypeAliasDeclPass.hpp
     Sem/Passes/TypePass.cpp
     Sem/Passes/TypePass.hpp
-    Sem/Passes/UdtDeclPass.cpp
-    Sem/Passes/UdtDeclPass.hpp
     Sem/SemanticAnalyzer.cpp
     Sem/SemanticAnalyzer.hpp
+    Symbol/Symbol.cpp
     Symbol/Symbol.hpp
     Symbol/SymbolTable.cpp
     Symbol/SymbolTable.hpp
     Type/Type.cpp
     Type/Type.def.hpp
     Type/Type.hpp
+    Type/TypeProxy.cpp
+    Type/TypeProxy.hpp
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
     Utils/ScopeGuard.hpp
@@ -85,7 +82,7 @@ add_library(
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
     Utils/Version.hpp
-    Type/TypeProxy.hpp Symbol/Symbol.cpp)
+)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)
