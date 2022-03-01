@@ -7,6 +7,6 @@
 import cstd
 
 type IntPtr as integer ptr
-var i = 10
-var ip As IntPtr = @i
+dim i = 10
+dim ip As IntPtr = @i
 printf "%d", *ip

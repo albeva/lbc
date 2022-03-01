@@ -8,7 +8,7 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-Var p As Player
+dim p As Player
 p.name = "Albert"
 p.age = 35
 p.details.score = 99

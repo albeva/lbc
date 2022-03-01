@@ -66,6 +66,7 @@
     _( As,       "AS"       ) \
     _( Continue, "CONTINUE" ) \
     _( Declare,  "DECLARE"  ) \
+    _( Dim,      "DIM"      ) \
     _( Do,       "DO"       ) \
     _( Else,     "ELSE"     ) \
     _( End,      "END"      ) \
@@ -87,7 +88,6 @@
     _( True,     "TRUE"     ) \
     _( Type,     "TYPE"     ) \
     _( Until,    "UNTIL"    ) \
-    _( Var,      "VAR"      ) \
     _( While,    "WHILE"    )
 
 #define TOKEN_OPERAOTR_KEYWORD_MAP(_) \

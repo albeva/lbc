@@ -7,10 +7,10 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var b = true
-var s = if b then "true" else "false"
-var i1 = if not b then 1 else 0
-var i2 = if i1 = 0 then -1 else 1
-var d1 = (if (i2 < 0) then (3.14) else (6.28))
+dim b = true
+dim s = if b then "true" else "false"
+dim i1 = if not b then 1 else 0
+dim i2 = if i1 = 0 then -1 else 1
+dim d1 = (if (i2 < 0) then (3.14) else (6.28))
 
 printf "%s, %d, %d, %lf\n", s, i1, i2, d1

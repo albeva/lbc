@@ -6,8 +6,8 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var i = 10
-var f = i as double
-var b = f as byte
+dim i = 10
+dim f = i as double
+dim b = f as byte
 
 printf "%lf, %hhi", f, b

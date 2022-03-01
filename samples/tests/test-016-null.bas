@@ -7,12 +7,12 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var ip as integer ptr = null
+dim ip as integer ptr = null
 
 if ip = null then printf "true"
 if ip <> null then printf "unreachable"
 
-var i = 10
+dim i = 10
 ip = @i
 
 if ip = null then printf "unreachable"

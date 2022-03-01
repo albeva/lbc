@@ -14,14 +14,14 @@ Type Player
     age As UInteger
 End Type
 
-Var p1 As Player
+dim p1 As Player
 p1.name = "Albert"
 p1.age = 35
 
 printf "Player1.name = %s\n", p1.name
 printf "Player1.age = %d\n", p1.age
 
-Var p2 As Player
+dim p2 As Player
 p2.name = "Mario"
 p2.age = 58
 

@@ -118,8 +118,8 @@ void CodePrinter::visit(AstVarDecl& ast) {
     }
 
     m_os << indent();
-    if (emitVARkeyword) {
-        m_os << "VAR ";
+    if (m_emitDimKeyword) {
+        m_os << "DIM ";
     }
     m_os << ast.name;
 
@@ -203,8 +203,8 @@ void CodePrinter::visit(AstReturnStmt& ast) {
 //----------------------------------------
 
 void CodePrinter::visit(AstUdtDecl& ast) {
-    RESTORE_ON_EXIT(emitVARkeyword);
-    emitVARkeyword = false;
+    RESTORE_ON_EXIT(m_emitDimKeyword);
+    m_emitDimKeyword = false;
 
     if (ast.attributes != nullptr) {
         visit(*ast.attributes);

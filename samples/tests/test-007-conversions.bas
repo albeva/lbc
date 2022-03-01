@@ -7,8 +7,8 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var d as double = 3.14
-var s as single = d
-var i as integer = d
+dim d as double = 3.14
+dim s as single = d
+dim i as integer = d
 
 printf "%lf, %d", d, i

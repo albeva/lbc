@@ -10,5 +10,5 @@ sub say(msg as zstring)
     printf "hello, %s!", msg
 end sub
 
-var sayp = @say
+dim sayp = @say
 (*sayp)("world")

@@ -9,13 +9,13 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var a = "Hello"
-var b = "World"
-var c = a
+dim a = "Hello"
+dim b = "World"
+dim c = a
 sendMessage c
 
 sub sendMessage(greeting as zstring)
-    var exclamation = getExclamation()
+    dim exclamation = getExclamation()
     printf "%s, %s%s", greeting, b, exclamation
 end sub'
 

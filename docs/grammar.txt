@@ -17,7 +17,7 @@ Statement
 
 Declaration
     = [ AttributeList ]
-    ( VAR
+    ( DIM
     | DECLARE
     | FUNCTION
     | SUB
@@ -37,8 +37,8 @@ AttributeArgList
     | "(" [ Literal { "," Literal } ] ")"
     .
 
-VAR
-    = "VAR" identifier
+DIM
+    = "DIM" identifier
     ( "=" Expression
     | "AS" TypeExpr [ "=" Expression ]
     )

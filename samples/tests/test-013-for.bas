@@ -11,7 +11,7 @@
 import cstd
 
 ' with scoped var
-for var first = true, i = 1 to 5
+for dim first = true, i = 1 to 5
     if first then first = false else printf ", "
     printf "%d", i
 next
@@ -30,8 +30,8 @@ for i = 6 to 0 step -3 do printf "%i, ", i
 printf "\n"
 
 ' with variables
-var b = 1
-var e = 7
-var s = 3
+dim b = 1
+dim e = 7
+dim s = 3
 for i = b to e step s do printf "%i, ", i
 printf "\n"

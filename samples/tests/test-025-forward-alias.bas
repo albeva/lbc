@@ -6,8 +6,8 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var i as MyInt = 10
-var ip as MyIntPtr = @i
+dim i as MyInt = 10
+dim ip as MyIntPtr = @i
 printf "%d\n", *ip
 
 type MyIntPtr as MyInt Ptr

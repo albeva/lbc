@@ -183,8 +183,8 @@ ParseResult<AstStmt> Parser::declaration() {
     TRY_DECLARE(attribs, attributeList())
 
     switch (m_token.getKind()) {
-    case TokenKind::Var:
-        return kwVar(attribs);
+    case TokenKind::Dim:
+        return kwDim(attribs);
     case TokenKind::Declare:
         return kwDeclare(attribs);
     case TokenKind::Function:
@@ -285,14 +285,14 @@ ParseResult<AstExprList> Parser::attributeArgList() {
 //----------------------------------------
 
 /**
- * VAR
- *   = "VAR" identifier
+ * Dim
+ *   = "DIM" identifier
  *   ( "=" Expression
  *   | "AS" TypeExpr [ "=" Expression ]
  *   )
  *   .
  */
-ParseResult<AstVarDecl> Parser::kwVar(AstAttributeList* attribs) {
+ParseResult<AstVarDecl> Parser::kwDim(AstAttributeList* attribs) {
     // assume m_token == VAR
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
     advance();
@@ -694,8 +694,8 @@ ParseResult<AstIfStmt> Parser::kwIf() {
  */
 ParseResult<AstIfStmtBlock> Parser::ifBlock() {
     std::vector<AstVarDecl*> decls;
-    while (m_token.is(TokenKind::Var)) {
-        TRY_DECLARE(var, kwVar(nullptr))
+    while (m_token.is(TokenKind::Dim)) {
+        TRY_DECLARE(var, kwDim(nullptr))
         decls.emplace_back(var);
         TRY(consume(TokenKind::Comma))
     }
@@ -751,8 +751,8 @@ ParseResult<AstForStmt> Parser::kwFor() {
     std::vector<AstVarDecl*> decls;
 
     // [ VAR { "," VAR } "," ]
-    while (m_token.is(TokenKind::Var)) {
-        TRY_DECLARE(var, kwVar(nullptr))
+    while (m_token.is(TokenKind::Dim)) {
+        TRY_DECLARE(var, kwDim(nullptr))
         decls.emplace_back(var);
         TRY(consume(TokenKind::Comma))
     }
@@ -839,9 +839,9 @@ ParseResult<AstDoLoopStmt> Parser::kwDo() {
 
     // [ VAR { "," VAR } ]
     auto acceptComma = false;
-    while (m_token.is(TokenKind::Var) || (acceptComma && accept(TokenKind::Comma))) {
+    while (m_token.is(TokenKind::Dim) || (acceptComma && accept(TokenKind::Comma))) {
         acceptComma = true;
-        TRY_DECLARE(var, kwVar(nullptr))
+        TRY_DECLARE(var, kwDim(nullptr))
         decls.emplace_back(var);
     }
 
