@@ -21,6 +21,10 @@ void ForwardDeclPass::visit(AstModule& ast) noexcept {
     for (auto* udt : m_udts) {
         implement(*udt);
     }
+
+    for (auto* func: m_funcs) {
+        implement(*func);
+    }
 }
 
 //----------------------------------------
@@ -35,27 +39,33 @@ void ForwardDeclPass::declare(AstStmtList& ast) noexcept {
         }
         if (auto* import = llvm::dyn_cast<AstImport>(stmt)) {
             declare(*import->module->stmtList);
+            continue;
+        }
+        if (auto* func = llvm::dyn_cast<AstFuncStmt>(stmt)) {
+            declare(*func->decl);
         }
     }
 }
 
-void ForwardDeclPass::declare(AstDeclList& ast) noexcept {
-    for (auto& decl : ast.decls) {
-        declare(*decl);
-    }
-}
-
 void ForwardDeclPass::declare(AstDecl& ast) noexcept {
-    if (not llvm::isa<AstUdtDecl, AstTypeAlias>(ast)) {
+    if (not llvm::isa<AstUdtDecl, AstTypeAlias, AstFuncDecl>(ast)) {
         return;
     }
 
     auto* symbol = m_sem.createNewSymbol(ast);
-    symbol->setDecl(&ast);
-    symbol->getFlags().type = true;
     symbol->setTypeProxy(m_sem.getContext().create<TypeProxy>());
+    symbol->setDecl(&ast);
+
+    if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
+        symbol->getFlags().callable = true;
+        symbol->getFlags().addressable = true;
+        m_funcs.push_back(func);
+    } else {
+        symbol->getFlags().type = true;
+        m_nodes.emplace_back(&ast);
+    }
+
     ast.symbol = symbol;
-    m_nodes.emplace_back(&ast);
 }
 
 //----------------------------------------
@@ -87,9 +97,7 @@ void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
     auto* symbol = ast.symbol;
     auto* proxy = symbol->getTypeProxy();
     auto* aliasedProxy = m_sem.getTypePass().visit(*ast.typeExpr, proxy);
-    if (isCircularAlias(proxy, aliasedProxy)) {
-        fatalError("Circular reference for '"_t + symbol->name() + "'");
-    }
+    checkCircularAlias(proxy, aliasedProxy);
     proxy->setNestedProxy(aliasedProxy);
 
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
@@ -129,17 +137,59 @@ void ForwardDeclPass::implement(AstUdtDecl& ast) noexcept {
     });
 }
 
+void ForwardDeclPass::implement(AstFuncDecl& ast) noexcept {
+    auto* symbol = ast.symbol;
+
+    // alias?
+    if (ast.attributes != nullptr) {
+        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
+            symbol->setAlias(*alias);
+        }
+    }
+
+    // main or external?
+    if (symbol->name() == "MAIN" && symbol->alias().empty()) {
+        symbol->setAlias("main");
+        symbol->getFlags().external = true;
+    } else {
+        symbol->getFlags().external = !ast.hasImpl;
+    }
+
+    // func type
+    symbol->getTypeProxy()->setNestedProxy(m_sem.getTypePass().visit(ast));
+
+    // parameters
+    ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
+    if (ast.params != nullptr) {
+        m_sem.with(ast.symbolTable, [&]() {
+            for (auto& param : ast.params->params) {
+                implement(*param);
+            }
+        });
+    }
+}
+
+void ForwardDeclPass::implement(AstFuncParamDecl& ast) noexcept {
+    auto* proxy = ast.typeExpr->typeProxy;
+    if (proxy->getType()->isUDT()) {
+        fatalError("Passing types by values is not implemented");
+    }
+
+    auto* symbol = createParamSymbol(ast);
+    symbol->setTypeProxy(proxy);
+    ast.symbol = symbol;
+}
+
 //----------------------------------------
 // Utils
 //----------------------------------------
-bool ForwardDeclPass::isCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
+void ForwardDeclPass::checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
     do {
         if (proxy == aliased) {
-            return true;
+            fatalError("Circular type alias");
         }
         aliased = aliased->getNestedProxy();
     } while (aliased != nullptr);
-    return false;
 }
 
 void ForwardDeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept {
@@ -151,4 +201,21 @@ void ForwardDeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoo
     if (result.first->getSecond() != udt) {
         fatalError("Nested type declarations");
     }
+}
+
+Symbol* ForwardDeclPass::createParamSymbol(AstFuncParamDecl& ast) noexcept {
+    const auto& name = ast.name;
+    if (m_sem.getSymbolTable()->find(name, false) != nullptr) {
+        fatalError("Redefinition of "_t + name);
+    }
+    auto* symbol = m_sem.getSymbolTable()->insert(m_sem.getContext(), name);
+
+    // alias?
+    if (ast.attributes != nullptr) {
+        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
+            symbol->setAlias(*alias);
+        }
+    }
+
+    return symbol;
 }
