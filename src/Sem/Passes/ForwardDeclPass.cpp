@@ -43,6 +43,7 @@ void ForwardDeclPass::declare(AstStmtList& ast) noexcept {
         }
         if (auto* func = llvm::dyn_cast<AstFuncStmt>(stmt)) {
             declare(*func->decl);
+            continue;
         }
     }
 }
