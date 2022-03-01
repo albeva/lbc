@@ -14,7 +14,7 @@ test(5)
 printf "\n"
 
 sub test(n as integer)
-    if var i = get(n), i = 0 then printf "0 "
+    if dim i = get(n), i = 0 then printf "0 "
     else if            i = 1 then printf "1 "
     else if            i = 2 then printf "2 "
     else                          printf "i = %d", i

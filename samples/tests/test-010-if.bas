@@ -6,7 +6,7 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var b = true
+dim b = true
 
 if b then printf "true"
 

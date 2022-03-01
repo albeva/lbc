@@ -14,7 +14,7 @@
 import cstd
 
 '' post until
-do var i = 1
+do dim i = 1
     if i > 1 then printf ", "
     printf "%d", i
     i = i + 1
@@ -22,7 +22,7 @@ loop until i = 5
 printf "\n"
 
 '' post while
-do var i = 1
+do dim i = 1
     if i > 1 then printf ", "
     printf "%d", i
     i = i + 1
@@ -30,7 +30,7 @@ loop while i < 5
 printf "\n"
 
 '' pre until
-do var i = 1 until i = 5
+do dim i = 1 until i = 5
     if i > 1 then printf ", "
     printf "%d", i
     i = i + 1
@@ -38,7 +38,7 @@ loop
 printf "\n"
 
 '' pre while
-do var i = 1 while i < 5
+do dim i = 1 while i < 5
     if i > 1 then printf ", "
     printf "%d", i
     i = i + 1
@@ -52,7 +52,7 @@ do
 loop
 
 '' do continue
-do var i = 1
+do dim i = 1
     i = i + 1
 
     if i mod 2 <> 0 then continue do

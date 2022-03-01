@@ -17,7 +17,7 @@ Sub foo(p As Player Ptr)
     p.age = 36
 End Sub
 
-Var p As Player
+dim p As Player
 foo(@p)
 
 printf "name = %s\n", p.name

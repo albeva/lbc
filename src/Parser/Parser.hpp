@@ -51,7 +51,7 @@ private:
     [[nodiscard]] ParseResult<AstCallExpr> callExpr();
     [[nodiscard]] ParseResult<AstIfExpr> ifExpr();
     [[nodiscard]] ParseResult<AstExprList> expressionList();
-    [[nodiscard]] ParseResult<AstVarDecl> kwVar(AstAttributeList* attribs);
+    [[nodiscard]] ParseResult<AstVarDecl> kwDim(AstAttributeList* attribs);
     [[nodiscard]] ParseResult<AstIfStmt> kwIf();
     [[nodiscard]] ParseResult<AstIfStmtBlock> ifBlock();
     [[nodiscard]] ParseResult<AstIfStmtBlock> thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr);

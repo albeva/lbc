@@ -14,5 +14,5 @@ sub say(getter as (function() as zstring) ptr)
     printf "hello, %s!\n", (*getter)()
 end sub
 
-var sayp as sub(function as zstring) = @say
+dim sayp as sub(function as zstring) = @say
 (*sayp)(@getMessage)

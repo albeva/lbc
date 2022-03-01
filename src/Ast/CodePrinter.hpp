@@ -16,7 +16,7 @@ private:
     size_t m_indent = 0;
     llvm::raw_ostream& m_os;
     static constexpr auto SPACES = 4;
-    bool emitVARkeyword = true;
+    bool m_emitDimKeyword = true;
 };
 
 } // namespace lbc

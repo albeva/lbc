@@ -7,7 +7,7 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var i = 10
-var ip = @i
-var iv = *ip
+dim i = 10
+dim ip = @i
+dim iv = *ip
 printf "%d\n", iv

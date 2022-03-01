@@ -10,16 +10,16 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-var iseven = 1 + 2 * 3
-var ifour = iseven - 6 / 2
-var ione = 10 mod 3
+dim iseven = 1 + 2 * 3
+dim ifour = iseven - 6 / 2
+dim ione = 10 mod 3
 printf "%d, %d, %d\n", iseven, ifour, ione
 
-var c3 as double = 3
-var d10 as double = 10
-var dseven = 1 + 2 * c3
-var dfour = dseven - 6 / 2
-var done = d10 mod c3
+dim c3 as double = 3
+dim d10 as double = 10
+dim dseven = 1 + 2 * c3
+dim dfour = dseven - 6 / 2
+dim done = d10 mod c3
 printf "%lf, %lf, %lf\n", dseven, dfour, done
 
 out "",   iseven > ifour

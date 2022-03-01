@@ -4,8 +4,8 @@ import cstd
 srand time(null)
 
 '' the secret number
-Var secret = rand() Mod 100
-Var answer = 0
+dim secret = rand() Mod 100
+dim answer = 0
 
 '' show help
 printf "Guess a number between 1 and 100. 0 to exit. You have 25 tries\n"
