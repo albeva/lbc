@@ -87,6 +87,7 @@
     _( To,       "TO"       ) \
     _( True,     "TRUE"     ) \
     _( Type,     "TYPE"     ) \
+    _( TypeOf,   "TYPEOF"   ) \
     _( Until,    "UNTIL"    ) \
     _( While,    "WHILE"    )
 
