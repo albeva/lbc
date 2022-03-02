@@ -358,6 +358,15 @@ void Lexer::identifier(Token& result) {
     uppercased.reserve(static_cast<size_t>(length));
     std::transform(start, m_input, std::back_inserter(uppercased), llvm::toUpper);
 
+    if (uppercased == "REM") {
+        auto ch = *m_input;
+        if (ch != 0 && ch != '\n' && ch != '\r') {
+            skipUntilLineEnd();
+        }
+        next(result);
+        return;
+    }
+
     auto range = makeRange(start, m_input);
     auto kind = Token::findKind(uppercased);
     switch (kind) {

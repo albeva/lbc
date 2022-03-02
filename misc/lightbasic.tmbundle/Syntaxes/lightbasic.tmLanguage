@@ -20,6 +20,14 @@
 		</dict>
 		<dict>
 			<key>begin</key>
+			<string>\b(?i:(rem))\b</string>
+			<key>end</key>
+			<string>\n</string>
+			<key>name</key>
+			<string>comment.line.lbc</string>
+		</dict>
+		<dict>
+			<key>begin</key>
 			<string>/'</string>
 			<key>end</key>
 			<string>'/</string>

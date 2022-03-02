@@ -75,7 +75,7 @@ TEST_F(LexerTests, NoInput) {
 }
 
 TEST_F(LexerTests, EmptyInputs) {
-    constexpr std::array inputs{
+    static constexpr std::array inputs{
         "   ",
         "\t\t",
         "\n   \n   ",
@@ -93,8 +93,42 @@ TEST_F(LexerTests, EmptyInputs) {
     }
 }
 
+TEST_F(LexerTests, RemComment) {
+    load("a rem b");
+    EXPECT_TOKEN(lbc::TokenKind::Identifier, "A")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::EndOfFile)
+
+    load("a REM b");
+    EXPECT_TOKEN(lbc::TokenKind::Identifier, "A")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::EndOfFile)
+
+    load("\"a rem b\"");
+    EXPECT_TOKEN(lbc::TokenKind::StringLiteral, "a rem b")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::EndOfFile)
+
+    load("a rem");
+    EXPECT_TOKEN(lbc::TokenKind::Identifier, "A")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::EndOfFile)
+
+    load("a rem\nb");
+    EXPECT_TOKEN(lbc::TokenKind::Identifier, "A")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::Identifier, "B")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::EndOfFile)
+
+    load("remember");
+    EXPECT_TOKEN(lbc::TokenKind::Identifier, "REMEMBER")
+    EXPECT_TOKEN(lbc::TokenKind::EndOfStmt)
+    EXPECT_TOKEN(lbc::TokenKind::EndOfFile)
+}
+
 TEST_F(LexerTests, MultiLineComments) {
-    constexpr std::array inputs{
+    static constexpr std::array inputs{
         "a/''/b",
         "a/' '/b",
         "a /''/ b",
@@ -117,7 +151,7 @@ TEST_F(LexerTests, MultiLineComments) {
 }
 
 TEST_F(LexerTests, TokenLocation) {
-    constexpr auto source =
+    static constexpr auto source =
         "one \"two\" three 42 = <= ...\n"
         "four \t IF a = b THEN \r\n"
         "five /'/' nested '/'/ six\n"
@@ -165,7 +199,7 @@ TEST_F(LexerTests, TokenLocation) {
 }
 
 TEST_F(LexerTests, StringLiterals) {
-    constexpr auto source = R"BAS(
+    static constexpr auto source = R"BAS(
 "hello"
 	"hello\nWorld!"
 "	Hello \"world\"\t"
@@ -189,7 +223,7 @@ TEST_F(LexerTests, StringLiterals) {
 }
 
 TEST_F(LexerTests, NumberLiterals) {
-    constexpr auto source = "10 .5 3.14 6. 0.10 5";
+    static constexpr auto source = "10 .5 3.14 6. 0.10 5";
     load(source);
 
     // clang-format off
@@ -205,7 +239,7 @@ TEST_F(LexerTests, NumberLiterals) {
 }
 
 TEST_F(LexerTests, MiscLiterals) {
-    constexpr auto source = R"BAS(
+    static constexpr auto source = R"BAS(
 true false null
 True False Null
 TRUE FALSE NULL
