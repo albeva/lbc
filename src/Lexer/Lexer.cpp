@@ -26,6 +26,7 @@ inline llvm::SMRange makeRange(const char* start, const char* end) noexcept {
 
 Lexer::Lexer(Context& context, unsigned fileID) noexcept
 : m_context{ context },
+  m_fileId{ fileID },
   m_buffer{ m_context.getSourceMrg().getMemoryBuffer(fileID) },
   m_input{ m_buffer->getBufferStart() },
   m_eolPos{ m_input },

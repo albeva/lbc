@@ -6,19 +6,19 @@
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
-#include "Lexer/Lexer.hpp"
+#include "Lexer/TokenSource.hpp."
 #include "Lexer/Token.hpp"
 #include "ParseResult.hpp"
 #include "Type/Type.hpp"
+#include "Lexer/Lexer.hpp"
 using namespace lbc;
 
-Parser::Parser(Context& context, unsigned int fileId, bool isMain)
+Parser::Parser(Context& context, TokenSource& source, bool isMain)
 : m_context{ context },
+  m_source{ source },
   m_diag{ context.getDiag() },
-  m_fileId{ fileId },
   m_isMain{ isMain },
   m_scope{ Scope::Root } {
-    m_lexer = std::make_unique<Lexer>(m_context, m_fileId);
     advance();
 }
 
@@ -32,7 +32,7 @@ Parser::~Parser() noexcept = default;
 ParseResult<AstModule> Parser::parse() {
     TRY_DECLARE(stmts, stmtList())
     return m_context.create<AstModule>(
-        m_fileId,
+        m_source.getFileId(),
         stmts->range,
         m_isMain,
         stmts);
@@ -159,7 +159,8 @@ ParseResult<AstImport> Parser::kwImport() {
     }
 
     // parse the module
-    TRY_DECLARE(module, Parser(m_context, ID, false).parse())
+    Lexer lexer{m_context, ID};
+    TRY_DECLARE(module, Parser(m_context, lexer, false).parse())
 
     return m_context.create<AstImport>(
         llvm::SMRange{ range.Start, m_endLoc },
@@ -428,7 +429,7 @@ ParseResult<AstFuncParamDecl> Parser::funcParam(bool isAnonymous) {
     if (isAnonymous) {
         if (m_token.is(TokenKind::Identifier)) {
             Token next;
-            m_lexer->peek(next);
+            m_source.peek(next);
             if (next.is(TokenKind::As)) {
                 id = m_token.getStringValue();
                 advance();
@@ -653,7 +654,7 @@ ParseResult<AstIfStmt> Parser::kwIf() {
 
     if (m_token.is(TokenKind::EndOfStmt)) {
         Token next;
-        m_lexer->peek(next);
+        m_source.peek(next);
         if (next.getKind() == TokenKind::Else) {
             advance();
         }
@@ -670,7 +671,7 @@ ParseResult<AstIfStmt> Parser::kwIf() {
 
         if (m_token.is(TokenKind::EndOfStmt)) {
             Token next;
-            m_lexer->peek(next);
+            m_source.peek(next);
             if (next.getKind() == TokenKind::Else) {
                 advance();
             }
@@ -1325,5 +1326,5 @@ void Parser::replace(TokenKind what, TokenKind with) noexcept {
 
 void Parser::advance() {
     m_endLoc = m_token.range().End;
-    m_lexer->next(m_token);
+    m_source.next(m_token);
 }

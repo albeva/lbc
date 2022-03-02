@@ -8,6 +8,7 @@
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "Gen/CodeGen.hpp"
 #include "Parser/Parser.hpp"
+#include "Lexer/Lexer.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "TempFileCache.hpp"
 #include "Toolchain/ToolTask.hpp"
@@ -336,7 +337,8 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     }
 
     bool isMain = m_options.isMainFile(path);
-    Parser parser{ m_context, ID, isMain };
+    Lexer lexer{m_context, ID};
+    Parser parser{ m_context, lexer, isMain };
 
     auto astOrErr = parser.parse();
     if (astOrErr.isError()) {

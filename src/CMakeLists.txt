@@ -48,6 +48,7 @@ add_library(
     Gen/ValueHandler.hpp
     Lexer/Lexer.cpp
     Lexer/Lexer.hpp
+    Lexer/TokenSource.hpp
     Lexer/Token.cpp
     Lexer/Token.def.hpp
     Lexer/Token.hpp
@@ -81,8 +82,7 @@ add_library(
     Utils/Utils.cpp
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
-    Utils/Version.hpp
-)
+    Utils/Version.hpp)
 
 target_precompile_headers(project_options INTERFACE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)

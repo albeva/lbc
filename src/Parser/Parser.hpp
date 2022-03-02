@@ -9,7 +9,7 @@
 
 namespace lbc {
 class Context;
-class Lexer;
+class TokenSource;
 struct AstIfStmtBlock;
 AST_FORWARD_DECLARE()
 
@@ -17,7 +17,7 @@ class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
 
-    Parser(Context& context, unsigned int fileId, bool isMain);
+    Parser(Context& context, TokenSource& source, bool isMain);
     ~Parser() noexcept;
 
     [[nodiscard]] ParseResult<AstModule> parse();
@@ -120,11 +120,11 @@ private:
     }
 
     Context& m_context;
+    TokenSource& m_source;
+
     DiagnosticEngine& m_diag;
-    const unsigned m_fileId;
     const bool m_isMain;
     Scope m_scope;
-    std::unique_ptr<Lexer> m_lexer;
     Token m_token{};
     llvm::SMLoc m_endLoc{};
     ExprFlags m_exprFlags{};
