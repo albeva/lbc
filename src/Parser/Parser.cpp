@@ -6,11 +6,11 @@
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
-#include "Lexer/TokenSource.hpp."
+#include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
+#include "Lexer/TokenSource.hpp"
 #include "ParseResult.hpp"
 #include "Type/Type.hpp"
-#include "Lexer/Lexer.hpp"
 using namespace lbc;
 
 Parser::Parser(Context& context, TokenSource& source, bool isMain)
@@ -159,7 +159,7 @@ ParseResult<AstImport> Parser::kwImport() {
     }
 
     // parse the module
-    Lexer lexer{m_context, ID};
+    Lexer lexer{ m_context, ID };
     TRY_DECLARE(module, Parser(m_context, lexer, false).parse())
 
     return m_context.create<AstImport>(
@@ -970,6 +970,7 @@ ParseResult<AstContinuationStmt> Parser::kwExit() {
  *          | "SUB" "(" { FuncParamList } ")" "PTR" { "PTR" }
  *          | "FUNCTION" "(" { FuncParamList } ")" "AS" TypeExpr "PTR" { "PTR" }
  *          | "(" TypeExpr ")"
+ *          | TypeOf
  *          .
  */
 ParseResult<AstTypeExpr> Parser::typeExpr() {
@@ -984,6 +985,8 @@ ParseResult<AstTypeExpr> Parser::typeExpr() {
     } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         expr = m_token.getKind();
         advance();
+    } else if (m_token.is(TokenKind::TypeOf)) {
+        TRY_ASSIGN(expr, kwTypeOf());
     } else {
         TRY_ASSIGN(expr, identifier())
     }
@@ -1005,6 +1008,46 @@ ParseResult<AstTypeExpr> Parser::typeExpr() {
         llvm::SMRange{ start, m_endLoc },
         expr,
         deref);
+}
+
+/**
+ * TypeOf = "TYPEOF" "(" (Expr | TypeExpr) ")"
+ *        .
+ */
+ParseResult<AstTypeOf> Parser::kwTypeOf() {
+    // assume m_token == "TYPEOF"
+    auto start = m_token.range().Start;
+    advance();
+
+    std::vector<Token> tokens;
+    int parens = 1;
+
+    TRY(consume(TokenKind::ParenOpen))
+    while (true) {
+        if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile)) {
+            return makeError(Diag::unexpectedToken, "type expression", m_token.description());
+        }
+        if (m_token.is(TokenKind::ParenClose)) {
+            parens--;
+            if (parens == 0) {
+                break;
+            }
+            if (parens < 0) {
+                return makeError(Diag::unexpectedToken, "type expression", m_token.description());
+            }
+        } else if (m_token.is(TokenKind::ParenOpen)) {
+            parens++;
+        }
+        tokens.push_back(m_token);
+        advance();
+    }
+
+    if (tokens.empty()) {
+        return makeError(Diag::unexpectedToken, "type expression", m_token.description());
+    }
+
+    TRY(consume(TokenKind::ParenClose));
+    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens));
 }
 
 //----------------------------------------

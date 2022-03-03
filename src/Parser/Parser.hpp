@@ -9,6 +9,7 @@
 
 namespace lbc {
 class Context;
+class SymbolTable;
 class TokenSource;
 struct AstIfStmtBlock;
 AST_FORWARD_DECLARE()
@@ -16,18 +17,6 @@ AST_FORWARD_DECLARE()
 class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
-
-    Parser(Context& context, TokenSource& source, bool isMain);
-    ~Parser() noexcept;
-
-    [[nodiscard]] ParseResult<AstModule> parse();
-
-private:
-    enum class Scope {
-        Root,
-        Function
-    };
-
     enum class ExprFlags : unsigned {
         None = 0,
         CommaAsAnd = 1,
@@ -36,11 +25,23 @@ private:
         LLVM_MARK_AS_BITMASK_ENUM(/* LargestValue = */ CallWithoutParens)
     };
 
+    Parser(Context& context, TokenSource& source, bool isMain);
+    ~Parser() noexcept;
+
+    [[nodiscard]] ParseResult<AstModule> parse();
+    [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = ExprFlags::None);
+    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr();
+
+private:
+    enum class Scope {
+        Root,
+        Function
+    };
+
     [[nodiscard]] ParseResult<AstStmtList> stmtList();
     [[nodiscard]] ParseResult<AstStmt> statement();
     [[nodiscard]] ParseResult<AstImport> kwImport();
     [[nodiscard]] ParseResult<AstStmt> declaration();
-    [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = ExprFlags::None);
     [[nodiscard]] ParseResult<AstExpr> factor();
     [[nodiscard]] ParseResult<AstExpr> primary();
     [[nodiscard]] ParseResult<AstExpr> unary(llvm::SMRange range, TokenKind op, AstExpr* expr);
@@ -62,7 +63,7 @@ private:
     [[nodiscard]] ParseResult<AstAttributeList> attributeList();
     [[nodiscard]] ParseResult<AstAttribute> attribute();
     [[nodiscard]] ParseResult<AstExprList> attributeArgList();
-    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr();
+    [[nodiscard]] ParseResult<AstTypeOf> kwTypeOf();
     [[nodiscard]] ParseResult<AstFuncDecl> kwDeclare(AstAttributeList* attribs);
     [[nodiscard]] ParseResult<AstFuncDecl> funcSignature(
         llvm::SMLoc start,

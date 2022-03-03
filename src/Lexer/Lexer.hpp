@@ -9,12 +9,12 @@ class Token;
 class Context;
 enum class TokenKind;
 
-class Lexer final: public TokenSource {
+class Lexer final : public TokenSource {
 public:
     NO_COPY_AND_MOVE(Lexer)
 
     Lexer(Context& context, unsigned fileID) noexcept;
-    ~Lexer() noexcept = default;
+    ~Lexer() noexcept override = default;
 
     unsigned int getFileId() override { return m_fileId; };
     void next(Token& result) override;

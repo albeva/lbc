@@ -349,14 +349,6 @@ void CodeGen::visit(AstUdtDecl& /*ast*/) {
 }
 
 //------------------------------------------------------------------
-// Type alias
-//------------------------------------------------------------------
-
-void CodeGen::visit(AstTypeAlias& /* ast */) {
-    // NO OP
-}
-
-//------------------------------------------------------------------
 // IF stmt
 //------------------------------------------------------------------
 
@@ -414,6 +406,14 @@ void CodeGen::visit(AstAttribute& /*ast*/) {
 
 void CodeGen::visit(AstTypeExpr& /*ast*/) {
     // NOOP
+}
+
+void CodeGen::visit(AstTypeOf& /* ast */) {
+    // NO OP
+}
+
+void CodeGen::visit(AstTypeAlias& /* ast */) {
+    // NO OP
 }
 
 //------------------------------------------------------------------

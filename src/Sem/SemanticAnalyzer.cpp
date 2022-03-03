@@ -5,6 +5,7 @@
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
+#include "Lexer/TokenProvider.hpp"
 #include "Passes/ForStmtPass.hpp"
 #include "Passes/ForwardDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
@@ -12,6 +13,7 @@
 #include "Type/Type.hpp"
 #include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
+#include "Parser/Parser.hpp"
 
 using namespace lbc;
 
@@ -225,6 +227,15 @@ void SemanticAnalyzer::visit(AstUdtDecl& /* ast */) {
 
 void SemanticAnalyzer::visit(AstTypeAlias& /* ast */) {
     // NO OP
+}
+
+void SemanticAnalyzer::visit(AstTypeOf& ast) {
+    if (std::holds_alternative<std::monostate>(ast.typeExpr)) {
+        TokenProvider provider{ m_astRootModule->fileId, ast.tokens };
+        Parser parser{ m_context, provider, /* isMain */ false };
+    }
+
+
 }
 
 //----------------------------------------

@@ -22,7 +22,7 @@ void ForwardDeclPass::visit(AstModule& ast) noexcept {
         implement(*udt);
     }
 
-    for (auto* func: m_funcs) {
+    for (auto* func : m_funcs) {
         implement(*func);
     }
 }
@@ -90,7 +90,12 @@ void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
         [](AstFuncDecl* decl) -> Symbol* {
             return decl->symbol;
         },
+        [](AstTypeOf*) -> Symbol* {
+            // fatalError("ForwardDeclPass::define::getSymbol no symbol from typeof");
+            return nullptr;
+        },
         [](TokenKind) -> Symbol* {
+            // fatalError("ForwardDeclPass::define::getSymbol no symbol from token");
             return nullptr;
         }
     };
