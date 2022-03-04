@@ -461,18 +461,18 @@ struct AstTypeAlias final : AstDecl {
 // Types
 //----------------------------------------
 struct AstTypeOf final : AstRoot {
+    using TypeExpr = std::variant<std::vector<Token>, AstTypeExpr*, AstExpr*>;
+
     explicit AstTypeOf(
         llvm::SMRange range_,
-        std::vector<Token> tokens_)
-    : AstRoot{ AstKind::TypeOf, range_ }, tokens{ std::move(tokens_) } {}
+        TypeExpr typeExpr_)
+    : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ std::move(typeExpr_) } {}
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
         return ast->kind == AstKind::TypeOf;
     }
 
-    using TypeExpr = std::variant<std::monostate, AstTypeExpr*, AstExpr*>;
-    TypeExpr typeExpr = std::monostate{};
-    std::vector<Token> tokens;
+    TypeExpr typeExpr;
     TypeProxy* typeProxy = nullptr;
 };
 

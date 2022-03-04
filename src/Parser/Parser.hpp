@@ -17,7 +17,7 @@ AST_FORWARD_DECLARE()
 class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
-    enum class ExprFlags : unsigned {
+    enum class ExprFlags {
         None = 0,
         CommaAsAnd = 1,
         UseAssign = 2,
@@ -25,12 +25,19 @@ public:
         LLVM_MARK_AS_BITMASK_ENUM(/* LargestValue = */ CallWithoutParens)
     };
 
-    Parser(Context& context, TokenSource& source, bool isMain);
-    ~Parser() noexcept;
+    struct TypeFlags {
+        bool evaluateTypeOf: 1;
+        bool consultSymbolTable: 1;
+    };
+
+    Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
+    ~Parser() noexcept = default;
 
     [[nodiscard]] ParseResult<AstModule> parse();
     [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = ExprFlags::None);
-    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr();
+    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr(TypeFlags flags = {});
+
+    void reset() noexcept;
 
 private:
     enum class Scope {
@@ -122,13 +129,15 @@ private:
 
     Context& m_context;
     TokenSource& m_source;
+    const bool m_isMain;
+    SymbolTable* m_symbolTable;
 
     DiagnosticEngine& m_diag;
-    const bool m_isMain;
     Scope m_scope;
     Token m_token{};
     llvm::SMLoc m_endLoc{};
     ExprFlags m_exprFlags{};
+    TypeFlags m_typeFlags{};
 };
 
 } // namespace lbc

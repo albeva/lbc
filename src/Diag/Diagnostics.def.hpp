@@ -33,7 +33,7 @@ ERROR(unexpectedNestedDeclaration,
 ERROR(variadicArgumentNotLast,
     "variadic argument must be last")
 ERROR(unexpectedReturn,
-    "return not allowed outside main module, SUB or FUNCTION")
+    "return not allowed outside main module, SUB or FUNCTION. Got {0}")
 ERROR(expectedExpression,
     "expected expression, got '{0}'")
 

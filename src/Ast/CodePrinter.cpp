@@ -110,8 +110,8 @@ void CodePrinter::visit(AstTypeExpr& ast) {
 void CodePrinter::visit(AstTypeOf& ast) {
     m_os << "TYPEOF(";
     const auto visitor = Visitor{
-        [&](std::monostate) {
-            for (auto& tkn : ast.tokens) {
+        [&](std::vector<Token>& tokens) {
+            for (auto& tkn : tokens) {
                 m_os << tkn.lexeme() << " ";
             }
         },

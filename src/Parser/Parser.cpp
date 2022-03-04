@@ -11,18 +11,27 @@
 #include "Lexer/TokenSource.hpp"
 #include "ParseResult.hpp"
 #include "Type/Type.hpp"
+#include "Symbol/SymbolTable.hpp"
 using namespace lbc;
 
-Parser::Parser(Context& context, TokenSource& source, bool isMain)
+Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
 : m_context{ context },
   m_source{ source },
-  m_diag{ context.getDiag() },
   m_isMain{ isMain },
+  m_symbolTable{ symbolTable },
+  m_diag{ context.getDiag() },
   m_scope{ Scope::Root } {
     advance();
 }
 
-Parser::~Parser() noexcept = default;
+void Parser::reset() noexcept {
+    m_scope = Scope::Root;
+    m_exprFlags = {};
+    m_typeFlags = {};
+    m_endLoc = {};
+    m_token = {};
+    advance();
+}
 
 /**
  * Module
@@ -973,7 +982,10 @@ ParseResult<AstContinuationStmt> Parser::kwExit() {
  *          | TypeOf
  *          .
  */
-ParseResult<AstTypeExpr> Parser::typeExpr() {
+ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
+    RESTORE_ON_EXIT(m_typeFlags);
+    m_typeFlags = flags;
+
     auto start = m_token.range().Start;
     bool parenthesized = accept(TokenKind::ParenOpen);
     bool mustBePtr = false;
@@ -986,9 +998,16 @@ ParseResult<AstTypeExpr> Parser::typeExpr() {
         expr = m_token.getKind();
         advance();
     } else if (m_token.is(TokenKind::TypeOf)) {
-        TRY_ASSIGN(expr, kwTypeOf());
+        TRY_ASSIGN(expr, kwTypeOf())
     } else {
-        TRY_ASSIGN(expr, identifier())
+        TRY_DECLARE(ident, identifier())
+        if (m_typeFlags.consultSymbolTable && m_symbolTable != nullptr) {
+            auto* symbol = m_symbolTable->find(ident->name);
+            if (symbol == nullptr || !symbol->getFlags().type) {
+                return ParseResult<AstTypeExpr>::error();
+            }
+        }
+        expr = ident;
     }
 
     if (parenthesized) {
@@ -1019,10 +1038,16 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
     auto start = m_token.range().Start;
     advance();
 
-    std::vector<Token> tokens;
-    int parens = 1;
+    if (m_typeFlags.evaluateTypeOf) {
+        TRY(consume(TokenKind::ParenOpen))
+        TRY_DECLARE(type, typeExpr(m_typeFlags));
+        TRY(consume(TokenKind::ParenClose))
+        return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, type);
+    }
 
     TRY(consume(TokenKind::ParenOpen))
+    std::vector<Token> tokens;
+    int parens = 1;
     while (true) {
         if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile)) {
             return makeError(Diag::unexpectedToken, "type expression", m_token.description());
@@ -1041,12 +1066,11 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
         tokens.push_back(m_token);
         advance();
     }
-
     if (tokens.empty()) {
         return makeError(Diag::unexpectedToken, "type expression", m_token.description());
     }
-
     TRY(consume(TokenKind::ParenClose));
+
     return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens));
 }
 
@@ -1371,3 +1395,4 @@ void Parser::advance() {
     m_endLoc = m_token.range().End;
     m_source.next(m_token);
 }
+

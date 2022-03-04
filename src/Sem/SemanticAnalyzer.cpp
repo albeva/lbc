@@ -230,12 +230,40 @@ void SemanticAnalyzer::visit(AstTypeAlias& /* ast */) {
 }
 
 void SemanticAnalyzer::visit(AstTypeOf& ast) {
-    if (std::holds_alternative<std::monostate>(ast.typeExpr)) {
-        TokenProvider provider{ m_astRootModule->fileId, ast.tokens };
-        Parser parser{ m_context, provider, /* isMain */ false };
+    if (ast.typeProxy != nullptr) {
+        return;
     }
 
+    if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
+        TokenProvider provider{ m_astRootModule->fileId, *tokens };
+        Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
 
+        if (auto* type = parser.typeExpr({.evaluateTypeOf = true, .consultSymbolTable = true}).getPointer()) {
+            ast.typeExpr = type;
+        } else {
+            provider.reset();
+            parser.reset();
+            auto result = parser.expression();
+            if (auto* expr = result.getPointer()) {
+                ast.typeExpr = expr;
+            }
+        }
+    }
+
+    const auto getType = Visitor{
+        [](std::vector<Token>&) -> TypeProxy* {
+            fatalError("Unresolved typeof()");
+        },
+        [&](AstTypeExpr* typeExpr) -> TypeProxy* {
+            return m_typePass.visit(*typeExpr);
+        },
+        [&](AstExpr* expr) -> TypeProxy* {
+            visit(*expr);
+            return expr->typeProxy;
+        }
+    };
+
+    ast.typeProxy = std::visit(getType, ast.typeExpr);
 }
 
 //----------------------------------------

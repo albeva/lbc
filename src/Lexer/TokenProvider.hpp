@@ -14,6 +14,7 @@ public:
     unsigned int getFileId() override { return m_fileId; }
     void next(Token& result) override;
     void peek(Token& result) override;
+    void reset() noexcept { m_index = 0; }
 
 private:
     unsigned int m_fileId;
