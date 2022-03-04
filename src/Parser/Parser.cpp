@@ -128,7 +128,7 @@ ParseResult<AstStmt> Parser::statement() {
         break;
     }
 
-    TRY_DECLARE(expr, expression(ExprFlags::UseAssign | ExprFlags::CallWithoutParens))
+    TRY_DECLARE(expr, expression({.useAssign = true, .callWithoutParens = true}))
     return m_context.create<AstExprStmt>(expr->range, expr);
 }
 
@@ -709,7 +709,7 @@ ParseResult<AstIfStmtBlock> Parser::ifBlock() {
         TRY(consume(TokenKind::Comma))
     }
 
-    TRY_DECLARE(expr, expression(ExprFlags::CommaAsAnd))
+    TRY_DECLARE(expr, expression({.commaAsAnd = true}))
     TRY(consume(TokenKind::Then))
 
     return thenBlock(std::move(decls), expr);
@@ -862,19 +862,19 @@ ParseResult<AstDoLoopStmt> Parser::kwDo() {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PostUntil;
-            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd))
+            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PostWhile;
-            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd))
+            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
         }
     } else {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PreUntil;
-            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd))
+            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PreWhile;
-            TRY_ASSIGN(expr, expression(ExprFlags::CommaAsAnd))
+            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
         }
 
         // EoS StmtList "LOOP"
@@ -1084,14 +1084,13 @@ ParseResult<AstExpr> Parser::expression(ExprFlags flags) {
 
     RESTORE_ON_EXIT(m_exprFlags);
     m_exprFlags = flags;
-    bool callableWithoutParens = (flags & ExprFlags::CallWithoutParens) != 0;
     TRY_DECLARE(expr, factor())
 
-    if ((flags & ExprFlags::UseAssign) == 0) {
+    if (!flags.useAssign) {
         replace(TokenKind::Assign, TokenKind::Equal);
     }
 
-    if ((flags & ExprFlags::CommaAsAnd) != 0) {
+    if (flags.commaAsAnd) {
         replace(TokenKind::Comma, TokenKind::CommaAnd);
     }
 
@@ -1113,7 +1112,7 @@ ParseResult<AstExpr> Parser::expression(ExprFlags flags) {
     }
 
     // print "hello"
-    if (callableWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowCallWithToken(m_token)) {
+    if (flags.callWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
         TRY_DECLARE(args, expressionList())
 
@@ -1140,10 +1139,10 @@ ParseResult<AstExpr> Parser::expression(AstExpr* lhs, int precedence) {
         advance();
 
         TRY_DECLARE(rhs, factor())
-        if ((m_exprFlags & ExprFlags::UseAssign) == 0) {
+        if (!m_exprFlags.useAssign) {
             replace(TokenKind::Assign, TokenKind::Equal);
         }
-        if ((m_exprFlags & ExprFlags::CommaAsAnd) != 0) {
+        if (m_exprFlags.commaAsAnd) {
             replace(TokenKind::Comma, TokenKind::CommaAnd);
         }
 
@@ -1226,7 +1225,7 @@ ParseResult<AstExpr> Parser::primary() {
         auto kind = m_token.getKind();
         advance();
 
-        if ((m_exprFlags & ExprFlags::UseAssign) == 0) {
+        if (!m_exprFlags.useAssign) {
             replace(TokenKind::Assign, TokenKind::Equal);
         }
         TRY_DECLARE(fact, factor())
@@ -1309,7 +1308,7 @@ ParseResult<AstIfExpr> Parser::ifExpr() {
     auto start = m_token.range().Start;
     advance();
 
-    TRY_DECLARE(expr, expression(ExprFlags::CommaAsAnd))
+    TRY_DECLARE(expr, expression({.commaAsAnd = true}))
 
     TRY(consume(TokenKind::Then))
     TRY_DECLARE(trueExpr, expression())

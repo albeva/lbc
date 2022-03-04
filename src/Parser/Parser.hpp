@@ -17,19 +17,17 @@ AST_FORWARD_DECLARE()
 class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
-    enum class ExprFlags {
-        None = 0,
-        CommaAsAnd = 1,
-        UseAssign = 2,
-        CallWithoutParens = 4,
-        LLVM_MARK_AS_BITMASK_ENUM(/* LargestValue = */ CallWithoutParens)
+    struct ExprFlags {
+        bool commaAsAnd: 1;
+        bool useAssign: 1;
+        bool callWithoutParens: 1;
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() noexcept = default;
 
     [[nodiscard]] ParseResult<AstModule> parse();
-    [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = ExprFlags::None);
+    [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = {});
     [[nodiscard]] ParseResult<AstTypeExpr> typeExpr();
 
     void reset() noexcept;
