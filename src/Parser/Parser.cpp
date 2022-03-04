@@ -10,8 +10,8 @@
 #include "Lexer/Token.hpp"
 #include "Lexer/TokenSource.hpp"
 #include "ParseResult.hpp"
-#include "Type/Type.hpp"
 #include "Symbol/SymbolTable.hpp"
+#include "Type/Type.hpp"
 using namespace lbc;
 
 Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
@@ -27,7 +27,6 @@ Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* 
 void Parser::reset() noexcept {
     m_scope = Scope::Root;
     m_exprFlags = {};
-    m_typeFlags = {};
     m_endLoc = {};
     m_token = {};
     advance();
@@ -982,10 +981,7 @@ ParseResult<AstContinuationStmt> Parser::kwExit() {
  *          | TypeOf
  *          .
  */
-ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
-    RESTORE_ON_EXIT(m_typeFlags);
-    m_typeFlags = flags;
-
+ParseResult<AstTypeExpr> Parser::typeExpr() {
     auto start = m_token.range().Start;
     bool parenthesized = accept(TokenKind::ParenOpen);
     bool mustBePtr = false;
@@ -1001,7 +997,7 @@ ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
         TRY_ASSIGN(expr, kwTypeOf())
     } else {
         TRY_DECLARE(ident, identifier())
-        if (m_typeFlags.consultSymbolTable && m_symbolTable != nullptr) {
+        if (m_symbolTable != nullptr) {
             auto* symbol = m_symbolTable->find(ident->name);
             if (symbol == nullptr || !symbol->getFlags().type) {
                 return ParseResult<AstTypeExpr>::error();
@@ -1037,13 +1033,6 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
     // assume m_token == "TYPEOF"
     auto start = m_token.range().Start;
     advance();
-
-    if (m_typeFlags.evaluateTypeOf) {
-        TRY(consume(TokenKind::ParenOpen))
-        TRY_DECLARE(type, typeExpr(m_typeFlags))
-        TRY(consume(TokenKind::ParenClose))
-        return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, type);
-    }
 
     TRY(consume(TokenKind::ParenOpen))
     std::vector<Token> tokens;
@@ -1395,4 +1384,3 @@ void Parser::advance() {
     m_endLoc = m_token.range().End;
     m_source.next(m_token);
 }
-

@@ -6,6 +6,7 @@
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
 #include "Lexer/TokenProvider.hpp"
+#include "Parser/Parser.hpp"
 #include "Passes/ForStmtPass.hpp"
 #include "Passes/ForwardDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
@@ -13,7 +14,6 @@
 #include "Type/Type.hpp"
 #include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
-#include "Parser/Parser.hpp"
 
 using namespace lbc;
 
@@ -238,13 +238,12 @@ void SemanticAnalyzer::visit(AstTypeOf& ast) {
         TokenProvider provider{ m_astRootModule->fileId, *tokens };
         Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
 
-        if (auto* type = parser.typeExpr({.evaluateTypeOf = true, .consultSymbolTable = true}).getPointer()) {
+        if (auto* type = parser.typeExpr().getPointer()) {
             ast.typeExpr = type;
         } else {
             provider.reset();
             parser.reset();
-            auto result = parser.expression();
-            if (auto* expr = result.getPointer()) {
+            if (auto* expr = parser.expression().getPointer()) {
                 ast.typeExpr = expr;
             }
         }
