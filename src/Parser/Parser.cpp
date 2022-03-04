@@ -30,6 +30,7 @@ void Parser::reset() noexcept {
     m_endLoc = {};
     m_token = {};
     advance();
+    m_endLoc = m_token.range().Start;
 }
 
 /**
@@ -128,7 +129,7 @@ ParseResult<AstStmt> Parser::statement() {
         break;
     }
 
-    TRY_DECLARE(expr, expression({.useAssign = true, .callWithoutParens = true}))
+    TRY_DECLARE(expr, expression({ .useAssign = true, .callWithoutParens = true }))
     return m_context.create<AstExprStmt>(expr->range, expr);
 }
 
@@ -709,7 +710,7 @@ ParseResult<AstIfStmtBlock> Parser::ifBlock() {
         TRY(consume(TokenKind::Comma))
     }
 
-    TRY_DECLARE(expr, expression({.commaAsAnd = true}))
+    TRY_DECLARE(expr, expression({ .commaAsAnd = true }))
     TRY(consume(TokenKind::Then))
 
     return thenBlock(std::move(decls), expr);
@@ -862,19 +863,19 @@ ParseResult<AstDoLoopStmt> Parser::kwDo() {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PostUntil;
-            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
+            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PostWhile;
-            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
+            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
         }
     } else {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PreUntil;
-            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
+            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PreWhile;
-            TRY_ASSIGN(expr, expression({.commaAsAnd = true}))
+            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
         }
 
         // EoS StmtList "LOOP"
@@ -1308,7 +1309,7 @@ ParseResult<AstIfExpr> Parser::ifExpr() {
     auto start = m_token.range().Start;
     advance();
 
-    TRY_DECLARE(expr, expression({.commaAsAnd = true}))
+    TRY_DECLARE(expr, expression({ .commaAsAnd = true }))
 
     TRY(consume(TokenKind::Then))
     TRY_DECLARE(trueExpr, expression())

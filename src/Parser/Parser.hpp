@@ -18,9 +18,9 @@ class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
     struct ExprFlags {
-        bool commaAsAnd: 1;
-        bool useAssign: 1;
-        bool callWithoutParens: 1;
+        bool commaAsAnd : 1;
+        bool useAssign : 1;
+        bool callWithoutParens : 1;
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);

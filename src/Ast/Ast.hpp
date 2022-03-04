@@ -89,7 +89,7 @@ struct AstStmt : AstRoot {
 struct AstStmtList final : AstStmt {
     AstStmtList(
         llvm::SMRange range_,
-        std::vector<AstStmt*> stmts_) noexcept
+        std::vector<AstStmt*>&& stmts_) noexcept
     : AstStmt{ AstKind::StmtList, range_ },
       stmts{ std::move(stmts_) } {};
 
@@ -169,7 +169,7 @@ struct AstIfStmtBlock final {
     AstStmt* stmt;
 
     AstIfStmtBlock(
-        std::vector<AstVarDecl*> decls_,
+        std::vector<AstVarDecl*>&& decls_,
         SymbolTable* symbolTable_,
         AstExpr* expr_,
         AstStmt* stmt_)
@@ -182,7 +182,7 @@ struct AstIfStmtBlock final {
 struct AstIfStmt final : AstStmt {
     AstIfStmt(
         llvm::SMRange range_,
-        std::vector<AstIfStmtBlock*> blocks_) noexcept
+        std::vector<AstIfStmtBlock*>&& blocks_) noexcept
     : AstStmt{ AstKind::IfStmt, range_ },
       blocks{ std::move(blocks_) } {};
 
@@ -203,7 +203,7 @@ struct AstForStmt final : AstStmt {
 
     AstForStmt(
         llvm::SMRange range_,
-        std::vector<AstVarDecl*> decls_,
+        std::vector<AstVarDecl*>&& decls_,
         AstVarDecl* iter_,
         AstExpr* limit_,
         AstExpr* step_,
@@ -243,7 +243,7 @@ struct AstDoLoopStmt final : AstStmt {
 
     AstDoLoopStmt(
         llvm::SMRange range_,
-        std::vector<AstVarDecl*> decls_,
+        std::vector<AstVarDecl*>&& decls_,
         Condition condition_,
         AstExpr* expr_,
         AstStmt* stmt_) noexcept
@@ -273,7 +273,7 @@ struct AstContinuationStmt final : AstStmt {
     explicit AstContinuationStmt(
         llvm::SMRange range_,
         Action action_,
-        std::vector<ControlFlowStatement> destination_) noexcept
+        std::vector<ControlFlowStatement>&& destination_) noexcept
     : AstStmt{ AstKind::ContinuationStmt, range_ },
       action{ action_ },
       destination{ std::move(destination_) } {}
@@ -293,7 +293,7 @@ struct AstContinuationStmt final : AstStmt {
 struct AstAttributeList final : AstRoot {
     AstAttributeList(
         llvm::SMRange range_,
-        std::vector<AstAttribute*> attribs_) noexcept
+        std::vector<AstAttribute*>&& attribs_) noexcept
     : AstRoot{ AstKind::AttributeList, range_ },
       attribs{ std::move(attribs_) } {};
 
@@ -347,7 +347,7 @@ struct AstDecl : AstStmt {
 };
 
 struct AstDeclList final : AstRoot {
-    AstDeclList(llvm::SMRange range_, std::vector<AstDecl*> decls_) noexcept
+    AstDeclList(llvm::SMRange range_, std::vector<AstDecl*>&& decls_) noexcept
     : AstRoot{ AstKind::DeclList, range_ },
       decls{ std::move(decls_) } {}
 
@@ -418,7 +418,7 @@ struct AstFuncParamDecl final : AstDecl {
 struct AstFuncParamList final : AstRoot {
     AstFuncParamList(
         llvm::SMRange range_,
-        std::vector<AstFuncParamDecl*> params_) noexcept
+        std::vector<AstFuncParamDecl*>&& params_) noexcept
     : AstRoot{ AstKind::FuncParamList, range_ },
       params{ std::move(params_) } {}
 
@@ -465,7 +465,7 @@ struct AstTypeOf final : AstRoot {
 
     explicit AstTypeOf(
         llvm::SMRange range_,
-        TypeExpr typeExpr_)
+        TypeExpr&& typeExpr_)
     : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ std::move(typeExpr_) } {}
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
@@ -517,7 +517,7 @@ struct AstExpr : AstRoot {
 struct AstExprList : AstRoot {
     AstExprList(
         llvm::SMRange range_,
-        std::vector<AstExpr*> exprs_) noexcept
+        std::vector<AstExpr*>&& exprs_) noexcept
     : AstRoot{ AstKind::ExprList, range_ },
       exprs{ std::move(exprs_) } {}
 
@@ -637,7 +637,7 @@ struct AstAddressOf final : AstExpr {
 struct AstMemberAccess final : AstExpr {
     AstMemberAccess(
         llvm::SMRange range_,
-        std::vector<AstExpr*> exprs_) noexcept
+        std::vector<AstExpr*>&& exprs_) noexcept
     : AstExpr{ AstKind::MemberAccess, range_ },
       exprs{ std::move(exprs_) } {};
 
