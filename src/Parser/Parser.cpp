@@ -1040,7 +1040,7 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
 
     if (m_typeFlags.evaluateTypeOf) {
         TRY(consume(TokenKind::ParenOpen))
-        TRY_DECLARE(type, typeExpr(m_typeFlags));
+        TRY_DECLARE(type, typeExpr(m_typeFlags))
         TRY(consume(TokenKind::ParenClose))
         return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, type);
     }
@@ -1069,7 +1069,7 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
     if (tokens.empty()) {
         return makeError(Diag::unexpectedToken, "type expression", m_token.description());
     }
-    TRY(consume(TokenKind::ParenClose));
+    TRY(consume(TokenKind::ParenClose))
 
     return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens));
 }
