@@ -315,7 +315,7 @@ ParseResult<AstVarDecl> Parser::kwDim(AstAttributeList* attribs) {
     AstExpr* expr = nullptr;
 
     if (accept(TokenKind::As)) {
-        TRY_ASSIGN(type, typeExpr({.typeOfAllowsExpr = true}))
+        TRY_ASSIGN(type, typeExpr({ .typeOfAllowsExpr = true }))
         if (accept(TokenKind::Assign)) {
             TRY_ASSIGN(expr, expression())
         }
@@ -454,7 +454,7 @@ ParseResult<AstFuncParamDecl> Parser::funcParam(bool isAnonymous) {
         TRY(consume(TokenKind::As))
     }
 
-    TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = false}))
+    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = false }))
 
     return m_context.create<AstFuncParamDecl>(
         llvm::SMRange{ start, m_endLoc },
@@ -502,7 +502,7 @@ ParseResult<AstDecl> Parser::kwType(AstAttributeList* attribs) {
  *    .
  */
 ParseResult<AstTypeAlias> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
-    TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = false}))
+    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = false }))
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange{ start, m_endLoc },
@@ -572,7 +572,7 @@ ParseResult<AstDecl> Parser::udtMember(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::As))
 
-    TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = true}))
+    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = true }))
 
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
@@ -1180,7 +1180,7 @@ ParseResult<AstExpr> Parser::factor() {
 
         // "AS" TypeExpr
         if (accept(TokenKind::As)) {
-            TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = true}))
+            TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = true }))
             auto* cast = m_context.create<AstCastExpr>(
                 llvm::SMRange{ start, m_endLoc },
                 expr,

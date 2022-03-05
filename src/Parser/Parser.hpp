@@ -24,7 +24,7 @@ public:
     };
 
     struct TypeFlags {
-        bool typeOfAllowsExpr: 1;
+        bool typeOfAllowsExpr : 1;
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
