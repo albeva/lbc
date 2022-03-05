@@ -5,6 +5,8 @@
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
+#include "Lexer/TokenProvider.hpp"
+#include "Parser/Parser.hpp"
 #include "Passes/ForStmtPass.hpp"
 #include "Passes/ForwardDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
@@ -225,6 +227,44 @@ void SemanticAnalyzer::visit(AstUdtDecl& /* ast */) {
 
 void SemanticAnalyzer::visit(AstTypeAlias& /* ast */) {
     // NO OP
+}
+
+void SemanticAnalyzer::visit(AstTypeOf& ast) {
+    if (ast.typeProxy != nullptr) {
+        return;
+    }
+
+    if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
+        TokenProvider provider{ m_astRootModule->fileId, *tokens };
+        Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
+
+        if (auto* type = parser.typeExpr().getPointer()) {
+            ast.typeExpr = type;
+        } else if (!ast.allowExpr) {
+            fatalError("Expression not allowed in typeof");
+        } else {
+            provider.reset();
+            parser.reset();
+            if (auto* expr = parser.expression().getPointer()) {
+                ast.typeExpr = expr;
+            }
+        }
+    }
+
+    const auto getType = Visitor{
+        [](std::vector<Token>&) -> TypeProxy* {
+            fatalError("Unresolved typeof()");
+        },
+        [&](AstTypeExpr* typeExpr) -> TypeProxy* {
+            return m_typePass.visit(*typeExpr);
+        },
+        [&](AstExpr* expr) -> TypeProxy* {
+            visit(*expr);
+            return expr->typeProxy;
+        }
+    };
+
+    ast.typeProxy = std::visit(getType, ast.typeExpr);
 }
 
 //----------------------------------------

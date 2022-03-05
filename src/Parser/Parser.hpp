@@ -9,18 +9,32 @@
 
 namespace lbc {
 class Context;
-class Lexer;
+class SymbolTable;
+class TokenSource;
 struct AstIfStmtBlock;
 AST_FORWARD_DECLARE()
 
 class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
+    struct ExprFlags {
+        bool commaAsAnd : 1;
+        bool useAssign : 1;
+        bool callWithoutParens : 1;
+    };
 
-    Parser(Context& context, unsigned int fileId, bool isMain);
-    ~Parser() noexcept;
+    struct TypeFlags {
+        bool typeOfAllowsExpr : 1;
+    };
+
+    Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
+    ~Parser() noexcept = default;
 
     [[nodiscard]] ParseResult<AstModule> parse();
+    [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = {});
+    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr(TypeFlags flags = {});
+
+    void reset() noexcept;
 
 private:
     enum class Scope {
@@ -28,19 +42,10 @@ private:
         Function
     };
 
-    enum class ExprFlags : unsigned {
-        None = 0,
-        CommaAsAnd = 1,
-        UseAssign = 2,
-        CallWithoutParens = 4,
-        LLVM_MARK_AS_BITMASK_ENUM(/* LargestValue = */ CallWithoutParens)
-    };
-
     [[nodiscard]] ParseResult<AstStmtList> stmtList();
     [[nodiscard]] ParseResult<AstStmt> statement();
     [[nodiscard]] ParseResult<AstImport> kwImport();
     [[nodiscard]] ParseResult<AstStmt> declaration();
-    [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = ExprFlags::None);
     [[nodiscard]] ParseResult<AstExpr> factor();
     [[nodiscard]] ParseResult<AstExpr> primary();
     [[nodiscard]] ParseResult<AstExpr> unary(llvm::SMRange range, TokenKind op, AstExpr* expr);
@@ -62,7 +67,7 @@ private:
     [[nodiscard]] ParseResult<AstAttributeList> attributeList();
     [[nodiscard]] ParseResult<AstAttribute> attribute();
     [[nodiscard]] ParseResult<AstExprList> attributeArgList();
-    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr();
+    [[nodiscard]] ParseResult<AstTypeOf> kwTypeOf();
     [[nodiscard]] ParseResult<AstFuncDecl> kwDeclare(AstAttributeList* attribs);
     [[nodiscard]] ParseResult<AstFuncDecl> funcSignature(
         llvm::SMLoc start,
@@ -120,14 +125,16 @@ private:
     }
 
     Context& m_context;
-    DiagnosticEngine& m_diag;
-    const unsigned m_fileId;
+    TokenSource& m_source;
     const bool m_isMain;
+    SymbolTable* m_symbolTable;
+
+    DiagnosticEngine& m_diag;
     Scope m_scope;
-    std::unique_ptr<Lexer> m_lexer;
     Token m_token{};
     llvm::SMLoc m_endLoc{};
     ExprFlags m_exprFlags{};
+    TypeFlags m_typeFlags{};
 };
 
 } // namespace lbc

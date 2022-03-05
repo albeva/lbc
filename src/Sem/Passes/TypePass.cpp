@@ -16,14 +16,17 @@ using namespace Sem;
 
 TypeProxy* TypePass::visit(AstTypeExpr& ast, TypeProxy* owner) const noexcept {
     const auto visitor = Visitor{
-        [](TokenKind kind) -> TypeProxy* {
-            return TypeRoot::fromTokenKind(kind)->getProxy();
-        },
         [&](AstIdentExpr* ident) -> TypeProxy* {
             return visit(*ident);
         },
         [&](AstFuncDecl* decl) -> TypeProxy* {
             return visit(*decl);
+        },
+        [&](AstTypeOf* typeOf) -> TypeProxy* {
+            return visit(*typeOf);
+        },
+        [](TokenKind kind) -> TypeProxy* {
+            return TypeRoot::fromTokenKind(kind)->getProxy();
         }
     };
     auto* proxy = std::visit(visitor, ast.expr);
@@ -84,4 +87,12 @@ TypeProxy* TypePass::visit(AstFuncDecl& ast) const noexcept {
     // function
     const auto* type = TypeFunction::get(m_sem.getContext(), retType->getType(), std::move(paramTypes), ast.variadic);
     return type->getProxy();
+}
+
+TypeProxy* TypePass::visit(AstTypeOf& ast) const noexcept {
+    if (ast.typeProxy != nullptr) {
+        return ast.typeProxy;
+    }
+    m_sem.visit(ast);
+    return ast.typeProxy;
 }

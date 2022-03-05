@@ -57,9 +57,10 @@
 // Type nodes extending AstRoot
 //----------------------------------------
 #define AST_TYPE_NODES(_) \
-    _( TypeExpr )
+    _( TypeExpr ) \
+    _( TypeOf   )
 
-#define AST_TYPE_RANGE(_) _(TypeExpr, TypeExpr)
+#define AST_TYPE_RANGE(_) _(TypeExpr, TypeOf)
 
 //----------------------------------------
 // Expression nodes extending AstExpr

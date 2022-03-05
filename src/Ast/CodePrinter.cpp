@@ -78,6 +78,8 @@ void CodePrinter::visit(AstAttribute& ast) {
     }
 }
 
+// Types
+
 void CodePrinter::visit(AstTypeExpr& ast) {
     if (const auto* type = ast.getType()) {
         m_os << type->asString();
@@ -85,14 +87,17 @@ void CodePrinter::visit(AstTypeExpr& ast) {
     }
 
     const auto visitor = Visitor{
-        [&](TokenKind kind) {
-            m_os << Token::description(kind);
-        },
         [&](AstIdentExpr* ident) {
             visit(*ident);
         },
         [&](AstFuncDecl* decl) {
             visit(*decl);
+        },
+        [&](AstTypeOf* typ) {
+            visit(*typ);
+        },
+        [&](TokenKind kind) {
+            m_os << Token::description(kind);
         }
     };
     std::visit(visitor, ast.expr);
@@ -100,6 +105,25 @@ void CodePrinter::visit(AstTypeExpr& ast) {
     for (int i = 0; i < ast.dereference; i++) {
         m_os << " PTR";
     }
+}
+
+void CodePrinter::visit(AstTypeOf& ast) {
+    m_os << "TYPEOF(";
+    const auto visitor = Visitor{
+        [&](std::vector<Token>& tokens) {
+            for (auto& tkn : tokens) {
+                m_os << tkn.lexeme() << " ";
+            }
+        },
+        [&](AstTypeExpr* typeExpr) {
+            visit(*typeExpr);
+        },
+        [&](AstExpr* expr) {
+            visit(*expr);
+        }
+    };
+    std::visit(visitor, ast.typeExpr);
+    m_os << ")";
 }
 
 // Declarations

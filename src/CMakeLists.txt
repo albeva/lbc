@@ -51,6 +51,9 @@ add_library(
     Lexer/Token.cpp
     Lexer/Token.def.hpp
     Lexer/Token.hpp
+    Lexer/TokenProvider.cpp
+    Lexer/TokenProvider.hpp
+    Lexer/TokenSource.hpp
     Parser/ParseResult.hpp
     Parser/Parser.cpp
     Parser/Parser.hpp

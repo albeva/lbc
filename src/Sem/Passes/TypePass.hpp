@@ -9,6 +9,7 @@ class TypeProxy;
 struct AstTypeExpr;
 struct AstIdentExpr;
 struct AstFuncDecl;
+struct AstTypeOf;
 
 namespace Sem {
     class TypePass final : public Pass {
@@ -18,6 +19,7 @@ namespace Sem {
         /// certain avoid creating extra proxies for pointers
         [[nodiscard]] TypeProxy* visit(AstTypeExpr& ast, TypeProxy* owner = nullptr) const noexcept;
         [[nodiscard]] TypeProxy* visit(AstFuncDecl& ast) const noexcept;
+        [[nodiscard]] TypeProxy* visit(AstTypeOf& ast) const noexcept;
 
     private:
         [[nodiscard]] TypeProxy* visit(AstIdentExpr& ast) const noexcept;

@@ -314,14 +314,17 @@ void AstPrinter::visit(AstTypeExpr& ast) {
             name = type->asString();
         } else {
             static constexpr auto visitor = Visitor{
-                [](TokenKind kind) -> llvm::StringRef {
-                    return Token::description(kind);
-                },
                 [](AstIdentExpr* ident) -> llvm::StringRef {
                     return ident->name;
                 },
                 [](AstFuncDecl* /* decl */) -> llvm::StringRef {
                     return "PROC PTR (not implemented)";
+                },
+                [](AstTypeOf* /* ast */) -> llvm::StringRef {
+                    return "TYPEOF (not implemented)";
+                },
+                [](TokenKind kind) -> llvm::StringRef {
+                    return Token::description(kind);
                 }
             };
             name = std::visit(visitor, ast.expr);
@@ -331,6 +334,28 @@ void AstPrinter::visit(AstTypeExpr& ast) {
             }
         }
         m_json.attribute("id", name);
+    });
+}
+
+void AstPrinter::visit(AstTypeOf& ast) {
+    m_json.object([&] {
+        writeHeader(ast);
+        const auto visitor = Visitor{
+            [&](std::vector<Token>& tokens) {
+                m_json.attributeArray("tokens", [&]() {
+                    for (auto& tkn : tokens) {
+                        m_json.value(tkn.lexeme());
+                    }
+                });
+            },
+            [&](AstTypeExpr* typeExpr) {
+                writeType(typeExpr);
+            },
+            [&](AstExpr* expr) {
+                writeExpr(expr);
+            }
+        };
+        std::visit(visitor, ast.typeExpr);
     });
 }
 

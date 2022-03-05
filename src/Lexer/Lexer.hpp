@@ -2,21 +2,23 @@
 // Created by Albert Varaksin on 03/07/2020.
 //
 #pragma once
+#include "TokenSource.hpp"
 
 namespace lbc {
 class Token;
 class Context;
 enum class TokenKind;
 
-class Lexer final {
+class Lexer final : public TokenSource {
 public:
     NO_COPY_AND_MOVE(Lexer)
 
     Lexer(Context& context, unsigned fileID) noexcept;
-    ~Lexer() noexcept = default;
+    ~Lexer() noexcept override = default;
 
-    void next(Token& result);
-    void peek(Token& result);
+    unsigned int getFileId() override { return m_fileId; };
+    void next(Token& result) override;
+    void peek(Token& result) override;
 
 private:
     void skipUntilLineEnd() noexcept;
@@ -33,6 +35,7 @@ private:
     void identifier(Token& result);
 
     Context& m_context;
+    unsigned int m_fileId;
     const llvm::MemoryBuffer* m_buffer;
     const char* m_input;
     const char* m_eolPos;

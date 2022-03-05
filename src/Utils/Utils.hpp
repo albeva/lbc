@@ -17,18 +17,6 @@
 #define MAKE_UNIQUE(x) CONCATENATE(x, __COUNTER__)
 
 namespace lbc {
-// Enum Flags
-LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
-
-template<typename E>
-requires llvm::is_bitmask_enum<E>::value constexpr bool operator==(E lhs, std::underlying_type_t<E> rhs) noexcept {
-    return lhs == static_cast<E>(rhs);
-}
-
-template<typename E>
-requires llvm::is_bitmask_enum<E>::value constexpr bool operator!=(E lhs, std::underlying_type_t<E> rhs) noexcept {
-    return lhs != static_cast<E>(rhs);
-}
 
 // helper type for std::variant visitors
 template<typename... Base>

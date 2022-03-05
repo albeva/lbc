@@ -48,7 +48,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(?i:(zstring|ubyte|byte|ushort|short|uinteger|integer|ulong|long|ulongint|longint|single|double|ptr|bool|any))\b</string>
+			<string>\b(?i:(zstring|ubyte|byte|ushort|short|uinteger|integer|ulong|long|ulongint|longint|single|double|ptr|bool|any|typeof))\b</string>
 			<key>name</key>
 			<string>storage.typeExpr.lbc</string>
 		</dict>
