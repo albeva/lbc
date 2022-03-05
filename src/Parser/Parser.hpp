@@ -23,12 +23,16 @@ public:
         bool callWithoutParens : 1;
     };
 
+    struct TypeFlags {
+        bool typeOfAllowsExpr: 1;
+    };
+
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() noexcept = default;
 
     [[nodiscard]] ParseResult<AstModule> parse();
     [[nodiscard]] ParseResult<AstExpr> expression(ExprFlags flags = {});
-    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr();
+    [[nodiscard]] ParseResult<AstTypeExpr> typeExpr(TypeFlags flags = {});
 
     void reset() noexcept;
 
@@ -130,6 +134,7 @@ private:
     Token m_token{};
     llvm::SMLoc m_endLoc{};
     ExprFlags m_exprFlags{};
+    TypeFlags m_typeFlags{};
 };
 
 } // namespace lbc

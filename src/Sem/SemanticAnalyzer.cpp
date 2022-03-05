@@ -240,6 +240,8 @@ void SemanticAnalyzer::visit(AstTypeOf& ast) {
 
         if (auto* type = parser.typeExpr().getPointer()) {
             ast.typeExpr = type;
+        } else if (!ast.allowExpr) {
+            fatalError("Expression not allowed in typeof");
         } else {
             provider.reset();
             parser.reset();

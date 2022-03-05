@@ -465,8 +465,9 @@ struct AstTypeOf final : AstRoot {
 
     explicit AstTypeOf(
         llvm::SMRange range_,
-        TypeExpr&& typeExpr_)
-    : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ std::move(typeExpr_) } {}
+        TypeExpr&& typeExpr_,
+        bool allowExpr_)
+    : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ std::move(typeExpr_) }, allowExpr{ allowExpr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
         return ast->kind == AstKind::TypeOf;
@@ -474,6 +475,7 @@ struct AstTypeOf final : AstRoot {
 
     TypeExpr typeExpr;
     TypeProxy* typeProxy = nullptr;
+    bool allowExpr;
 };
 
 struct AstTypeExpr final : AstRoot {

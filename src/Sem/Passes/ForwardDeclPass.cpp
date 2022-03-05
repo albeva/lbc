@@ -90,12 +90,7 @@ void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
         [](AstFuncDecl* decl) -> Symbol* {
             return decl->symbol;
         },
-        [](AstTypeOf*) -> Symbol* {
-            // fatalError("ForwardDeclPass::define::getSymbol no symbol from typeof");
-            return nullptr;
-        },
-        [](TokenKind) -> Symbol* {
-            // fatalError("ForwardDeclPass::define::getSymbol no symbol from token");
+        [](auto) -> Symbol* {
             return nullptr;
         }
     };

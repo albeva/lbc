@@ -315,7 +315,7 @@ ParseResult<AstVarDecl> Parser::kwDim(AstAttributeList* attribs) {
     AstExpr* expr = nullptr;
 
     if (accept(TokenKind::As)) {
-        TRY_ASSIGN(type, typeExpr())
+        TRY_ASSIGN(type, typeExpr({.typeOfAllowsExpr = true}))
         if (accept(TokenKind::Assign)) {
             TRY_ASSIGN(expr, expression())
         }
@@ -454,7 +454,7 @@ ParseResult<AstFuncParamDecl> Parser::funcParam(bool isAnonymous) {
         TRY(consume(TokenKind::As))
     }
 
-    TRY_DECLARE(type, typeExpr())
+    TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = false}))
 
     return m_context.create<AstFuncParamDecl>(
         llvm::SMRange{ start, m_endLoc },
@@ -502,7 +502,7 @@ ParseResult<AstDecl> Parser::kwType(AstAttributeList* attribs) {
  *    .
  */
 ParseResult<AstTypeAlias> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
-    TRY_DECLARE(type, typeExpr())
+    TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = false}))
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange{ start, m_endLoc },
@@ -572,7 +572,7 @@ ParseResult<AstDecl> Parser::udtMember(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::As))
 
-    TRY_DECLARE(type, typeExpr())
+    TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = true}))
 
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
@@ -982,7 +982,10 @@ ParseResult<AstContinuationStmt> Parser::kwExit() {
  *          | TypeOf
  *          .
  */
-ParseResult<AstTypeExpr> Parser::typeExpr() {
+ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
+    RESTORE_ON_EXIT(m_typeFlags);
+    m_typeFlags = flags;
+
     auto start = m_token.range().Start;
     bool parenthesized = accept(TokenKind::ParenOpen);
     bool mustBePtr = false;
@@ -1053,7 +1056,7 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
         } else if (m_token.is(TokenKind::ParenOpen)) {
             parens++;
         }
-        tokens.push_back(m_token);
+        tokens.emplace_back(m_token);
         advance();
     }
     if (tokens.empty()) {
@@ -1061,7 +1064,8 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
     }
     TRY(consume(TokenKind::ParenClose))
 
-    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens));
+    bool typeOfAllowsExpr = m_typeFlags.typeOfAllowsExpr;
+    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens), typeOfAllowsExpr);
 }
 
 //----------------------------------------
@@ -1176,7 +1180,7 @@ ParseResult<AstExpr> Parser::factor() {
 
         // "AS" TypeExpr
         if (accept(TokenKind::As)) {
-            TRY_DECLARE(type, typeExpr())
+            TRY_DECLARE(type, typeExpr({.typeOfAllowsExpr = true}))
             auto* cast = m_context.create<AstCastExpr>(
                 llvm::SMRange{ start, m_endLoc },
                 expr,
@@ -1235,7 +1239,7 @@ ParseResult<AstExpr> Parser::primary() {
         return unary({ start, m_endLoc }, kind, expr);
     }
 
-    return makeError(Diag::unexpectedReturn, m_token.description());
+    return makeError(Diag::expectedExpression, m_token.description());
 }
 
 ParseResult<AstExpr> Parser::unary(llvm::SMRange range, TokenKind op, AstExpr* expr) {
