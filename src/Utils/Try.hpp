@@ -19,17 +19,17 @@ namespace lbc {
 //     return val;
 // }
 
-#define TRY(expression)           \
-    if ((expression).isError()) { \
-        return { true };          \
+#define TRY(expression)                \
+    if ((expression).isError()) {      \
+        return { ParseStatus::error }; \
     }
 
-#define TRY_ASSIGN(var, expression)     \
-    {                                   \
-        auto valOrErr_ = (expression);  \
-        if (valOrErr_.isError())        \
-            return { true };            \
-        (var) = valOrErr_.getPointer(); \
+#define TRY_ASSIGN(var, expression)        \
+    {                                      \
+        auto valOrErr_ = (expression);     \
+        if (valOrErr_.isError())           \
+            return { ParseStatus::error }; \
+        (var) = valOrErr_.getPointer();    \
     }
 
 #define TRY_DECLARE(var, expression)      \

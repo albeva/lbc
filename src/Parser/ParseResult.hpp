@@ -6,32 +6,37 @@
 
 namespace lbc {
 
+enum class ParseStatus: bool {
+    valid,
+    error
+};
+
 /// Parse result wrapping pointer to type T
 template<typename T>
 class ParseResult;
 
 /// Specialise for non-value ParseResult
 template<>
-class ParseResult<void> final {
+class [[nodiscard]] ParseResult<void> final {
 public:
     ParseResult() noexcept = default;
-    ParseResult(bool error) noexcept // NOLINT(hicpp-explicit-conversions)
+    ParseResult(ParseStatus error) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_error{ error } {}
 
     [[nodiscard]] static ParseResult error() noexcept {
-        return ParseResult{ true };
+        return ParseResult{ ParseStatus::error };
     }
 
     [[nodiscard]] inline bool isError() const noexcept {
-        return m_error;
+        return m_error == ParseStatus::error;
     }
 
 private:
-    bool m_error = false;
+    ParseStatus m_error = ParseStatus::valid;
 };
 
 template<typename T>
-class ParseResult final {
+class [[nodiscard]] ParseResult final {
 public:
     using value_type = T*;
 
@@ -39,29 +44,29 @@ public:
     ParseResult() noexcept = default;
 
     /// Null value with defined error
-    ParseResult(bool error) noexcept // NOLINT(hicpp-explicit-conversions)
+    ParseResult(ParseStatus error) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, error } {}
 
     /// given pointer value without error
     ParseResult(T* pointer) noexcept // NOLINT(hicpp-explicit-conversions)
-    : m_value{ pointer, false } {}
+    : m_value{ pointer, ParseStatus::valid } {}
 
     /// Downcast from derived type to base type
     template<typename U>
     requires std::is_base_of_v<T, U> ParseResult(ParseResult<U> other) // NOLINT(hicpp-explicit-conversions)
     noexcept
-    : m_value{ other.getPointer(), other.isError() } {}
+    : m_value{ other.getPointer(), other.isError() ? ParseStatus::error : ParseStatus::valid } {}
 
     /// cast from ParseResult<void>, null value and copy the error state
     ParseResult(ParseResult<void> other) noexcept // NOLINT(hicpp-explicit-conversions)
-    : m_value{ nullptr, other.isError() } {}
+    : m_value{ nullptr, other.isError() ? ParseStatus::error : ParseStatus::valid } {}
 
     [[nodiscard]] static ParseResult error() noexcept {
-        return ParseResult{ true };
+        return ParseResult{ ParseStatus::error };
     }
 
     [[nodiscard]] inline bool isError() const noexcept {
-        return m_value.getInt();
+        return m_value.getInt() == ParseStatus::error;
     }
 
     [[nodiscard]] inline T* getPointer() const noexcept {
@@ -69,7 +74,7 @@ public:
     }
 
 private:
-    const llvm::PointerIntPair<T*, 1, bool> m_value;
+    const llvm::PointerIntPair<T*, 1, ParseStatus> m_value;
 };
 
 } // namespace lbc
