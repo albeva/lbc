@@ -1,6 +1,6 @@
 @echo off
 
-set VERSION=llvm-project-llvmorg-14.0.0
+set VERSION=llvm-project-llvmorg-14.0.3
 
 set SRC=%cd%\%VERSION%\llvm
 set BUILD=%cd%\%VERSION%.build
@@ -18,7 +18,9 @@ cmake -G "Ninja" -S "%SRC%" -B "%BUILD%" ^
     -DLLVM_INSTALL_UTILS=ON ^
     -DLLVM_INCLUDE_BENCHMARKS=OFF ^
     -DLLVM_INCLUDE_TESTS=OFF
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 ninja -C "%BUILD%" install
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 setx LLVM_DIR "%INSTALL%\lib\cmake\llvm"
