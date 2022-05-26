@@ -1,6 +1,6 @@
 @echo off
 
-set VERSION=llvm-project-llvmorg-14.0.3
+set VERSION=llvm-project-llvmorg-14.0.4
 
 set SRC=%cd%\%VERSION%\llvm
 set BUILD=%cd%\%VERSION%.build
