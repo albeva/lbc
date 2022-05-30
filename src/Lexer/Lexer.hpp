@@ -33,6 +33,7 @@ private:
     void token(Token& result, TokenKind kind, int len = 1) noexcept;
     void numberLiteral(Token& result);
     void identifier(Token& result);
+    [[nodiscard]] char peekChar(size_t offset) const noexcept;
 
     Context& m_context;
     unsigned int m_fileId;

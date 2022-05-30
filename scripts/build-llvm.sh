@@ -1,9 +1,9 @@
-VERSION="llvm-project-llvmorg-14.0.3"
+VERSION="llvm-project-llvmorg-14.0.4"
+BUILD_DIR="$VERSION.build"
 
-mkdir $VERSION.build
-cd $VERSION.build/
+mkdir -p "$BUILD_DIR"
 
-cmake -G "Unix Makefiles"           \
+cmake -G "Ninja" -S "$VERSION/llvm" -B "$BUILD_DIR" \
   -DCMAKE_INSTALL_PREFIX=/usr/local \
   -DCMAKE_CXX_STANDARD=20           \
   -DCMAKE_BUILD_TYPE=Release        \
@@ -12,8 +12,8 @@ cmake -G "Unix Makefiles"           \
   -DLLVM_OPTIMIZED_TABLEGEN=ON      \
   -DLLVM_INSTALL_UTILS=ON           \
   -DLLVM_INCLUDE_BENCHMARKS=OFF     \
-  -DLLVM_INCLUDE_TESTS=OFF          \
-  ../$VERSION/llvm
+  -DLLVM_INCLUDE_TESTS=OFF
 
-make -j12 && sudo make install
-cd ..
+if [ $? -eq 0 ]; then
+    sudo cmake --build "$BUILD_DIR" --target install
+fi

@@ -81,8 +81,11 @@ void Lexer::next(Token& result) {
             return token(result, TokenKind::Comma);
         case '.': {
             auto next = m_input[1];
-            if (next == '.' && m_input[2] == '.') {
-                return token(result, TokenKind::Ellipsis, 3);
+            if (next == '.') {
+                if (peekChar(2) == '.') {
+                    return token(result, TokenKind::Ellipsis, 3);
+                }
+                break;
             }
             if (isDigit(next)) {
                 return numberLiteral(result);
@@ -137,6 +140,15 @@ void Lexer::next(Token& result) {
         return invalid(result, m_input);
     }
     // clang-format on
+}
+
+char Lexer::peekChar(size_t offset) const noexcept {
+    const auto* ptr = m_input;
+    std::advance(ptr, offset);
+    if (ptr < m_buffer->getBufferEnd()) {
+        return *ptr;
+    }
+    return '\0';
 }
 
 void Lexer::peek(Token& result) {

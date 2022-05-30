@@ -20,7 +20,5 @@ cmake -G "Ninja" -S "%SRC%" -B "%BUILD%" ^
     -DLLVM_INCLUDE_TESTS=OFF
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-ninja -C "%BUILD%" install
-if %errorlevel% neq 0 exit /b %errorlevel%
-
-setx LLVM_DIR "%INSTALL%\lib\cmake\llvm"
+cmake --build "%BUILD%" --target install ^
+    && setx LLVM_DIR "%INSTALL%\lib\cmake\llvm"
