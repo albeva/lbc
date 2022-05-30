@@ -44,13 +44,13 @@ private:
 
     struct FuncFlags {
         // Nameless declaration. For example in type definitions
-        bool isAnonymous: 1;
+        bool isAnonymous : 1;
         // Is following DECLARE keyword
-        bool isDeclaration: 1;
+        bool isDeclaration : 1;
         // Allow single line statement function() as integer => 42
-        bool allowShorthand: 1;
+        bool allowShorthand : 1;
         // Allow getting type from function body
-        bool allowUntyped: 1;
+        bool allowUntyped : 1;
     };
 
     [[nodiscard]] ParseResult<AstStmtList> stmtList();

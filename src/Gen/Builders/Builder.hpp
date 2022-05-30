@@ -8,7 +8,7 @@
 namespace lbc::Gen {
 
 template<typename T>
-requires std::is_base_of_v<AstRoot, T>
+    requires std::is_base_of_v<AstRoot, T>
 class Builder {
 public:
     Builder(CodeGen& gen, T& ast) noexcept

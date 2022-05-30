@@ -349,7 +349,7 @@ ParseResult<AstFuncDecl> Parser::kwDeclare(AstAttributeList* attribs) {
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
     advance();
 
-    return funcSignature(start, attribs, {.isDeclaration = true});
+    return funcSignature(start, attribs, { .isDeclaration = true });
 }
 
 /**
@@ -598,7 +598,7 @@ ParseResult<AstFuncStmt> Parser::kwFunction(AstAttributeList* attribs) {
 
     bool isFunction = m_token.is(TokenKind::Function);
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
-    TRY_DECLARE(decl, funcSignature(start, attribs, {.allowShorthand = true, .allowUntyped = true}))
+    TRY_DECLARE(decl, funcSignature(start, attribs, { .allowShorthand = true, .allowUntyped = true }))
 
     RESTORE_ON_EXIT(m_scope);
     m_scope = Scope::Function;
@@ -1007,7 +1007,7 @@ ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
 
     AstTypeExpr::TypeExpr expr;
     if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        TRY_ASSIGN(expr, funcSignature(start, nullptr, {.isAnonymous = true}))
+        TRY_ASSIGN(expr, funcSignature(start, nullptr, { .isAnonymous = true }))
         mustBePtr = true;
     } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         expr = m_token.getKind();
