@@ -76,6 +76,9 @@ void Lexer::next(Token& result) {
         case '"':
             return stringLiteral(result);
         case '=':
+            if (m_input[1] == '>') {
+                return token(result, TokenKind::LambdaBody, 2);
+            }
             return token(result, TokenKind::Assign);
         case ',':
             return token(result, TokenKind::Comma);

@@ -42,6 +42,17 @@ private:
         Function
     };
 
+    struct FuncFlags {
+        // Nameless declaration. For example in type definitions
+        bool isAnonymous: 1;
+        // Is following DECLARE keyword
+        bool isDeclaration: 1;
+        // Allow single line statement function() as integer => 42
+        bool allowShorthand: 1;
+        // Allow getting type from function body
+        bool allowUntyped: 1;
+    };
+
     [[nodiscard]] ParseResult<AstStmtList> stmtList();
     [[nodiscard]] ParseResult<AstStmt> statement();
     [[nodiscard]] ParseResult<AstImport> kwImport();
@@ -69,11 +80,7 @@ private:
     [[nodiscard]] ParseResult<AstExprList> attributeArgList();
     [[nodiscard]] ParseResult<AstTypeOf> kwTypeOf();
     [[nodiscard]] ParseResult<AstFuncDecl> kwDeclare(AstAttributeList* attribs);
-    [[nodiscard]] ParseResult<AstFuncDecl> funcSignature(
-        llvm::SMLoc start,
-        AstAttributeList* attribs,
-        bool hasImpl,
-        bool isAnonymous = false);
+    [[nodiscard]] ParseResult<AstFuncDecl> funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags);
     [[nodiscard]] ParseResult<AstFuncParamList> funcParamList(bool& isVariadic, bool isAnonymous);
     [[nodiscard]] ParseResult<AstFuncParamDecl> funcParam(bool isAnonymous);
     [[nodiscard]] ParseResult<AstFuncStmt> kwFunction(AstAttributeList* attribs);

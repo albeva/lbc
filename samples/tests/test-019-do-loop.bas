@@ -10,6 +10,7 @@
 '' CHECK-NEXT: 1, 2, 3, 4
 '' CHECK-NEXT: 1, 2, 3, 4
 '' CHECK-NEXT: 2, 4, 6, 8, 10
+'' CHECK-NEXT: 1, 2, 3, 4
 ''------------------------------------------------------------------------------
 import cstd
 
@@ -62,3 +63,10 @@ do dim i = 1
     printf "%d", i
 loop
 printf "\n"
+
+'' One liner
+function advance(i as integer) as integer
+    printf "%d, ", i
+    return i + 1
+end function
+do dim i = 1 while i < 5 => i = advance(i)

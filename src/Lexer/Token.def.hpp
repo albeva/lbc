@@ -25,7 +25,8 @@
     _( ParenClose,      ")"   ) \
     _( BracketOpen,     "["   ) \
     _( BracketClose,    "]"   ) \
-    _( Ellipsis,        "..." )
+    _( Ellipsis,        "..." ) \
+    _( LambdaBody,      "=>"  )
 
 #define TOKEN_OPERATORS(_) \
     /* ID               Str     Prec    Type    Assoc   Kind       */ \

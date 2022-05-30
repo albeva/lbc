@@ -18,20 +18,20 @@ next
 printf "\n"
 
 ' singe liner
-for i = 0 to 10 step 2 do printf "%i, ", i
+for i = 0 to 10 step 2 => printf "%i, ", i
 printf "\n"
 
 ' backwards
-for i = 5 to 1 do printf "%i, ", i
+for i = 5 to 1 => printf "%i, ", i
 printf "\n"
 
 ' backwards with step
-for i = 6 to 0 step -3 do printf "%i, ", i
+for i = 6 to 0 step -3 => printf "%i, ", i
 printf "\n"
 
 ' with variables
 dim b = 1
 dim e = 7
 dim s = 3
-for i = b to e step s do printf "%i, ", i
+for i = b to e step s => printf "%i, ", i
 printf "\n"

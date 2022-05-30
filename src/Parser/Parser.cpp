@@ -349,7 +349,7 @@ ParseResult<AstFuncDecl> Parser::kwDeclare(AstAttributeList* attribs) {
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
     advance();
 
-    return funcSignature(start, attribs, false);
+    return funcSignature(start, attribs, {.isDeclaration = true});
 }
 
 /**
@@ -358,14 +358,14 @@ ParseResult<AstFuncDecl> Parser::kwDeclare(AstAttributeList* attribs) {
  *     | "SUB" id [ "(" FuncParamList ")" ]
  *     .
  */
-ParseResult<AstFuncDecl> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* attribs, bool hasImpl, bool isAnonymous) {
+ParseResult<AstFuncDecl> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags) {
     bool isFunc = accept(TokenKind::Function);
     if (!isFunc) {
         TRY(consume(TokenKind::Sub))
     }
 
     llvm::StringRef id;
-    if (isAnonymous) {
+    if (funcFlags.isAnonymous) {
         id = "";
     } else {
         TRY(expect(TokenKind::Identifier))
@@ -376,7 +376,7 @@ ParseResult<AstFuncDecl> Parser::funcSignature(llvm::SMLoc start, AstAttributeLi
     bool isVariadic = false;
     AstFuncParamList* params = nullptr;
     if (accept(TokenKind::ParenOpen)) {
-        TRY_ASSIGN(params, funcParamList(isVariadic, isAnonymous))
+        TRY_ASSIGN(params, funcParamList(isVariadic, funcFlags.isAnonymous))
         TRY(consume(TokenKind::ParenClose))
     }
 
@@ -393,7 +393,7 @@ ParseResult<AstFuncDecl> Parser::funcSignature(llvm::SMLoc start, AstAttributeLi
         params,
         isVariadic,
         ret,
-        hasImpl);
+        !funcFlags.isDeclaration);
 }
 
 /**
@@ -596,21 +596,36 @@ ParseResult<AstFuncStmt> Parser::kwFunction(AstAttributeList* attribs) {
         return makeError(Diag::unexpectedNestedDeclaration, m_token.description());
     }
 
+    bool isFunction = m_token.is(TokenKind::Function);
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
-    TRY_DECLARE(decl, funcSignature(start, attribs, true))
-    TRY(consume(TokenKind::EndOfStmt))
+    TRY_DECLARE(decl, funcSignature(start, attribs, {.allowShorthand = true, .allowUntyped = true}))
 
     RESTORE_ON_EXIT(m_scope);
     m_scope = Scope::Function;
+    AstStmtList* stmts = nullptr;
 
-    TRY_DECLARE(stmts, stmtList())
-
-    TRY(consume(TokenKind::End))
-
-    if (decl->retTypeExpr != nullptr) {
-        TRY(consume(TokenKind::Function))
+    if (accept(TokenKind::LambdaBody)) {
+        AstStmt* stmt = nullptr;
+        if (isFunction) {
+            TRY_DECLARE(expr, expression())
+            stmt = m_context.create<AstReturnStmt>(
+                llvm::SMRange{ start, m_endLoc },
+                expr);
+        } else {
+            TRY_ASSIGN(stmt, statement())
+        }
+        stmts = m_context.create<AstStmtList>(
+            llvm::SMRange{ start, m_endLoc },
+            std::vector<AstStmt*>{ stmt });
     } else {
-        TRY(consume(TokenKind::Sub))
+        TRY(consume(TokenKind::EndOfStmt))
+        TRY_ASSIGN(stmts, stmtList())
+        TRY(consume(TokenKind::End))
+        if (isFunction) {
+            TRY(consume(TokenKind::Function))
+        } else {
+            TRY(consume(TokenKind::Sub))
+        }
     }
 
     return m_context.create<AstFuncStmt>(
@@ -747,7 +762,7 @@ ParseResult<AstIfStmtBlock> Parser::thenBlock(std::vector<AstVarDecl*> decls, As
  * FOR
  *   = "FOR" [ VAR { "," VAR } "," ]
  *     id [ "AS" TypeExpr ] "=" Expression "TO" Expression [ "STEP" expression ]
- *   ( "DO" Statement
+ *   ( "=>" Statement
  *   | <EoS> StatementList
  *     "NEXT" [ id ]
  *   )
@@ -797,10 +812,10 @@ ParseResult<AstForStmt> Parser::kwFor() {
         TRY_ASSIGN(step, expression())
     }
 
-    // "DO" statement ?
+    // "=>" statement ?
     AstStmt* stmt = nullptr;
     llvm::StringRef next;
-    if (accept(TokenKind::Do)) {
+    if (accept(TokenKind::LambdaBody)) {
         TRY_ASSIGN(stmt, statement())
     } else {
         TRY(consume(TokenKind::EndOfStmt))
@@ -830,7 +845,7 @@ ParseResult<AstForStmt> Parser::kwFor() {
 /**
  * DO = "DO" [ VAR { "," VAR } ]
  *    ( EndOfStmt StmtList "LOOP" [ LoopCondition ]
- *    | [ LoopCondition ] ( EoS StmtList "LOOP" | "DO" Statement )
+ *    | [ LoopCondition ] ( EoS StmtList "LOOP" | "=>" Statement )
  *    )
  *    .
  * LoopCondition
@@ -883,9 +898,9 @@ ParseResult<AstDoLoopStmt> Parser::kwDo() {
             TRY_ASSIGN(stmt, stmtList())
             TRY(consume(TokenKind::Loop))
         }
-        // "DO" Statement
+        // "=>" Statement
         else {
-            TRY(consume(TokenKind::Do))
+            TRY(consume(TokenKind::LambdaBody))
             TRY_ASSIGN(stmt, statement())
         }
     }
@@ -992,7 +1007,7 @@ ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
 
     AstTypeExpr::TypeExpr expr;
     if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        TRY_ASSIGN(expr, funcSignature(start, nullptr, false, true))
+        TRY_ASSIGN(expr, funcSignature(start, nullptr, {.isAnonymous = true}))
         mustBePtr = true;
     } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         expr = m_token.getKind();
@@ -1197,7 +1212,7 @@ ParseResult<AstExpr> Parser::factor() {
 /**
  * primary = literal
  *         | CallExpr
- *         | identifier
+ *         | identifier [ "(" params ") ]
  *         | "(" expression ")"
  *         | <Left Unary Op> [ factor { <Binary Op> expression } ]
  *         | IfExpr
@@ -1209,7 +1224,20 @@ ParseResult<AstExpr> Parser::primary() {
     }
 
     if (m_token.is(TokenKind::Identifier)) {
-        return identifier();
+        TRY_DECLARE(ident, identifier());
+
+        // expr ([params])
+        if (accept(TokenKind::ParenOpen)) {
+            auto start = ident->range.Start;
+            TRY_DECLARE(args, expressionList())
+            TRY(consume(TokenKind::ParenClose))
+
+            return m_context.create<AstCallExpr>(
+                llvm::SMRange{ start, m_endLoc },
+                ident,
+                args);
+        }
+        return ident;
     }
 
     if (accept(TokenKind::ParenOpen)) {
