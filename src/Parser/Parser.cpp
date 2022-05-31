@@ -1106,29 +1106,11 @@ ParseResult<AstExpr> Parser::expression(ExprFlags flags) {
     m_exprFlags = flags;
     TRY_DECLARE(expr, factor())
 
-    if (!flags.useAssign) {
-        replace(TokenKind::Assign, TokenKind::Equal);
-    }
-
-    if (flags.commaAsAnd) {
-        replace(TokenKind::Comma, TokenKind::CommaAnd);
-    }
+    fixExprOperators();
 
     // expr op
     if (m_token.isOperator()) {
         TRY_ASSIGN(expr, expression(expr, 1))
-    }
-
-    // expr ([params])
-    if (accept(TokenKind::ParenOpen)) {
-        auto start = expr->range.Start;
-        TRY_DECLARE(args, expressionList())
-        TRY(consume(TokenKind::ParenClose))
-
-        expr = m_context.create<AstCallExpr>(
-            llvm::SMRange{ start, m_endLoc },
-            expr,
-            args);
     }
 
     // print "hello"
@@ -1159,12 +1141,7 @@ ParseResult<AstExpr> Parser::expression(AstExpr* lhs, int precedence) {
         advance();
 
         TRY_DECLARE(rhs, factor())
-        if (!m_exprFlags.useAssign) {
-            replace(TokenKind::Assign, TokenKind::Equal);
-        }
-        if (m_exprFlags.commaAsAnd) {
-            replace(TokenKind::Comma, TokenKind::CommaAnd);
-        }
+        fixExprOperators();
 
         while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
             TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
@@ -1174,6 +1151,18 @@ ParseResult<AstExpr> Parser::expression(AstExpr* lhs, int precedence) {
         TRY_ASSIGN(lhs, binary({ start, m_endLoc }, kind, lhs, rhs))
     }
     return lhs;
+}
+
+void Parser::fixExprOperators() noexcept {
+    if (m_token.is(TokenKind::Assign)) {
+        if (m_exprFlags.useAssign) {
+            m_exprFlags.useAssign = false;
+        } else {
+            m_token.setKind(TokenKind::Equal);
+        }
+    } else if (m_token.is(TokenKind::Comma) && m_exprFlags.commaAsAnd) {
+        m_token.setKind(TokenKind::CommaAnd);
+    }
 }
 
 /**
@@ -1188,8 +1177,17 @@ ParseResult<AstExpr> Parser::factor() {
         if (m_token.isUnary() && m_token.isRightToLeft()) {
             auto kind = m_token.getKind();
             advance();
-
             TRY_ASSIGN(expr, unary({ start, m_endLoc }, kind, expr))
+            continue;
+        }
+
+        if (accept(TokenKind::ParenOpen)) {
+            TRY_DECLARE(args, expressionList())
+            TRY(consume(TokenKind::ParenClose))
+            expr = m_context.create<AstCallExpr>(
+                llvm::SMRange{ start, m_endLoc },
+                expr,
+                args);
             continue;
         }
 
@@ -1224,20 +1222,7 @@ ParseResult<AstExpr> Parser::primary() {
     }
 
     if (m_token.is(TokenKind::Identifier)) {
-        TRY_DECLARE(ident, identifier());
-
-        // expr ([params])
-        if (accept(TokenKind::ParenOpen)) {
-            auto start = ident->range.Start;
-            TRY_DECLARE(args, expressionList())
-            TRY(consume(TokenKind::ParenClose))
-
-            return m_context.create<AstCallExpr>(
-                llvm::SMRange{ start, m_endLoc },
-                ident,
-                args);
-        }
-        return ident;
+        return identifier();
     }
 
     if (accept(TokenKind::ParenOpen)) {
@@ -1258,9 +1243,6 @@ ParseResult<AstExpr> Parser::primary() {
         auto kind = m_token.getKind();
         advance();
 
-        if (!m_exprFlags.useAssign) {
-            replace(TokenKind::Assign, TokenKind::Equal);
-        }
         TRY_DECLARE(fact, factor())
         TRY_DECLARE(expr, expression(fact, prec))
 

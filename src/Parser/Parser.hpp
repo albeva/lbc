@@ -93,6 +93,7 @@ private:
 
     // replace token kind with another (e.g. Minus to Negate)
     void replace(TokenKind what, TokenKind with) noexcept;
+    void fixExprOperators() noexcept;
 
     // If token matches then advance and return true
     [[nodiscard]] bool accept(TokenKind kind) {
