@@ -55,7 +55,7 @@ TypeProxy* TypePass::visit(AstIdentExpr& ast) const noexcept {
         fatalError("Undefined type "_t + ast.name);
     }
 
-    if (sym->getFlags().type) {
+    if (sym->getFlags().isType) {
         ast.typeProxy = sym->getTypeProxy();
         return ast.typeProxy;
     }

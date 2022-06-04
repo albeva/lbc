@@ -35,6 +35,7 @@ public:
     [[nodiscard]] ParseResult<AstTypeExpr> typeExpr(TypeFlags flags = {});
 
     void reset() noexcept;
+    [[nodiscard]] inline const Token& getToken() const noexcept { return m_token; }
 
 private:
     enum class Scope {

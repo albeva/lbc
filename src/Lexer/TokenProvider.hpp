@@ -8,8 +8,8 @@
 namespace lbc {
 class TokenProvider final : public TokenSource {
 public:
-    TokenProvider(unsigned int fileId, std::vector<Token>& tokens) noexcept
-    : m_fileId{ fileId }, m_tokens{ tokens } {}
+    TokenProvider(unsigned int fileId, std::vector<Token>&& tokens) noexcept
+    : m_fileId{ fileId }, m_tokens{ std::move(tokens) } {}
 
     unsigned int getFileId() override { return m_fileId; }
     void next(Token& result) override;
@@ -19,7 +19,7 @@ public:
 private:
     unsigned int m_fileId;
     size_t m_index = 0;
-    std::vector<Token>& m_tokens;
+    std::vector<Token> m_tokens;
 };
 
 } // namespace lbc

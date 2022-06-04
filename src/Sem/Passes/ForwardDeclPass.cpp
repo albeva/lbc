@@ -62,7 +62,7 @@ void ForwardDeclPass::declare(AstDecl& ast) noexcept {
         symbol->getFlags().addressable = true;
         m_funcs.push_back(func);
     } else {
-        symbol->getFlags().type = true;
+        symbol->getFlags().isType = true;
         m_nodes.emplace_back(&ast);
     }
 
@@ -105,7 +105,7 @@ void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
         symbol->setFlags(parent->getFlags());
         symbol->setParent(parent->getParent());
     } else {
-        symbol->getFlags().type = true;
+        symbol->getFlags().isType = true;
     }
 }
 
@@ -151,9 +151,9 @@ void ForwardDeclPass::implement(AstFuncDecl& ast) noexcept {
     // main or external?
     if (symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
-        symbol->getFlags().external = true;
+        symbol->getFlags().isExternal = true;
     } else {
-        symbol->getFlags().external = !ast.hasImpl;
+        symbol->getFlags().isExternal = !ast.hasImpl;
     }
 
     // func type

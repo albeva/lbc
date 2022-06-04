@@ -51,7 +51,7 @@ public:
     }
 
     [[nodiscard]] llvm::GlobalValue::LinkageTypes getLlvmLinkage() const noexcept {
-        if (m_flags.external) {
+        if (m_flags.isExternal) {
             return llvm::GlobalValue::LinkageTypes::ExternalLinkage;
         }
         return llvm::GlobalValue::LinkageTypes::InternalLinkage;

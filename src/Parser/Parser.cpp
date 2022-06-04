@@ -502,7 +502,7 @@ ParseResult<AstDecl> Parser::kwType(AstAttributeList* attribs) {
  *    .
  */
 ParseResult<AstTypeAlias> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
-    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = false }))
+    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = true }))
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange{ start, m_endLoc },
@@ -1018,7 +1018,7 @@ ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
         TRY_DECLARE(ident, identifier())
         if (m_symbolTable != nullptr) {
             auto* symbol = m_symbolTable->find(ident->name);
-            if (symbol == nullptr || !symbol->getFlags().type) {
+            if (symbol == nullptr || !symbol->getFlags().isType) {
                 return ParseResult<AstTypeExpr>::error();
             }
         }
@@ -1035,7 +1035,7 @@ ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
     }
 
     if (mustBePtr && deref == 0) {
-        deref = 1;
+        return ParseResult<AstTypeExpr>::error();
     }
 
     return m_context.create<AstTypeExpr>(
@@ -1057,7 +1057,7 @@ ParseResult<AstTypeOf> Parser::kwTypeOf() {
     std::vector<Token> tokens;
     int parens = 1;
     while (true) {
-        if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile)) {
+        if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile, TokenKind::Invalid)) {
             return makeError(Diag::unexpectedToken, "type expression", m_token.description());
         }
         if (m_token.is(TokenKind::ParenClose)) {

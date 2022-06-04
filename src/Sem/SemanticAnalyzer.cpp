@@ -74,7 +74,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
 
     // The Symbol
     auto* symbol = createNewSymbol(ast);
-    symbol->getFlags().external = false;
+    symbol->getFlags().isExternal = false;
 
     // create function symbol
     symbol->setTypeProxy(type);
@@ -235,7 +235,8 @@ void SemanticAnalyzer::visit(AstTypeOf& ast) {
     }
 
     if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
-        TokenProvider provider{ m_astRootModule->fileId, *tokens };
+        // let provider take ownership of tokens
+        TokenProvider provider{ m_astRootModule->fileId, std::move(*tokens) };
         Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
 
         if (auto* type = parser.typeExpr().getPointer()) {
@@ -247,7 +248,13 @@ void SemanticAnalyzer::visit(AstTypeOf& ast) {
             parser.reset();
             if (auto* expr = parser.expression().getPointer()) {
                 ast.typeExpr = expr;
+            } else {
+                fatalError("Failed to parse expression");
             }
+        }
+
+        if (not parser.getToken().is(TokenKind::EndOfStmt)) {
+            fatalError("Unexpected token: "_t + parser.getToken().description());
         }
     }
 
