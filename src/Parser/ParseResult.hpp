@@ -19,20 +19,20 @@ class ParseResult;
 template<>
 class [[nodiscard]] ParseResult<void> final {
 public:
-    ParseResult() noexcept = default;
-    ParseResult(ParseStatus error) noexcept // NOLINT(hicpp-explicit-conversions)
+    constexpr ParseResult() noexcept = default;
+    constexpr ParseResult(ParseStatus error) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_error{ error } {}
 
-    [[nodiscard]] static ParseResult error() noexcept {
+    [[nodiscard]] constexpr static ParseResult error() noexcept {
         return ParseResult{ ParseStatus::error };
     }
 
-    [[nodiscard]] inline bool isError() const noexcept {
+    [[nodiscard]] constexpr inline bool isError() const noexcept {
         return m_error == ParseStatus::error;
     }
 
 private:
-    ParseStatus m_error = ParseStatus::valid;
+    const ParseStatus m_error = ParseStatus::valid;
 };
 
 template<typename T>
@@ -41,36 +41,34 @@ public:
     using value_type = T*;
 
     /// Default, null value, no error
-    ParseResult() noexcept = default;
+    constexpr ParseResult() noexcept = default;
 
     /// Null value with defined error
-    ParseResult(ParseStatus error) noexcept // NOLINT(hicpp-explicit-conversions)
+    constexpr ParseResult(ParseStatus error) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, error } {}
 
     /// given pointer value without error
-    ParseResult(T* pointer) noexcept // NOLINT(hicpp-explicit-conversions)
+    constexpr ParseResult(T* pointer) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ pointer, ParseStatus::valid } {}
 
     /// Downcast from derived type to base type
-    template<typename U>
-        requires std::is_base_of_v<T, U>
-    ParseResult(ParseResult<U> other) // NOLINT(hicpp-explicit-conversions)
-        noexcept
+    template<std::derived_from<T> U>
+    constexpr ParseResult(ParseResult<U> other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ other.getPointer(), other.isError() ? ParseStatus::error : ParseStatus::valid } {}
 
     /// cast from ParseResult<void>, null value and copy the error state
-    ParseResult(ParseResult<void> other) noexcept // NOLINT(hicpp-explicit-conversions)
+    constexpr ParseResult(ParseResult<void> other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, other.isError() ? ParseStatus::error : ParseStatus::valid } {}
 
-    [[nodiscard]] static ParseResult error() noexcept {
+    [[nodiscard]] constexpr static ParseResult error() noexcept {
         return ParseResult{ ParseStatus::error };
     }
 
-    [[nodiscard]] inline bool isError() const noexcept {
+    [[nodiscard]] constexpr inline bool isError() const noexcept {
         return m_value.getInt() == ParseStatus::error;
     }
 
-    [[nodiscard]] inline T* getPointer() const noexcept {
+    [[nodiscard]] constexpr inline T* getPointer() const noexcept {
         return m_value.getPointer();
     }
 

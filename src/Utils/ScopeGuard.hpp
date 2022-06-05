@@ -4,7 +4,7 @@
 #pragma once
 namespace lbc {
 
-template<typename T>
+template<std::invocable T>
 struct ScopeGuard final {
     NO_COPY_AND_MOVE(ScopeGuard)
     constexpr explicit ScopeGuard(T&& handler) : handler{ std::forward<T>(handler) } {}
