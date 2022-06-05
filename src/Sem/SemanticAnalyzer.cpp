@@ -233,11 +233,6 @@ void SemanticAnalyzer::visit(AstTypeAlias& /* ast */) {
 }
 
 void SemanticAnalyzer::visit(AstTypeOf& ast) {
-    // TODO: Will this be called more than once?
-    if (ast.type != nullptr) {
-        return;
-    }
-
     if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
         // let provider take ownership of tokens
         TokenProvider provider{ m_astRootModule->fileId, std::move(*tokens) };
