@@ -9,7 +9,6 @@
 #include "Gen/ValueHandler.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Gen;
 

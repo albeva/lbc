@@ -6,7 +6,6 @@
 
 namespace lbc {
 class Symbol;
-class TypeProxy;
 class TypeRoot;
 struct AstModule;
 struct AstStmtList;
@@ -38,7 +37,7 @@ namespace Sem {
         void defineUdt(AstUdtDecl& ast) noexcept;
 
         Symbol* createParamSymbol(AstFuncParamDecl& ast) noexcept;
-        void checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept;
+        void checkCircularAlias(const TypeRoot* owner, const TypeRoot* aliased) const noexcept;
         void checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept;
 
         using RelKey = std::pair<const TypeRoot*, const TypeRoot*>;

@@ -6,7 +6,6 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -58,7 +57,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
             m_sem.convert(ast.limit, type);
         } else {
             m_sem.convert(ast.iterator->expr, ast.limit->getType());
-            ast.iterator->symbol->setTypeProxy(ast.limit->typeProxy);
+            ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
     }

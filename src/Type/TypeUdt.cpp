@@ -5,7 +5,6 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 
 TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
@@ -13,7 +12,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
   m_symbol{ symbol },
   m_symbolTable{ symbolTable },
   m_packed(packed) {
-    setProxy(symbol.getTypeProxy());
+    symbol.setType(this);
     symbol.valueFlags().isType = true;
 }
 

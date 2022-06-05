@@ -5,7 +5,6 @@
 #include "Driver/Context.hpp"
 #include "Gen/Helpers.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Gen;
 

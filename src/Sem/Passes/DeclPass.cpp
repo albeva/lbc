@@ -6,7 +6,6 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Sem;
@@ -42,7 +41,6 @@ void DeclPass::declare(AstDecl& ast) noexcept {
     }
 
     auto* symbol = m_sem.createNewSymbol(ast);
-    symbol->setTypeProxy(m_sem.getContext().create<TypeProxy>());
     symbol->setDecl(&ast);
 
     if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
@@ -90,10 +88,10 @@ void DeclPass::defineAlias(AstTypeAlias& ast) noexcept {
         return;
     }
 
-    auto* proxy = symbol->getTypeProxy();
-    auto* aliasedProxy = m_sem.getTypePass().visit(*ast.typeExpr, proxy);
-    checkCircularAlias(proxy, aliasedProxy);
-    proxy->setNestedProxy(aliasedProxy);
+    // const auto* owner = symbol->getType();
+    const auto* aliased = m_sem.getTypePass().visit(*ast.typeExpr);
+    // TODO: Fix checkCircularAlias(owner, aliased);
+    symbol->setType(aliased);
 
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
         symbol->valueFlags() = parent->valueFlags();
@@ -154,7 +152,7 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     }
 
     // func type
-    symbol->getTypeProxy()->setNestedProxy(m_sem.getTypePass().visit(ast));
+    symbol->setType(m_sem.getTypePass().visit(ast));
 
     // parameters
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
@@ -171,13 +169,13 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
 }
 
 void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
-    auto* proxy = ast.typeExpr->typeProxy;
-    if (proxy->getType()->isUDT()) {
+    const auto* type = ast.typeExpr->type;
+    if (type->isUDT()) {
         fatalError("Passing types by values is not implemented");
     }
 
     auto* symbol = createParamSymbol(ast);
-    symbol->setTypeProxy(proxy);
+    symbol->setType(type);
     symbol->stateFlags().defined = true;
     ast.symbol = symbol;
 }
@@ -185,13 +183,14 @@ void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
 //----------------------------------------
 // Utils
 //----------------------------------------
-void DeclPass::checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
-    do {
-        if (proxy == aliased) {
-            fatalError("Circular type alias");
-        }
-        aliased = aliased->getNestedProxy();
-    } while (aliased != nullptr);
+void DeclPass::checkCircularAlias(const TypeRoot* /*owner*/, const TypeRoot* /*aliased*/) const noexcept {
+    llvm_unreachable("Type aliasing is broken");
+    //    do {
+    //        if (proxy == aliased) {
+    //            fatalError("Circular type alias");
+    //        }
+    //        aliased = aliased->getNestedProxy();
+    //    } while (aliased != nullptr);
 }
 
 void DeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept {

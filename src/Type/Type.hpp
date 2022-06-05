@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "Type.def.hpp"
-#include "TypeProxy.hpp"
 
 namespace lbc {
 
@@ -50,14 +49,6 @@ public:
 
     [[nodiscard]] constexpr TypeFamily getKind() const noexcept { return m_kind; }
 
-    [[nodiscard]] TypeProxy* getProxy() const noexcept { return m_proxy; }
-    void setProxy(TypeProxy* proxy) const {
-        assert(proxy->getType() == nullptr && // NOLINT
-            "When setting type proxy, it should not override another type");
-        m_proxy = proxy;
-        m_proxy->setType(this);
-    }
-
     [[nodiscard]] llvm::Type* getLlvmType(Context& context) const noexcept {
         if (m_llvmType == nullptr) {
             m_llvmType = genLlvmType(context);
@@ -98,15 +89,13 @@ public:
 
 protected:
     constexpr explicit TypeRoot(TypeFamily kind) noexcept
-    : m_kind{ kind }, m_proxyDefault{ this }, m_proxy{ &m_proxyDefault } {}
+    : m_kind{ kind } {}
 
     [[nodiscard]] virtual llvm::Type* genLlvmType(Context& context) const = 0;
 
 private:
     mutable llvm::Type* m_llvmType = nullptr;
     const TypeFamily m_kind;
-    mutable TypeProxy m_proxyDefault;
-    mutable TypeProxy* m_proxy;
 };
 
 /**

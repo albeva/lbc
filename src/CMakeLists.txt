@@ -75,8 +75,6 @@ add_library(
     Type/Type.cpp
     Type/Type.def.hpp
     Type/Type.hpp
-    Type/TypeProxy.cpp
-    Type/TypeProxy.hpp
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
     Utils/ScopeGuard.hpp

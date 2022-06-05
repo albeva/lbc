@@ -5,7 +5,7 @@
 #include "Pass.hpp"
 
 namespace lbc {
-class TypeProxy;
+class TypeRoot;
 struct AstTypeExpr;
 struct AstIdentExpr;
 struct AstFuncDecl;
@@ -15,14 +15,12 @@ namespace Sem {
     class TypePass final : public Pass {
     public:
         using Pass::Pass;
-        /// Resolve type of given type expression. If owner is provided then
-        /// certain avoid creating extra proxies for pointers
-        [[nodiscard]] TypeProxy* visit(AstTypeExpr& ast, TypeProxy* owner = nullptr) const noexcept;
-        [[nodiscard]] TypeProxy* visit(AstFuncDecl& ast) const noexcept;
-        [[nodiscard]] TypeProxy* visit(AstTypeOf& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstTypeExpr& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstFuncDecl& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstTypeOf& ast) const noexcept;
 
     private:
-        [[nodiscard]] TypeProxy* visit(AstIdentExpr& ast) const noexcept;
+        [[nodiscard]] const TypeRoot* visit(AstIdentExpr& ast) const noexcept;
     };
 } // namespace Sem
 } // namespace lbc

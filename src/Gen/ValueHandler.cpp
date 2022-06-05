@@ -7,7 +7,6 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 #include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Gen;
@@ -39,8 +38,7 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llv
 }
 
 ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept {
-    auto* typeProxy = type->getProxy();
-    auto* symbol = gen.getContext().create<Symbol>(name, typeProxy);
+    auto* symbol = gen.getContext().create<Symbol>(name, type);
     symbol->setLlvmValue(value);
     return { &gen, symbol };
 }

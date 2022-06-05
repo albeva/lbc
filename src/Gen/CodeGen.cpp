@@ -9,7 +9,6 @@
 #include "Driver/Context.hpp"
 #include "Helpers.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 #include "ValueHandler.hpp"
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRPrintingPasses.h>

@@ -5,7 +5,6 @@
 #include "Ast/ValueFlags.hpp"
 
 namespace lbc {
-class TypeProxy;
 class TypeRoot;
 struct AstDecl;
 
@@ -20,8 +19,8 @@ public:
         uint8_t usable : 1;
     };
 
-    explicit Symbol(llvm::StringRef name, TypeProxy* proxy = nullptr) noexcept
-    : m_name{ name }, m_typeProxy{ proxy }, m_alias{ "" } {}
+    explicit Symbol(llvm::StringRef name, const TypeRoot* type = nullptr) noexcept
+    : m_name{ name }, m_type{ type }, m_alias{ "" } {}
 
     ~Symbol() noexcept = default;
 
@@ -29,15 +28,13 @@ public:
     [[nodiscard]] inline StateFlags& stateFlags() noexcept { return m_state; }
 
     [[nodiscard]] Symbol* getParent() const noexcept { return m_parent; }
-    void setParent(Symbol* parent) noexcept { m_parent = parent; }
+    inline void setParent(Symbol* parent) noexcept { m_parent = parent; }
 
     [[nodiscard]] unsigned int getIndex() const noexcept { return m_index; }
-    void setIndex(unsigned int index) noexcept { m_index = index; }
+    inline void setIndex(unsigned int index) noexcept { m_index = index; }
 
-    [[nodiscard]] TypeProxy* getTypeProxy() const noexcept { return m_typeProxy; }
-    void setTypeProxy(TypeProxy* proxy) noexcept { m_typeProxy = proxy; }
-
-    [[nodiscard]] const TypeRoot* getType() const noexcept;
+    [[nodiscard]] inline const TypeRoot* getType() const noexcept { return m_type; }
+    inline void setType(const TypeRoot* type) noexcept { m_type = type; }
 
     [[nodiscard]] llvm::StringRef name() const noexcept { return m_name; }
 
@@ -76,7 +73,7 @@ public:
 
 private:
     const llvm::StringRef m_name;
-    TypeProxy* m_typeProxy;
+    const TypeRoot* m_type;
 
     AstDecl* m_decl = nullptr;
     llvm::StringRef m_alias;

@@ -6,7 +6,6 @@
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 
 AstPrinter::AstPrinter(Context& context, llvm::raw_ostream& os) noexcept

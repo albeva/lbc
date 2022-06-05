@@ -5,7 +5,6 @@
 #include "Ast.hpp"
 #include "Lexer/Token.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 
 void CodePrinter::visit(AstModule& ast) {

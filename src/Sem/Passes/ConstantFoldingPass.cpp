@@ -5,7 +5,6 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeProxy.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -58,7 +57,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
 
     auto value = unary(ast.tokenKind, *literal);
     auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
-    repl->typeProxy = ast.typeProxy;
+    repl->type = ast.type;
     return repl;
 }
 
@@ -135,7 +134,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
             ast.expr,
             nullptr,
             true);
-        cast->typeProxy = ast.typeProxy;
+        cast->type = ast.type;
         return cast;
     }
 
@@ -150,7 +149,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
             unary,
             nullptr,
             true);
-        cast->typeProxy = ast.typeProxy;
+        cast->type = ast.type;
         return cast;
     }
 
@@ -170,7 +169,7 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
 
     auto value = cast(ast.getType(), *literal);
     auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
-    repl->typeProxy = ast.typeProxy;
+    repl->type = ast.type;
     return repl;
 }
 

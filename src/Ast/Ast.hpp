@@ -9,7 +9,6 @@
 #include "ValueFlags.hpp"
 
 namespace lbc {
-class TypeProxy;
 class TypeRoot;
 AST_FORWARD_DECLARE()
 
@@ -474,7 +473,7 @@ struct AstTypeOf final : AstRoot {
     }
 
     TypeExpr typeExpr;
-    TypeProxy* typeProxy = nullptr;
+    const TypeRoot* type = nullptr;
     bool allowExpr;
 };
 
@@ -497,7 +496,7 @@ struct AstTypeExpr final : AstRoot {
 
     TypeExpr expr;
     const int dereference;
-    TypeProxy* typeProxy = nullptr;
+    const TypeRoot* type = nullptr;
 };
 
 //----------------------------------------
@@ -512,7 +511,7 @@ struct AstExpr : AstRoot {
 
     [[nodiscard]] const TypeRoot* getType() const noexcept;
 
-    TypeProxy* typeProxy = nullptr;
+    const TypeRoot* type = nullptr;
     ValueFlags flags{};
 };
 
