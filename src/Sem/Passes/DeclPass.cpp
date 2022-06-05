@@ -43,7 +43,7 @@ void DeclPass::declare(AstDecl& ast) noexcept {
     auto* symbol = m_sem.createNewSymbol(ast);
     symbol->setDecl(&ast);
 
-    if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
+    if (llvm::isa<AstFuncDecl>(&ast)) {
         symbol->valueFlags().callable = true;
         symbol->valueFlags().addressable = true;
     } else {
@@ -119,7 +119,7 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
         packed = ast.attributes->exists("PACKED");
     }
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
-    const auto* udt = TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
+    TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
 
     m_sem.with(ast.symbolTable, [&]() {
         for (auto& decl : ast.decls->decls) {
