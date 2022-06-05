@@ -25,11 +25,11 @@ void ForStmtPass::ceclare(AstForStmt& ast) const noexcept {
         m_sem.visit(*var);
     }
     m_sem.visit(*ast.iterator);
-    auto flags = ast.iterator->symbol->getFlags();
+    auto flags = ast.iterator->symbol->valueFlags();
     flags.dereferencable = false;
     flags.addressable = false;
     flags.assignable = false;
-    ast.iterator->symbol->setFlags(flags);
+    ast.iterator->symbol->valueFlags() = flags;
 }
 
 void ForStmtPass::analyze(AstForStmt& ast) const noexcept {

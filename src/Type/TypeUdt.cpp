@@ -14,7 +14,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
   m_symbolTable{ symbolTable },
   m_packed(packed) {
     setProxy(symbol.getTypeProxy());
-    symbol.getFlags().isType = true;
+    symbol.valueFlags().isType = true;
 }
 
 const TypeUDT* TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) {

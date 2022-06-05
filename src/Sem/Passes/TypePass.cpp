@@ -50,17 +50,21 @@ TypeProxy* TypePass::visit(AstTypeExpr& ast, TypeProxy* owner) const noexcept {
 }
 
 TypeProxy* TypePass::visit(AstIdentExpr& ast) const noexcept {
-    auto* sym = m_sem.getSymbolTable()->find(ast.name);
-    if (sym == nullptr) {
+    auto* symbol = m_sem.getSymbolTable()->find(ast.name);
+    if (symbol == nullptr) {
         fatalError("Undefined type "_t + ast.name);
     }
 
-    if (sym->getFlags().isType) {
-        ast.typeProxy = sym->getTypeProxy();
-        return ast.typeProxy;
+    if (!symbol->valueFlags().isType) {
+        fatalError(""_t + symbol->name() + " is not a type");
     }
 
-    fatalError(""_t + sym->name() + " is not a type");
+    if (not symbol->stateFlags().defined) {
+        m_sem.getDeclPass().define(*symbol->getDecl());
+    }
+
+    ast.typeProxy = symbol->getTypeProxy();
+    return ast.typeProxy;
 }
 
 TypeProxy* TypePass::visit(AstFuncDecl& ast) const noexcept {

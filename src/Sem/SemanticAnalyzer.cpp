@@ -7,8 +7,8 @@
 #include "Lexer/Token.hpp"
 #include "Lexer/TokenProvider.hpp"
 #include "Parser/Parser.hpp"
+#include "Passes/DeclPass.hpp"
 #include "Passes/ForStmtPass.hpp"
-#include "Passes/ForwardDeclPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
@@ -20,14 +20,15 @@ using namespace lbc;
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : m_context{ context },
   m_constantFolder{ *this },
-  m_typePass{ *this } {}
+  m_typePass{ *this },
+  m_declPass{ *this } {}
 
 void SemanticAnalyzer::visit(AstModule& ast) {
     m_astRootModule = &ast;
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     m_table = ast.symbolTable;
 
-    Sem::ForwardDeclPass(*this).visit(ast);
+    m_declPass.visit(ast);
     visit(*ast.stmtList);
 }
 
@@ -55,37 +56,34 @@ void SemanticAnalyzer::visit(AstExprStmt& ast) {
 
 void SemanticAnalyzer::visit(AstVarDecl& ast) {
     // m_type expr?
-    TypeProxy* type = nullptr;
+    TypeProxy* proxy = nullptr;
     if (ast.typeExpr != nullptr) {
-        type = m_typePass.visit(*ast.typeExpr);
+        proxy = m_typePass.visit(*ast.typeExpr);
     }
 
     // expression?
     if (ast.expr != nullptr) {
-        expression(ast.expr, type == nullptr ? nullptr : type->getType());
-        if (type == nullptr) {
-            type = ast.expr->typeProxy;
+        expression(ast.expr, proxy == nullptr ? nullptr : proxy->getType());
+        if (proxy == nullptr) {
+            proxy = ast.expr->typeProxy;
         }
     }
 
-    if (type == nullptr) {
-        fatalError("no type for var declaration");
+    if (proxy == nullptr) {
+        fatalError("no proxy for var declaration");
     }
 
     // The Symbol
     auto* symbol = createNewSymbol(ast);
-    symbol->getFlags().isExternal = false;
-
-    // create function symbol
-    symbol->setTypeProxy(type);
-    ast.symbol = symbol;
-    auto flags = ast.symbol->getFlags();
-    flags.addressable = true;
-    flags.assignable = true;
-    if (type->getType()->isPointer()) {
-        flags.dereferencable = true;
+    symbol->valueFlags().isExternal = false;
+    symbol->valueFlags().addressable = true;
+    symbol->valueFlags().assignable = true;
+    if (proxy->getType()->isPointer()) {
+        symbol->valueFlags().dereferencable = true;
     }
-    ast.symbol->setFlags(flags);
+    symbol->setTypeProxy(proxy);
+    symbol->stateFlags().defined = true;
+    ast.symbol = symbol;
 
     // alias?
     if (ast.attributes != nullptr) {
@@ -102,8 +100,10 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
 /**
  * Analyze function declaration
  */
-void SemanticAnalyzer::visit(AstFuncDecl& /*ast*/) {
-    // NOOP
+void SemanticAnalyzer::visit(AstFuncDecl& ast) {
+    if (not ast.symbol->stateFlags().defined) {
+        m_declPass.define(*ast.symbol->getDecl());
+    }
 }
 
 void SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
@@ -111,11 +111,15 @@ void SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
 }
 
 void SemanticAnalyzer::visit(AstFuncStmt& ast) {
-    RESTORE_ON_EXIT(m_table);
+    if (not ast.decl->symbol->stateFlags().defined) {
+        m_declPass.define(*ast.decl);
+    }
+
     RESTORE_ON_EXIT(m_function);
-    m_function = ast.decl;
-    m_table = ast.decl->symbolTable;
-    visit(*ast.stmtList);
+    with(ast.decl->symbolTable, [&]() {
+        m_function = ast.decl;
+        visit(*ast.stmtList);
+    });
 }
 
 void SemanticAnalyzer::visit(AstReturnStmt& ast) {
@@ -321,6 +325,10 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
         fatalError("Unknown identifier "_t + ast.name);
     }
 
+    if (not symbol->stateFlags().defined) {
+        m_declPass.define(*symbol->getDecl());
+    }
+
     auto* proxy = symbol->getTypeProxy();
     if (proxy == nullptr) {
         fatalError("Identifier "_t + ast.name + " has unresolved type");
@@ -328,7 +336,7 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
 
     ast.typeProxy = proxy;
     ast.symbol = symbol;
-    ast.flags = symbol->getFlags();
+    ast.flags = symbol->valueFlags();
 }
 
 void SemanticAnalyzer::visit(AstCallExpr& ast) {

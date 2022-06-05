@@ -13,13 +13,20 @@ class Symbol final {
 public:
     NO_COPY_AND_MOVE(Symbol)
 
+    struct StateFlags final {
+        // Symbol type is fully resolved
+        uint8_t defined : 1;
+        // Symbol is usable from code context
+        uint8_t usable : 1;
+    };
+
     explicit Symbol(llvm::StringRef name, TypeProxy* proxy = nullptr) noexcept
     : m_name{ name }, m_typeProxy{ proxy }, m_alias{ "" } {}
 
     ~Symbol() noexcept = default;
 
-    [[nodiscard]] inline ValueFlags& getFlags() noexcept { return m_flags; }
-    void inline setFlags(ValueFlags flags) noexcept { m_flags = flags; }
+    [[nodiscard]] inline ValueFlags& valueFlags() noexcept { return m_flags; }
+    [[nodiscard]] inline StateFlags& stateFlags() noexcept { return m_state; }
 
     [[nodiscard]] Symbol* getParent() const noexcept { return m_parent; }
     void setParent(Symbol* parent) noexcept { m_parent = parent; }
@@ -77,6 +84,7 @@ private:
     Symbol* m_parent = nullptr;
     unsigned int m_index = 0;
     ValueFlags m_flags{};
+    StateFlags m_state{};
 };
 
 } // namespace lbc

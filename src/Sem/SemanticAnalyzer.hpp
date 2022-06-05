@@ -6,6 +6,7 @@
 #include "Ast/ControlFlowStack.hpp"
 #include "Ast/ValueFlags.hpp"
 #include "Passes/ConstantFoldingPass.hpp"
+#include "Passes/DeclPass.hpp"
 #include "Passes/TypePass.hpp"
 
 namespace lbc {
@@ -32,11 +33,12 @@ public:
     void cast(AstExpr*& ast, const TypeRoot* type);
 
     [[nodiscard]] Symbol* createNewSymbol(AstDecl& ast);
-    [[nodiscard]] Context& getContext() noexcept { return m_context; }
-    [[nodiscard]] SymbolTable* getSymbolTable() { return m_table; }
-    [[nodiscard]] auto& getControlStack() { return m_controlStack; }
-    [[nodiscard]] Sem::TypePass& getTypePass() { return m_typePass; }
-    [[nodiscard]] Sem::ConstantFoldingPass& getConstantFoldingPass() { return m_constantFolder; }
+    [[nodiscard]] inline Context& getContext() noexcept { return m_context; }
+    [[nodiscard]] inline SymbolTable* getSymbolTable() noexcept { return m_table; }
+    [[nodiscard]] inline auto& getControlStack() noexcept { return m_controlStack; }
+    [[nodiscard]] inline Sem::TypePass& getTypePass() noexcept { return m_typePass; }
+    [[nodiscard]] inline Sem::ConstantFoldingPass& getConstantFoldingPass() noexcept { return m_constantFolder; }
+    [[nodiscard]] inline Sem::DeclPass& getDeclPass() noexcept { return m_declPass; }
 
     template<typename T>
     inline void with(SymbolTable* table, T handler) {
@@ -58,6 +60,7 @@ private:
     SymbolTable* m_table = nullptr;
     Sem::ConstantFoldingPass m_constantFolder;
     Sem::TypePass m_typePass;
+    Sem::DeclPass m_declPass;
 
     ControlFlowStack<> m_controlStack;
 };

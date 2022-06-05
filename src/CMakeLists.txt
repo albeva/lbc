@@ -61,8 +61,8 @@ add_library(
     Sem/Passes/ConstantFoldingPass.hpp
     Sem/Passes/ForStmtPass.cpp
     Sem/Passes/ForStmtPass.hpp
-    Sem/Passes/ForwardDeclPass.cpp
-    Sem/Passes/ForwardDeclPass.hpp
+    Sem/Passes/DeclPass.cpp
+    Sem/Passes/DeclPass.hpp
     Sem/Passes/Pass.hpp
     Sem/Passes/TypePass.cpp
     Sem/Passes/TypePass.hpp

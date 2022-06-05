@@ -22,30 +22,25 @@ namespace Sem {
     /**
      * Forward declare all user defined types, aliases and precedures
      */
-    class ForwardDeclPass final : public Pass {
+    class DeclPass final : public Pass {
     public:
         using Pass::Pass;
         void visit(AstModule&) noexcept;
+        void define(AstDecl& ast) noexcept;
 
     private:
         void declare(AstStmtList& ast) noexcept;
         void declare(AstDecl& ast) noexcept;
 
-        void define(AstDecl& ast) noexcept;
-        void define(AstTypeAlias& ast) noexcept;
-        void define(AstUdtDecl& ast) noexcept;
-
-        void implement(AstUdtDecl& ast) noexcept;
-        void implement(AstFuncDecl& ast) noexcept;
-        void implement(AstFuncParamDecl& ast) noexcept;
+        void defineFunc(AstFuncDecl& ast) noexcept;
+        void defineFuncParam(AstFuncParamDecl& ast) noexcept;
+        void defineAlias(AstTypeAlias& ast) noexcept;
+        void defineUdt(AstUdtDecl& ast) noexcept;
 
         Symbol* createParamSymbol(AstFuncParamDecl& ast) noexcept;
         void checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept;
         void checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept;
 
-        std::vector<AstDecl*> m_nodes{};
-        std::vector<AstUdtDecl*> m_udts{};
-        std::vector<AstFuncDecl*> m_funcs{};
         using RelKey = std::pair<const TypeRoot*, const TypeRoot*>;
         llvm::DenseMap<RelKey, const TypeRoot*> m_typeRelations{};
     };

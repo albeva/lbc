@@ -1,7 +1,7 @@
 //
 // Created by Albert on 26/02/2022.
 //
-#include "ForwardDeclPass.hpp"
+#include "DeclPass.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
@@ -11,27 +11,15 @@
 using namespace lbc;
 using namespace Sem;
 
-void ForwardDeclPass::visit(AstModule& ast) noexcept {
+void DeclPass::visit(AstModule& ast) noexcept {
     declare(*ast.stmtList);
-
-    for (auto* node : m_nodes) {
-        define(*node);
-    }
-
-    for (auto* udt : m_udts) {
-        implement(*udt);
-    }
-
-    for (auto* func : m_funcs) {
-        implement(*func);
-    }
 }
 
 //----------------------------------------
 // Declare symbol
 //----------------------------------------
 
-void ForwardDeclPass::declare(AstStmtList& ast) noexcept {
+void DeclPass::declare(AstStmtList& ast) noexcept {
     for (auto& stmt : ast.stmts) {
         if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
             declare(*decl);
@@ -48,7 +36,7 @@ void ForwardDeclPass::declare(AstStmtList& ast) noexcept {
     }
 }
 
-void ForwardDeclPass::declare(AstDecl& ast) noexcept {
+void DeclPass::declare(AstDecl& ast) noexcept {
     if (not llvm::isa<AstUdtDecl, AstTypeAlias, AstFuncDecl>(ast)) {
         return;
     }
@@ -58,31 +46,33 @@ void ForwardDeclPass::declare(AstDecl& ast) noexcept {
     symbol->setDecl(&ast);
 
     if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
-        symbol->getFlags().callable = true;
-        symbol->getFlags().addressable = true;
-        m_funcs.push_back(func);
+        symbol->valueFlags().callable = true;
+        symbol->valueFlags().addressable = true;
     } else {
-        symbol->getFlags().isType = true;
-        m_nodes.emplace_back(&ast);
+        symbol->valueFlags().isType = true;
     }
 
     ast.symbol = symbol;
 }
 
 //----------------------------------------
-// Define symbol type
+// Define symbol
 //----------------------------------------
 
-void ForwardDeclPass::define(AstDecl& ast) noexcept {
+void DeclPass::define(AstDecl& ast) noexcept {
     if (auto* alias = llvm::dyn_cast<AstTypeAlias>(&ast)) {
-        return define(*alias);
+        return defineAlias(*alias);
     }
     if (auto* udt = llvm::dyn_cast<AstUdtDecl>(&ast)) {
-        return define(*udt);
+        return defineUdt(*udt);
     }
+    if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
+        return defineFunc(*func);
+    }
+    llvm_unreachable("Unknown decl type");
 }
 
-void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
+void DeclPass::defineAlias(AstTypeAlias& ast) noexcept {
     static constexpr auto getSymbol = Visitor{
         [](AstIdentExpr* ident) -> Symbol* {
             return ident->symbol;
@@ -96,50 +86,57 @@ void ForwardDeclPass::define(AstTypeAlias& ast) noexcept {
     };
 
     auto* symbol = ast.symbol;
+    if (symbol->stateFlags().defined) {
+        return;
+    }
+
     auto* proxy = symbol->getTypeProxy();
     auto* aliasedProxy = m_sem.getTypePass().visit(*ast.typeExpr, proxy);
     checkCircularAlias(proxy, aliasedProxy);
     proxy->setNestedProxy(aliasedProxy);
 
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
-        symbol->setFlags(parent->getFlags());
+        symbol->valueFlags() = parent->valueFlags();
         symbol->setParent(parent->getParent());
     } else {
-        symbol->getFlags().isType = true;
+        symbol->valueFlags().isType = true;
     }
+
+    symbol->stateFlags().defined = true;
 }
 
-void ForwardDeclPass::define(AstUdtDecl& ast) noexcept {
+void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
     auto* symbol = ast.symbol;
+    if (symbol->stateFlags().defined) {
+        return;
+    }
+
     bool packed = false;
     if (ast.attributes != nullptr) {
         packed = ast.attributes->exists("PACKED");
     }
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
-    TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
-    m_udts.push_back(&ast);
-}
+    const auto* udt = TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
 
-//----------------------------------------
-// Implement
-//----------------------------------------
-
-void ForwardDeclPass::implement(AstUdtDecl& ast) noexcept {
-    const auto* udt = ast.symbol->getType();
     m_sem.with(ast.symbolTable, [&]() {
         for (auto& decl : ast.decls->decls) {
             m_sem.visit(*decl);
-            decl->symbol->setParent(ast.symbol);
+            decl->symbol->setParent(symbol);
             const auto* nested = decl->symbol->getType();
             if (nested->isUDT()) {
                 checkCircularDependency(udt, nested);
             }
         }
     });
+
+    symbol->stateFlags().defined = true;
 }
 
-void ForwardDeclPass::implement(AstFuncDecl& ast) noexcept {
+void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     auto* symbol = ast.symbol;
+    if (symbol->stateFlags().defined) {
+        return;
+    }
 
     // alias?
     if (ast.attributes != nullptr) {
@@ -151,9 +148,9 @@ void ForwardDeclPass::implement(AstFuncDecl& ast) noexcept {
     // main or external?
     if (symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
-        symbol->getFlags().isExternal = true;
+        symbol->valueFlags().isExternal = true;
     } else {
-        symbol->getFlags().isExternal = !ast.hasImpl;
+        symbol->valueFlags().isExternal = !ast.hasImpl;
     }
 
     // func type
@@ -164,13 +161,16 @@ void ForwardDeclPass::implement(AstFuncDecl& ast) noexcept {
     if (ast.params != nullptr) {
         m_sem.with(ast.symbolTable, [&]() {
             for (auto& param : ast.params->params) {
-                implement(*param);
+                defineFuncParam(*param);
             }
         });
     }
+
+    // mark defined
+    symbol->stateFlags().defined = true;
 }
 
-void ForwardDeclPass::implement(AstFuncParamDecl& ast) noexcept {
+void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
     auto* proxy = ast.typeExpr->typeProxy;
     if (proxy->getType()->isUDT()) {
         fatalError("Passing types by values is not implemented");
@@ -178,13 +178,14 @@ void ForwardDeclPass::implement(AstFuncParamDecl& ast) noexcept {
 
     auto* symbol = createParamSymbol(ast);
     symbol->setTypeProxy(proxy);
+    symbol->stateFlags().defined = true;
     ast.symbol = symbol;
 }
 
 //----------------------------------------
 // Utils
 //----------------------------------------
-void ForwardDeclPass::checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
+void DeclPass::checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) const noexcept {
     do {
         if (proxy == aliased) {
             fatalError("Circular type alias");
@@ -193,7 +194,7 @@ void ForwardDeclPass::checkCircularAlias(TypeProxy* proxy, TypeProxy* aliased) c
     } while (aliased != nullptr);
 }
 
-void ForwardDeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept {
+void DeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept {
     const auto* lower = std::min(udt, nested);
     const auto* higher = std::max(udt, nested);
     auto key = RelKey{ lower, higher };
@@ -204,7 +205,7 @@ void ForwardDeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoo
     }
 }
 
-Symbol* ForwardDeclPass::createParamSymbol(AstFuncParamDecl& ast) noexcept {
+Symbol* DeclPass::createParamSymbol(AstFuncParamDecl& ast) noexcept {
     const auto& name = ast.name;
     if (m_sem.getSymbolTable()->find(name, false) != nullptr) {
         fatalError("Redefinition of "_t + name);
