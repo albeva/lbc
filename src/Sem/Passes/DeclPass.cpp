@@ -145,7 +145,7 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     }
 
     // main or external?
-    if (symbol->name() == "MAIN" && symbol->alias().empty()) {
+    if (m_sem.hasImplicitMain() && symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
         symbol->valueFlags().isExternal = true;
     } else {

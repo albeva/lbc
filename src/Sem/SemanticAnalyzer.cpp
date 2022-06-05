@@ -220,16 +220,20 @@ void SemanticAnalyzer::visit(AstContinuationStmt& ast) {
 // Type (user defined)
 //----------------------------------------
 
-void SemanticAnalyzer::visit(AstUdtDecl& /* ast */) {
-    // NO OP
+void SemanticAnalyzer::visit(AstUdtDecl& ast) {
+    if (not ast.symbol->stateFlags().defined) {
+        m_declPass.define(ast.symbol);
+    }
 }
 
 //----------------------------------------
 // Type alias
 //----------------------------------------
 
-void SemanticAnalyzer::visit(AstTypeAlias& /* ast */) {
-    // NO OP
+void SemanticAnalyzer::visit(AstTypeAlias& ast) {
+    if (not ast.symbol->stateFlags().defined) {
+        m_declPass.define(ast.symbol);
+    }
 }
 
 void SemanticAnalyzer::visit(AstTypeOf& ast) {
@@ -395,7 +399,7 @@ void SemanticAnalyzer::visit(AstLiteralExpr& ast) {
 
 void SemanticAnalyzer::visit(AstUnaryExpr& ast) {
     expression(ast.expr);
-    auto* type = ast.expr->type;
+    const auto* type = ast.expr->type;
 
     switch (ast.tokenKind) {
     case TokenKind::LogicalNot:

@@ -39,6 +39,7 @@ public:
     [[nodiscard]] inline Sem::TypePass& getTypePass() noexcept { return m_typePass; }
     [[nodiscard]] inline Sem::ConstantFoldingPass& getConstantFoldingPass() noexcept { return m_constantFolder; }
     [[nodiscard]] inline Sem::DeclPass& getDeclPass() noexcept { return m_declPass; }
+    [[nodiscard]] inline bool hasImplicitMain() const noexcept { return m_astRootModule->hasImplicitMain; }
 
     template<typename T>
     inline void with(SymbolTable* table, T handler) {
