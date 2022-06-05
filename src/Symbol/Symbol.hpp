@@ -15,8 +15,8 @@ public:
     struct StateFlags final {
         // Symbol type is fully resolved
         uint8_t defined : 1;
-        // Symbol is usable from code context
-        uint8_t usable : 1;
+        // Symbol is being analysed
+        uint8_t beingDefined : 1;
     };
 
     explicit Symbol(llvm::StringRef name, const TypeRoot* type = nullptr) noexcept

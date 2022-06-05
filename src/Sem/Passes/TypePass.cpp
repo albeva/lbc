@@ -49,7 +49,7 @@ const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
     }
 
     if (not symbol->stateFlags().defined) {
-        m_sem.getDeclPass().define(*symbol->getDecl());
+        m_sem.getDeclPass().define(symbol);
     }
 
     ast.type = symbol->getType();

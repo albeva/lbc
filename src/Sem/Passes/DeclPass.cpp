@@ -57,14 +57,22 @@ void DeclPass::declare(AstDecl& ast) noexcept {
 // Define symbol
 //----------------------------------------
 
-void DeclPass::define(AstDecl& ast) noexcept {
-    if (auto* alias = llvm::dyn_cast<AstTypeAlias>(&ast)) {
+void DeclPass::define(Symbol* symbol) noexcept {
+    auto& state = symbol->stateFlags();
+    if (state.beingDefined) {
+        fatalError("Circular dependency detected on "_t + symbol->name());
+    }
+    state.beingDefined = true;
+    SCOPE_GAURD(state.beingDefined = false);
+
+    auto* ast = symbol->getDecl();
+    if (auto* alias = llvm::dyn_cast<AstTypeAlias>(ast)) {
         return defineAlias(*alias);
     }
-    if (auto* udt = llvm::dyn_cast<AstUdtDecl>(&ast)) {
+    if (auto* udt = llvm::dyn_cast<AstUdtDecl>(ast)) {
         return defineUdt(*udt);
     }
-    if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
+    if (auto* func = llvm::dyn_cast<AstFuncDecl>(ast)) {
         return defineFunc(*func);
     }
     llvm_unreachable("Unknown decl type");
@@ -88,10 +96,7 @@ void DeclPass::defineAlias(AstTypeAlias& ast) noexcept {
         return;
     }
 
-    // const auto* owner = symbol->getType();
-    const auto* aliased = m_sem.getTypePass().visit(*ast.typeExpr);
-    // TODO: Fix checkCircularAlias(owner, aliased);
-    symbol->setType(aliased);
+    symbol->setType(m_sem.getTypePass().visit(*ast.typeExpr));
 
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
         symbol->valueFlags() = parent->valueFlags();
@@ -120,10 +125,6 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
         for (auto& decl : ast.decls->decls) {
             m_sem.visit(*decl);
             decl->symbol->setParent(symbol);
-            const auto* nested = decl->symbol->getType();
-            if (nested->isUDT()) {
-                checkCircularDependency(udt, nested);
-            }
         }
     });
 
@@ -178,30 +179,6 @@ void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
     symbol->setType(type);
     symbol->stateFlags().defined = true;
     ast.symbol = symbol;
-}
-
-//----------------------------------------
-// Utils
-//----------------------------------------
-void DeclPass::checkCircularAlias(const TypeRoot* /*owner*/, const TypeRoot* /*aliased*/) const noexcept {
-    llvm_unreachable("Type aliasing is broken");
-    //    do {
-    //        if (proxy == aliased) {
-    //            fatalError("Circular type alias");
-    //        }
-    //        aliased = aliased->getNestedProxy();
-    //    } while (aliased != nullptr);
-}
-
-void DeclPass::checkCircularDependency(const TypeRoot* udt, const TypeRoot* nested) noexcept {
-    const auto* lower = std::min(udt, nested);
-    const auto* higher = std::max(udt, nested);
-    auto key = RelKey{ lower, higher };
-
-    auto result = m_typeRelations.try_emplace(key, udt);
-    if (result.first->getSecond() != udt) {
-        fatalError("Nested type declarations");
-    }
 }
 
 Symbol* DeclPass::createParamSymbol(AstFuncParamDecl& ast) noexcept {

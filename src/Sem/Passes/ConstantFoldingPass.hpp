@@ -9,9 +9,6 @@ namespace lbc {
 class TypeRoot;
 
 namespace Sem {
-    /**
-     * Fold constant expressions
-     */
     class ConstantFoldingPass final : public Pass {
     public:
         using Pass::Pass;

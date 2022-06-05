@@ -101,7 +101,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
  */
 void SemanticAnalyzer::visit(AstFuncDecl& ast) {
     if (not ast.symbol->stateFlags().defined) {
-        m_declPass.define(*ast.symbol->getDecl());
+        m_declPass.define(ast.symbol);
     }
 }
 
@@ -111,7 +111,7 @@ void SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
 
 void SemanticAnalyzer::visit(AstFuncStmt& ast) {
     if (not ast.decl->symbol->stateFlags().defined) {
-        m_declPass.define(*ast.decl);
+        m_declPass.define(ast.decl->symbol);
     }
 
     RESTORE_ON_EXIT(m_function);
@@ -326,10 +326,10 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
     }
 
     if (not symbol->stateFlags().defined) {
-        m_declPass.define(*symbol->getDecl());
+        m_declPass.define(symbol);
     }
 
-    auto* type = symbol->getType();
+    const auto* type = symbol->getType();
     if (type == nullptr) {
         fatalError("Identifier "_t + ast.name + " has unresolved type");
     }
