@@ -24,8 +24,8 @@ public:
         llvm::StringRef name,
         SymbolTable* table,
         const TypeRoot* type,
-        AstDecl* m_decl) noexcept
-    : m_name{ name }, m_table{ table }, m_type{ type }, m_alias{ "" }, m_decl{ m_decl } {}
+        AstDecl* decl) noexcept
+    : m_name{ name }, m_table{ table }, m_type{ type }, m_decl{ decl }, m_alias{ "" } {}
 
     ~Symbol() noexcept = default;
 

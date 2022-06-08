@@ -57,10 +57,12 @@ struct AstModule final : AstRoot {
         unsigned int file,
         llvm::SMRange range_,
         bool implicitMain,
+        std::vector<AstImport*>&& imports_,
         AstStmtList* stms) noexcept
     : AstRoot{ AstKind::Module, range_ },
       fileId{ file },
       hasImplicitMain{ implicitMain },
+      imports{ std::move(imports_) },
       stmtList{ stms } {};
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
@@ -69,6 +71,7 @@ struct AstModule final : AstRoot {
 
     const unsigned int fileId;
     const bool hasImplicitMain;
+    std::vector<AstImport*> imports;
     AstStmtList* stmtList;
     SymbolTable* symbolTable = nullptr;
 };
@@ -88,14 +91,20 @@ struct AstStmt : AstRoot {
 struct AstStmtList final : AstStmt {
     AstStmtList(
         llvm::SMRange range_,
+        std::vector<AstDecl*>&& decl_,
+        std::vector<AstFuncStmt*>&& funcs_,
         std::vector<AstStmt*>&& stmts_) noexcept
     : AstStmt{ AstKind::StmtList, range_ },
+      decl{ std::move(decl_) },
+      funcs{ std::move(funcs_) },
       stmts{ std::move(stmts_) } {};
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
         return ast->kind == AstKind::StmtList;
     }
 
+    std::vector<AstDecl*> decl;
+    std::vector<AstFuncStmt*> funcs;
     std::vector<AstStmt*> stmts;
 };
 

@@ -23,14 +23,20 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
   m_declPass{ *this } {}
 
 void SemanticAnalyzer::visit(AstModule& ast) {
-    m_astRootModule = &ast;
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
-    m_table = ast.symbolTable;
-    visit(*ast.stmtList);
+    with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), StateFlags{}, [&]() {
+        for (auto* import : ast.imports) {
+            visit(*import);
+        }
+        visit(*ast.stmtList);
+    });
 }
 
 void SemanticAnalyzer::visit(AstStmtList& ast) {
     m_declPass.declare(ast);
+    for (auto& func : ast.funcs) {
+        visit(*func);
+    }
     for (auto& stmt : ast.stmts) {
         visit(*stmt);
     }
@@ -40,8 +46,8 @@ void SemanticAnalyzer::visit(AstImport& ast) {
     if (ast.module == nullptr) {
         return;
     }
-
-    visit(*ast.module->stmtList);
+    visit(*ast.module);
+    m_table->import(ast.module->symbolTable);
 }
 
 void SemanticAnalyzer::visit(AstExprList& /*ast*/) {
@@ -90,7 +96,7 @@ void SemanticAnalyzer::visit(AstReturnStmt& ast) {
     const TypeRoot* retType = nullptr;
     bool canOmitExpression = false;
     if (m_function == nullptr) {
-        if (!m_astRootModule->hasImplicitMain) {
+        if (!m_module->hasImplicitMain) {
             fatalError("Return statement outside SUB / FUNCTION or a main module");
         }
         retType = TypeIntegral::fromTokenKind(TokenKind::Integer);
@@ -201,7 +207,7 @@ void SemanticAnalyzer::visit(AstTypeAlias& ast) {
 void SemanticAnalyzer::visit(AstTypeOf& ast) {
     if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
         // let provider take ownership of tokens
-        TokenProvider provider{ m_astRootModule->fileId, std::move(*tokens) };
+        TokenProvider provider{ m_module->fileId, std::move(*tokens) };
         Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
 
         if (auto* type = parser.typeExpr().getPointer()) {

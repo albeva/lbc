@@ -30,9 +30,12 @@ public:
 
     void insert(Symbol* symbol) noexcept;
     void addReference(Symbol*);
+    void import(SymbolTable* table);
 
-    [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const noexcept;
-    [[nodiscard]] Symbol* find(llvm::StringRef id, bool recursive = true) const noexcept;
+    [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const noexcept {
+        return find(name, recursive) != nullptr;
+    }
+    [[nodiscard]] Symbol* find(llvm::StringRef name, bool recursive = true) const noexcept;
     [[nodiscard]] std::vector<Symbol*> getSymbols() const;
 
     [[nodiscard]] auto size() const noexcept { return m_symbols.size(); }
@@ -50,8 +53,9 @@ public:
 private:
     SymbolTable* m_parent;
     mutable AstFuncDecl* m_function;
-    Container m_symbols;
-    llvm::StringMap<Symbol*> m_references;
+    Container m_symbols{};
+    std::vector<SymbolTable*> m_imports{};
+    llvm::StringMap<Symbol*> m_references{};
 };
 
 } // namespace lbc

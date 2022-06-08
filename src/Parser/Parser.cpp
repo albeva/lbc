@@ -12,6 +12,7 @@
 #include "ParseResult.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
+#include <llvm/ADT/TypeSwitch.h>
 using namespace lbc;
 
 Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
@@ -44,6 +45,7 @@ ParseResult<AstModule> Parser::parse() {
         m_source.getFileId(),
         stmts->range,
         m_isMain,
+        std::move(m_imports),
         stmts);
 }
 
@@ -71,16 +73,34 @@ ParseResult<AstStmtList> Parser::stmtList() {
     };
 
     auto start = m_token.range().Start;
+    std::vector<AstDecl*> decl;
+    std::vector<AstFuncStmt*> funcs;
     std::vector<AstStmt*> stms;
 
     while (isNonTerminator(m_token)) {
         TRY_DECLARE(stmt, statement())
-        stms.emplace_back(stmt);
+        llvm::TypeSwitch<AstStmt*>(stmt)
+            .Case<AstFuncStmt>([&](auto* node) {
+                funcs.emplace_back(node);
+                decl.emplace_back(node->decl);
+            })
+            .Case<AstDecl>([&](auto* node) {
+                stms.emplace_back(node);
+                decl.emplace_back(node);
+            })
+            .Case<AstImport>([&](auto* import) {
+                m_imports.emplace_back(import);
+            })
+            .Default([&](auto* node) {
+                stms.emplace_back(node);
+            });
         TRY(consume(TokenKind::EndOfStmt))
     }
 
     return m_context.create<AstStmtList>(
         llvm::SMRange{ start, m_endLoc },
+        std::move(decl),
+        std::move(funcs),
         std::move(stms));
 }
 
@@ -616,6 +636,8 @@ ParseResult<AstFuncStmt> Parser::kwFunction(AstAttributeList* attribs) {
         }
         stmts = m_context.create<AstStmtList>(
             llvm::SMRange{ start, m_endLoc },
+            std::vector<AstDecl*>{}, // TODO: Fix. stmt could be a declaration!
+            std::vector<AstFuncStmt*>{},
             std::vector<AstStmt*>{ stmt });
     } else {
         TRY(consume(TokenKind::EndOfStmt))

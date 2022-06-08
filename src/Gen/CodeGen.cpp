@@ -60,8 +60,6 @@ void CodeGen::visit(AstModule& ast) {
     m_module = std::make_unique<llvm::Module>(file, m_llvmContext);
     m_module->setTargetTriple(m_context.getTriple().str());
 
-    declareFuncs(*ast.stmtList);
-
     if (m_context.getTriple().isOSWindows()) {
         auto* chkstk = llvm::Function::Create(
             llvm::FunctionType::get(llvm::Type::getVoidTy(m_llvmContext), false),
@@ -102,6 +100,9 @@ void CodeGen::visit(AstModule& ast) {
     }
 
     // parse statements
+    for (auto* import : ast.imports) {
+        visit(*import);
+    }
     visit(*ast.stmtList);
 
     // close main
@@ -138,15 +139,12 @@ llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
 }
 
 void CodeGen::visit(AstStmtList& ast) {
+    declareFuncs(ast);
     for (auto* stmt : ast.stmts) {
-        if (not llvm::isa<AstFuncStmt>(stmt)) {
-            visit(*stmt);
-        }
+        visit(*stmt);
     }
-    for (auto* stmt : ast.stmts) {
-        if (llvm::isa<AstFuncStmt>(stmt)) {
-            visit(*stmt);
-        }
+    for (auto* func : ast.funcs) {
+        visit(*func);
     }
 }
 
@@ -243,23 +241,9 @@ void CodeGen::visit(AstFuncDecl& /*ast*/) {
 }
 
 void CodeGen::declareFuncs(AstStmtList& ast) {
-    for (const auto& stmt : ast.stmts) {
-        switch (stmt->kind) {
-        case AstKind::FuncDecl:
-            declareFunc(static_cast<AstFuncDecl&>(*stmt));
-            break;
-        case AstKind::FuncStmt:
-            declareFunc(*static_cast<AstFuncStmt&>(*stmt).decl);
-            break;
-        case AstKind::Import: {
-            auto& import = static_cast<AstImport&>(*stmt);
-            if (import.module != nullptr) {
-                declareFuncs(*import.module->stmtList);
-            }
-            break;
-        }
-        default:
-            break;
+    for (auto* decl : ast.decl) {
+        if (auto* func = llvm::dyn_cast<AstFuncDecl>(decl)) {
+            declareFunc(*func);
         }
     }
 }

@@ -16,15 +16,8 @@ using namespace Sem;
 //----------------------------------------
 
 void DeclPass::declare(AstStmtList& ast) noexcept {
-    for (auto& stmt : ast.stmts) {
-        if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
-            declare(*decl);
-            continue;
-        }
-        if (auto* func = llvm::dyn_cast<AstFuncStmt>(stmt)) {
-            declare(*func->decl);
-            continue;
-        }
+    for (auto* decl : ast.decl) {
+        declare(*decl);
     }
 }
 

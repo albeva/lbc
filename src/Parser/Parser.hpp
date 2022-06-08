@@ -142,6 +142,7 @@ private:
     Scope m_scope;
     Token m_token{};
     llvm::SMLoc m_endLoc{};
+    std::vector<AstImport*> m_imports{};
     ExprFlags m_exprFlags{};
     TypeFlags m_typeFlags{};
 };
