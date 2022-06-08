@@ -5,27 +5,20 @@
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
+#include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Sem;
 
-void DeclPass::visit(AstModule& ast) noexcept {
-    declare(*ast.stmtList);
-}
-
 //----------------------------------------
-// Declare symbol
+// Declare symbols
 //----------------------------------------
 
 void DeclPass::declare(AstStmtList& ast) noexcept {
     for (auto& stmt : ast.stmts) {
         if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
             declare(*decl);
-            continue;
-        }
-        if (auto* import = llvm::dyn_cast<AstImport>(stmt)) {
-            declare(*import->module->stmtList);
             continue;
         }
         if (auto* func = llvm::dyn_cast<AstFuncStmt>(stmt)) {
@@ -36,21 +29,30 @@ void DeclPass::declare(AstStmtList& ast) noexcept {
 }
 
 void DeclPass::declare(AstDecl& ast) noexcept {
-    if (not llvm::isa<AstUdtDecl, AstTypeAlias, AstFuncDecl>(ast)) {
-        return;
-    }
-
-    auto* symbol = m_sem.createNewSymbol(ast);
-    symbol->setDecl(&ast);
+    auto* symbol = createNewSymbol(ast, nullptr);
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
-        symbol->valueFlags().callable = true;
+        symbol->valueFlags().kind = ValueFlags::Kind::function;
         symbol->valueFlags().addressable = true;
+    } else if (llvm::isa<AstVarDecl>(&ast)) {
+        symbol->valueFlags().kind = ValueFlags::Kind::variable;
     } else {
-        symbol->valueFlags().isType = true;
+        symbol->valueFlags().kind = ValueFlags::Kind::type;
     }
 
     ast.symbol = symbol;
+}
+
+void DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) noexcept {
+    for (auto* var : vars) {
+        declareAndDefine(*var);
+    }
+}
+
+void DeclPass::declareAndDefine(AstVarDecl& var) noexcept {
+    declare(var);
+    define(var.symbol);
+    var.symbol->stateFlags().declared = true;
 }
 
 //----------------------------------------
@@ -75,6 +77,9 @@ void DeclPass::define(Symbol* symbol) noexcept {
     if (auto* func = llvm::dyn_cast<AstFuncDecl>(ast)) {
         return defineFunc(*func);
     }
+    if (auto* var = llvm::dyn_cast<AstVarDecl>(ast)) {
+        return defineVar(*var);
+    }
     llvm_unreachable("Unknown decl type");
 }
 
@@ -92,28 +97,17 @@ void DeclPass::defineAlias(AstTypeAlias& ast) noexcept {
     };
 
     auto* symbol = ast.symbol;
-    if (symbol->stateFlags().defined) {
-        return;
-    }
-
     symbol->setType(m_sem.getTypePass().visit(*ast.typeExpr));
 
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
         symbol->valueFlags() = parent->valueFlags();
-        symbol->setParent(parent->getParent());
     } else {
-        symbol->valueFlags().isType = true;
+        symbol->valueFlags().kind = ValueFlags::Kind::type;
     }
-
-    symbol->stateFlags().defined = true;
 }
 
 void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
     auto* symbol = ast.symbol;
-    if (symbol->stateFlags().defined) {
-        return;
-    }
-
     bool packed = false;
     if (ast.attributes != nullptr) {
         packed = ast.attributes->exists("PACKED");
@@ -122,20 +116,18 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
     TypeUDT::get(m_sem.getContext(), *symbol, *ast.symbolTable, packed);
 
     m_sem.with(ast.symbolTable, [&]() {
-        for (auto& decl : ast.decls->decls) {
-            m_sem.visit(*decl);
-            decl->symbol->setParent(symbol);
+        for (auto* decl : ast.decls->decls) {
+            declare(*decl);
+        }
+        for (auto* decl : ast.decls->decls) {
+            define(decl->symbol);
+            decl->symbol->stateFlags().declared = true;
         }
     });
-
-    symbol->stateFlags().defined = true;
 }
 
 void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     auto* symbol = ast.symbol;
-    if (symbol->stateFlags().defined) {
-        return;
-    }
 
     // alias?
     if (ast.attributes != nullptr) {
@@ -147,16 +139,16 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     // main or external?
     if (m_sem.hasImplicitMain() && symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
-        symbol->valueFlags().isExternal = true;
+        symbol->valueFlags().external = true;
     } else {
-        symbol->valueFlags().isExternal = !ast.hasImpl;
+        symbol->valueFlags().external = !ast.hasImpl;
     }
 
     // func type
     symbol->setType(m_sem.getTypePass().visit(ast));
 
     // parameters
-    ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable());
+    ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable(), &ast);
     if (ast.params != nullptr) {
         m_sem.with(ast.symbolTable, [&]() {
             for (auto& param : ast.params->params) {
@@ -164,9 +156,6 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
             }
         });
     }
-
-    // mark defined
-    symbol->stateFlags().defined = true;
 }
 
 void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
@@ -175,18 +164,64 @@ void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
         fatalError("Passing types by values is not implemented");
     }
 
-    auto* symbol = createParamSymbol(ast);
-    symbol->setType(type);
-    symbol->stateFlags().defined = true;
+    auto* symbol = createNewSymbol(ast, type);
     ast.symbol = symbol;
 }
 
-Symbol* DeclPass::createParamSymbol(AstFuncParamDecl& ast) noexcept {
-    const auto& name = ast.name;
-    if (m_sem.getSymbolTable()->find(name, false) != nullptr) {
-        fatalError("Redefinition of "_t + name);
+void DeclPass::defineVar(AstVarDecl& ast) noexcept {
+    // m_type expr?
+    const TypeRoot* type = nullptr;
+    if (ast.typeExpr != nullptr) {
+        type = m_sem.getTypePass().visit(*ast.typeExpr);
     }
-    auto* symbol = m_sem.getSymbolTable()->insert(m_sem.getContext(), name);
+
+    // expression?
+    if (ast.expr != nullptr) {
+        m_sem.expression(ast.expr, type);
+        if (type == nullptr) {
+            type = ast.expr->type;
+        }
+    }
+
+    if (type == nullptr) [[unlikely]] {
+        fatalError("Variable declaration is missing a type");
+    }
+
+    // The Symbol
+    auto* symbol = ast.symbol;
+    symbol->valueFlags().external = false;
+    symbol->valueFlags().addressable = true;
+    symbol->valueFlags().assignable = true;
+    if (type->isPointer()) {
+        symbol->valueFlags().dereferencable = true;
+    }
+    symbol->setType(type);
+    ast.symbol = symbol;
+
+    // alias?
+    if (ast.attributes != nullptr) {
+        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
+            symbol->setAlias(*alias);
+        }
+    }
+}
+
+//----------------------------------------
+// Utils
+//----------------------------------------
+
+Symbol* DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) noexcept {
+    if (m_sem.getSymbolTable()->find(ast.name, false) != nullptr) {
+        fatalError("Redefinition of "_t + ast.name);
+    }
+
+    auto* symbol = m_sem.getContext().create<Symbol>(
+        ast.name,
+        m_sem.getSymbolTable(),
+        type,
+        &ast);
+
+    m_sem.getSymbolTable()->insert(symbol);
 
     // alias?
     if (ast.attributes != nullptr) {

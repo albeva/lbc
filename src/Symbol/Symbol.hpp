@@ -7,28 +7,30 @@
 namespace lbc {
 class TypeRoot;
 struct AstDecl;
+class SymbolTable;
 
 class Symbol final {
 public:
     NO_COPY_AND_MOVE(Symbol)
 
     struct StateFlags final {
-        // Symbol type is fully resolved
-        uint8_t defined : 1;
         // Symbol is being analysed
         uint8_t beingDefined : 1;
+        // Symbol is declared and usable in expressions
+        uint8_t declared : 1;
     };
 
-    explicit Symbol(llvm::StringRef name, const TypeRoot* type = nullptr) noexcept
-    : m_name{ name }, m_type{ type }, m_alias{ "" } {}
+    explicit Symbol(
+        llvm::StringRef name,
+        SymbolTable* table,
+        const TypeRoot* type,
+        AstDecl* m_decl) noexcept
+    : m_name{ name }, m_table{ table }, m_type{ type }, m_alias{ "" }, m_decl{ m_decl } {}
 
     ~Symbol() noexcept = default;
 
     [[nodiscard]] inline ValueFlags& valueFlags() noexcept { return m_flags; }
     [[nodiscard]] inline StateFlags& stateFlags() noexcept { return m_state; }
-
-    [[nodiscard]] Symbol* getParent() const noexcept { return m_parent; }
-    inline void setParent(Symbol* parent) noexcept { m_parent = parent; }
 
     [[nodiscard]] unsigned int getIndex() const noexcept { return m_index; }
     inline void setIndex(unsigned int index) noexcept { m_index = index; }
@@ -47,6 +49,8 @@ public:
     [[nodiscard]] AstDecl* getDecl() const noexcept { return m_decl; }
     void setDecl(AstDecl* decl) noexcept { m_decl = decl; }
 
+    [[nodiscard]] SymbolTable* getSymbolTable() const noexcept { return m_table; }
+
     [[nodiscard]] llvm::StringRef identifier() const noexcept {
         if (m_alias.empty()) {
             return m_name;
@@ -55,7 +59,7 @@ public:
     }
 
     [[nodiscard]] llvm::GlobalValue::LinkageTypes getLlvmLinkage() const noexcept {
-        if (m_flags.isExternal) {
+        if (m_flags.external) {
             return llvm::GlobalValue::LinkageTypes::ExternalLinkage;
         }
         return llvm::GlobalValue::LinkageTypes::InternalLinkage;
@@ -73,12 +77,12 @@ public:
 
 private:
     const llvm::StringRef m_name;
+    SymbolTable* m_table;
     const TypeRoot* m_type;
+    AstDecl* m_decl;
 
-    AstDecl* m_decl = nullptr;
     llvm::StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
-    Symbol* m_parent = nullptr;
     unsigned int m_index = 0;
     ValueFlags m_flags{};
     StateFlags m_state{};

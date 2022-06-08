@@ -138,8 +138,15 @@ llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
 }
 
 void CodeGen::visit(AstStmtList& ast) {
-    for (const auto& stmt : ast.stmts) {
-        visit(*stmt);
+    for (auto* stmt : ast.stmts) {
+        if (not llvm::isa<AstFuncStmt>(stmt)) {
+            visit(*stmt);
+        }
+    }
+    for (auto* stmt : ast.stmts) {
+        if (llvm::isa<AstFuncStmt>(stmt)) {
+            visit(*stmt);
+        }
     }
 }
 

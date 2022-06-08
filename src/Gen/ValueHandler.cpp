@@ -38,7 +38,7 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llv
 }
 
 ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept {
-    auto* symbol = gen.getContext().create<Symbol>(name, type);
+    auto* symbol = gen.getContext().create<Symbol>(name, /* symbol table */ nullptr, type, /* declaring ast node */ nullptr);
     symbol->setLlvmValue(value);
     return { &gen, symbol };
 }

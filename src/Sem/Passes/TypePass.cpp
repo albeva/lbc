@@ -44,11 +44,11 @@ const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
         fatalError("Undefined type "_t + ast.name);
     }
 
-    if (!symbol->valueFlags().isType) {
+    if (symbol->valueFlags().kind != ValueFlags::Kind::type) {
         fatalError(""_t + symbol->name() + " is not a type");
     }
 
-    if (not symbol->stateFlags().defined) {
+    if (symbol->getType() == nullptr) {
         m_sem.getDeclPass().define(symbol);
     }
 

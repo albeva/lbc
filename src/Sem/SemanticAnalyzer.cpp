@@ -26,12 +26,11 @@ void SemanticAnalyzer::visit(AstModule& ast) {
     m_astRootModule = &ast;
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     m_table = ast.symbolTable;
-
-    m_declPass.visit(ast);
     visit(*ast.stmtList);
 }
 
 void SemanticAnalyzer::visit(AstStmtList& ast) {
+    m_declPass.declare(ast);
     for (auto& stmt : ast.stmts) {
         visit(*stmt);
     }
@@ -54,42 +53,10 @@ void SemanticAnalyzer::visit(AstExprStmt& ast) {
 }
 
 void SemanticAnalyzer::visit(AstVarDecl& ast) {
-    // m_type expr?
-    const TypeRoot* type = nullptr;
-    if (ast.typeExpr != nullptr) {
-        type = m_typePass.visit(*ast.typeExpr);
+    if (ast.symbol->getType() == nullptr) {
+        m_declPass.define(ast.symbol);
     }
-
-    // expression?
-    if (ast.expr != nullptr) {
-        expression(ast.expr, type);
-        if (type == nullptr) {
-            type = ast.expr->type;
-        }
-    }
-
-    if (type == nullptr) [[unlikely]] {
-        fatalError("Variable declaration is missing a type");
-    }
-
-    // The Symbol
-    auto* symbol = createNewSymbol(ast);
-    symbol->valueFlags().isExternal = false;
-    symbol->valueFlags().addressable = true;
-    symbol->valueFlags().assignable = true;
-    if (type->isPointer()) {
-        symbol->valueFlags().dereferencable = true;
-    }
-    symbol->setType(type);
-    symbol->stateFlags().defined = true;
-    ast.symbol = symbol;
-
-    // alias?
-    if (ast.attributes != nullptr) {
-        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
-            symbol->setAlias(*alias);
-        }
-    }
+    ast.symbol->stateFlags().declared = true;
 }
 
 //----------------------------------------
@@ -100,7 +67,7 @@ void SemanticAnalyzer::visit(AstVarDecl& ast) {
  * Analyze function declaration
  */
 void SemanticAnalyzer::visit(AstFuncDecl& ast) {
-    if (not ast.symbol->stateFlags().defined) {
+    if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
 }
@@ -110,13 +77,11 @@ void SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
 }
 
 void SemanticAnalyzer::visit(AstFuncStmt& ast) {
-    if (not ast.decl->symbol->stateFlags().defined) {
+    if (ast.decl->symbol->getType() == nullptr) {
         m_declPass.define(ast.decl->symbol);
     }
 
-    RESTORE_ON_EXIT(m_function);
-    with(ast.decl->symbolTable, [&]() {
-        m_function = ast.decl;
+    with(ast.decl->symbolTable, ast.decl, [&]() {
         visit(*ast.stmtList);
     });
 }
@@ -165,8 +130,8 @@ void SemanticAnalyzer::visit(AstIfStmt& ast) {
         auto& block = ast.blocks[idx];
 
         m_table = block->symbolTable;
+        m_declPass.declareAndDefine(block->decls);
         for (auto& var : block->decls) {
-            visit(*var);
             for (size_t next = idx + 1; next < ast.blocks.size(); next++) {
                 ast.blocks[next]->symbolTable->addReference(var->symbol);
             }
@@ -191,10 +156,7 @@ void SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     RESTORE_ON_EXIT(m_table);
     ast.symbolTable = m_context.create<SymbolTable>(m_table);
     m_table = ast.symbolTable;
-
-    for (auto& var : ast.decls) {
-        visit(*var);
-    }
+    m_declPass.declareAndDefine(ast.decls);
 
     if (ast.expr != nullptr) {
         expression(ast.expr);
@@ -221,7 +183,7 @@ void SemanticAnalyzer::visit(AstContinuationStmt& ast) {
 //----------------------------------------
 
 void SemanticAnalyzer::visit(AstUdtDecl& ast) {
-    if (not ast.symbol->stateFlags().defined) {
+    if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
 }
@@ -231,7 +193,7 @@ void SemanticAnalyzer::visit(AstUdtDecl& ast) {
 //----------------------------------------
 
 void SemanticAnalyzer::visit(AstTypeAlias& ast) {
-    if (not ast.symbol->stateFlags().defined) {
+    if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
 }
@@ -269,8 +231,12 @@ void SemanticAnalyzer::visit(AstTypeOf& ast) {
             return m_typePass.visit(*typeExpr);
         },
         [&](AstExpr* expr) -> const TypeRoot* {
-            visit(*expr);
-            return expr->type;
+            auto flags = m_flags;
+            flags.allowUseBeforDefiniation = true;
+            return with(flags, [&]() {
+                visit(*expr);
+                return expr->type;
+            });
         }
     };
 
@@ -324,18 +290,29 @@ void SemanticAnalyzer::visit(AstIdentExpr& ast) {
         fatalError("Unknown identifier "_t + ast.name);
     }
 
-    if (not symbol->stateFlags().defined) {
+    if (symbol->getType() == nullptr) {
         m_declPass.define(symbol);
     }
 
     const auto* type = symbol->getType();
-    if (type == nullptr) {
+    if (type == nullptr) [[unlikely]] {
         fatalError("Identifier "_t + ast.name + " has unresolved type");
+    }
+
+    if (not isVariableAccessible(symbol)) {
+        fatalError("Use of '"_t + symbol->name() + "' before definition");
     }
 
     ast.type = type;
     ast.symbol = symbol;
     ast.flags = symbol->valueFlags();
+}
+
+bool SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const noexcept {
+    return symbol->stateFlags().declared
+        || m_flags.allowUseBeforDefiniation
+        || symbol->valueFlags().kind != ValueFlags::Kind::variable
+        || symbol->getSymbolTable()->getFunction() != m_function;
 }
 
 void SemanticAnalyzer::visit(AstCallExpr& ast) {
@@ -664,24 +641,4 @@ void SemanticAnalyzer::visit(AstIfExpr& ast) {
     case TypeComparison::Upcast:
         return convert(ast.trueExpr, right);
     }
-}
-
-//------------------------------------------------------------------
-// Utils
-//------------------------------------------------------------------
-
-Symbol* SemanticAnalyzer::createNewSymbol(AstDecl& ast) {
-    if (m_table->find(ast.name, false) != nullptr) {
-        fatalError("Redefinition of "_t + ast.name);
-    }
-    auto* symbol = m_table->insert(m_context, ast.name);
-
-    // alias?
-    if (ast.attributes != nullptr) {
-        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
-            symbol->setAlias(*alias);
-        }
-    }
-
-    return symbol;
 }

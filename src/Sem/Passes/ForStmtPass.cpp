@@ -20,10 +20,8 @@ void ForStmtPass::visit(AstForStmt& ast) const noexcept {
 }
 
 void ForStmtPass::ceclare(AstForStmt& ast) const noexcept {
-    for (auto& var : ast.decls) {
-        m_sem.visit(*var);
-    }
-    m_sem.visit(*ast.iterator);
+    m_sem.getDeclPass().declareAndDefine(ast.decls);
+    m_sem.getDeclPass().declareAndDefine(*ast.iterator);
     auto flags = ast.iterator->symbol->valueFlags();
     flags.dereferencable = false;
     flags.addressable = false;

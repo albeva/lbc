@@ -6,12 +6,18 @@
 namespace lbc {
 
 struct ValueFlags final {
+    enum class Kind : uint8_t {
+        type,
+        variable,
+        function
+    };
+    Kind kind : 2;
     uint8_t addressable : 1;
     uint8_t dereferencable : 1;
     uint8_t assignable : 1;
-    uint8_t callable : 1;
-    uint8_t isType : 1;
-    uint8_t isExternal : 1;
+    uint8_t external : 1;
+    uint8_t unused1 : 1;
+    uint8_t unused2 : 1;
 };
 
 } // namespace lbc

@@ -1018,7 +1018,7 @@ ParseResult<AstTypeExpr> Parser::typeExpr(TypeFlags flags) {
         TRY_DECLARE(ident, identifier())
         if (m_symbolTable != nullptr) {
             auto* symbol = m_symbolTable->find(ident->name);
-            if (symbol == nullptr || !symbol->valueFlags().isType) {
+            if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
                 return ParseResult<AstTypeExpr>::error();
             }
         }

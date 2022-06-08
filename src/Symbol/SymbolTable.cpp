@@ -6,10 +6,9 @@
 #include "Symbol.hpp"
 using namespace lbc;
 
-Symbol* SymbolTable::insert(Context& context, llvm::StringRef name) {
-    auto* symbol = context.create<Symbol>(name);
+void SymbolTable::insert(Symbol* symbol) noexcept {
     symbol->setIndex(m_symbols.size());
-    return m_symbols.insert({ name, symbol }).first->second;
+    m_symbols.insert({ symbol->name(), symbol });
 }
 
 void SymbolTable::addReference(Symbol* symbol) {
@@ -48,7 +47,7 @@ std::vector<Symbol*> SymbolTable::getSymbols() const {
     std::vector<Symbol*> symbols;
     symbols.reserve(size());
 
-    std::transform(begin(), end(), std::back_inserter(symbols), [](const auto& item) {
+    std::transform(m_symbols.begin(), m_symbols.end(), std::back_inserter(symbols), [](const auto& item) {
         return item.second;
     });
 

@@ -6,19 +6,29 @@
 
 namespace lbc {
 class Context;
+struct AstFuncDecl;
 
 class SymbolTable final {
     using Container = llvm::StringMap<Symbol*>;
 
 public:
     NO_COPY_AND_MOVE(SymbolTable)
-    explicit SymbolTable(SymbolTable* parent = nullptr) noexcept : m_parent{ parent } {}
+    explicit SymbolTable(SymbolTable* parent = nullptr, AstFuncDecl* function = nullptr) noexcept
+    : m_parent{ parent }, m_function{ function } {}
+
     ~SymbolTable() noexcept = default;
 
     [[nodiscard]] SymbolTable* getParent() const noexcept { return m_parent; }
     void setParent(SymbolTable* parent) noexcept { m_parent = parent; }
 
-    Symbol* insert(Context& context, llvm::StringRef name);
+    [[nodiscard]] AstFuncDecl* getFunction() const noexcept {
+        if (m_function == nullptr && m_parent != nullptr) {
+            m_function = m_parent->getFunction();
+        }
+        return m_function;
+    }
+
+    void insert(Symbol* symbol) noexcept;
     void addReference(Symbol*);
 
     [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const noexcept;
@@ -26,12 +36,6 @@ public:
     [[nodiscard]] std::vector<Symbol*> getSymbols() const;
 
     [[nodiscard]] auto size() const noexcept { return m_symbols.size(); }
-
-    [[nodiscard]] auto begin() noexcept { return m_symbols.begin(); }
-    [[nodiscard]] auto end() noexcept { return m_symbols.end(); }
-
-    [[nodiscard]] auto begin() const noexcept { return m_symbols.begin(); }
-    [[nodiscard]] auto end() const noexcept { return m_symbols.end(); }
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
@@ -45,6 +49,7 @@ public:
 
 private:
     SymbolTable* m_parent;
+    mutable AstFuncDecl* m_function;
     Container m_symbols;
     llvm::StringMap<Symbol*> m_references;
 };
