@@ -8,14 +8,32 @@
 using namespace lbc;
 
 void CodePrinter::visit(AstModule& ast) {
+    for (auto* import : ast.imports) {
+        visit(*import);
+        m_os << '\n';
+    }
     visit(*ast.stmtList);
 }
 
 // Statements
 
 void CodePrinter::visit(AstStmtList& ast) {
-    for (const auto& stmt : ast.stmts) {
+    for (auto* decl : ast.decl) {
+        if (auto* func = llvm::dyn_cast<AstFuncDecl>(decl)) {
+            if (not func->hasImpl) {
+                visit(*func);
+                m_os << '\n';
+            }
+        }
+    }
+
+    for (auto* stmt : ast.stmts) {
         visit(*stmt);
+        m_os << '\n';
+    }
+
+    for (auto* func : ast.funcs) {
+        visit(*func);
         m_os << '\n';
     }
 }

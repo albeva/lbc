@@ -15,14 +15,33 @@ AstPrinter::AstPrinter(Context& context, llvm::raw_ostream& os) noexcept
 void AstPrinter::visit(AstModule& ast) {
     m_json.object([&] {
         writeHeader(ast);
+        if (not ast.imports.empty()) {
+            m_json.attributeBegin("imports");
+            m_json.array([&] {
+                for (auto* import : ast.imports) {
+                    visit(*import);
+                }
+            });
+            m_json.attributeEnd();
+        }
         writeStmts(ast.stmtList);
     });
 }
 
 void AstPrinter::visit(AstStmtList& ast) {
     m_json.array([&] {
-        for (const auto& stmt : ast.stmts) {
+        for (auto* decl : ast.decl) {
+            if (auto* func = llvm::dyn_cast<AstFuncDecl>(decl)) {
+                if (not func->hasImpl) {
+                    visit(*func);
+                }
+            }
+        }
+        for (auto* stmt : ast.stmts) {
             visit(*stmt);
+        }
+        for (auto* func : ast.funcs) {
+            visit(*func);
         }
     });
 }
