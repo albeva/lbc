@@ -170,7 +170,7 @@ void DeclPass::defineVar(AstVarDecl& ast) noexcept {
 
     // expression?
     if (ast.expr != nullptr) {
-        m_sem.expression(ast.expr, type);
+        TRY_FATAL(m_sem.expression(ast.expr, type));
         if (type == nullptr) {
             type = ast.expr->type;
         }

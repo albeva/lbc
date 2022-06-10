@@ -9,7 +9,7 @@
 namespace lbc {
 class Context;
 
-class CodeGen final : public AstVisitor<CodeGen, Gen::ValueHandler> {
+class CodeGen final : public AstVisitor<CodeGen, void, void, Gen::ValueHandler> {
 public:
     explicit CodeGen(Context& context);
 

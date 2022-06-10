@@ -30,10 +30,10 @@ void ForStmtPass::ceclare(AstForStmt& ast) const noexcept {
 }
 
 void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
-    m_sem.expression(ast.limit);
+    TRY_FATAL(m_sem.expression(ast.limit));
 
     if (ast.step != nullptr) {
-        m_sem.expression(ast.step);
+        TRY_FATAL(m_sem.expression(ast.step));
     }
 
     const auto* type = ast.iterator->symbol->getType();
@@ -46,15 +46,15 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
     case TypeComparison::Downcast:
-        m_sem.convert(ast.limit, type);
+        TRY_FATAL(m_sem.convert(ast.limit, type));
         break;
     case TypeComparison::Equal:
         break;
     case TypeComparison::Upcast:
         if (ast.iterator->typeExpr != nullptr) {
-            m_sem.convert(ast.limit, type);
+            TRY_FATAL(m_sem.convert(ast.limit, type));
         } else {
-            m_sem.convert(ast.iterator->expr, ast.limit->getType());
+            TRY_FATAL(m_sem.convert(ast.iterator->expr, ast.limit->getType()));
             ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
@@ -90,7 +90,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
                     }
                 }
             }
-            m_sem.convert(ast.step, dstTy);
+            TRY_FATAL(m_sem.convert(ast.step, dstTy));
             break;
         }
         case TypeComparison::Equal:
@@ -99,7 +99,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
     }
 
     m_sem.getControlStack().push(ControlFlowStatement::For);
-    m_sem.visit(*ast.stmt);
+    TRY_FATAL(m_sem.visit(*ast.stmt));
     m_sem.getControlStack().pop();
 
     if (!ast.next.empty()) {

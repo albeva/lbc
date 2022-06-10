@@ -8,6 +8,7 @@
 #include "Passes/ConstantFoldingPass.hpp"
 #include "Passes/DeclPass.hpp"
 #include "Passes/TypePass.hpp"
+#include "Utils/Result.hpp"
 
 namespace lbc {
 class Token;
@@ -16,7 +17,7 @@ class SymbolTable;
 class TypeRoot;
 class Context;
 
-class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer> {
+class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer, Result<void>> {
 public:
     struct StateFlags final {
         bool allowUseBeforDefiniation : 1;
@@ -25,16 +26,16 @@ public:
     explicit SemanticAnalyzer(Context& context);
 
     /// declareMembers the expression, optionally coerce result to given type
-    void expression(AstExpr*& ast, const TypeRoot* type = nullptr);
+    Result<void> expression(AstExpr*& ast, const TypeRoot* type = nullptr);
 
     /// Checks types and if they are convertible, create CAST expression
-    void coerce(AstExpr*& expr, const TypeRoot* type);
+    Result<void> coerce(AstExpr*& expr, const TypeRoot* type);
 
     /// Cast expression and fold the value
-    void convert(AstExpr*& ast, const TypeRoot* type);
+    Result<void> convert(AstExpr*& ast, const TypeRoot* type);
 
     /// Creates a CAST expression, without folding
-    void cast(AstExpr*& ast, const TypeRoot* type);
+    Result<void> cast(AstExpr*& ast, const TypeRoot* type);
 
     [[nodiscard]] inline Context& getContext() noexcept { return m_context; }
     [[nodiscard]] inline SymbolTable* getSymbolTable() noexcept { return m_table; }
@@ -79,11 +80,11 @@ public:
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 private:
-    void arithmetic(AstBinaryExpr& ast);
-    void logical(AstBinaryExpr& ast);
-    void comparison(AstBinaryExpr& ast);
-    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const noexcept;
+    Result<void> arithmetic(AstBinaryExpr& ast);
+    Result<void> logical(AstBinaryExpr& ast);
+    Result<void> comparison(AstBinaryExpr& ast);
 
+    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const noexcept;
     [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const noexcept;
 
     Context& m_context;

@@ -46,6 +46,7 @@ inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) noexcept {
 
 /**
  * Emit compiler warning, but continue compilation process
+ * 
  * @param message to print
  * @param prefix add standard prefix before the message
  */

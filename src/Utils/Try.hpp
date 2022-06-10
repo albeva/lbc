@@ -11,8 +11,8 @@ namespace lbc {
 //
 // However, avoid GNU non-standard expression statement extension.
 //
-// ParseError<int> getValue();
-// ParseError<int> foo() {
+// Result<int> getValue();
+// Result<int> foo() {
 //     TRY_DECLARE(val, getValue());
 //     useVal(val);
 //     TRY_ASSIGN(val, getValue());
@@ -22,6 +22,11 @@ namespace lbc {
 #define TRY(expression)                 \
     if ((expression).isError()) {       \
         return { ResultStatus::error }; \
+    }
+
+#define TRY_FATAL(expression)                         \
+    if ((expression).isError()) {                     \
+        fatalError("TRY(" #expression ") has error"); \
     }
 
 #define TRY_ASSIGN(var, expression)         \
