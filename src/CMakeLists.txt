@@ -54,7 +54,6 @@ add_library(
     Lexer/TokenProvider.cpp
     Lexer/TokenProvider.hpp
     Lexer/TokenSource.hpp
-    Parser/ParseResult.hpp
     Parser/Parser.cpp
     Parser/Parser.hpp
     Sem/Passes/ConstantFoldingPass.cpp
@@ -77,6 +76,7 @@ add_library(
     Type/Type.hpp
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
+    Utils/Result.hpp
     Utils/ScopeGuard.hpp
     Utils/Try.hpp
     Utils/Utils.cpp
