@@ -29,6 +29,17 @@ Visitor(Base...) -> Visitor<Base...>;
 template<typename... Ts>
 using LastType = typename decltype((std::type_identity<Ts>{}, ...))::type;
 
+// Concept to test if type is a pointer
+template<typename T>
+concept IsPointer = std::is_pointer_v<T>;
+
+// Is point
+template<typename Derived, typename Base>
+concept PointersDerivedFrom =
+    std::is_pointer_v<Derived> &&
+    std::is_pointer_v<Base> &&
+    std::is_base_of_v<std::remove_pointer_t<Base>, std::remove_pointer_t<Derived>>;
+
 /**
  * Get Twine from "literal"_t
  */
@@ -46,7 +57,7 @@ inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) noexcept {
 
 /**
  * Emit compiler warning, but continue compilation process
- * 
+ *
  * @param message to print
  * @param prefix add standard prefix before the message
  */

@@ -19,22 +19,22 @@ namespace lbc {
 //     return val;
 // }
 
-#define TRY(expression)                 \
-    if ((expression).isError()) {       \
-        return { ResultStatus::error }; \
+#define TRY(expression)            \
+    if ((expression).hasError()) { \
+        return { ResultError{} };  \
     }
 
 #define TRY_FATAL(expression)                         \
-    if ((expression).isError()) {                     \
+    if ((expression).hasError()) {                    \
         fatalError("TRY(" #expression ") has error"); \
     }
 
-#define TRY_ASSIGN(var, expression)         \
-    {                                       \
-        auto valOrErr_ = (expression);      \
-        if (valOrErr_.isError())            \
-            return { ResultStatus::error }; \
-        (var) = valOrErr_.getPointer();     \
+#define TRY_ASSIGN(var, expression)    \
+    {                                  \
+        auto valOrErr_ = (expression); \
+        if (valOrErr_.hasError())      \
+            return { ResultError{} };  \
+        (var) = valOrErr_.getValue();  \
     }
 
 #define TRY_DECLARE(var, expression)      \

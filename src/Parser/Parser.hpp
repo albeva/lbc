@@ -5,7 +5,6 @@
 #include "Ast/Ast.def.hpp"
 #include "Diag/DiagnosticEngine.hpp"
 #include "Lexer/Token.hpp"
-#include "Utils/Result.hpp"
 
 namespace lbc {
 class Context;
@@ -48,10 +47,6 @@ private:
         bool isAnonymous : 1;
         // Is following DECLARE keyword
         bool isDeclaration : 1;
-        // Allow single line statement function() as integer => 42
-        bool allowShorthand : 1;
-        // Allow getting type from function body
-        bool allowUntyped : 1;
     };
 
     [[nodiscard]] Result<AstStmtList*> stmtList();
@@ -106,30 +101,30 @@ private:
     }
 
     // expects given token and advances.
-    [[nodiscard]] Result<void> consume(TokenKind kind) noexcept {
+    [[nodiscard]] Result<> consume(TokenKind kind) noexcept {
         TRY(expect(kind))
         advance();
         return {};
     }
 
     // Expects a match, raises error when fails
-    [[nodiscard]] Result<void> expect(TokenKind kind) const noexcept;
+    [[nodiscard]] Result<> expect(TokenKind kind) const noexcept;
 
     // advance to the next token from the stream
     void advance();
 
     template<typename... Args>
-    [[nodiscard]] Result<void> makeError(const llvm::SMRange& range, Diag diag, Args&&... args) const noexcept {
+    [[nodiscard]] Result<> makeError(const llvm::SMRange& range, Diag diag, Args&&... args) const noexcept {
         m_diag.print(
             diag,
             range.Start,
             m_diag.format(diag, std::forward<Args>(args)...),
             range);
-        return Result<void>::error();
+        return Result<>::error();
     }
 
     template<typename... Args>
-    [[nodiscard]] Result<void> makeError(Diag diag, Args&&... args) const noexcept {
+    [[nodiscard]] Result<> makeError(Diag diag, Args&&... args) const noexcept {
         return makeError(m_token.range(), diag, std::forward<Args>(args)...);
     }
 

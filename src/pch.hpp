@@ -57,6 +57,7 @@ using namespace std::literals::string_literals;
 #endif
 
 // APP
-#include "Utils/Try.hpp"
 #include "Utils/Utils.hpp"
+#include "Utils/Result.hpp"
+#include "Utils/Try.hpp"
 #include "Utils/Version.hpp"

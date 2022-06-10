@@ -617,7 +617,7 @@ Result<AstFuncStmt*> Parser::kwFunction(AstAttributeList* attribs) {
 
     bool isFunction = m_token.is(TokenKind::Function);
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
-    TRY_DECLARE(decl, funcSignature(start, attribs, { .allowShorthand = true, .allowUntyped = true }))
+    TRY_DECLARE(decl, funcSignature(start, attribs, {}))
 
     RESTORE_ON_EXIT(m_scope);
     m_scope = Scope::Function;
@@ -1407,7 +1407,7 @@ void Parser::replace(TokenKind what, TokenKind with) noexcept {
     }
 }
 
-[[nodiscard]] Result<void> Parser::expect(TokenKind kind) const noexcept {
+[[nodiscard]] Result<> Parser::expect(TokenKind kind) const noexcept {
     if (m_token.is(kind)) {
         return {};
     }
