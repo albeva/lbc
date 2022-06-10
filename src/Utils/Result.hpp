@@ -38,7 +38,7 @@ private:
 template<typename T>
 class [[nodiscard]] Result final {
 public:
-    using value_type = T*;
+    using value_type = T;
 
     /// Default, null value, no error
     constexpr Result() noexcept = default;
@@ -48,11 +48,11 @@ public:
     : m_value{ nullptr, error } {}
 
     /// given pointer value without error
-    constexpr Result(T* pointer) noexcept // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(T pointer) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ pointer, ResultStatus::valid } {}
 
     /// Downcast from derived type to base type
-    template<std::derived_from<T> U>
+    template<typename U, std::derived_from<std::remove_pointer_t<T>> B = std::remove_pointer_t<U>>
     constexpr Result(const Result<U>& other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ other.getPointer(), other.isError() ? ResultStatus::error : ResultStatus::valid } {}
 
@@ -68,12 +68,12 @@ public:
         return m_value.getInt() == ResultStatus::error;
     }
 
-    [[nodiscard]] constexpr inline T* getPointer() const noexcept {
+    [[nodiscard]] constexpr inline T getPointer() const noexcept {
         return m_value.getPointer();
     }
 
 private:
-    const llvm::PointerIntPair<T*, 1, ResultStatus> m_value;
+    const llvm::PointerIntPair<T, 1, ResultStatus> m_value;
 };
 
 } // namespace lbc
