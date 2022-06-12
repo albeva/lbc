@@ -6,6 +6,10 @@ if grep -q microsoft <<< `uname -a`; then
     LBC=../../bin/lbc.exe
     FILECHECK=../../bin/toolchain/win64/bin/FileCheck.exe
     ECHO="echo -e"
+elif grep -q Msys <<< `uname -a`; then
+    LBC=../../bin/lbc.exe
+    FILECHECK=../../bin/toolchain/win64/bin/FileCheck.exe
+    ECHO="echo -e"
 elif grep -q Darwin <<< `uname -a`; then
     LBC=../../bin/lbc
     FILECHECK=FileCheck

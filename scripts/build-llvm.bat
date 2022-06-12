@@ -1,8 +1,8 @@
 @echo off
 
-set VERSION=llvm-project-llvmorg-14.0.4
+set VERSION=llvm-project-14.0.5
 
-set SRC=%cd%\%VERSION%\llvm
+set SRC=%cd%\%VERSION%.src\llvm
 set BUILD=%cd%\%VERSION%.build
 set INSTALL=%cd%\%VERSION%.dist
 
