@@ -22,12 +22,17 @@ public:
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_hasError{ true } {}
 
-    [[nodiscard]] constexpr static Result error() noexcept {
+    [[nodiscard]] constexpr static Result makeError() noexcept {
         return Result{ ResultError{} };
     }
 
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
         return m_hasError;
+    }
+
+    [[nodiscard]] constexpr inline ResultError getError() const noexcept {
+        assert(hasError() && "getting error from non erronous Result");
+        return ResultError{};
     }
 
 private:
@@ -60,12 +65,17 @@ public:
     constexpr Result(const Result<void>& other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, other.hasError() } {}
 
-    [[nodiscard]] constexpr static Result error() noexcept {
+    [[nodiscard]] constexpr static Result makeError() noexcept {
         return Result{ ResultError{} };
     }
 
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
         return m_value.getInt();
+    }
+
+    [[nodiscard]] constexpr inline ResultError getError() const noexcept {
+        assert(hasError() && "getting error from non erronous Result");
+        return ResultError{};
     }
 
     [[nodiscard]] constexpr inline T getValue() const noexcept {
@@ -139,8 +149,17 @@ public:
         }
     }
 
+    [[nodiscard]] constexpr static Result makeError() noexcept {
+        return Result{ ResultError{} };
+    }
+
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
         return std::holds_alternative<std::monostate>(m_value);
+    }
+
+    [[nodiscard]] constexpr inline ResultError getError() const noexcept {
+        assert(hasError() && "getting error from non erronous Result");
+        return ResultError{};
     }
 
     [[nodiscard]] constexpr inline T& getValue() & noexcept {

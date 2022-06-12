@@ -19,9 +19,12 @@ namespace lbc {
 //     return val;
 // }
 
-#define TRY(expression)            \
-    if ((expression).hasError()) { \
-        return { ResultError{} };  \
+#define TRY(expression)                  \
+    {                                    \
+        auto valOrErr_ = (expression);   \
+        if ((expression).hasError()) {   \
+            return valOrErr_.getError(); \
+        }                                \
     }
 
 #define TRY_FATAL(expression)                         \
@@ -29,12 +32,12 @@ namespace lbc {
         fatalError("TRY(" #expression ") has error"); \
     }
 
-#define TRY_ASSIGN(var, expression)    \
-    {                                  \
-        auto valOrErr_ = (expression); \
-        if (valOrErr_.hasError())      \
-            return { ResultError{} };  \
-        (var) = valOrErr_.getValue();  \
+#define TRY_ASSIGN(var, expression)      \
+    {                                    \
+        auto valOrErr_ = (expression);   \
+        if (valOrErr_.hasError())        \
+            return valOrErr_.getError(); \
+        (var) = valOrErr_.getValue();    \
     }
 
 #define TRY_DECLARE(var, expression)      \
