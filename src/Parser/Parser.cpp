@@ -1118,7 +1118,7 @@ Result<AstTypeExpr*> Parser::typeExpr(TypeFlags flags) {
         if (m_symbolTable != nullptr) {
             auto* symbol = m_symbolTable->find(ident->name);
             if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
-                return Result<AstTypeExpr*>::makeError();
+                return ResultError{};
             }
         }
         expr = *ident;
@@ -1134,7 +1134,7 @@ Result<AstTypeExpr*> Parser::typeExpr(TypeFlags flags) {
     }
 
     if (mustBePtr && deref == 0) {
-        return Result<AstTypeExpr*>::makeError();
+        return ResultError{};
     }
 
     return m_context.create<AstTypeExpr>(

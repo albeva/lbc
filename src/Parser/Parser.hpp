@@ -120,7 +120,7 @@ private:
             range.Start,
             m_diag.format(diag, std::forward<Args>(args)...),
             range);
-        return Result<>::makeError();
+        return ResultError{};
     }
 
     template<typename... Args>

@@ -22,8 +22,9 @@ public:
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_hasError{ true } {}
 
-    [[nodiscard]] constexpr static Result makeError() noexcept {
-        return Result{ ResultError{} };
+    constexpr Result& operator=(ResultError /* _ */) noexcept {
+        m_hasError = true;
+        return *this;
     }
 
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
@@ -47,17 +48,17 @@ public:
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, true } {}
 
+    constexpr Result& operator=(ResultError /* _ */) noexcept {
+        m_value.setPointerAndInt(nullptr, true);
+        return *this;
+    }
+
     /// given pointer value without error
     constexpr Result(T pointer) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ pointer, false } {}
 
     constexpr Result& operator=(T pointer) noexcept {
         m_value.setPointerAndInt(pointer, false);
-        return *this;
-    }
-
-    constexpr Result& operator=(ResultError /* _ */) noexcept {
-        m_value.setPointerAndInt(nullptr, true);
         return *this;
     }
 
@@ -80,8 +81,9 @@ public:
     constexpr Result(Result<void>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, other.hasError() } {}
 
-    [[nodiscard]] constexpr static Result makeError() noexcept {
-        return Result{ ResultError{} };
+    constexpr Result& operator=(Result<void>&& other) noexcept {
+        m_value.setPointerAndInt(nullptr, other.hasError());
+        return *this;
     }
 
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
@@ -128,13 +130,26 @@ public:
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{} {};
 
+    constexpr inline Result& operator= (ResultError /* _ */) noexcept {
+        m_value.reset();
+        return *this;
+    }
+
     // Move value
     constexpr Result(T&& value) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ std::forward<T>(value) } {}
 
+    constexpr inline Result& operator= (T&& other) noexcept {
+        m_value = std::move(other.m_value);
+    }
+
     // Copy value
     constexpr Result(const T& value) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ value } {}
+
+    constexpr inline Result& operator= (const T& other) noexcept {
+        m_value = other.m_value;
+    }
 
     /// From Result<void> only if value is default constructible
     constexpr Result(const Result<void>& other) noexcept // NOLINT(hicpp-explicit-conversions)
@@ -145,12 +160,32 @@ public:
         }
     }
 
+    constexpr inline Result& operator=(const Result<void>& other) noexcept
+        requires std::is_default_constructible_v<T> {
+        if (other.hasError()) {
+            m_value.reset();
+        } else {
+            m_value.template emplace<T>();
+        }
+    }
+
+
     /// Downcast from derived type to base type
     template<std::convertible_to<T> U>
     constexpr Result(Result<U>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
         requires std::movable<U>
     : m_value{} {
         if (!other.hasError()) {
+            m_value = static_cast<T&&>(std::move(other.getValue()));
+        }
+    }
+
+    template<std::convertible_to<T> U>
+    constexpr inline Result& operator=(Result<U>&& other) noexcept
+        requires std::movable<U> {
+        if (other.hasError()) {
+            m_value.reset();
+        } else {
             m_value = static_cast<T&&>(std::move(other.getValue()));
         }
     }
@@ -164,8 +199,14 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr static Result makeError() noexcept {
-        return Result{ ResultError{} };
+    template<std::convertible_to<T> U>
+    constexpr inline Result& operator=(const Result<U>& other) noexcept
+        requires std::copyable<U> {
+        if (other.hasError()) {
+            m_value.reset();
+        } else {
+            m_value = static_cast<T>(other.getValue());
+        }
     }
 
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
@@ -178,7 +219,7 @@ public:
         if (hasError()) {
             return T();
         }
-        return m_value.getPointer();
+        return m_value.value();
     }
 
     [[nodiscard]] constexpr inline T& getValue() & noexcept {
