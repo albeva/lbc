@@ -39,13 +39,15 @@ void Parser::reset() noexcept {
  *   .
  */
 Result<AstModule*> Parser::parse() {
-    TRY_DECLARE(stmts, stmtList())
+    auto stmts = stmtList();
+    TRY(stmts)
+
     return m_context.create<AstModule>(
         m_source.getFileId(),
         stmts->range,
         m_isMain,
         std::move(m_imports),
-        stmts);
+        *stmts);
 }
 
 //----------------------------------------
@@ -77,8 +79,10 @@ Result<AstStmtList*> Parser::stmtList() {
     std::vector<AstStmt*> stms;
 
     while (isNonTerminator(m_token)) {
-        TRY_DECLARE(stmt, statement())
-        llvm::TypeSwitch<AstStmt*>(stmt)
+        auto stmt = statement();
+        TRY(stmt)
+
+        llvm::TypeSwitch<AstStmt*>(*stmt)
             .Case<AstFuncStmt>([&](auto* node) {
                 funcs.emplace_back(node);
                 decl.emplace_back(node->decl);
@@ -117,8 +121,10 @@ Result<AstStmtList*> Parser::stmtList() {
  *   .
  */
 Result<AstStmt*> Parser::statement() {
-    TRY_DECLARE(decl, declaration())
-    if (decl != nullptr) {
+    auto decl = declaration();
+    TRY(decl)
+
+    if (*decl != nullptr) {
         return decl;
     }
 
@@ -148,8 +154,9 @@ Result<AstStmt*> Parser::statement() {
         break;
     }
 
-    TRY_DECLARE(expr, expression({ .useAssign = true, .callWithoutParens = true }))
-    return m_context.create<AstExprStmt>(expr->range, expr);
+    auto expr = expression({ .useAssign = true, .callWithoutParens = true });
+    TRY(expr)
+    return m_context.create<AstExprStmt>(expr->range, *expr);
 }
 
 /**
@@ -188,12 +195,13 @@ Result<AstImport*> Parser::kwImport() {
 
     // parse the module
     Lexer lexer{ m_context, ID };
-    TRY_DECLARE(module, Parser(m_context, lexer, false).parse())
+    auto module = Parser(m_context, lexer, false).parse();
+    TRY(module)
 
     return m_context.create<AstImport>(
         llvm::SMRange{ range.Start, m_endLoc },
         import,
-        module);
+        *module);
 }
 
 /**
@@ -209,23 +217,24 @@ Result<AstImport*> Parser::kwImport() {
  *   .
  */
 Result<AstStmt*> Parser::declaration() {
-    TRY_DECLARE(attribs, attributeList())
+    auto attribs = attributeList();
+    TRY(attribs)
 
     switch (m_token.getKind()) {
     case TokenKind::Dim:
-        return kwDim(attribs);
+        return kwDim(*attribs);
     case TokenKind::Declare:
-        return kwDeclare(attribs);
+        return kwDeclare(*attribs);
     case TokenKind::Function:
     case TokenKind::Sub:
-        return kwFunction(attribs);
+        return kwFunction(*attribs);
     case TokenKind::Type:
-        return kwType(attribs);
+        return kwType(*attribs);
     default:
         break;
     }
 
-    if (attribs != nullptr) {
+    if (*attribs != nullptr) {
         return makeError(Diag::expectedDeclarationAfterAttribute, m_token.description());
     }
     return nullptr;
@@ -249,8 +258,10 @@ Result<AstAttributeList*> Parser::attributeList() {
     std::vector<AstAttribute*> attribs;
 
     do {
-        TRY_DECLARE(attrib, attribute())
-        attribs.emplace_back(attrib);
+        auto attrib = attribute();
+        TRY(attrib)
+
+        attribs.emplace_back(*attrib);
     } while (accept(TokenKind::Comma));
 
     TRY(consume(TokenKind::BracketClose))
@@ -268,16 +279,19 @@ Result<AstAttributeList*> Parser::attributeList() {
 Result<AstAttribute*> Parser::attribute() {
     auto start = m_token.range().Start;
 
-    TRY_DECLARE(id, identifier())
-    AstExprList* args = nullptr;
+    auto id = identifier();
+    TRY(id)
+
+    Result<AstExprList*> args{};
     if (m_token.isOneOf(TokenKind::Assign, TokenKind::ParenOpen)) {
-        TRY_ASSIGN(args, attributeArgList())
+        args = attributeArgList();
+        TRY(args)
     }
 
     return m_context.create<AstAttribute>(
         llvm::SMRange{ start, m_endLoc },
-        id,
-        args);
+        *id,
+        *args);
 }
 
 /**
@@ -291,12 +305,16 @@ Result<AstExprList*> Parser::attributeArgList() {
     std::vector<AstExpr*> args;
 
     if (accept(TokenKind::Assign)) {
-        TRY_DECLARE(lit, literal())
-        args.emplace_back(lit);
+        auto lit = literal();
+        TRY(lit)
+
+        args.emplace_back(*lit);
     } else if (accept(TokenKind::ParenOpen)) {
         while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
-            TRY_DECLARE(lit, literal())
-            args.emplace_back(lit);
+            auto lit = literal();
+            TRY(lit)
+
+            args.emplace_back(*lit);
             if (!accept(TokenKind::Comma)) {
                 break;
             }
@@ -330,25 +348,29 @@ Result<AstVarDecl*> Parser::kwDim(AstAttributeList* attribs) {
     auto id = m_token.getStringValue();
     advance();
 
-    AstTypeExpr* type = nullptr;
-    AstExpr* expr = nullptr;
+    Result<AstTypeExpr*> type{};
+    Result<AstExpr*> expr{};
 
     if (accept(TokenKind::As)) {
-        TRY_ASSIGN(type, typeExpr({ .typeOfAllowsExpr = true }))
+        type = typeExpr({ .typeOfAllowsExpr = true });
+        TRY(type)
+
         if (accept(TokenKind::Assign)) {
-            TRY_ASSIGN(expr, expression())
+            expr = expression();
+            TRY(expr)
         }
     } else {
         TRY(consume(TokenKind::Assign))
-        TRY_ASSIGN(expr, expression())
+        expr = expression();
+        TRY(expr)
     }
 
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
         attribs,
-        type,
-        expr);
+        *type,
+        *expr);
 }
 
 //----------------------------------------
@@ -393,25 +415,27 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
     }
 
     bool isVariadic = false;
-    AstFuncParamList* params = nullptr;
+    Result<AstFuncParamList*> params{};
     if (accept(TokenKind::ParenOpen)) {
-        TRY_ASSIGN(params, funcParamList(isVariadic, funcFlags.isAnonymous))
+        params = funcParamList(isVariadic, funcFlags.isAnonymous);
+        TRY(params)
         TRY(consume(TokenKind::ParenClose))
     }
 
-    AstTypeExpr* ret = nullptr;
+    Result<AstTypeExpr*> ret{};
     if (isFunc) {
         TRY(consume(TokenKind::As))
-        TRY_ASSIGN(ret, typeExpr())
+        ret = typeExpr();
+        TRY(ret)
     }
 
     return m_context.create<AstFuncDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
         attribs,
-        params,
+        *params,
         isVariadic,
-        ret,
+        *ret,
         !funcFlags.isDeclaration);
 }
 
@@ -432,8 +456,10 @@ Result<AstFuncParamList*> Parser::funcParamList(bool& isVariadic, bool isAnonymo
             }
             break;
         }
-        TRY_DECLARE(param, funcParam(isAnonymous))
-        params.push_back(param);
+        auto param = funcParam(isAnonymous);
+        TRY(param)
+
+        params.push_back(*param);
         if (!accept(TokenKind::Comma)) {
             break;
         }
@@ -473,19 +499,19 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
         TRY(consume(TokenKind::As))
     }
 
-    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = false }))
+    auto type = typeExpr({ .typeOfAllowsExpr = false });
+    TRY(type)
 
     return m_context.create<AstFuncParamDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
         nullptr,
-        type);
+        *type);
 }
 
 //----------------------------------------
 // TYPE
 //----------------------------------------
-
 
 /**
  * TYPE
@@ -521,13 +547,14 @@ Result<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
  *    .
  */
 Result<AstTypeAlias*> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
-    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = true }))
+    auto type = typeExpr({ .typeOfAllowsExpr = true });
+    TRY(type)
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange{ start, m_endLoc },
         id,
         attribs,
-        type);
+        *type);
 }
 
 /**
@@ -539,7 +566,8 @@ Result<AstTypeAlias*> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAt
  */
 Result<AstUdtDecl*> Parser::udt(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
     // assume m_token == declaration || "end"
-    TRY_DECLARE(decls, udtDeclList())
+    auto decls = udtDeclList();
+    TRY(decls)
 
     TRY(consume(TokenKind::End))
     TRY(consume(TokenKind::Type))
@@ -548,7 +576,7 @@ Result<AstUdtDecl*> Parser::udt(llvm::StringRef id, llvm::SMLoc start, AstAttrib
         llvm::SMRange{ start, m_endLoc },
         id,
         attribs,
-        decls);
+        *decls);
 }
 
 /**
@@ -561,15 +589,19 @@ Result<AstDeclList*> Parser::udtDeclList() {
     std::vector<AstDecl*> decls;
 
     while (true) {
-        TRY_DECLARE(attribs, attributeList())
-        if (attribs != nullptr) {
+        auto attribs = attributeList();
+        TRY(attribs)
+
+        if (*attribs != nullptr) {
             TRY(expect(TokenKind::Identifier))
         } else if (m_token.isNot(TokenKind::Identifier)) {
             break;
         }
 
-        TRY_DECLARE(member, udtMember(attribs))
-        decls.emplace_back(member);
+        auto member = udtMember(*attribs);
+        TRY(member)
+
+        decls.emplace_back(*member);
         TRY(consume(TokenKind::EndOfStmt))
     }
 
@@ -591,13 +623,14 @@ Result<AstDecl*> Parser::udtMember(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::As))
 
-    TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = true }))
+    auto type = typeExpr({ .typeOfAllowsExpr = true });
+    TRY(type)
 
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
         attribs,
-        type,
+        *type,
         nullptr);
 }
 
@@ -617,30 +650,36 @@ Result<AstFuncStmt*> Parser::kwFunction(AstAttributeList* attribs) {
 
     bool isFunction = m_token.is(TokenKind::Function);
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
-    TRY_DECLARE(decl, funcSignature(start, attribs, {}))
+    auto decl = funcSignature(start, attribs, {});
+    TRY(decl)
 
     RESTORE_ON_EXIT(m_scope);
     m_scope = Scope::Function;
-    AstStmtList* stmts = nullptr;
+    Result<AstStmtList*> stmts{};
 
     if (accept(TokenKind::LambdaBody)) {
-        AstStmt* stmt = nullptr;
+        Result<AstStmt*> stmt{};
         if (isFunction) {
-            TRY_DECLARE(expr, expression())
+            auto expr = expression();
+            TRY(expr)
+
             stmt = m_context.create<AstReturnStmt>(
                 llvm::SMRange{ start, m_endLoc },
-                expr);
+                *expr);
         } else {
-            TRY_ASSIGN(stmt, statement())
+            stmt = statement();
+            TRY(stmt)
         }
         stmts = m_context.create<AstStmtList>(
             llvm::SMRange{ start, m_endLoc },
             std::vector<AstDecl*>{}, // TODO: Fix. stmt could be a declaration!
             std::vector<AstFuncStmt*>{},
-            std::vector<AstStmt*>{ stmt });
+            std::vector<AstStmt*>{ *stmt });
     } else {
         TRY(consume(TokenKind::EndOfStmt))
-        TRY_ASSIGN(stmts, stmtList())
+        stmts = stmtList();
+        TRY(stmts)
+
         TRY(consume(TokenKind::End))
         if (isFunction) {
             TRY(consume(TokenKind::Function))
@@ -651,8 +690,8 @@ Result<AstFuncStmt*> Parser::kwFunction(AstAttributeList* attribs) {
 
     return m_context.create<AstFuncStmt>(
         llvm::SMRange{ start, m_endLoc },
-        decl,
-        stmts);
+        *decl,
+        *stmts);
 }
 
 /**
@@ -666,14 +705,15 @@ Result<AstStmt*> Parser::kwReturn() {
     auto start = m_token.range().Start;
     advance();
 
-    AstExpr* expr = nullptr;
+    Result<AstExpr*> expr{};
     if (m_token.isNot(TokenKind::EndOfStmt)) {
-        TRY_ASSIGN(expr, expression())
+        expr = expression();
+        TRY(expr)
     }
 
     return m_context.create<AstReturnStmt>(
         llvm::SMRange{ start, m_endLoc },
-        expr);
+        *expr);
 }
 
 //----------------------------------------
@@ -694,8 +734,10 @@ Result<AstIfStmt*> Parser::kwIf() {
     advance();
 
     std::vector<AstIfStmtBlock*> blocks;
-    TRY_DECLARE(block, ifBlock())
-    blocks.emplace_back(block);
+    auto block = ifBlock();
+    TRY(block)
+
+    blocks.emplace_back(*block);
 
     if (m_token.is(TokenKind::EndOfStmt)) {
         Token next;
@@ -707,11 +749,13 @@ Result<AstIfStmt*> Parser::kwIf() {
 
     while (accept(TokenKind::Else)) {
         if (accept(TokenKind::If)) {
-            TRY_DECLARE(if_, ifBlock())
-            blocks.emplace_back(if_);
+            auto if_ = ifBlock();
+            TRY(if_)
+            blocks.emplace_back(*if_);
         } else {
-            TRY_DECLARE(else_, thenBlock({}, nullptr))
-            blocks.emplace_back(else_);
+            auto else_ = thenBlock({}, nullptr);
+            TRY(else_)
+            blocks.emplace_back(*else_);
         }
 
         if (m_token.is(TokenKind::EndOfStmt)) {
@@ -741,15 +785,19 @@ Result<AstIfStmt*> Parser::kwIf() {
 Result<AstIfStmtBlock*> Parser::ifBlock() {
     std::vector<AstVarDecl*> decls;
     while (m_token.is(TokenKind::Dim)) {
-        TRY_DECLARE(var, kwDim(nullptr))
-        decls.emplace_back(var);
+        auto var = kwDim(nullptr);
+        TRY(var)
+
+        decls.emplace_back(*var);
         TRY(consume(TokenKind::Comma))
     }
 
-    TRY_DECLARE(expr, expression({ .commaAsAnd = true }))
+    auto expr = expression({ .commaAsAnd = true });
+    TRY(expr)
+
     TRY(consume(TokenKind::Then))
 
-    return thenBlock(std::move(decls), expr);
+    return thenBlock(std::move(decls), *expr);
 }
 
 /**
@@ -761,18 +809,20 @@ Result<AstIfStmtBlock*> Parser::ifBlock() {
  *   .
  */
 Result<AstIfStmtBlock*> Parser::thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr) {
-    AstStmt* stmt = nullptr;
+    Result<AstStmt*> stmt{};
     if (accept(TokenKind::EndOfStmt)) {
-        TRY_ASSIGN(stmt, stmtList())
+        stmt = stmtList();
+        TRY(stmt)
     } else {
-        TRY_ASSIGN(stmt, statement())
+        stmt = statement();
+        TRY(stmt)
     }
 
     return m_context.create<AstIfStmtBlock>(
         std::move(decls),
         nullptr,
         expr,
-        stmt);
+        *stmt);
 }
 
 //----------------------------------------
@@ -798,8 +848,10 @@ Result<AstForStmt*> Parser::kwFor() {
 
     // [ VAR { "," VAR } "," ]
     while (m_token.is(TokenKind::Dim)) {
-        TRY_DECLARE(var, kwDim(nullptr))
-        decls.emplace_back(var);
+        auto var = kwDim(nullptr);
+        TRY(var)
+
+        decls.emplace_back(*var);
         TRY(consume(TokenKind::Comma))
     }
 
@@ -809,38 +861,47 @@ Result<AstForStmt*> Parser::kwFor() {
     auto id = m_token.getStringValue();
     advance();
 
-    AstTypeExpr* type = nullptr;
+    Result<AstTypeExpr*> type{};
     if (accept(TokenKind::As)) {
-        TRY_ASSIGN(type, typeExpr())
+        type = typeExpr();
+        TRY(type)
     }
 
     TRY(consume(TokenKind::Assign))
 
-    TRY_DECLARE(expr, expression())
+    auto expr = expression();
+    TRY(expr)
+
     auto* iterator = m_context.create<AstVarDecl>(
         llvm::SMRange{ idStart, m_endLoc },
         id,
         nullptr,
-        type,
-        expr);
+        *type,
+        *expr);
 
     // "TO" Expression [ "STEP" expression ]
     TRY(consume(TokenKind::To))
 
-    TRY_DECLARE(limit, expression())
-    AstExpr* step = nullptr;
+    auto limit = expression();
+    TRY(limit)
+
+    Result<AstExpr*> step{};
     if (accept(TokenKind::Step)) {
-        TRY_ASSIGN(step, expression())
+        step = expression();
+        TRY(step)
     }
 
     // "=>" statement ?
-    AstStmt* stmt = nullptr;
+    Result<AstStmt*> stmt{};
     llvm::StringRef next;
     if (accept(TokenKind::LambdaBody)) {
-        TRY_ASSIGN(stmt, statement())
+        stmt = statement();
+        TRY(stmt)
     } else {
         TRY(consume(TokenKind::EndOfStmt))
-        TRY_ASSIGN(stmt, stmtList())
+        stmt = stmtList();
+        TRY(stmt)
+
         TRY(consume(TokenKind::Next))
 
         if (m_token.is(TokenKind::Identifier)) {
@@ -853,9 +914,9 @@ Result<AstForStmt*> Parser::kwFor() {
         llvm::SMRange{ start, m_endLoc },
         std::move(decls),
         iterator,
-        limit,
-        step,
-        stmt,
+        *limit,
+        *step,
+        *stmt,
         next);
 }
 
@@ -879,50 +940,61 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
     advance();
 
     auto condition = AstDoLoopStmt::Condition::None;
-    AstStmt* stmt = nullptr;
-    AstExpr* expr = nullptr;
+    Result<AstStmt*> stmt{};
+    Result<AstExpr*> expr{};
     std::vector<AstVarDecl*> decls;
 
     // [ VAR { "," VAR } ]
     auto acceptComma = false;
     while (m_token.is(TokenKind::Dim) || (acceptComma && accept(TokenKind::Comma))) {
         acceptComma = true;
-        TRY_DECLARE(var, kwDim(nullptr))
-        decls.emplace_back(var);
+        auto var = kwDim(nullptr);
+        TRY(var)
+
+        decls.emplace_back(*var);
     }
 
     // ( EoS StmtList "LOOP" [ Condition ]
     if (accept(TokenKind::EndOfStmt)) {
-        TRY_ASSIGN(stmt, stmtList())
+        stmt = stmtList();
+        TRY(stmt)
+
         TRY(consume(TokenKind::Loop))
 
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PostUntil;
-            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
+            expr = expression({ .commaAsAnd = true });
+            TRY(expr)
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PostWhile;
-            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
+            expr = expression({ .commaAsAnd = true });
+            TRY(expr)
         }
     } else {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PreUntil;
-            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
+            expr = expression({ .commaAsAnd = true });
+            TRY(expr)
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PreWhile;
-            TRY_ASSIGN(expr, expression({ .commaAsAnd = true }))
+            expr = expression({ .commaAsAnd = true });
+            TRY(expr)
         }
 
         // EoS StmtList "LOOP"
         if (accept(TokenKind::EndOfStmt)) {
-            TRY_ASSIGN(stmt, stmtList())
+            stmt = stmtList();
+            TRY(stmt)
+
             TRY(consume(TokenKind::Loop))
         }
         // "=>" Statement
         else {
             TRY(consume(TokenKind::LambdaBody))
-            TRY_ASSIGN(stmt, statement())
+            stmt = statement();
+            TRY(stmt)
         }
     }
 
@@ -930,8 +1002,8 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
         llvm::SMRange{ start, m_endLoc },
         std::move(decls),
         condition,
-        expr,
-        stmt);
+        *expr,
+        *stmt);
 }
 
 //----------------------------------------
@@ -1028,22 +1100,28 @@ Result<AstTypeExpr*> Parser::typeExpr(TypeFlags flags) {
 
     AstTypeExpr::TypeExpr expr;
     if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        TRY_ASSIGN(expr, funcSignature(start, nullptr, { .isAnonymous = true }))
+        auto signature = funcSignature(start, nullptr, { .isAnonymous = true });
+        TRY(signature)
+        expr = *signature;
         mustBePtr = true;
     } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
         expr = m_token.getKind();
         advance();
     } else if (m_token.is(TokenKind::TypeOf)) {
-        TRY_ASSIGN(expr, kwTypeOf())
+        auto typeOf = kwTypeOf();
+        TRY(typeOf)
+        expr = *typeOf;
     } else {
-        TRY_DECLARE(ident, identifier())
+        auto ident = identifier();
+        TRY(ident)
+
         if (m_symbolTable != nullptr) {
             auto* symbol = m_symbolTable->find(ident->name);
             if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
                 return Result<AstTypeExpr*>::makeError();
             }
         }
-        expr = ident;
+        expr = *ident;
     }
 
     if (parenthesized) {
@@ -1125,24 +1203,27 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
 
     RESTORE_ON_EXIT(m_exprFlags);
     m_exprFlags = flags;
-    TRY_DECLARE(expr, factor())
+    auto expr = factor();
+    TRY(expr)
 
     fixExprOperators();
 
     // expr op
     if (m_token.isOperator()) {
-        TRY_ASSIGN(expr, expression(expr, 1))
+        expr = expression(*expr, 1);
+        TRY(expr)
     }
 
     // print "hello"
-    if (flags.callWithoutParens && llvm::isa<AstIdentExpr>(expr) && allowCallWithToken(m_token)) {
+    if (flags.callWithoutParens && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
-        TRY_DECLARE(args, expressionList())
+        auto args = expressionList();
+        TRY(args)
 
         expr = m_context.create<AstCallExpr>(
             llvm::SMRange{ start, m_endLoc },
-            expr,
-            args);
+            *expr,
+            *args);
     }
 
     return expr;
@@ -1161,15 +1242,20 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
         }
         advance();
 
-        TRY_DECLARE(rhs, factor())
+        auto rhs = factor();
+        TRY(rhs)
+
         fixExprOperators();
 
         while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
-            TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
+            rhs = expression(*rhs, m_token.getPrecedence());
+            TRY(rhs)
         }
 
         auto start = lhs->range.Start;
-        TRY_ASSIGN(lhs, binary({ start, m_endLoc }, kind, lhs, rhs))
+        auto bin = binary({ start, m_endLoc }, kind, lhs, *rhs);
+        TRY(bin)
+        lhs = *bin;
     }
     return lhs;
 }
@@ -1191,34 +1277,41 @@ void Parser::fixExprOperators() noexcept {
  */
 Result<AstExpr*> Parser::factor() {
     auto start = m_token.range().Start;
-    TRY_DECLARE(expr, primary())
+    auto expr = primary();
+    TRY(expr)
 
     while (true) {
         // <Right Unary Op>
         if (m_token.isUnary() && m_token.isRightToLeft()) {
             auto kind = m_token.getKind();
             advance();
-            TRY_ASSIGN(expr, unary({ start, m_endLoc }, kind, expr))
+            expr = unary({ start, m_endLoc }, kind, *expr);
+            TRY(expr)
+
             continue;
         }
 
         if (accept(TokenKind::ParenOpen)) {
-            TRY_DECLARE(args, expressionList())
+            auto args = expressionList();
+            TRY(args)
+
             TRY(consume(TokenKind::ParenClose))
             expr = m_context.create<AstCallExpr>(
                 llvm::SMRange{ start, m_endLoc },
-                expr,
-                args);
+                *expr,
+                *args);
             continue;
         }
 
         // "AS" TypeExpr
         if (accept(TokenKind::As)) {
-            TRY_DECLARE(type, typeExpr({ .typeOfAllowsExpr = true }))
+            auto type = typeExpr({ .typeOfAllowsExpr = true });
+            TRY(type)
+
             auto* cast = m_context.create<AstCastExpr>(
                 llvm::SMRange{ start, m_endLoc },
-                expr,
-                type,
+                *expr,
+                *type,
                 false);
             expr = cast;
             continue;
@@ -1247,7 +1340,9 @@ Result<AstExpr*> Parser::primary() {
     }
 
     if (accept(TokenKind::ParenOpen)) {
-        TRY_DECLARE(expr, expression())
+        auto expr = expression();
+        TRY(expr)
+
         TRY(consume(TokenKind::ParenClose))
         return expr;
     }
@@ -1264,10 +1359,13 @@ Result<AstExpr*> Parser::primary() {
         auto kind = m_token.getKind();
         advance();
 
-        TRY_DECLARE(fact, factor())
-        TRY_DECLARE(expr, expression(fact, prec))
+        auto fact = factor();
+        TRY(fact)
 
-        return unary({ start, m_endLoc }, kind, expr);
+        auto expr = expression(*fact, prec);
+        TRY(expr)
+
+        return unary({ start, m_endLoc }, kind, *expr);
     }
 
     return makeError(Diag::expectedExpression, m_token.description());
@@ -1324,16 +1422,19 @@ Result<AstIdentExpr*> Parser::identifier() {
  */
 Result<AstCallExpr*> Parser::callExpr() {
     auto start = m_token.range().Start;
-    TRY_DECLARE(id, identifier())
+    auto id = identifier();
+    TRY(id)
 
     TRY(consume(TokenKind::ParenOpen))
-    TRY_DECLARE(args, expressionList())
+    auto args = expressionList();
+    TRY(args)
+
     TRY(consume(TokenKind::ParenClose))
 
     return m_context.create<AstCallExpr>(
         llvm::SMRange{ start, m_endLoc },
-        id,
-        args);
+        *id,
+        *args);
 }
 
 /**
@@ -1344,19 +1445,22 @@ Result<AstIfExpr*> Parser::ifExpr() {
     auto start = m_token.range().Start;
     advance();
 
-    TRY_DECLARE(expr, expression({ .commaAsAnd = true }))
+    auto expr = expression({ .commaAsAnd = true });
+    TRY(expr)
 
     TRY(consume(TokenKind::Then))
-    TRY_DECLARE(trueExpr, expression())
+    auto trueExpr = expression();
+    TRY(trueExpr)
 
     TRY(consume(TokenKind::Else))
-    TRY_DECLARE(falseExpr, expression())
+    auto falseExpr = expression();
+    TRY(falseExpr)
 
     return m_context.create<AstIfExpr>(
         llvm::SMRange{ start, m_endLoc },
-        expr,
-        trueExpr,
-        falseExpr);
+        *expr,
+        *trueExpr,
+        *falseExpr);
 }
 
 /**
@@ -1385,8 +1489,10 @@ Result<AstExprList*> Parser::expressionList() {
     std::vector<AstExpr*> exprs;
 
     while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose, TokenKind::EndOfStmt)) {
-        TRY_DECLARE(expr, expression())
-        exprs.emplace_back(expr);
+        auto expr = expression();
+        TRY(expr)
+
+        exprs.emplace_back(*expr);
         if (!accept(TokenKind::Comma)) {
             break;
         }

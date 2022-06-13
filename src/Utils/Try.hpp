@@ -13,35 +13,19 @@ namespace lbc {
 //
 // Result<int> getValue();
 // Result<int> foo() {
-//     TRY_DECLARE(val, getValue());
-//     useVal(val);
-//     TRY_ASSIGN(val, getValue());
-//     return val;
+//   auto res = getValue();
+//   TRY(res)
+//   std::cout << "value = " << *res << '\n';
 // }
 
-//#define TRY(expression)                  \
-//    {                                    \
-//        auto valOrErr_ = (expression);   \
-//        if ((expression).hasError()) {   \
-//            return valOrErr_.getError(); \
-//        }                                \
-//    }
-//
-//#define TRY_FATAL(expression)                         \
-//    if ((expression).hasError()) {                    \
-//        fatalError("TRY(" #expression ") has error"); \
-//    }
-//
-//#define TRY_ASSIGN(var, expression)      \
-//    {                                    \
-//        auto valOrErr_ = (expression);   \
-//        if (valOrErr_.hasError())        \
-//            return valOrErr_.getError(); \
-//        (var) = valOrErr_.getValue();    \
-//    }
-//
-//#define TRY_DECLARE(var, expression)      \
-//    decltype(expression)::value_type var; \
-//    TRY_ASSIGN(var, expression);
+#define TRY(expression)            \
+    if ((expression).hasError()) { \
+        return { ResultError{} };  \
+    }
+
+#define TRY_FATAL(expression)                         \
+    if ((expression).hasError()) {                    \
+        fatalError("TRY(" #expression ") has error"); \
+    }
 
 } // namespace lbc

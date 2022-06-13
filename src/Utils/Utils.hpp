@@ -36,9 +36,8 @@ concept IsPointer = std::is_pointer_v<T>;
 // Is point
 template<typename Derived, typename Base>
 concept PointersDerivedFrom =
-    std::is_pointer_v<Derived> &&
-    std::is_pointer_v<Base> &&
-    std::is_base_of_v<std::remove_pointer_t<Base>, std::remove_pointer_t<Derived>>;
+    std::is_pointer_v<Derived> && std::is_pointer_v<Base> && std::is_base_of_v < std::remove_pointer_t<Base>,
+std::remove_pointer_t < Derived >> ;
 
 /**
  * Get Twine from "literal"_t
@@ -64,5 +63,7 @@ inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) noexcept {
 void warning(const llvm::Twine& message, bool prefix = true);
 } // namespace lbc
 
+#include "Result.hpp"
 #include "ScopeGuard.hpp"
+#include "Try.hpp"
 #include "ValueRestorer.hpp"

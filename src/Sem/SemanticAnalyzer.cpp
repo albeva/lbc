@@ -221,14 +221,14 @@ Result<> SemanticAnalyzer::visit(AstTypeOf& ast) {
         TokenProvider provider{ m_module->fileId, std::move(*tokens) };
         Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
 
-        if (auto* type = parser.typeExpr().getValue()) {
+        if (auto* type = parser.typeExpr().getValueOrNull()) {
             ast.typeExpr = type;
         } else if (!ast.allowExpr) {
             fatalError("Expression not allowed in typeof");
         } else {
             provider.reset();
             parser.reset();
-            if (auto* expr = parser.expression().getValue()) {
+            if (auto* expr = parser.expression().getValueOrNull()) {
                 ast.typeExpr = expr;
             } else {
                 fatalError("Failed to parse expression");
