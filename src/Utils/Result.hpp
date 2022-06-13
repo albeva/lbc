@@ -10,13 +10,15 @@ namespace lbc {
 struct ResultError final {};
 
 /// Parse result wrapping pointer to type T
-template<typename T = void>
+template<typename T>
 class Result;
 
 /// Specialise for no type
 template<std::same_as<void> T>
 class [[nodiscard]] Result<T> final {
 public:
+    using value_type = T;
+
     constexpr Result() noexcept = default;
 
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
@@ -63,25 +65,24 @@ public:
     }
 
     /// Downcast from derived type to base type
-    template<PointersDerivedFrom<T> U>
-    constexpr Result(Result<U>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
-    : m_value{ other.hasError() ? nullptr : other.getValue(), other.hasError() } {}
+    template<typename U>
+    friend class Result;
 
     template<PointersDerivedFrom<T> U>
-    constexpr Result& operator=(Result<U>&& other) noexcept {
-        if (other.hasError()) {
-            m_value.setPointerAndInt(nullptr, true);
-        } else {
-            m_value.setPointerAndInt(other.getValue(), false);
-        }
+    constexpr Result(Result<U>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
+    : m_value{ other.m_value.getPointer(), other.m_value.getInt() } {}
+
+    template<PointersDerivedFrom<T> U>
+    constexpr inline Result& operator=(Result<U>&& other) noexcept {
+        m_value.setPointerAndInt(other.m_value.getPointer(), other.m_value.getInt());
         return *this;
     }
 
-    /// cast from ParseResult<>, null value and copy the error state
+    /// cast from ParseResult<void>, null value and copy the error state
     constexpr Result(Result<void>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, other.hasError() } {}
 
-    constexpr Result& operator=(Result<void>&& other) noexcept {
+    constexpr inline Result& operator=(Result<void>&& other) noexcept {
         m_value.setPointerAndInt(nullptr, other.hasError());
         return *this;
     }
@@ -130,7 +131,7 @@ public:
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{} {};
 
-    constexpr inline Result& operator= (ResultError /* _ */) noexcept {
+    constexpr inline Result& operator=(ResultError /* _ */) noexcept {
         m_value.reset();
         return *this;
     }
@@ -139,7 +140,7 @@ public:
     constexpr Result(T&& value) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ std::forward<T>(value) } {}
 
-    constexpr inline Result& operator= (T&& other) noexcept {
+    constexpr inline Result& operator=(T&& other) noexcept {
         m_value = std::move(other.m_value);
     }
 
@@ -147,7 +148,7 @@ public:
     constexpr Result(const T& value) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ value } {}
 
-    constexpr inline Result& operator= (const T& other) noexcept {
+    constexpr inline Result& operator=(const T& other) noexcept {
         m_value = other.m_value;
     }
 
@@ -161,7 +162,8 @@ public:
     }
 
     constexpr inline Result& operator=(const Result<void>& other) noexcept
-        requires std::is_default_constructible_v<T> {
+        requires std::is_default_constructible_v<T>
+    {
         if (other.hasError()) {
             m_value.reset();
         } else {
@@ -182,7 +184,8 @@ public:
 
     template<std::convertible_to<T> U>
     constexpr inline Result& operator=(Result<U>&& other) noexcept
-        requires std::movable<U> {
+        requires std::movable<U>
+    {
         if (other.hasError()) {
             m_value.reset();
         } else {
@@ -201,7 +204,8 @@ public:
 
     template<std::convertible_to<T> U>
     constexpr inline Result& operator=(const Result<U>& other) noexcept
-        requires std::copyable<U> {
+        requires std::copyable<U>
+    {
         if (other.hasError()) {
             m_value.reset();
         } else {

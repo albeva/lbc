@@ -20,7 +20,7 @@ namespace lbc {
 
 #define TRY(expression)            \
     if ((expression).hasError()) { \
-        return { ResultError{} };  \
+        return ResultError{};      \
     }
 
 #define TRY_FATAL(expression)                         \

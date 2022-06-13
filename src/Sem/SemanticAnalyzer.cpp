@@ -22,9 +22,9 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
   m_typePass{ *this },
   m_declPass{ *this } {}
 
-Result<> SemanticAnalyzer::visit(AstModule& ast) {
+Result<void> SemanticAnalyzer::visit(AstModule& ast) {
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
-    return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), StateFlags{}, [&]() -> Result<> {
+    return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), StateFlags{}, [&]() -> Result<void> {
         for (auto* import : ast.imports) {
             TRY(visit(*import));
         }
@@ -32,7 +32,7 @@ Result<> SemanticAnalyzer::visit(AstModule& ast) {
     });
 }
 
-Result<> SemanticAnalyzer::visit(AstStmtList& ast) {
+Result<void> SemanticAnalyzer::visit(AstStmtList& ast) {
     m_declPass.declare(ast);
     for (auto& func : ast.funcs) {
         TRY(visit(*func));
@@ -43,7 +43,7 @@ Result<> SemanticAnalyzer::visit(AstStmtList& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstImport& ast) {
+Result<void> SemanticAnalyzer::visit(AstImport& ast) {
     if (ast.module == nullptr) {
         return {};
     }
@@ -52,15 +52,15 @@ Result<> SemanticAnalyzer::visit(AstImport& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstExprList& /*ast*/) {
+Result<void> SemanticAnalyzer::visit(AstExprList& /*ast*/) {
     llvm_unreachable("Unhandled AstExprList&");
 }
 
-Result<> SemanticAnalyzer::visit(AstExprStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstExprStmt& ast) {
     return expression(ast.expr);
 }
 
-Result<> SemanticAnalyzer::visit(AstVarDecl& ast) {
+Result<void> SemanticAnalyzer::visit(AstVarDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
@@ -75,18 +75,18 @@ Result<> SemanticAnalyzer::visit(AstVarDecl& ast) {
 /**
  * Analyze function declaration
  */
-Result<> SemanticAnalyzer::visit(AstFuncDecl& ast) {
+Result<void> SemanticAnalyzer::visit(AstFuncDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
+Result<void> SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
     llvm_unreachable("visit");
 }
 
-Result<> SemanticAnalyzer::visit(AstFuncStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstFuncStmt& ast) {
     if (ast.decl->symbol->getType() == nullptr) {
         m_declPass.define(ast.decl->symbol);
     }
@@ -96,7 +96,7 @@ Result<> SemanticAnalyzer::visit(AstFuncStmt& ast) {
     });
 }
 
-Result<> SemanticAnalyzer::visit(AstReturnStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
     const TypeRoot* retType = nullptr;
     bool canOmitExpression = false;
     if (m_function == nullptr) {
@@ -131,7 +131,7 @@ Result<> SemanticAnalyzer::visit(AstReturnStmt& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstIfStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
     RESTORE_ON_EXIT(m_table);
     for (auto& block : ast.blocks) {
         block->symbolTable = m_context.create<SymbolTable>(m_table);
@@ -160,12 +160,12 @@ Result<> SemanticAnalyzer::visit(AstIfStmt& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstForStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstForStmt& ast) {
     Sem::ForStmtPass(*this).visit(ast);
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     RESTORE_ON_EXIT(m_table);
     ast.symbolTable = m_context.create<SymbolTable>(m_table);
     m_table = ast.symbolTable;
@@ -186,7 +186,7 @@ Result<> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstContinuationStmt& ast) {
+Result<void> SemanticAnalyzer::visit(AstContinuationStmt& ast) {
     if (m_controlStack.find(ast.destination) == m_controlStack.cend()) {
         fatalError("control statement not found");
     }
@@ -197,7 +197,7 @@ Result<> SemanticAnalyzer::visit(AstContinuationStmt& ast) {
 // Type (user defined)
 //----------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstUdtDecl& ast) {
+Result<void> SemanticAnalyzer::visit(AstUdtDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
@@ -208,14 +208,14 @@ Result<> SemanticAnalyzer::visit(AstUdtDecl& ast) {
 // Type alias
 //----------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstTypeAlias& ast) {
+Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
     if (ast.symbol->getType() == nullptr) {
         m_declPass.define(ast.symbol);
     }
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstTypeOf& ast) {
+Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
     if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
         // let provider take ownership of tokens
         TokenProvider provider{ m_module->fileId, std::move(*tokens) };
@@ -265,11 +265,11 @@ Result<> SemanticAnalyzer::visit(AstTypeOf& ast) {
 // Attributes
 //----------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstAttributeList& /*ast*/) {
+Result<void> SemanticAnalyzer::visit(AstAttributeList& /*ast*/) {
     llvm_unreachable("visitAttributeList");
 }
 
-Result<> SemanticAnalyzer::visit(AstAttribute& /*ast*/) {
+Result<void> SemanticAnalyzer::visit(AstAttribute& /*ast*/) {
     llvm_unreachable("visitAttribute");
 }
 
@@ -277,7 +277,7 @@ Result<> SemanticAnalyzer::visit(AstAttribute& /*ast*/) {
 // Types
 //----------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) {
+Result<void> SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) {
     llvm_unreachable("AstTypeExpr");
 }
 
@@ -285,7 +285,7 @@ Result<> SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) {
 // Expressions
 //----------------------------------------
 
-Result<> SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) {
+Result<void> SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) {
     TRY(visit(*ast));
     m_constantFolder.fold(ast);
     if (type != nullptr) {
@@ -295,7 +295,7 @@ Result<> SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstAssignExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
     TRY(visit(*ast.lhs));
     if (!ast.lhs->flags.assignable) {
         fatalError("Cannot assign");
@@ -303,7 +303,7 @@ Result<> SemanticAnalyzer::visit(AstAssignExpr& ast) {
     return expression(ast.rhs, ast.lhs->getType());
 }
 
-Result<> SemanticAnalyzer::visit(AstIdentExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
     auto* symbol = m_table->find(ast.name);
     if (symbol == nullptr) {
         fatalError("Unknown identifier "_t + ast.name);
@@ -336,7 +336,7 @@ bool SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const noexcept {
         || symbol->getSymbolTable()->getFunction() != m_function;
 }
 
-Result<> SemanticAnalyzer::visit(AstCallExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstCallExpr& ast) {
     TRY(visit(*ast.callable));
 
     const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->getType());
@@ -368,7 +368,7 @@ Result<> SemanticAnalyzer::visit(AstCallExpr& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::visit(AstLiteralExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstLiteralExpr& ast) {
     static constexpr auto visitor = Visitor{
         [](const std::monostate& /*value*/) {
             return TokenKind::Null;
@@ -399,7 +399,7 @@ Result<> SemanticAnalyzer::visit(AstLiteralExpr& ast) {
 // Unary Expressions
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstUnaryExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstUnaryExpr& ast) {
     TRY(expression(ast.expr));
     const auto* type = ast.expr->type;
 
@@ -427,7 +427,7 @@ Result<> SemanticAnalyzer::visit(AstUnaryExpr& ast) {
 // Dereference
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstDereference& ast) {
+Result<void> SemanticAnalyzer::visit(AstDereference& ast) {
     // TODO dereference needs to return a reference to value, NOT value itself
 
     TRY(visit(*ast.expr));
@@ -449,7 +449,7 @@ Result<> SemanticAnalyzer::visit(AstDereference& ast) {
 // AddressOf
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstAddressOf& ast) {
+Result<void> SemanticAnalyzer::visit(AstAddressOf& ast) {
     TRY(visit(*ast.expr));
     if (!ast.expr->flags.addressable) {
         fatalError("Cannot take address");
@@ -464,7 +464,7 @@ Result<> SemanticAnalyzer::visit(AstAddressOf& ast) {
 // Member Access
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstMemberAccess& ast) {
+Result<void> SemanticAnalyzer::visit(AstMemberAccess& ast) {
     RESTORE_ON_EXIT(m_table);
 
     for (size_t i = 0; i < ast.exprs.size(); i++) {
@@ -500,7 +500,7 @@ Result<> SemanticAnalyzer::visit(AstMemberAccess& ast) {
 // Binary Expressions
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
     TRY(expression(ast.lhs));
     TRY(expression(ast.rhs));
 
@@ -516,7 +516,7 @@ Result<> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
     }
 }
 
-Result<> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
+Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -524,7 +524,7 @@ Result<> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
         fatalError("Applying artithmetic operation to non numeric type");
     }
 
-    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<> {
+    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty));
         m_constantFolder.fold(expr);
         ast.type = ty;
@@ -546,7 +546,7 @@ Result<> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     }
 }
 
-Result<> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
+Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -557,7 +557,7 @@ Result<> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
+Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -565,7 +565,7 @@ Result<> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
         fatalError("Cannot apply operationg to types");
     }
 
-    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<> {
+    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty));
         m_constantFolder.fold(expr);
         ast.type = TypeBoolean::get();
@@ -603,7 +603,7 @@ bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 // Casting
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstCastExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstCastExpr& ast) {
     ast.type = m_typePass.visit(*ast.typeExpr);
     TRY(expression(ast.expr));
 
@@ -615,13 +615,13 @@ Result<> SemanticAnalyzer::visit(AstCastExpr& ast) {
     return {};
 }
 
-Result<> SemanticAnalyzer::convert(AstExpr*& ast, const TypeRoot* type) {
+Result<void> SemanticAnalyzer::convert(AstExpr*& ast, const TypeRoot* type) {
     TRY(cast(ast, type));
     m_constantFolder.fold(ast);
     return {};
 }
 
-Result<> SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
+Result<void> SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
     if (ast->getType() == type) {
         return {};
     }
@@ -644,7 +644,7 @@ Result<> SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
     }
 }
 
-Result<> SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
+Result<void> SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
     auto category = ast->flags;
     auto* cast = m_context.create<AstCastExpr>(
         ast->range,
@@ -661,12 +661,12 @@ Result<> SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
 // IfExpr
 //------------------------------------------------------------------
 
-Result<> SemanticAnalyzer::visit(AstIfExpr& ast) {
+Result<void> SemanticAnalyzer::visit(AstIfExpr& ast) {
     TRY(expression(ast.expr, TypeBoolean::get()));
     TRY(expression(ast.trueExpr));
     TRY(expression(ast.falseExpr));
 
-    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<> {
+    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty));
         m_constantFolder.fold(expr);
         ast.type = ty;
