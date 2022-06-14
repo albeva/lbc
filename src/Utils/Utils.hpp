@@ -33,11 +33,13 @@ using LastType = typename decltype((std::type_identity<Ts>{}, ...))::type;
 template<typename T>
 concept IsPointer = std::is_pointer_v<T>;
 
-// Is point
+// clang-format off
 template<typename Derived, typename Base>
 concept PointersDerivedFrom =
-    std::is_pointer_v<Derived> && std::is_pointer_v<Base> && std::is_base_of_v < std::remove_pointer_t<Base>,
-std::remove_pointer_t < Derived >> ;
+    std::is_pointer_v<Derived> &&
+    std::is_pointer_v<Base> &&
+    std::is_base_of_v<std::remove_pointer_t<Base>, std::remove_pointer_t<Derived>>;
+// clang-format on
 
 /**
  * Get Twine from "literal"_t
