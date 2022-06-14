@@ -23,9 +23,9 @@ namespace lbc {
         return ResultError{};      \
     }
 
-#define TRY_FATAL(expression)                         \
-    if ((expression).hasError()) {                    \
-        fatalError("TRY(" #expression ") has error"); \
+#define TRY_FATAL(expression)                              \
+    if ((expression).hasError()) {                         \
+        fatalError("TRY(" #expression ") returned error"); \
     }
 
 } // namespace lbc

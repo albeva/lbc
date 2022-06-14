@@ -78,15 +78,6 @@ public:
         return *this;
     }
 
-    /// cast from ParseResult<void>, null value and copy the error state
-    constexpr Result(Result<void>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
-    : m_value{ nullptr, other.hasError() } {}
-
-    constexpr inline Result& operator=(Result<void>&& other) noexcept {
-        m_value.setPointerAndInt(nullptr, other.hasError());
-        return *this;
-    }
-
     [[nodiscard]] constexpr inline bool hasError() const noexcept {
         return m_value.getInt();
     }
@@ -151,26 +142,6 @@ public:
     constexpr inline Result& operator=(const T& other) noexcept {
         m_value = other.m_value;
     }
-
-    /// From Result<void> only if value is default constructible
-    constexpr Result(const Result<void>& other) noexcept // NOLINT(hicpp-explicit-conversions)
-        requires std::is_default_constructible_v<T>
-    : m_value{} {
-        if (!other.hasError()) {
-            m_value.template emplace<T>();
-        }
-    }
-
-    constexpr inline Result& operator=(const Result<void>& other) noexcept
-        requires std::is_default_constructible_v<T>
-    {
-        if (other.hasError()) {
-            m_value.reset();
-        } else {
-            m_value.template emplace<T>();
-        }
-    }
-
 
     /// Downcast from derived type to base type
     template<std::convertible_to<T> U>

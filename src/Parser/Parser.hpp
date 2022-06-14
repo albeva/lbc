@@ -114,7 +114,7 @@ private:
     void advance();
 
     template<typename... Args>
-    [[nodiscard]] Result<void> makeError(const llvm::SMRange& range, Diag diag, Args&&... args) const noexcept {
+    [[nodiscard]] ResultError makeError(const llvm::SMRange& range, Diag diag, Args&&... args) const noexcept {
         m_diag.print(
             diag,
             range.Start,
@@ -124,7 +124,7 @@ private:
     }
 
     template<typename... Args>
-    [[nodiscard]] Result<void> makeError(Diag diag, Args&&... args) const noexcept {
+    [[nodiscard]] ResultError makeError(Diag diag, Args&&... args) const noexcept {
         return makeError(m_token.range(), diag, std::forward<Args>(args)...);
     }
 
