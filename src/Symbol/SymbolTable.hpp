@@ -23,13 +23,12 @@ public:
 
     [[nodiscard]] AstFuncDecl* getFunction() const noexcept {
         if (m_function == nullptr && m_parent != nullptr) {
-            m_function = m_parent->getFunction();
+            return m_parent->getFunction();
         }
         return m_function;
     }
 
     void insert(Symbol* symbol) noexcept;
-    void addReference(Symbol*);
     void import(SymbolTable* table);
 
     [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const noexcept {
@@ -52,10 +51,9 @@ public:
 
 private:
     SymbolTable* m_parent;
-    mutable AstFuncDecl* m_function;
+    AstFuncDecl* m_function;
     Container m_symbols{};
     std::vector<SymbolTable*> m_imports{};
-    llvm::StringMap<Symbol*> m_references{};
 };
 
 } // namespace lbc

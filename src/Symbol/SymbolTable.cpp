@@ -7,12 +7,10 @@
 using namespace lbc;
 
 void SymbolTable::insert(Symbol* symbol) noexcept {
-    symbol->setIndex(m_symbols.size());
+    if (symbol->getSymbolTable() == this) {
+        symbol->setIndex(m_symbols.size());
+    }
     m_symbols.insert({ symbol->name(), symbol });
-}
-
-void SymbolTable::addReference(Symbol* symbol) {
-    m_references.insert({ symbol->name(), symbol });
 }
 
 void SymbolTable::import(SymbolTable* table) {
@@ -21,10 +19,6 @@ void SymbolTable::import(SymbolTable* table) {
 
 Symbol* SymbolTable::find(llvm::StringRef name, bool recursive) const noexcept {
     if (auto iter = m_symbols.find(name); iter != m_symbols.end()) {
-        return iter->second;
-    }
-
-    if (auto iter = m_references.find(name); iter != m_references.end()) {
         return iter->second;
     }
 

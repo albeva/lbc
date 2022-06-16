@@ -20,13 +20,13 @@
     _( NullLiteral,          "Null-Literal"           )
 
 #define TOKEN_SYMBOLS(_) \
-    _( Comma,           ","   ) \
-    _( ParenOpen,       "("   ) \
-    _( ParenClose,      ")"   ) \
-    _( BracketOpen,     "["   ) \
-    _( BracketClose,    "]"   ) \
-    _( Ellipsis,        "..." ) \
-    _( LambdaBody,      "=>"  )
+    _( Comma,        ","   ) \
+    _( ParenOpen,    "("   ) \
+    _( ParenClose,   ")"   ) \
+    _( BracketOpen,  "["   ) \
+    _( BracketClose, "]"   ) \
+    _( Ellipsis,     "..." ) \
+    _( LambdaBody,   "=>"  )
 
 #define TOKEN_OPERATORS(_) \
     /* ID               Str     Prec    Type    Assoc   Kind       */ \

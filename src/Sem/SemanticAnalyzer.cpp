@@ -144,7 +144,7 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
         m_declPass.declareAndDefine(block->decls);
         for (auto& var : block->decls) {
             for (size_t next = idx + 1; next < ast.blocks.size(); next++) {
-                ast.blocks[next]->symbolTable->addReference(var->symbol);
+                ast.blocks[next]->symbolTable->insert(var->symbol);
             }
         }
         if (block->expr != nullptr) {
