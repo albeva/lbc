@@ -122,11 +122,11 @@ Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
 
     TRY(expression(ast.expr));
 
-    if (ast.expr->getType() != retType) {
+    if (ast.expr->type != retType) {
         fatalError(
             "Return expression type mismatch."_t
             + " Expected (" + retType->asString() + ")"
-            + " got (" + ast.expr->getType()->asString() + ")");
+            + " got (" + ast.expr->type->asString() + ")");
     }
     return {};
 }
@@ -149,9 +149,9 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
         }
         if (block->expr != nullptr) {
             TRY(expression(block->expr));
-            if (!block->expr->getType()->isBoolean()) {
+            if (!block->expr->type->isBoolean()) {
                 fatalError("type '"_t
-                    + block->expr->getType()->asString()
+                    + block->expr->type->asString()
                     + "' cannot be used as boolean");
             }
         }
@@ -173,9 +173,9 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
 
     if (ast.expr != nullptr) {
         TRY(expression(ast.expr));
-        if (!ast.expr->getType()->isBoolean()) {
+        if (!ast.expr->type->isBoolean()) {
             fatalError("type '"_t
-                + ast.expr->getType()->asString()
+                + ast.expr->type->asString()
                 + "' cannot be used as boolean");
         }
     }
@@ -300,7 +300,7 @@ Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
     if (!ast.lhs->flags.assignable) {
         fatalError("Cannot assign");
     }
-    return expression(ast.rhs, ast.lhs->getType());
+    return expression(ast.rhs, ast.lhs->type);
 }
 
 Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
@@ -339,7 +339,7 @@ bool SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const noexcept {
 Result<void> SemanticAnalyzer::visit(AstCallExpr& ast) {
     TRY(visit(*ast.callable));
 
-    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->getType());
+    const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->type);
     if (type == nullptr) {
         fatalError("Trying to call a non callable");
     }
@@ -431,14 +431,14 @@ Result<void> SemanticAnalyzer::visit(AstDereference& ast) {
     // TODO dereference needs to return a reference to value, NOT value itself
 
     TRY(visit(*ast.expr));
-    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->getType())) {
+    if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->type)) {
         ast.type = type->getBase();
     } else {
         fatalError("dereferencing a non pointer");
     }
 
     ast.flags = ast.expr->flags;
-    if (!ast.getType()->isPointer()) {
+    if (!ast.type->isPointer()) {
         ast.flags.dereferencable = false;
     }
 
@@ -454,7 +454,7 @@ Result<void> SemanticAnalyzer::visit(AstAddressOf& ast) {
     if (!ast.expr->flags.addressable) {
         fatalError("Cannot take address");
     }
-    ast.type = TypePointer::get(m_context, ast.expr->getType());
+    ast.type = TypePointer::get(m_context, ast.expr->type);
     ast.flags = ast.expr->flags;
     ast.flags.dereferencable = true;
     return {};
@@ -607,7 +607,7 @@ Result<void> SemanticAnalyzer::visit(AstCastExpr& ast) {
     ast.type = m_typePass.visit(*ast.typeExpr);
     TRY(expression(ast.expr));
 
-    if (ast.expr->getType()->compare(ast.getType()) == TypeComparison::Incompatible) {
+    if (ast.expr->type->compare(ast.type) == TypeComparison::Incompatible) {
         fatalError("Incompatible cast");
     }
 
@@ -622,18 +622,18 @@ Result<void> SemanticAnalyzer::convert(AstExpr*& ast, const TypeRoot* type) {
 }
 
 Result<void> SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
-    if (ast->getType() == type) {
+    if (ast->type == type) {
         return {};
     }
     const auto* src = type;
-    const auto* dst = ast->getType();
+    const auto* dst = ast->type;
 
     switch (src->compare(dst)) {
     case TypeComparison::Incompatible:
         fatalError(
             "Type mismatch."_t
             + " Expected '" + type->asString() + "'"
-            + " got '" + ast->getType()->asString() + "'");
+            + " got '" + ast->type->asString() + "'");
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);

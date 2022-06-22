@@ -42,7 +42,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
     }
 
     // type TO type check
-    switch (type->compare(ast.limit->getType())) {
+    switch (type->compare(ast.limit->type)) {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
     case TypeComparison::Downcast:
@@ -54,7 +54,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
         if (ast.iterator->typeExpr != nullptr) {
             TRY_FATAL(m_sem.convert(ast.limit, type));
         } else {
-            TRY_FATAL(m_sem.convert(ast.iterator->expr, ast.limit->getType()));
+            TRY_FATAL(m_sem.convert(ast.iterator->expr, ast.limit->type));
             ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
@@ -62,7 +62,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
 
     // type STEP type check
     if (ast.step != nullptr) {
-        switch (type->compare(ast.step->getType())) {
+        switch (type->compare(ast.step->type)) {
         case TypeComparison::Incompatible:
             fatalError("Incompatible types in STEP");
         case TypeComparison::Downcast:
@@ -70,7 +70,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
             const auto* dstTy = type;
             const auto* iterTy = llvm::dyn_cast<TypeIntegral>(type);
             if (iterTy != nullptr && !iterTy->isSigned()) {
-                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(ast.step->getType())) {
+                if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(ast.step->type)) {
                     if (stepIntTy->isSigned()) {
                         if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
                             if (static_cast<int64_t>(std::get<uint64_t>(literal->value)) < 0) {
@@ -80,7 +80,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
                             dstTy = iterTy->getSigned();
                         }
                     }
-                } else if (llvm::isa<TypeFloatingPoint>(ast.step->getType())) {
+                } else if (llvm::isa<TypeFloatingPoint>(ast.step->type)) {
                     if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
                         if (std::get<double>(literal->value) < 0.0) {
                             dstTy = iterTy->getSigned();
@@ -160,7 +160,7 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
         return;
     }
 
-    if (step->getType()->isSignedIntegral()) {
+    if (step->type->isSignedIntegral()) {
         auto val = static_cast<int64_t>(std::get<uint64_t>(step->value));
         if (val < 0) {
             if (ast.direction == AstForStmt::Direction::Increment) {
@@ -184,14 +184,14 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
                 ast.direction = AstForStmt::Direction::Increment;
             }
         }
-    } else if (step->getType()->isUnsignedIntegral()) {
+    } else if (step->type->isUnsignedIntegral()) {
         auto val = std::get<uint64_t>(step->value);
         if (val == 0 || ast.direction == AstForStmt::Direction::Decrement) {
             ast.direction = AstForStmt::Direction::Skip;
         } else if (ast.direction == AstForStmt::Direction::Unknown) {
             ast.direction = AstForStmt::Direction::Increment;
         }
-    } else if (step->getType()->isFloatingPoint()) {
+    } else if (step->type->isFloatingPoint()) {
         auto val = std::get<double>(step->value);
         if (val < 0.0) {
             if (ast.direction == AstForStmt::Direction::Increment) {

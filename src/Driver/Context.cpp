@@ -9,7 +9,7 @@
 using namespace lbc;
 
 struct Context::Pimpl {
-    Pimpl(Context& context) noexcept
+    explicit Pimpl(Context& context) noexcept
     : diag{ context },
       toolchain{ context } {}
 

@@ -501,8 +501,6 @@ struct AstTypeExpr final : AstRoot {
         return ast->kind == AstKind::TypeExpr;
     }
 
-    [[nodiscard]] const TypeRoot* getType() const noexcept;
-
     TypeExpr expr;
     const int dereference;
     const TypeRoot* type = nullptr;
@@ -517,8 +515,6 @@ struct AstExpr : AstRoot {
     static constexpr bool classof(const AstRoot* ast) noexcept {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
     }
-
-    [[nodiscard]] const TypeRoot* getType() const noexcept;
 
     const TypeRoot* type = nullptr;
     ValueFlags flags{};

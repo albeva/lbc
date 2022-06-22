@@ -446,34 +446,34 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
 
     auto* call = m_builder.CreateCall(fnType, callable, values, "");
     call->setTailCall(false);
-    return { this, ast.getType(), call };
+    return { this, ast.type, call };
 }
 
 ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
     const auto visitor = Visitor{
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
-                llvm::cast<llvm::PointerType>(ast.getType()->getLlvmType(m_context)));
+                llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context)));
         },
         [&](llvm::StringRef str) -> llvm::Value* {
             return getStringConstant(str);
         },
         [&](uint64_t value) -> llvm::Value* {
             return llvm::ConstantInt::get(
-                ast.getType()->getLlvmType(m_context),
+                ast.type->getLlvmType(m_context),
                 value,
-                static_cast<const TypeIntegral*>(ast.getType())->isSigned());
+                static_cast<const TypeIntegral*>(ast.type)->isSigned());
         },
         [&](double value) -> llvm::Value* {
             return llvm::ConstantFP::get(
-                ast.getType()->getLlvmType(m_context),
+                ast.type->getLlvmType(m_context),
                 value);
         },
         [&](bool value) -> llvm::Value* {
             return value ? m_constantTrue : m_constantFalse;
         }
     };
-    return { this, ast.getType(), std::visit(visitor, ast.value) };
+    return { this, ast.type, std::visit(visitor, ast.value) };
 }
 
 llvm::Constant* CodeGen::getStringConstant(llvm::StringRef str) {
@@ -490,18 +490,18 @@ ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
         auto* value = visit(*ast.expr).load();
 
         if (value->getType()->isIntegerTy()) {
-            return { this, ast.getType(), m_builder.CreateNeg(value) };
+            return { this, ast.type, m_builder.CreateNeg(value) };
         }
 
         if (value->getType()->isFloatingPointTy()) {
-            return { this, ast.getType(), m_builder.CreateFNeg(value) };
+            return { this, ast.type, m_builder.CreateFNeg(value) };
         }
 
         llvm_unreachable("Unexpected unary operator");
     }
     case TokenKind::LogicalNot: {
         auto value = visit(*ast.expr);
-        return { this, ast.getType(), m_builder.CreateNot(value.load(), "lnot") };
+        return { this, ast.type, m_builder.CreateNot(value.load(), "lnot") };
     }
     default:
         llvm_unreachable("Unexpected unary operator");
@@ -523,17 +523,17 @@ ValueHandler CodeGen::visit(AstBinaryExpr& ast) {
 ValueHandler CodeGen::visit(AstCastExpr& ast) {
     auto* value = visit(*ast.expr).load();
 
-    bool srcIsSigned = ast.expr->getType()->isSignedIntegral();
-    bool dstIsSigned = ast.getType()->isSignedIntegral();
+    bool srcIsSigned = ast.expr->type->isSignedIntegral();
+    bool dstIsSigned = ast.type->isSignedIntegral();
 
     auto opcode = llvm::CastInst::getCastOpcode(
         value,
         srcIsSigned,
-        ast.getType()->getLlvmType(m_context),
+        ast.type->getLlvmType(m_context),
         dstIsSigned);
-    auto* casted = m_builder.CreateCast(opcode, value, ast.getType()->getLlvmType(m_context));
+    auto* casted = m_builder.CreateCast(opcode, value, ast.type->getLlvmType(m_context));
 
-    return { this, ast.getType(), casted };
+    return { this, ast.type, casted };
 }
 
 ValueHandler CodeGen::visit(AstIfExpr& ast) {
@@ -542,7 +542,7 @@ ValueHandler CodeGen::visit(AstIfExpr& ast) {
     auto falseValue = visit(*ast.falseExpr);
 
     auto* value = m_builder.CreateSelect(condValue.load(), trueValue.load(), falseValue.load());
-    return { this, ast.getType(), value };
+    return { this, ast.type, value };
 }
 
 std::unique_ptr<llvm::Module> CodeGen::getModule() {

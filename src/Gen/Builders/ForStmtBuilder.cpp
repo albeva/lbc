@@ -75,7 +75,7 @@ void ForStmtBuilder::configureStep() {
 
     // Literal value
     if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(m_ast.step)) {
-        const auto* stepTy = literal->getType();
+        const auto* stepTy = literal->type;
         llvm::Constant* stepVal = nullptr;
         if (const auto* integral = llvm::dyn_cast<TypeIntegral>(stepTy)) {
             auto stepLit = std::get<uint64_t>(literal->value);
@@ -104,7 +104,7 @@ void ForStmtBuilder::configureStep() {
     auto* stepValue = m_step.load();
 
     auto* isStepNeg = m_builder.CreateCmp(
-        getCmpPred(m_ast.step->getType(), TokenKind::LessThan),
+        getCmpPred(m_ast.step->type, TokenKind::LessThan),
         stepValue,
         llvm::Constant::getNullValue(m_llvmType),
         "for.isStepNeg");

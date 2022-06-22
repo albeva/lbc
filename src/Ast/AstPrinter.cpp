@@ -328,7 +328,7 @@ void AstPrinter::visit(AstTypeExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);
         std::string name;
-        if (const auto* type = ast.getType()) {
+        if (const auto* type = ast.type) {
             name = type->asString();
         } else {
             static constexpr auto visitor = Visitor{
@@ -405,7 +405,7 @@ void AstPrinter::visit(AstLiteralExpr& ast) {
             return { TokenKind::StringLiteral, value.str() };
         },
         [&](uint64_t value) -> Ret {
-            const auto* type = ast.getType();
+            const auto* type = ast.type;
             if (type == nullptr || type->isSignedIntegral()) {
                 auto sval = static_cast<int64_t>(value);
                 return { TokenKind::IntegerLiteral, std::to_string(sval) };
@@ -425,8 +425,8 @@ void AstPrinter::visit(AstLiteralExpr& ast) {
         auto [kind, value] = std::visit(visitor, ast.value);
         m_json.attribute("kind", Token::description(kind));
         m_json.attribute("value", value);
-        if (ast.getType() != nullptr) {
-            m_json.attribute("type", ast.getType()->asString());
+        if (ast.type != nullptr) {
+            m_json.attribute("type", ast.type->asString());
         }
     });
 }

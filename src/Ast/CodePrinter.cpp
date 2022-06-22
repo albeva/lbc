@@ -98,7 +98,7 @@ void CodePrinter::visit(AstAttribute& ast) {
 // Types
 
 void CodePrinter::visit(AstTypeExpr& ast) {
-    if (const auto* type = ast.getType()) {
+    if (const auto* type = ast.type) {
         m_os << type->asString();
         return;
     }
@@ -445,7 +445,7 @@ void CodePrinter::visit(AstLiteralExpr& ast) {
             return '"' + result + '"';
         },
         [&](uint64_t value) -> std::string {
-            const auto* type = ast.getType();
+            const auto* type = ast.type;
             if (type == nullptr || type->isSignedIntegral()) {
                 auto sval = static_cast<int64_t>(value);
                 return std::to_string(sval);
@@ -515,7 +515,7 @@ void CodePrinter::visit(AstCastExpr& ast) {
     visit(*ast.expr);
     m_os << " AS ";
     if (ast.implicit) {
-        const auto* type = ast.getType();
+        const auto* type = ast.type;
         if (type != nullptr) {
             m_os << type->asString();
         } else {

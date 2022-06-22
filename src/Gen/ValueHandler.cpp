@@ -14,27 +14,27 @@ using namespace Gen;
 ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     auto* var = gen.getBuilder().CreateAlloca(
-        expr.getType()->getLlvmType(gen.getContext()),
+        expr.type->getLlvmType(gen.getContext()),
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
 
-    return createOpaqueValue(gen, expr.getType(), var, name);
+    return createOpaqueValue(gen, expr.type, var, name);
 }
 
 ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
     auto* value = gen.visit(expr).load();
     if (llvm::isa<llvm::Constant>(value)) {
-        return { &gen, expr.getType(), value };
+        return { &gen, expr.type, value };
     }
 
     auto* var = gen.getBuilder().CreateAlloca(
-        expr.getType()->getLlvmType(gen.getContext()),
+        expr.type->getLlvmType(gen.getContext()),
         nullptr,
         name);
     gen.getBuilder().CreateStore(value, var);
 
-    return createOpaqueValue(gen, expr.getType(), var, name);
+    return createOpaqueValue(gen, expr.type, var, name);
 }
 
 ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept {
@@ -53,13 +53,13 @@ ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
 : ValueHandler{ gen, ast.symbol } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.getType() } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.getType() } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.getType() } {}
+: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 llvm::Value* ValueHandler::getAddress() const noexcept {
     if (auto* value = dyn_cast<llvm::Value*>()) {
@@ -112,7 +112,7 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
     }
 
     if (auto* ast = dyn_cast<AstExpr*>()) {
-        return ast->getType()->getLlvmType(m_gen->getContext());
+        return ast->type->getLlvmType(m_gen->getContext());
     }
 
     llvm_unreachable("Unknown type in getLlvmType");
