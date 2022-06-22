@@ -7,9 +7,6 @@
 using namespace lbc;
 
 void SymbolTable::insert(Symbol* symbol) noexcept {
-    if (symbol->getSymbolTable() == this) {
-        symbol->setIndex(m_symbols.size());
-    }
     m_symbols.insert({ symbol->name(), symbol });
 }
 

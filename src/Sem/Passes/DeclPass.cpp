@@ -112,8 +112,10 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
         for (auto* decl : ast.decls->decls) {
             declare(*decl);
         }
+        int index = 0;
         for (auto* decl : ast.decls->decls) {
             define(decl->symbol);
+            decl->symbol->setIndex(index++);
             decl->symbol->stateFlags().declared = true;
         }
     });
