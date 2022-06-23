@@ -18,6 +18,7 @@
 //----------------------------------------
 // Parse errors
 //----------------------------------------
+
 ERROR(notAllowedTopLevelStatement,
     "statements are not allowed at the top level")
 ERROR(unexpectedToken,
@@ -33,7 +34,7 @@ ERROR(unexpectedNestedDeclaration,
 ERROR(variadicArgumentNotLast,
     "variadic argument must be last")
 ERROR(unexpectedReturn,
-    "return not allowed outside main module, SUB or FUNCTION. Got {0}")
+    "return not allowed outside main module, SUB or FUNCTION")
 ERROR(expectedExpression,
     "expected expression, got '{0}'")
 ERROR(unsupportedExternLanguage,
@@ -44,6 +45,14 @@ ERROR(onlyDeclarationsInExtern,
 //----------------------------------------
 // Semantic errors
 //----------------------------------------
+ERROR(functionMustReturnAValue,
+    "FUNCTION must return a value")
+ERROR(subShouldNotReturnAValue,
+    "SUB should not return a value")
+ERROR(invalidFunctionReturnType,
+    "No viable conversion from returned value of type '{0}' to function return type '{1}'")
+ERROR(noViableConversionToType,
+    "No viable conversion from '{0}' to '{1}'")
 
 #undef DIAG
 #undef ERROR

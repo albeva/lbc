@@ -8,27 +8,27 @@ using namespace lbc;
 
 namespace {
 // Commonly used types
-const TypeVoid voidTy{};              // VOID
-const TypeAny anyTy{};                // Any typeExpr
-const TypePointer anyPtrTy{ &anyTy }; // void*
+constexpr TypeVoid voidTy{};              // VOID
+constexpr TypeAny anyTy{};                // Any typeExpr
+constexpr TypePointer anyPtrTy{ &anyTy }; // void*
 
 // clang-format off
 
 // primitives
 #define DEFINE_TYPE(ID, STR, KIND) \
-    const Type##KIND ID##Ty;
+    constexpr Type##KIND ID##Ty;
     PRIMITIVE_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 // integers
 #define DEFINE_TYPE(ID, STR, KIND, BITS, ISSIGNED, ...) \
-    const Type##KIND ID##Ty{ BITS, ISSIGNED };
+    constexpr Type##KIND ID##Ty{ BITS, ISSIGNED };
     INTEGRAL_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 // Floating Points
 #define DEFINE_TYPE(ID, STR, KIND, BITS, ...) \
-    const Type##KIND ID##Ty{ BITS };
+    constexpr Type##KIND ID##Ty{ BITS };
     FLOATINGPOINT_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 

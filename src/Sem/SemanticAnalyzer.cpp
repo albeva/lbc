@@ -18,6 +18,7 @@ using namespace lbc;
 
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : m_context{ context },
+  m_diag{ context.getDiag() },
   m_constantFolder{ *this },
   m_typePass{ *this },
   m_declPass{ *this } {}
@@ -100,33 +101,32 @@ Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
     const TypeRoot* retType = nullptr;
     bool canOmitExpression = false;
     if (m_function == nullptr) {
-        if (!m_module->hasImplicitMain) {
-            fatalError("Return statement outside SUB / FUNCTION or a main module");
-        }
         retType = TypeIntegral::fromTokenKind(TokenKind::Integer);
         canOmitExpression = true;
     } else {
         retType = llvm::cast<TypeFunction>(m_function->symbol->getType())->getReturn();
     }
     auto isVoid = retType->isVoid();
+
     if (ast.expr == nullptr) {
         if (!isVoid && !canOmitExpression) {
-            fatalError("Expected expression");
+            return m_diag.makeError(Diag::functionMustReturnAValue, ast.range);
         }
         return {};
     }
 
     if (isVoid) {
-        fatalError("Unexpected expression for SUB");
+        return m_diag.makeError(Diag::subShouldNotReturnAValue, ast.expr->range);
     }
 
     TRY(expression(ast.expr))
 
     if (ast.expr->type != retType) {
-        fatalError(
-            "Return expression type mismatch."_t
-            + " Expected (" + retType->asString() + ")"
-            + " got (" + ast.expr->type->asString() + ")");
+        return m_diag.makeError(
+            Diag::invalidFunctionReturnType,
+            ast.expr->range,
+            ast.expr->type->asString(),
+            retType->asString());
     }
     return {};
 }
@@ -150,9 +150,12 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
         if (block->expr != nullptr) {
             TRY(expression(block->expr))
             if (!block->expr->type->isBoolean()) {
-                fatalError("type '"_t
-                    + block->expr->type->asString()
-                    + "' cannot be used as boolean");
+                return m_diag.makeError(
+                    Diag::noViableConversionToType,
+                    block->expr->range,
+                    block->expr->type->asString(),
+                    TypeBoolean::get()->asString()
+                );
             }
         }
         TRY(visit(*block->stmt))
@@ -174,9 +177,12 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     if (ast.expr != nullptr) {
         TRY(expression(ast.expr))
         if (!ast.expr->type->isBoolean()) {
-            fatalError("type '"_t
-                + ast.expr->type->asString()
-                + "' cannot be used as boolean");
+            return m_diag.makeError(
+                Diag::noViableConversionToType,
+                ast.expr->range,
+                ast.expr->type->asString(),
+                TypeBoolean::get()->asString()
+            );
         }
     }
 

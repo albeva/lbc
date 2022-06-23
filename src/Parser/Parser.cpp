@@ -198,7 +198,7 @@ Result<AstImport*> Parser::kwImport() {
         return m_context.create<AstImport>(llvm::SMRange{ range.Start, m_endLoc }, import);
     }
     if (!fs::exists(source)) {
-        return makeError(range, Diag::moduleNotFound, import);
+        return m_diag.makeError(Diag::moduleNotFound, range, import);
     }
 
     // Load import into Source Mgr
@@ -208,7 +208,7 @@ Result<AstImport*> Parser::kwImport() {
         range.Start,
         included);
     if (ID == ~0U) {
-        return makeError(range, Diag::failedToLoadModule, source.string());
+        return m_diag.makeError(Diag::failedToLoadModule, range, source.string());
     }
 
     // parse the module
@@ -236,7 +236,7 @@ Result<AstExtern*> Parser::kwExtern() {
     RESTORE_ON_EXIT(m_language);
 
     if (m_token.is(TokenKind::StringLiteral)) {
-        auto str = std::get<llvm::StringRef>(m_token.getValue()).upper();
+        auto str = m_token.getStringValue().upper();
         if (str == "C") {
             m_language = ExternLangauge::C;
         } else if (str == "DEFAULT") {
@@ -1564,12 +1564,12 @@ Result<AstIfExpr*> Parser::ifExpr() {
  *         .
  */
 Result<AstLiteralExpr*> Parser::literal() {
-    auto value = m_token.getValue();
+    auto token = m_token;
     advance();
 
     return m_context.create<AstLiteralExpr>(
-        m_token.range(),
-        value);
+        token.range(),
+        token.getValue());
 }
 
 /**

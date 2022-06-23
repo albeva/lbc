@@ -27,6 +27,16 @@ public:
 
     void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) noexcept;
 
+    template<typename... Args>
+    [[nodiscard]] ResultError makeError(Diag diag, const llvm::SMRange& range, Args&&... args) noexcept {
+        print(
+            diag,
+            range.Start,
+            format(diag, std::forward<Args>(args)...),
+            range);
+        return ResultError{};
+    }
+
 private:
     static const char* getText(Diag diag) noexcept;
     static llvm::SourceMgr::DiagKind getKind(Diag diag) noexcept;
