@@ -112,7 +112,7 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
         for (auto* decl : ast.decls->decls) {
             declare(*decl);
         }
-        int index = 0;
+        unsigned index = 0;
         for (auto* decl : ast.decls->decls) {
             define(decl->symbol);
             decl->symbol->setIndex(index++);

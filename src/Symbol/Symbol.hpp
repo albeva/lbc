@@ -33,7 +33,7 @@ public:
     [[nodiscard]] inline StateFlags& stateFlags() noexcept { return m_state; }
 
     [[nodiscard]] unsigned int getIndex() const noexcept { return m_index; }
-    inline void setIndex(unsigned int index) noexcept { m_index = index; }
+    inline void setIndex(unsigned index) noexcept { m_index = index; }
 
     [[nodiscard]] inline const TypeRoot* getType() const noexcept { return m_type; }
     inline void setType(const TypeRoot* type) noexcept { m_type = type; }
@@ -83,7 +83,7 @@ private:
 
     llvm::StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
-    unsigned int m_index = 0;
+    unsigned m_index = 0;
     ValueFlags m_flags{};
     StateFlags m_state{};
 };
