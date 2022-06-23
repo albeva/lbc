@@ -124,12 +124,12 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
 void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     auto* symbol = ast.symbol;
 
-    // alias?
-    if (ast.attributes != nullptr) {
-        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
-            symbol->setAlias(*alias);
-        }
-    }
+//    // alias?
+//    if (ast.attributes != nullptr) {
+//        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
+//            symbol->setAlias(*alias);
+//        }
+//    }
 
     // main or external?
     if (m_sem.hasImplicitMain() && symbol->name() == "MAIN" && symbol->alias().empty()) {
@@ -193,12 +193,12 @@ void DeclPass::defineVar(AstVarDecl& ast) noexcept {
     symbol->setType(type);
     ast.symbol = symbol;
 
-    // alias?
-    if (ast.attributes != nullptr) {
-        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
-            symbol->setAlias(*alias);
-        }
-    }
+//    // alias?
+//    if (ast.attributes != nullptr) {
+//        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
+//            symbol->setAlias(*alias);
+//        }
+//    }
 }
 
 //----------------------------------------
@@ -219,10 +219,16 @@ Symbol* DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) noexcept {
     m_sem.getSymbolTable()->insert(symbol);
 
     // alias?
+    bool hasAlias = false;
     if (ast.attributes != nullptr) {
         if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
             symbol->setAlias(*alias);
+            hasAlias = true;
         }
+    }
+
+    if (!hasAlias && ast.language == ExternLangauge::C) {
+        symbol->setAlias(ast.token.lexeme());
     }
 
     return symbol;

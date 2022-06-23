@@ -19,6 +19,7 @@ Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* 
   m_source{ source },
   m_isMain{ isMain },
   m_symbolTable{ symbolTable },
+  m_language{ ExternLangauge::Default },
   m_diag{ context.getDiag() },
   m_scope{ Scope::Root } {
     advance();
@@ -74,7 +75,7 @@ Result<AstStmtList*> Parser::stmtList() {
     };
 
     auto start = m_token.range().Start;
-    std::vector<AstDecl*> decl;
+    std::vector<AstDecl*> decls;
     std::vector<AstFuncStmt*> funcs;
     std::vector<AstStmt*> stms;
 
@@ -83,26 +84,40 @@ Result<AstStmtList*> Parser::stmtList() {
         TRY(stmt)
 
         llvm::TypeSwitch<AstStmt*>(*stmt)
-            .Case<AstFuncStmt>([&](auto* node) {
+            .Case([&](AstFuncStmt* node) {
                 funcs.emplace_back(node);
-                decl.emplace_back(node->decl);
+                decls.emplace_back(node->decl);
             })
-            .Case<AstDecl>([&](auto* node) {
+            .Case([&](AstDecl* node) {
+                decls.emplace_back(node);
                 stms.emplace_back(node);
-                decl.emplace_back(node);
             })
-            .Case<AstImport>([&](auto* import) {
+            .Case([&](AstImport* import) {
                 m_imports.emplace_back(import);
+            })
+            .Case([&](AstExtern* ext){
+                for (auto* stmt: ext->stmts) {
+                    if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
+                        decls.emplace_back(decl);
+                        stms.emplace_back(decl);
+                    } else if (auto* func = llvm::dyn_cast<AstFuncStmt>(stmt)) {
+                        decls.emplace_back(func->decl);
+                        funcs.emplace_back(func);
+                    } else {
+                        fatalError("Unknown declaration");
+                    }
+                }
             })
             .Default([&](auto* node) {
                 stms.emplace_back(node);
             });
+
         TRY(consume(TokenKind::EndOfStmt))
     }
 
     return m_context.create<AstStmtList>(
         llvm::SMRange{ start, m_endLoc },
-        std::move(decl),
+        std::move(decls),
         std::move(funcs),
         std::move(stms));
 }
@@ -131,6 +146,9 @@ Result<AstStmt*> Parser::statement() {
     if (m_scope == Scope::Root) {
         if (m_token.is(TokenKind::Import)) {
             return kwImport();
+        }
+        if (m_token.is(TokenKind::Extern)) {
+            return kwExtern();
         }
         if (!m_isMain) {
             return makeError(Diag::notAllowedTopLevelStatement);
@@ -202,6 +220,58 @@ Result<AstImport*> Parser::kwImport() {
         llvm::SMRange{ range.Start, m_endLoc },
         import,
         *module);
+}
+
+/**
+ * Extern
+ *   = [ LanguageStringLiteral ]
+ *   ( Statement
+ *   | StatementList "END" "EXTERN"
+ *   .
+  */
+Result<AstExtern*> Parser::kwExtern() {
+    // assume m_token == Extern
+    auto start = m_token.range().Start;
+    advance();
+    RESTORE_ON_EXIT(m_language);
+
+    if (m_token.is(TokenKind::StringLiteral)) {
+        auto str = std::get<llvm::StringRef>(m_token.getValue()).upper();
+        if (str == "C") {
+            m_language = ExternLangauge::C;
+        } else if (str == "DEFAULT") {
+            m_language = ExternLangauge::Default;
+        } else {
+            return makeError(Diag::unsupportedExternLanguage, str);
+        }
+        advance();
+    }
+
+    std::vector<AstStmt*> stmts{};
+
+    Result<AstStmt*> stmt = nullptr;
+    if (accept(TokenKind::EndOfStmt)) {
+        while (m_token.isNot(TokenKind::End)) {
+            auto decl = declaration();
+            TRY(decl)
+            if (*decl == nullptr) {
+                return makeError(Diag::onlyDeclarationsInExtern);
+            }
+            stmts.emplace_back(*decl);
+            TRY(consume(TokenKind::EndOfStmt))
+        }
+        TRY(consume(TokenKind::End))
+        TRY(consume(TokenKind::Extern))
+    } else {
+        auto decl = declaration();
+        TRY(stmt)
+        stmts.emplace_back(*decl);
+    }
+
+    return m_context.create<AstExtern>(
+        llvm::SMRange{ start, m_endLoc },
+        m_language,
+        std::move(stmts));
 }
 
 /**
@@ -307,13 +377,11 @@ Result<AstExprList*> Parser::attributeArgList() {
     if (accept(TokenKind::Assign)) {
         auto lit = literal();
         TRY(lit)
-
         args.emplace_back(*lit);
     } else if (accept(TokenKind::ParenOpen)) {
         while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
             auto lit = literal();
             TRY(lit)
-
             args.emplace_back(*lit);
             if (!accept(TokenKind::Comma)) {
                 break;
@@ -346,6 +414,7 @@ Result<AstVarDecl*> Parser::kwDim(AstAttributeList* attribs) {
 
     TRY(expect(TokenKind::Identifier))
     auto id = m_token.getStringValue();
+    auto token = m_token;
     advance();
 
     Result<AstTypeExpr*> type{};
@@ -368,6 +437,8 @@ Result<AstVarDecl*> Parser::kwDim(AstAttributeList* attribs) {
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
+        token,
+        m_language,
         attribs,
         *type,
         *expr);
@@ -406,11 +477,13 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
     }
 
     llvm::StringRef id;
+    Token token;
     if (funcFlags.isAnonymous) {
         id = "";
     } else {
         TRY(expect(TokenKind::Identifier))
         id = m_token.getStringValue();
+        token = m_token;
         advance();
     }
 
@@ -432,6 +505,8 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
     return m_context.create<AstFuncDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
+        token,
+        m_language,
         attribs,
         *params,
         isVariadic,
@@ -480,12 +555,14 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
     auto start = m_token.range().Start;
 
     llvm::StringRef id;
+    Token token;
     if (isAnonymous) {
         if (m_token.is(TokenKind::Identifier)) {
             Token next;
             m_source.peek(next);
             if (next.is(TokenKind::As)) {
                 id = m_token.getStringValue();
+                token = m_token;
                 advance();
                 advance();
             }
@@ -495,6 +572,7 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
     } else {
         TRY(expect(TokenKind::Identifier))
         id = m_token.getStringValue();
+        token = m_token;
         advance();
         TRY(consume(TokenKind::As))
     }
@@ -505,6 +583,8 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
     return m_context.create<AstFuncParamDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
+        token,
+        m_language,
         nullptr,
         *type);
 }
@@ -528,14 +608,15 @@ Result<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
 
     TRY(expect(TokenKind::Identifier))
     auto id = m_token.getStringValue();
+    auto token = m_token;
     advance();
 
     if (accept(TokenKind::EndOfStmt)) {
-        return udt(id, start, attribs);
+        return udt(id, token, start, attribs);
     }
 
     if (accept(TokenKind::As)) {
-        return alias(id, start, attribs);
+        return alias(id, token, start, attribs);
     }
 
     return makeError(Diag::unexpectedToken, "'=' or end of statement", m_token.description());
@@ -546,13 +627,15 @@ Result<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
  *    = TypeExpr
  *    .
  */
-Result<AstTypeAlias*> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
+Result<AstTypeAlias*> Parser::alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) {
     auto type = typeExpr({ .typeOfAllowsExpr = true });
     TRY(type)
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange{ start, m_endLoc },
         id,
+        token,
+        m_language,
         attribs,
         *type);
 }
@@ -564,7 +647,7 @@ Result<AstTypeAlias*> Parser::alias(llvm::StringRef id, llvm::SMLoc start, AstAt
  *     "END" "TYPE"
  *   .
  */
-Result<AstUdtDecl*> Parser::udt(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs) {
+Result<AstUdtDecl*> Parser::udt(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) {
     // assume m_token == declaration || "end"
     auto decls = udtDeclList();
     TRY(decls)
@@ -575,6 +658,8 @@ Result<AstUdtDecl*> Parser::udt(llvm::StringRef id, llvm::SMLoc start, AstAttrib
     return m_context.create<AstUdtDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
+        token,
+        m_language,
         attribs,
         *decls);
 }
@@ -619,6 +704,7 @@ Result<AstDecl*> Parser::udtMember(AstAttributeList* attribs) {
     // assume m_token == Identifier
     auto start = m_token.range().Start;
     auto id = m_token.getStringValue();
+    auto token = m_token;
     advance();
 
     TRY(consume(TokenKind::As))
@@ -629,6 +715,8 @@ Result<AstDecl*> Parser::udtMember(AstAttributeList* attribs) {
     return m_context.create<AstVarDecl>(
         llvm::SMRange{ start, m_endLoc },
         id,
+        token,
+        m_language,
         attribs,
         *type,
         nullptr);
@@ -859,6 +947,7 @@ Result<AstForStmt*> Parser::kwFor() {
     auto idStart = m_token.range().Start;
     TRY(expect(TokenKind::Identifier))
     auto id = m_token.getStringValue();
+    auto token = m_token;
     advance();
 
     Result<AstTypeExpr*> type{};
@@ -875,6 +964,8 @@ Result<AstForStmt*> Parser::kwFor() {
     auto* iterator = m_context.create<AstVarDecl>(
         llvm::SMRange{ idStart, m_endLoc },
         id,
+        token,
+        m_language,
         nullptr,
         *type,
         *expr);

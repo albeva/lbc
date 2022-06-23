@@ -72,6 +72,7 @@
     _( Else,     "ELSE"     ) \
     _( End,      "END"      ) \
     _( Exit,     "EXIT"     ) \
+    _( Extern,   "EXTERN"   ) \
     _( False,    "FALSE"    ) \
     _( For,      "FOR"      ) \
     _( Function, "FUNCTION" ) \

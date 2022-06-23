@@ -28,6 +28,9 @@ void CodePrinter::visit(AstStmtList& ast) {
     }
 
     for (auto* stmt : ast.stmts) {
+        if (stmt->kind == AstKind::FuncDecl) {
+            continue ;
+        }
         visit(*stmt);
         m_os << '\n';
     }
@@ -158,6 +161,10 @@ void CodePrinter::visit(AstVarDecl& ast) {
         m_os << " _" << '\n';
     }
 
+    if (ast.language == ExternLangauge::C) {
+        m_os << "EXTERN \"C\" ";
+    }
+
     m_os << indent();
     if (m_emitDimKeyword) {
         m_os << "DIM ";
@@ -182,6 +189,10 @@ void CodePrinter::visit(AstFuncDecl& ast) {
     }
 
     m_os << indent();
+
+    if (ast.language == ExternLangauge::C) {
+        m_os << "EXTERN \"C\" ";
+    }
 
     if (!ast.hasImpl) {
         m_os << "DECLARE ";
@@ -250,6 +261,10 @@ void CodePrinter::visit(AstUdtDecl& ast) {
     if (ast.attributes != nullptr) {
         visit(*ast.attributes);
         m_os << " _" << '\n';
+    }
+
+    if (ast.language == ExternLangauge::C) {
+        m_os << "EXTERN \"C\" ";
     }
 
     m_os << indent() << "TYPE " << ast.name << '\n';

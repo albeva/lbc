@@ -11,7 +11,9 @@ class Context;
 class SymbolTable;
 class TokenSource;
 struct AstIfStmtBlock;
+enum class ExternLangauge;
 AST_FORWARD_DECLARE()
+struct AstExtern;
 
 class Parser final {
 public:
@@ -52,6 +54,7 @@ private:
     [[nodiscard]] Result<AstStmtList*> stmtList();
     [[nodiscard]] Result<AstStmt*> statement();
     [[nodiscard]] Result<AstImport*> kwImport();
+    [[nodiscard]] Result<AstExtern*> kwExtern();
     [[nodiscard]] Result<AstStmt*> declaration();
     [[nodiscard]] Result<AstExpr*> factor();
     [[nodiscard]] Result<AstExpr*> primary();
@@ -82,8 +85,8 @@ private:
     [[nodiscard]] Result<AstFuncStmt*> kwFunction(AstAttributeList* attribs);
     [[nodiscard]] Result<AstStmt*> kwReturn();
     [[nodiscard]] Result<AstDecl*> kwType(AstAttributeList* attribs);
-    [[nodiscard]] Result<AstTypeAlias*> alias(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs);
-    [[nodiscard]] Result<AstUdtDecl*> udt(llvm::StringRef id, llvm::SMLoc start, AstAttributeList* attribs);
+    [[nodiscard]] Result<AstTypeAlias*> alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs);
+    [[nodiscard]] Result<AstUdtDecl*> udt(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs);
     [[nodiscard]] Result<AstDeclList*> udtDeclList();
     [[nodiscard]] Result<AstDecl*> udtMember(AstAttributeList* attribs);
 
@@ -132,6 +135,7 @@ private:
     TokenSource& m_source;
     const bool m_isMain;
     SymbolTable* m_symbolTable;
+    ExternLangauge m_language;
 
     DiagnosticEngine& m_diag;
     Scope m_scope;
