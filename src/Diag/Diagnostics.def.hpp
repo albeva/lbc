@@ -53,6 +53,10 @@ ERROR(invalidFunctionReturnType,
     "No viable conversion from returned value of type '{0}' to function return type '{1}'")
 ERROR(noViableConversionToType,
     "No viable conversion from '{0}' to '{1}'")
+ERROR(invalidTypeOfExpression,
+    "Invalid TYPEOF expression")
+ERROR(unexpectedTokenInTypeOf,
+    "Unexpected token in TYPEOF expression")
 
 #undef DIAG
 #undef ERROR

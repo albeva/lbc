@@ -24,16 +24,12 @@ public:
         bool callWithoutParens : 1;
     };
 
-    struct TypeFlags {
-        bool typeOfAllowsExpr : 1;
-    };
-
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() noexcept = default;
 
     [[nodiscard]] Result<AstModule*> parse();
     [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = {});
-    [[nodiscard]] Result<AstTypeExpr*> typeExpr(TypeFlags flags = {});
+    [[nodiscard]] Result<AstTypeExpr*> typeExpr();
 
     void reset() noexcept;
     [[nodiscard]] inline const Token& getToken() const noexcept { return m_token; }
@@ -133,7 +129,6 @@ private:
     llvm::SMLoc m_endLoc{};
     std::vector<AstImport*> m_imports{};
     ExprFlags m_exprFlags{};
-    TypeFlags m_typeFlags{};
 };
 
 } // namespace lbc

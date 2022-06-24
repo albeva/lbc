@@ -225,46 +225,54 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
     if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
         // let provider take ownership of tokens
         TokenProvider provider{ m_module->fileId, std::move(*tokens) };
-        Parser parser{ m_context, provider, /* isMain */ false, getSymbolTable() };
+        Parser parser{ m_context, provider, false, m_table };
 
-        if (auto* type = parser.typeExpr().getValueOrNull()) {
-            ast.typeExpr = type;
-        } else if (!ast.allowExpr) {
-            fatalError("Expression not allowed in typeof");
-        } else {
+        auto parsedExpression = m_diag.ignoringErrors([&]() -> bool {
+            if (auto* type = parser.typeExpr().getValueOrNull()) {
+                ast.typeExpr = type;
+                return true;
+            }
+
             provider.reset();
             parser.reset();
             if (auto* expr = parser.expression().getValueOrNull()) {
                 ast.typeExpr = expr;
-            } else {
-                fatalError("Failed to parse expression");
+                return true;
             }
+
+            return false;
+        });
+
+        if (not parsedExpression) {
+            return m_diag.makeError(Diag::invalidTypeOfExpression, provider.getRange());
         }
 
         if (not parser.getToken().is(TokenKind::EndOfStmt)) {
-            fatalError("Unexpected token: "_t + parser.getToken().description());
+            return m_diag.makeError(Diag::unexpectedTokenInTypeOf, parser.getToken().range());
         }
     }
 
+    using ResTy = Result<void>;
     const auto getType = Visitor{
-        [](std::vector<Token>&) -> const TypeRoot* {
-            fatalError("Unresolved typeof()");
+        [](std::vector<Token>&) -> ResTy {
+            llvm_unreachable("unresolved typeof expression");
         },
-        [&](AstTypeExpr* typeExpr) -> const TypeRoot* {
-            return m_typePass.visit(*typeExpr);
+        [&](AstTypeExpr* typeExpr) -> ResTy {
+            ast.type = m_typePass.visit(*typeExpr);
+            return {};
         },
-        [&](AstExpr* expr) -> const TypeRoot* {
+        [&](AstExpr* expr) -> ResTy {
             auto flags = m_flags;
             flags.allowUseBeforDefiniation = true;
-            return with(flags, [&]() {
-                TRY_FATAL(visit(*expr))
-                return expr->type;
+            return with(flags, [&]() -> ResTy {
+                TRY(visit(*expr))
+                ast.type = expr->type;
+                return {};
             });
         }
     };
 
-    ast.type = std::visit(getType, ast.typeExpr);
-    return {};
+    return std::visit(getType, ast.typeExpr);
 }
 
 //----------------------------------------

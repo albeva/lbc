@@ -16,7 +16,7 @@ struct ValueRestorer final {
 
 private:
     T& m_target;
-    const T m_value;
+    T const m_value;
 };
 
 /**

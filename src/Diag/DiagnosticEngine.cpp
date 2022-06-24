@@ -30,6 +30,9 @@ llvm::SourceMgr::DiagKind DiagnosticEngine::getKind(Diag diag) noexcept {
 }
 
 void DiagnosticEngine::print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges) noexcept {
+    if (m_ignoreErrors) {
+        return;
+    }
     auto kind = getKind(diag);
     if (kind == llvm::SourceMgr::DK_Error) {
         m_errorCounter++;

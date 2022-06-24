@@ -16,6 +16,8 @@ public:
     void peek(Token& result) override;
     void reset() noexcept { m_index = 0; }
 
+    llvm::SMRange getRange() const noexcept;
+
 private:
     unsigned int m_fileId;
     size_t m_index = 0;

@@ -421,7 +421,7 @@ Result<AstVarDecl*> Parser::kwDim(AstAttributeList* attribs) {
     Result<AstExpr*> expr{};
 
     if (accept(TokenKind::As)) {
-        type = typeExpr({ .typeOfAllowsExpr = true });
+        type = typeExpr();
         TRY(type)
 
         if (accept(TokenKind::Assign)) {
@@ -577,7 +577,7 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
         TRY(consume(TokenKind::As))
     }
 
-    auto type = typeExpr({ .typeOfAllowsExpr = false });
+    auto type = typeExpr();
     TRY(type)
 
     return m_context.create<AstFuncParamDecl>(
@@ -628,7 +628,7 @@ Result<AstDecl*> Parser::kwType(AstAttributeList* attribs) {
  *    .
  */
 Result<AstTypeAlias*> Parser::alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) {
-    auto type = typeExpr({ .typeOfAllowsExpr = true });
+    auto type = typeExpr();
     TRY(type)
 
     return m_context.create<AstTypeAlias>(
@@ -709,7 +709,7 @@ Result<AstDecl*> Parser::udtMember(AstAttributeList* attribs) {
 
     TRY(consume(TokenKind::As))
 
-    auto type = typeExpr({ .typeOfAllowsExpr = true });
+    auto type = typeExpr();
     TRY(type)
 
     return m_context.create<AstVarDecl>(
@@ -1181,10 +1181,7 @@ Result<AstContinuationStmt*> Parser::kwExit() {
  *          | TypeOf
  *          .
  */
-Result<AstTypeExpr*> Parser::typeExpr(TypeFlags flags) {
-    RESTORE_ON_EXIT(m_typeFlags);
-    m_typeFlags = flags;
-
+Result<AstTypeExpr*> Parser::typeExpr() {
     auto start = m_token.range().Start;
     bool parenthesized = accept(TokenKind::ParenOpen);
     bool mustBePtr = false;
@@ -1269,8 +1266,7 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
     }
     TRY(consume(TokenKind::ParenClose))
 
-    bool typeOfAllowsExpr = m_typeFlags.typeOfAllowsExpr;
-    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens), typeOfAllowsExpr);
+    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens));
 }
 
 //----------------------------------------
@@ -1396,7 +1392,7 @@ Result<AstExpr*> Parser::factor() {
 
         // "AS" TypeExpr
         if (accept(TokenKind::As)) {
-            auto type = typeExpr({ .typeOfAllowsExpr = true });
+            auto type = typeExpr();
             TRY(type)
 
             auto* cast = m_context.create<AstCastExpr>(

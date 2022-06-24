@@ -19,3 +19,10 @@ void TokenProvider::peek(Token& result) {
     }
     result.set(TokenKind::EndOfStmt, {});
 }
+
+llvm::SMRange TokenProvider::getRange() const noexcept {
+    if (m_tokens.empty()) {
+        return {};
+    }
+    return { m_tokens.front().range().Start, m_tokens.back().range().End };
+}
