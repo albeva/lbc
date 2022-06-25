@@ -13,18 +13,16 @@ void ForStmtPass::visit(AstForStmt& ast) const noexcept {
     auto* current = m_sem.getSymbolTable();
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
     m_sem.with(ast.symbolTable, [&]() {
-        ceclare(ast);
+        declare(ast);
         analyze(ast);
         determineForDirection(ast);
     });
 }
 
-void ForStmtPass::ceclare(AstForStmt& ast) const noexcept {
+void ForStmtPass::declare(AstForStmt& ast) const noexcept {
     m_sem.getDeclPass().declareAndDefine(ast.decls);
     m_sem.getDeclPass().declareAndDefine(*ast.iterator);
     auto flags = ast.iterator->symbol->valueFlags();
-    flags.dereferencable = false;
-    flags.addressable = false;
     flags.assignable = false;
     ast.iterator->symbol->valueFlags() = flags;
 }

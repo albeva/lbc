@@ -26,7 +26,6 @@ void DeclPass::declare(AstDecl& ast) noexcept {
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
         symbol->valueFlags().kind = ValueFlags::Kind::function;
-        symbol->valueFlags().addressable = true;
     } else if (llvm::isa<AstVarDecl>(&ast)) {
         symbol->valueFlags().kind = ValueFlags::Kind::variable;
     } else {
@@ -124,13 +123,6 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
 void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     auto* symbol = ast.symbol;
 
-//    // alias?
-//    if (ast.attributes != nullptr) {
-//        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
-//            symbol->setAlias(*alias);
-//        }
-//    }
-
     // main or external?
     if (m_sem.hasImplicitMain() && symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
@@ -185,20 +177,9 @@ void DeclPass::defineVar(AstVarDecl& ast) noexcept {
     // The Symbol
     auto* symbol = ast.symbol;
     symbol->valueFlags().external = false;
-    symbol->valueFlags().addressable = true;
     symbol->valueFlags().assignable = true;
-    if (type->isPointer()) {
-        symbol->valueFlags().dereferencable = true;
-    }
     symbol->setType(type);
     ast.symbol = symbol;
-
-//    // alias?
-//    if (ast.attributes != nullptr) {
-//        if (auto alias = ast.attributes->getStringLiteral("ALIAS")) {
-//            symbol->setAlias(*alias);
-//        }
-//    }
 }
 
 //----------------------------------------

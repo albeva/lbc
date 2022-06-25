@@ -14,7 +14,7 @@ namespace Sem {
         void visit(AstForStmt& ast) const noexcept;
 
     private:
-        void ceclare(AstForStmt& ast) const noexcept;
+        void declare(AstForStmt& ast) const noexcept;
         void analyze(AstForStmt& ast) const noexcept;
         void determineForDirection(AstForStmt& ast) const noexcept;
     };

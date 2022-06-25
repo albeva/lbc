@@ -12,8 +12,6 @@ struct ValueFlags final {
         function
     };
     Kind kind : 2;
-    uint8_t addressable : 1;
-    uint8_t dereferencable : 1;
     uint8_t assignable : 1;
     uint8_t external : 1;
     uint8_t unused1 : 1;

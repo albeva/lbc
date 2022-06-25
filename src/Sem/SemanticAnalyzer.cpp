@@ -452,9 +452,6 @@ Result<void> SemanticAnalyzer::visit(AstDereference& ast) {
     }
 
     ast.flags = ast.expr->flags;
-    if (!ast.type->isPointer()) {
-        ast.flags.dereferencable = false;
-    }
 
     return {};
 }
@@ -465,12 +462,8 @@ Result<void> SemanticAnalyzer::visit(AstDereference& ast) {
 
 Result<void> SemanticAnalyzer::visit(AstAddressOf& ast) {
     TRY(visit(*ast.expr))
-    if (!ast.expr->flags.addressable) {
-        fatalError("Cannot take address");
-    }
     ast.type = TypePointer::get(m_context, ast.expr->type);
     ast.flags = ast.expr->flags;
-    ast.flags.dereferencable = true;
     return {};
 }
 
