@@ -14,8 +14,6 @@ struct ValueFlags final {
     Kind kind : 2;
     uint8_t assignable : 1;
     uint8_t external : 1;
-    uint8_t unused1 : 1;
-    uint8_t unused2 : 1;
 };
 
 } // namespace lbc

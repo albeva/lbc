@@ -57,6 +57,8 @@ ERROR(invalidTypeOfExpression,
     "Invalid TYPEOF expression")
 ERROR(unexpectedTokenInTypeOf,
     "Unexpected token in TYPEOF expression")
+ERROR(targetNotAssignable,
+    "Non-object type '{0}' is not assignable")
 
 #undef DIAG
 #undef ERROR

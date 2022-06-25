@@ -311,8 +311,11 @@ Result<void> SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) {
 
 Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
     TRY(visit(*ast.lhs))
-    if (!ast.lhs->flags.assignable) {
-        fatalError("Cannot assign");
+    if (not ast.lhs->flags.assignable) {
+        return m_diag.makeError(
+            Diag::targetNotAssignable,
+            ast.lhs->range,
+            ast.lhs->type->asString());
     }
     return expression(ast.rhs, ast.lhs->type);
 }
