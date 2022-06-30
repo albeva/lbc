@@ -330,16 +330,11 @@ Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
         m_declPass.define(symbol);
     }
 
-    const auto* type = symbol->getType();
-    if (type == nullptr) [[unlikely]] {
-        fatalError("Identifier "_t + ast.name + " has unresolved type");
-    }
-
     if (not isVariableAccessible(symbol)) {
         fatalError("Use of '"_t + symbol->name() + "' before definition");
     }
 
-    ast.type = type;
+    ast.type = symbol->getType();
     ast.symbol = symbol;
     ast.flags = symbol->valueFlags();
 
