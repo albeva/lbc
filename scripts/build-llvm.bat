@@ -17,8 +17,6 @@ cmake -G "Ninja" -S "%SRC%" -B "%BUILD%" ^
     -DLLVM_OPTIMIZED_TABLEGEN=ON ^
     -DLLVM_INSTALL_UTILS=ON ^
     -DLLVM_INCLUDE_BENCHMARKS=OFF ^
-    -DLLVM_INCLUDE_TESTS=OFF
-if %errorlevel% neq 0 exit /b %errorlevel%
-
-cmake --build "%BUILD%" --target install ^
+    -DLLVM_INCLUDE_TESTS=OFF ^
+    && cmake --build "%BUILD%" --target install ^
     && setx LLVM_DIR "%INSTALL%\lib\cmake\llvm"
