@@ -139,6 +139,16 @@ const TypePointer* TypeRoot::getPointer(Context& context) const noexcept {
     return TypePointer::get(context, this);
 }
 
+const TypeFunction* TypeRoot::getUnderlyingFunctionType() const noexcept {
+    if (isFunction()) {
+        return static_cast<const TypeFunction*>(this);
+    }
+    if (isPointer()) {
+        return static_cast<const TypePointer*>(this)->getUnderlyingFunctionType();
+    }
+    return nullptr;
+}
+
 // Void
 
 const TypeVoid* TypeVoid::get() noexcept {

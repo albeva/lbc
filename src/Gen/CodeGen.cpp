@@ -250,7 +250,7 @@ void CodeGen::declareFuncs(AstStmtList& ast) {
 
 void CodeGen::declareFunc(AstFuncDecl& ast) {
     auto* sym = ast.symbol;
-    auto* fnTy = llvm::cast<llvm::FunctionType>(ast.symbol->getType()->getLlvmType(m_context));
+    auto* fnTy = ast.symbol->getType()->getUnderlyingFunctionType()->getLlvmFunctionType(m_context);
     auto* fn = llvm::Function::Create(
         fnTy,
         sym->getLlvmLinkage(),
@@ -428,13 +428,8 @@ ValueHandler CodeGen::visit(AstAddressOf& ast) {
 
 ValueHandler CodeGen::visit(AstCallExpr& ast) {
     auto* callable = visit(*ast.callable).getAddress();
-
-    llvm::FunctionType* fnType = nullptr;
-    if (auto* func = llvm::dyn_cast<llvm::Function>(callable)) {
-        fnType = func->getFunctionType();
-    } else if (const auto* ptr = llvm::dyn_cast<llvm::PointerType>(callable->getType())) {
-        fnType = llvm::cast<llvm::FunctionType>(ptr->getPointerElementType());
-    }
+    const auto* funcType = ast.callable->type->getUnderlyingFunctionType();
+    auto* llvmFunc = funcType->getLlvmFunctionType(m_context);
 
     const auto& args = ast.args->exprs;
     std::vector<llvm::Value*> values;
@@ -444,7 +439,7 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
         values.emplace_back(value);
     }
 
-    auto* call = m_builder.CreateCall(fnType, callable, values, "");
+    auto* call = m_builder.CreateCall(llvmFunc, callable, values, "");
     call->setTailCall(false);
     return { this, ast.type, call };
 }

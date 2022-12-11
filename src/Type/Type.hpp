@@ -76,6 +76,10 @@ public:
     [[nodiscard]] bool isSignedIntegral() const noexcept;
     [[nodiscard]] bool isUnsignedIntegral() const noexcept;
 
+    // Handy shorthands
+    [[nodiscard]] const TypeFunction* getUnderlyingFunctionType() const noexcept;
+
+    // Comparison
     [[nodiscard]] TypeComparison compare(const TypeRoot* other) const noexcept;
 
     // clang-format off
@@ -274,6 +278,10 @@ public:
     [[nodiscard]] const TypeRoot* getReturn() const noexcept { return m_retType; }
     [[nodiscard]] const std::vector<const TypeRoot*>& getParams() const noexcept { return m_paramTypes; }
     [[nodiscard]] bool isVariadic() const noexcept { return m_variadic; }
+
+    llvm::FunctionType* getLlvmFunctionType(Context& context) const noexcept {
+        return static_cast<llvm::FunctionType*>(getLlvmType(context));
+    }
 
 protected:
     [[nodiscard]] llvm::Type* genLlvmType(Context& context) const final;

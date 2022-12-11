@@ -4,6 +4,7 @@
 #pragma once
 #include "Ast/Ast.hpp"
 #include "Type/Type.hpp"
+#include "Driver/Context.hpp"
 
 namespace lbc::Gen {
 
@@ -14,6 +15,7 @@ public:
     virtual void emitCallFunction(const TypeFunction*, AstCallExpr&) = 0;
     virtual void lowerArgument(const TypeFunction*, AstFuncParamDecl&) = 0;
     virtual bool supportsCVarArg() = 0;
+    virtual llvm::StringRef mangle(Context&, AstIdentExpr*) = 0;
 };
 
 } // namespace lbc::Gen
