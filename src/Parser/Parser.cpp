@@ -95,8 +95,8 @@ Result<AstStmtList*> Parser::stmtList() {
             .Case([&](AstImport* import) {
                 m_imports.emplace_back(import);
             })
-            .Case([&](AstExtern* ext){
-                for (auto* stmt: ext->stmts) {
+            .Case([&](AstExtern* ext) {
+                for (auto* stmt : ext->stmts) {
                     if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
                         decls.emplace_back(decl);
                         stms.emplace_back(decl);
@@ -228,7 +228,7 @@ Result<AstImport*> Parser::kwImport() {
  *   ( Statement
  *   | StatementList "END" "EXTERN"
  *   .
-  */
+ */
 Result<AstExtern*> Parser::kwExtern() {
     // assume m_token == Extern
     auto start = m_token.range().Start;

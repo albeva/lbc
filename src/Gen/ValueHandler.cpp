@@ -137,7 +137,7 @@ llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const noexc
 
     // a.b.c.d = [ a, b, c, d ]
     for (size_t i = 0; i < ast.exprs.size(); i++) {
-        bool last = i == (ast.exprs.size() - 1);
+        bool const last = i == (ast.exprs.size() - 1);
 
         auto* symbol = m_gen->visit(*ast.exprs[i]).dyn_cast<Symbol*>();
         if (symbol == nullptr) {

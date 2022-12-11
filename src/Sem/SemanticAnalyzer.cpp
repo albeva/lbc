@@ -154,8 +154,7 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
                     Diag::noViableConversionToType,
                     block->expr->range,
                     block->expr->type->asString(),
-                    TypeBoolean::get()->asString()
-                );
+                    TypeBoolean::get()->asString());
             }
         }
         TRY(visit(*block->stmt))
@@ -181,8 +180,7 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
                 Diag::noViableConversionToType,
                 ast.expr->range,
                 ast.expr->type->asString(),
-                TypeBoolean::get()->asString()
-            );
+                TypeBoolean::get()->asString());
         }
     }
 

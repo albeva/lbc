@@ -40,6 +40,7 @@ add_library(
     Gen/Builders/ForStmtBuilder.hpp
     Gen/Builders/IfStmtBuilder.cpp
     Gen/Builders/IfStmtBuilder.hpp
+    Gen/CallingConv/CallingConvention.hpp
     Gen/CodeGen.cpp
     Gen/CodeGen.hpp
     Gen/Helpers.cpp
@@ -58,10 +59,10 @@ add_library(
     Parser/Parser.hpp
     Sem/Passes/ConstantFoldingPass.cpp
     Sem/Passes/ConstantFoldingPass.hpp
-    Sem/Passes/ForStmtPass.cpp
-    Sem/Passes/ForStmtPass.hpp
     Sem/Passes/DeclPass.cpp
     Sem/Passes/DeclPass.hpp
+    Sem/Passes/ForStmtPass.cpp
+    Sem/Passes/ForStmtPass.hpp
     Sem/Passes/Pass.hpp
     Sem/Passes/TypePass.cpp
     Sem/Passes/TypePass.hpp

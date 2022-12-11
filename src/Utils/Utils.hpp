@@ -20,7 +20,9 @@ namespace lbc {
 
 // helper type for std::variant visitors
 template<typename... Base>
-struct Visitor : Base... { using Base::operator()...; };
+struct Visitor : Base... {
+    using Base::operator()...;
+};
 
 template<typename... Base>
 Visitor(Base...) -> Visitor<Base...>;

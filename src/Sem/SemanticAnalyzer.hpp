@@ -5,8 +5,8 @@
 #include "Ast/AstVisitor.h"
 #include "Ast/ControlFlowStack.hpp"
 #include "Ast/ValueFlags.hpp"
-#include "Passes/ConstantFoldingPass.hpp"
 #include "Diag/DiagnosticEngine.hpp"
+#include "Passes/ConstantFoldingPass.hpp"
 #include "Passes/DeclPass.hpp"
 #include "Passes/TypePass.hpp"
 

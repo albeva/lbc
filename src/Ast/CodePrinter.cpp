@@ -29,7 +29,7 @@ void CodePrinter::visit(AstStmtList& ast) {
 
     for (auto* stmt : ast.stmts) {
         if (stmt->kind == AstKind::FuncDecl) {
-            continue ;
+            continue;
         }
         visit(*stmt);
         m_os << '\n';

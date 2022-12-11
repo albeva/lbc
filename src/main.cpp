@@ -9,7 +9,7 @@
 using namespace lbc;
 
 int main(int argc, const char* argv[]) {
-    llvm::InitLLVM init{ argc, argv };
+    llvm::InitLLVM const init{ argc, argv };
 
     CompileOptions options{};
     CmdLineParser cmdLineParser{ options };
