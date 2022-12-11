@@ -20,3 +20,9 @@ cmake -G "Ninja" -S "%SRC%" -B "%BUILD%" ^
     -DLLVM_INCLUDE_TESTS=OFF ^
     && cmake --build "%BUILD%" --target install ^
     && setx LLVM_DIR "%INSTALL%\lib\cmake\llvm"
+
+if defined LBC_DIR if %errorlevel% == 0 (
+    xcopy /y "%BUILD%\bin\llc.exe" "%LBC_DIR%\bin\toolchain\win64\bin"
+    xcopy /y "%BUILD%\bin\opt.exe" "%LBC_DIR%\bin\toolchain\win64\bin"
+    xcopy /y "%BUILD%\bin\FileCheck.exe" "%LBC_DIR%\bin\toolchain\win64\bin"
+)
