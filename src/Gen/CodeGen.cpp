@@ -80,7 +80,7 @@ void CodeGen::visit(AstModule& ast) {
             hasMainDefined = true;
         }
     }
-    bool generateMain = !hasMainDefined && ast.hasImplicitMain;
+    bool const generateMain = !hasMainDefined && ast.hasImplicitMain;
 
     llvm::Function* mainFn = nullptr;
     if (generateMain) {
@@ -457,7 +457,7 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
             return llvm::ConstantInt::get(
                 ast.type->getLlvmType(m_context),
                 value,
-                static_cast<const TypeIntegral*>(ast.type)->isSigned());
+                ast.type->isSignedIntegral());
         },
         [&](double value) -> llvm::Value* {
             return llvm::ConstantFP::get(

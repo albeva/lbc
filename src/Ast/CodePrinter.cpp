@@ -161,7 +161,7 @@ void CodePrinter::visit(AstVarDecl& ast) {
         m_os << " _" << '\n';
     }
 
-    if (ast.language == ExternLangauge::C) {
+    if (ast.callingConv == CallingConv::C) {
         m_os << "EXTERN \"C\" ";
     }
 
@@ -190,7 +190,7 @@ void CodePrinter::visit(AstFuncDecl& ast) {
 
     m_os << indent();
 
-    if (ast.language == ExternLangauge::C) {
+    if (ast.callingConv == CallingConv::C) {
         m_os << "EXTERN \"C\" ";
     }
 
@@ -263,7 +263,7 @@ void CodePrinter::visit(AstUdtDecl& ast) {
         m_os << " _" << '\n';
     }
 
-    if (ast.language == ExternLangauge::C) {
+    if (ast.callingConv == CallingConv::C) {
         m_os << "EXTERN \"C\" ";
     }
 

@@ -19,7 +19,7 @@ Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* 
   m_source{ source },
   m_isMain{ isMain },
   m_symbolTable{ symbolTable },
-  m_language{ ExternLangauge::Default },
+  m_language{ CallingConv::Default },
   m_diag{ context.getDiag() },
   m_scope{ Scope::Root } {
     advance();
@@ -238,9 +238,9 @@ Result<AstExtern*> Parser::kwExtern() {
     if (m_token.is(TokenKind::StringLiteral)) {
         auto str = m_token.getStringValue().upper();
         if (str == "C") {
-            m_language = ExternLangauge::C;
+            m_language = CallingConv::C;
         } else if (str == "DEFAULT") {
-            m_language = ExternLangauge::Default;
+            m_language = CallingConv::Default;
         } else {
             return makeError(Diag::unsupportedExternLanguage, str);
         }
@@ -249,7 +249,7 @@ Result<AstExtern*> Parser::kwExtern() {
 
     std::vector<AstStmt*> stmts{};
 
-    Result<AstStmt*> stmt = nullptr;
+    Result<AstStmt*> const stmt = nullptr;
     if (accept(TokenKind::EndOfStmt)) {
         while (m_token.isNot(TokenKind::End)) {
             auto decl = declaration();
@@ -471,7 +471,7 @@ Result<AstFuncDecl*> Parser::kwDeclare(AstAttributeList* attribs) {
  *     .
  */
 Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags) {
-    bool isFunc = accept(TokenKind::Function);
+    bool const isFunc = accept(TokenKind::Function);
     if (!isFunc) {
         TRY(consume(TokenKind::Sub))
     }
@@ -736,7 +736,7 @@ Result<AstFuncStmt*> Parser::kwFunction(AstAttributeList* attribs) {
         return makeError(Diag::unexpectedNestedDeclaration, m_token.description());
     }
 
-    bool isFunction = m_token.is(TokenKind::Function);
+    bool const isFunction = m_token.is(TokenKind::Function);
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
     auto decl = funcSignature(start, attribs, {});
     TRY(decl)
@@ -1183,7 +1183,7 @@ Result<AstContinuationStmt*> Parser::kwExit() {
  */
 Result<AstTypeExpr*> Parser::typeExpr() {
     auto start = m_token.range().Start;
-    bool parenthesized = accept(TokenKind::ParenOpen);
+    bool const parenthesized = accept(TokenKind::ParenOpen);
     bool mustBePtr = false;
 
     AstTypeExpr::TypeExpr expr;

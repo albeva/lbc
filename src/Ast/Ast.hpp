@@ -12,7 +12,7 @@ namespace lbc {
 class TypeRoot;
 AST_FORWARD_DECLARE()
 
-enum class ExternLangauge {
+enum class CallingConv {
     Default,
     C
 };
@@ -22,6 +22,7 @@ enum class AstKind {
     AST_CONTENT_NODES(KIND_ENUM)
 #undef KIND_ENUM
     Extern
+        Extern
 };
 
 /**
@@ -134,7 +135,7 @@ struct AstImport final : AstStmt {
 struct AstExtern final : AstStmt {
     AstExtern(
         llvm::SMRange range_,
-        ExternLangauge language_,
+        CallingConv language_,
         std::vector<AstStmt*>&& stmts_) noexcept
     : AstStmt{ AstKind::Extern, range_ },
       langauge{ language_ },
@@ -144,7 +145,7 @@ struct AstExtern final : AstStmt {
         return ast->kind == AstKind::Extern;
     }
 
-    ExternLangauge langauge;
+    CallingConv langauge;
     std::vector<AstStmt*> stmts;
 };
 
@@ -365,12 +366,12 @@ struct AstDecl : AstStmt {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
-        ExternLangauge language_,
+        CallingConv callingConv_,
         AstAttributeList* attribs) noexcept
     : AstStmt{ kind_, range_ },
       name{ name_ },
       token{ token_ },
-      language{ language_ },
+      callingConv{ callingConv_ },
       attributes{ attribs } {}
 
     static constexpr bool classof(const AstRoot* ast) noexcept {
@@ -379,7 +380,7 @@ struct AstDecl : AstStmt {
 
     const llvm::StringRef name;
     Token token;
-    ExternLangauge language;
+    CallingConv callingConv;
     AstAttributeList* attributes;
     Symbol* symbol = nullptr;
 };
@@ -397,11 +398,11 @@ struct AstVarDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
-        ExternLangauge language_,
+        CallingConv callingConv_,
         AstAttributeList* attrs_,
         AstTypeExpr* type_,
         AstExpr* expr_) noexcept
-    : AstDecl{ AstKind::VarDecl, range_, name_, token_, language_, attrs_ },
+    : AstDecl{ AstKind::VarDecl, range_, name_, token_, callingConv_, attrs_ },
       typeExpr{ type_ },
       expr{ expr_ } {};
 
@@ -418,13 +419,13 @@ struct AstFuncDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
-        ExternLangauge language_,
+        CallingConv callingConv_,
         AstAttributeList* attrs_,
         AstFuncParamList* params_,
         bool variadic_,
         AstTypeExpr* retType_,
         bool hasImpl_) noexcept
-    : AstDecl{ AstKind::FuncDecl, range_, name_, token_, language_, attrs_ },
+    : AstDecl{ AstKind::FuncDecl, range_, name_, token_, callingConv_, attrs_ },
       params{ params_ },
       variadic{ variadic_ },
       retTypeExpr{ retType_ },
@@ -446,10 +447,10 @@ struct AstFuncParamDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
-        ExternLangauge language_,
+        CallingConv callingConv_,
         AstAttributeList* attrs,
         AstTypeExpr* type_) noexcept
-    : AstDecl{ AstKind::FuncParamDecl, range_, name_, token_, language_, attrs },
+    : AstDecl{ AstKind::FuncParamDecl, range_, name_, token_, callingConv_, attrs },
       typeExpr{ type_ } {};
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
@@ -474,10 +475,10 @@ struct AstUdtDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
-        ExternLangauge language_,
+        CallingConv callingConv_,
         AstAttributeList* attrs,
         AstDeclList* decls_) noexcept
-    : AstDecl{ AstKind::UdtDecl, range_, name_, token_, language_, attrs },
+    : AstDecl{ AstKind::UdtDecl, range_, name_, token_, callingConv_, attrs },
       decls{ decls_ } {}
 
     constexpr static bool classof(const AstRoot* ast) noexcept {
@@ -493,10 +494,10 @@ struct AstTypeAlias final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
-        ExternLangauge language_,
+        CallingConv callingConv_,
         AstAttributeList* attrs,
         AstTypeExpr* typeExpr_) noexcept
-    : AstDecl{ AstKind::TypeAlias, range_, name_, token_, language_, attrs },
+    : AstDecl{ AstKind::TypeAlias, range_, name_, token_, callingConv_, attrs },
       typeExpr{ typeExpr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) noexcept {

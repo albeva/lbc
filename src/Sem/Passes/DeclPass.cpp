@@ -208,7 +208,7 @@ Symbol* DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) noexcept {
         }
     }
 
-    if (!hasAlias && ast.language == ExternLangauge::C) {
+    if (!hasAlias && ast.callingConv == CallingConv::C) {
         symbol->setAlias(ast.token.lexeme());
     }
 

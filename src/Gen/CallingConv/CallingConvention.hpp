@@ -3,8 +3,8 @@
 //
 #pragma once
 #include "Ast/Ast.hpp"
-#include "Type/Type.hpp"
 #include "Driver/Context.hpp"
+#include "Type/Type.hpp"
 
 namespace lbc::Gen {
 

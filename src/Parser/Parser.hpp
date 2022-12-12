@@ -11,7 +11,7 @@ class Context;
 class SymbolTable;
 class TokenSource;
 struct AstIfStmtBlock;
-enum class ExternLangauge;
+enum class CallingConv;
 AST_FORWARD_DECLARE()
 struct AstExtern;
 
@@ -121,7 +121,7 @@ private:
     TokenSource& m_source;
     const bool m_isMain;
     SymbolTable* m_symbolTable;
-    ExternLangauge m_language;
+    CallingConv m_language;
 
     DiagnosticEngine& m_diag;
     Scope m_scope;
