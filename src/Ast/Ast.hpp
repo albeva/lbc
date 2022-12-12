@@ -21,7 +21,6 @@ enum class AstKind {
 #define KIND_ENUM(id, ...) id,
     AST_CONTENT_NODES(KIND_ENUM)
 #undef KIND_ENUM
-    Extern
         Extern
 };
 
