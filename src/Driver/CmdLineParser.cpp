@@ -145,7 +145,7 @@ OPTIONS:
 void CmdLineParser::showVersion() {
     llvm::outs() << "LightBASIC version " << LBC_VERSION_STRING
                  << " (Based on LLVM " << LLVM_VERSION_STRING << ")\n"
-                 << "(c) Albert Varaksin 2022"
+                 << "(c) Albert Varaksin 2023"
                  << '\n';
     std::exit(EXIT_SUCCESS);
 }

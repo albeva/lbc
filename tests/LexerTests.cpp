@@ -179,7 +179,7 @@ TEST_F(LexerTests, TokenLocation) {
     EXPECT_TOKEN(lbc::TokenKind::Identifier,     "A",     2, 11, 1)
     EXPECT_TOKEN(lbc::TokenKind::Assign,         "=",     2, 13, 1)
     EXPECT_TOKEN(lbc::TokenKind::Identifier,     "B",     2, 15, 1)
-    EXPECT_TOKEN(lbc::TokenKind::Then,           "THEN",  2, 17, 4)
+    EXPECT_TOKEN(lbc::TokenKind::Then,           "THEN",  2, 17, 4)!
     EXPECT_TOKEN(lbc::TokenKind::EndOfStmt,      "",      2, 22, 0)
 
     // line 3
