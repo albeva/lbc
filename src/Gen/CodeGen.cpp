@@ -108,7 +108,7 @@ void CodeGen::visit(AstModule& ast) {
     // close main
     if (mainFn != nullptr) {
         auto* retValue = llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(m_llvmContext));
-        auto& lastBlock = mainFn->getBasicBlockList().back();
+        auto& lastBlock = mainFn->back();
         llvm::ReturnInst::Create(m_llvmContext, retValue, &lastBlock);
     }
 
@@ -135,7 +135,7 @@ llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
         llvm::appendToGlobalCtors(*m_module, m_globalCtorFunc, 0, nullptr);
         llvm::BasicBlock::Create(m_llvmContext, "entry", m_globalCtorFunc);
     }
-    return &m_globalCtorFunc->getBasicBlockList().back();
+    return &m_globalCtorFunc->back();
 }
 
 void CodeGen::visit(AstStmtList& ast) {
