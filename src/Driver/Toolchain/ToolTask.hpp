@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 07/02/2021.
 //
 #pragma once
+#include "pch.hpp"
 namespace lbc {
 
 class Toolchain;
@@ -23,7 +24,7 @@ public:
     ToolTask& addArg(const std::string& name, const std::string& value);
     ToolTask& addPath(const fs::path& path);
     ToolTask& addPath(const std::string& name, const fs::path& value);
-    ToolTask& addArgs(std::initializer_list<std::string> arghs);
+    ToolTask& addArgs(std::initializer_list<std::string> args);
 
     [[nodiscard]] int execute() const noexcept;
 

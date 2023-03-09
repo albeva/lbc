@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 12/06/2021.
 //
 #pragma once
+#include "pch.hpp"
 
 namespace lbc {
 

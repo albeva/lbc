@@ -184,6 +184,7 @@ const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) noex
     }
 
     for (const auto& ptr : context.ptrTypes) {
+        // cppcheck-suppress useStlAlgorithm
         if (ptr->m_base == base) {
             return ptr;
         }
@@ -293,6 +294,7 @@ const TypeFunction* TypeFunction::get(
     std::vector<const TypeRoot*> paramTypes,
     bool variadic) noexcept {
     for (const auto& ptr : context.funcTypes) {
+        // cppcheck-suppress useStlAlgorithm
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {
             return ptr;
         }
@@ -309,6 +311,7 @@ llvm::Type* TypeFunction::genLlvmType(Context& context) const {
     std::vector<llvm::Type*> params;
     params.reserve(m_paramTypes.size());
     for (const auto& param : m_paramTypes) {
+        // cppcheck-suppress useStlAlgorithm
         params.emplace_back(param->getLlvmType(context));
     }
 

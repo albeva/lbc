@@ -2,6 +2,7 @@
 // Created by Albert on 02/03/2022.
 //
 #pragma once
+#include "pch.hpp"
 
 namespace lbc {
 class Token;

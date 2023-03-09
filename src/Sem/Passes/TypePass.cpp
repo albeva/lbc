@@ -61,7 +61,7 @@ const TypeRoot* TypePass::visit(AstFuncDecl& ast) const noexcept {
     std::vector<const TypeRoot*> paramTypes;
     if (ast.params != nullptr) {
         paramTypes.reserve(ast.params->params.size());
-        for (auto& param : ast.params->params) {
+        for (const auto& param : ast.params->params) {
             paramTypes.emplace_back(visit(*param->typeExpr));
         }
     }

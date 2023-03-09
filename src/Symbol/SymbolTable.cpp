@@ -23,7 +23,8 @@ Symbol* SymbolTable::find(llvm::StringRef name, bool recursive) const noexcept {
         return nullptr;
     }
 
-    for (auto* imported : m_imports) {
+    for (const auto* imported : m_imports) {
+        // cppcheck-suppress useStlAlgorithm
         if (auto* found = imported->find(name, recursive)) {
             return found;
         }

@@ -131,7 +131,7 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
             } else {
                 if (lhs < rhs) {
                     ast.direction = AstForStmt::Direction::Increment;
-                } else if (lhs > rhs) {
+                } else {
                     ast.direction = AstForStmt::Direction::Decrement;
                 }
             }

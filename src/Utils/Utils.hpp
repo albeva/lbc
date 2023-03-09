@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 03/07/2020.
 //
 #pragma once
+#include "pch.hpp"
 // do not include pch.h!
 
 #define LOG_VAR(VAR) llvm::outs() << #VAR << " = " << VAR << '\n';

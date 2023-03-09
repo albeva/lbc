@@ -7,7 +7,7 @@ add_library(
     Ast/Ast.hpp
     Ast/AstPrinter.cpp
     Ast/AstPrinter.hpp
-    Ast/AstVisitor.h
+    Ast/AstVisitor.hpp
     Ast/CodePrinter.cpp
     Ast/CodePrinter.hpp
     Ast/ControlFlowStack.hpp
@@ -86,12 +86,12 @@ add_library(
     Utils/Version.hpp
 )
 
-target_precompile_headers(project_options INTERFACE pch.hpp)
-target_include_directories(lbc_lib PUBLIC ${lbc_SOURCE_DIR}/src)
-configure_llvm(lbc_lib)
 target_link_libraries(lbc_lib PUBLIC project_options project_warnings)
+target_precompile_headers(project_options INTERFACE pch.hpp)
+target_include_directories(lbc_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+configure_llvm(lbc_lib)
 
 # lbc executable
 add_executable(lbc main.cpp)
 target_link_libraries(lbc PRIVATE lbc_lib)
-set_target_properties(lbc PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../bin)
+set_target_properties(lbc PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)

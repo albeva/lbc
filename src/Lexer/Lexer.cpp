@@ -83,14 +83,14 @@ void Lexer::next(Token& result) {
         case ',':
             return token(result, TokenKind::Comma);
         case '.': {
-            auto next = m_input[1];
-            if (next == '.') {
+            auto nextCh = m_input[1];
+            if (nextCh == '.') {
                 if (peekChar(2) == '.') {
                     return token(result, TokenKind::Ellipsis, 3);
                 }
                 break;
             }
-            if (isDigit(next)) {
+            if (isDigit(nextCh)) {
                 return numberLiteral(result);
             }
             return token(result, TokenKind::MemberAccess);

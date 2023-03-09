@@ -2,6 +2,7 @@
 // Created by Albert on 03/03/2022.
 //
 #pragma once
+#include "pch.hpp"
 #include "Token.hpp"
 #include "TokenSource.hpp"
 

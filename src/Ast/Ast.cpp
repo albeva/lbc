@@ -2,7 +2,7 @@
 // Created by Albert Varaksin on 05/07/2020.
 //
 #include "Ast.hpp"
-#include "AstVisitor.h"
+#include "AstVisitor.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
 

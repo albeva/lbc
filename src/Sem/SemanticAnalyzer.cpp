@@ -27,6 +27,7 @@ Result<void> SemanticAnalyzer::visit(AstModule& ast) {
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), StateFlags{}, [&]() -> Result<void> {
         for (auto* import : ast.imports) {
+            // cppcheck-suppress useStlAlgorithm
             TRY(visit(*import))
         }
         return visit(*ast.stmtList);
@@ -36,9 +37,12 @@ Result<void> SemanticAnalyzer::visit(AstModule& ast) {
 Result<void> SemanticAnalyzer::visit(AstStmtList& ast) {
     m_declPass.declare(ast);
     for (auto& func : ast.funcs) {
+        // cppcheck-suppress useStlAlgorithm
         TRY(visit(*func))
     }
+
     for (auto& stmt : ast.stmts) {
+        // cppcheck-suppress useStlAlgorithm
         TRY(visit(*stmt))
     }
     return {};
@@ -527,7 +531,7 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
         fatalError("Applying artithmetic operation to non numeric type");
     }
 
-    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
+    const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty))
         m_constantFolder.fold(expr);
         ast.type = ty;
@@ -538,12 +542,12 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     case TypeComparison::Incompatible:
         fatalError("Operator on incompatible types");
     case TypeComparison::Downcast:
-        return convert(ast.rhs, left);
+        return castTo(ast.rhs, left);
     case TypeComparison::Equal:
         ast.type = left;
         return {};
     case TypeComparison::Upcast:
-        return convert(ast.lhs, right);
+        return castTo(ast.lhs, right);
     default:
         llvm_unreachable("unknown comparison result");
     }
@@ -568,7 +572,7 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
         fatalError("Cannot apply operationg to types");
     }
 
-    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
+    const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty))
         m_constantFolder.fold(expr);
         ast.type = TypeBoolean::get();
@@ -579,12 +583,12 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     case TypeComparison::Incompatible:
         fatalError("Operator on incompatible types");
     case TypeComparison::Downcast:
-        return convert(ast.rhs, left);
+        return castTo(ast.rhs, left);
     case TypeComparison::Equal:
         ast.type = TypeBoolean::get();
         return {};
     case TypeComparison::Upcast:
-        return convert(ast.lhs, right);
+        return castTo(ast.lhs, right);
     default:
         llvm_unreachable("unknown comparison result");
     }
@@ -669,7 +673,7 @@ Result<void> SemanticAnalyzer::visit(AstIfExpr& ast) {
     TRY(expression(ast.trueExpr))
     TRY(expression(ast.falseExpr))
 
-    const auto convert = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
+    const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty))
         m_constantFolder.fold(expr);
         ast.type = ty;
@@ -682,12 +686,12 @@ Result<void> SemanticAnalyzer::visit(AstIfExpr& ast) {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types");
     case TypeComparison::Downcast:
-        return convert(ast.falseExpr, left);
+        return castTo(ast.falseExpr, left);
     case TypeComparison::Equal:
         ast.type = left;
         return {};
     case TypeComparison::Upcast:
-        return convert(ast.trueExpr, right);
+        return castTo(ast.trueExpr, right);
     default:
         llvm_unreachable("unknown comparison result");
     }

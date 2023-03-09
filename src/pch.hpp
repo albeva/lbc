@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 03/07/2020.
 //
 #pragma once
+#include "pch.hpp"
 
 // STL
 #include <algorithm>
@@ -57,5 +58,8 @@ using namespace std::literals::string_literals;
 #endif
 
 // APP
+#if defined(_MSC_VER)
+#    pragma warning(disable : 4291)
+#endif
 #include "Utils/Utils.hpp"
 #include "Utils/Version.hpp"

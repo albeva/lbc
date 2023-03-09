@@ -52,9 +52,7 @@ int ToolTask::execute() const noexcept {
     auto program = m_path.string();
     args.emplace_back(program);
 
-    for (const auto& arg : m_args) {
-        args.emplace_back(arg);
-    }
+    std::copy(m_args.begin(), m_args.end(), std::back_inserter(args));
 
     if (m_context.getOptions().isVerbose()) {
         switch (m_kind) {

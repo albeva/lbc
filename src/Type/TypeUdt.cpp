@@ -34,7 +34,7 @@ std::string TypeUDT::asString() const {
 llvm::Type* TypeUDT::genLlvmType(Context& context) const {
     llvm::SmallVector<llvm::Type*> elems;
     elems.reserve(m_symbolTable.size());
-    for (auto* symbol : m_symbolTable.getSymbols()) {
+    for (const auto* symbol : m_symbolTable.getSymbols()) {
         auto* ty = symbol->getType()->getLlvmType(context);
         elems.emplace_back(ty);
     }

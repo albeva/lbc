@@ -2,6 +2,7 @@
 // Created by Albert on 11/12/2022.
 //
 #pragma once
+#include "pch.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Type/Type.hpp"

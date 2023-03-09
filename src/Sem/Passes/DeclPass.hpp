@@ -2,6 +2,7 @@
 // Created by Albert on 26/02/2022.
 //
 #pragma once
+#include "pch.hpp"
 #include "Pass.hpp"
 
 namespace lbc {

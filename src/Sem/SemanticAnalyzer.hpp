@@ -2,7 +2,8 @@
 // Created by Albert Varaksin on 08/07/2020.
 //
 #pragma once
-#include "Ast/AstVisitor.h"
+#include "pch.hpp"
+#include "Ast/AstVisitor.hpp"
 #include "Ast/ControlFlowStack.hpp"
 #include "Ast/ValueFlags.hpp"
 #include "Diag/DiagnosticEngine.hpp"
@@ -29,7 +30,7 @@ public:
     Result<void> expression(AstExpr*& ast, const TypeRoot* type = nullptr);
 
     /// Checks types and if they are convertible, create CAST expression
-    Result<void> coerce(AstExpr*& expr, const TypeRoot* type);
+    Result<void> coerce(AstExpr*& ast, const TypeRoot* type);
 
     /// Cast expression and fold the value
     Result<void> convert(AstExpr*& ast, const TypeRoot* type);

@@ -2,7 +2,8 @@
 // Created by Albert Varaksin on 22/07/2020.
 //
 #pragma once
-#include "AstVisitor.h"
+#include "pch.hpp"
+#include "AstVisitor.hpp"
 
 namespace lbc {
 

@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 03/07/2020.
 //
 #pragma once
+#include "pch.hpp"
 #include "Ast/Ast.def.hpp"
 #include "Diag/DiagnosticEngine.hpp"
 #include "Lexer/Token.hpp"

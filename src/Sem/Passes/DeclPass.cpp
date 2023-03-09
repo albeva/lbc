@@ -138,7 +138,7 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable(), &ast);
     if (ast.params != nullptr) {
         m_sem.with(ast.symbolTable, [&]() {
-            for (auto& param : ast.params->params) {
+            for (const auto& param : ast.params->params) {
                 defineFuncParam(*param);
             }
         });

@@ -2,6 +2,7 @@
 // Created by Albert on 19/02/2022.
 //
 #pragma once
+#include "pch.hpp"
 #include <llvm/ADT/PointerIntPair.h>
 
 namespace lbc {
@@ -21,7 +22,8 @@ public:
 
     constexpr Result() noexcept = default;
 
-    constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
+    // cppcheck-suppress noExplicitConstructor
+    /* explicit */ constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_hasError{ true } {}
 
     constexpr Result& operator=(ResultError /* _ */) noexcept {
@@ -47,6 +49,7 @@ public:
     constexpr Result() noexcept : m_value{ nullptr, false } {}
 
     /// Null value with defined error
+    // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ nullptr, true } {}
 
@@ -56,6 +59,7 @@ public:
     }
 
     /// given pointer value without error
+    // cppcheck-suppress noExplicitConstructor
     constexpr Result(T pointer) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ pointer, false } {}
 
@@ -119,6 +123,7 @@ public:
     : m_value{ std::in_place_type<T> } {}
 
     // Error
+    // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{} {};
 
@@ -128,22 +133,27 @@ public:
     }
 
     // Move value
+    // cppcheck-suppress noExplicitConstructor
     constexpr Result(T&& value) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ std::forward<T>(value) } {}
 
     constexpr inline Result& operator=(T&& other) noexcept {
         m_value = std::move(other.m_value);
+        return *this;
     }
 
     // Copy value
+    // cppcheck-suppress noExplicitConstructor
     constexpr Result(const T& value) noexcept // NOLINT(hicpp-explicit-conversions)
     : m_value{ value } {}
 
     constexpr inline Result& operator=(const T& other) noexcept {
         m_value = other.m_value;
+        return *this;
     }
 
     /// Downcast from derived type to base type
+    // cppcheck-suppress noExplicitConstructor
     template<std::convertible_to<T> U>
     constexpr Result(Result<U>&& other) noexcept // NOLINT(hicpp-explicit-conversions)
         requires std::movable<U>
@@ -164,6 +174,7 @@ public:
         }
     }
 
+    // cppcheck-suppress noExplicitConstructor
     template<std::convertible_to<T> U>
     constexpr Result(const Result<U>& other) noexcept // NOLINT(hicpp-explicit-conversions)
         requires std::copyable<U>
