@@ -164,7 +164,7 @@ void DeclPass::defineVar(AstVarDecl& ast) {
 
     // expression?
     if (ast.expr != nullptr) {
-        TRY_FATAL(m_sem.expression(ast.expr, type));
+        MUST(m_sem.expression(ast.expr, type));
         if (type == nullptr) {
             type = ast.expr->type;
         }

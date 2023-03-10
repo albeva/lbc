@@ -23,7 +23,7 @@ namespace lbc {
         return ResultError{};      \
     }
 
-#define TRY_FATAL(expression)                              \
+#define MUST(expression)                                   \
     if ((expression).hasError()) {                         \
         fatalError("TRY(" #expression ") returned error"); \
     }

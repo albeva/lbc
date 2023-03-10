@@ -85,6 +85,6 @@ const TypeRoot* TypePass::visit(AstTypeOf& ast) const {
     if (ast.type != nullptr) {
         return ast.type;
     }
-    TRY_FATAL(m_sem.visit(ast));
+    MUST(m_sem.visit(ast));
     return ast.type;
 }
