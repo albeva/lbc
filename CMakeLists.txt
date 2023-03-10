@@ -73,6 +73,10 @@ project_options(
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL)
     target_compile_options(project_options INTERFACE "/Zc:__cplusplus")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    target_compile_options(project_options INTERFACE -fno-exceptions -fno-rtti)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(project_options INTERFACE -fno-exceptions -fno-rtti)
 endif()
 
 # Sources
