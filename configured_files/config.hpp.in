@@ -19,4 +19,4 @@ namespace @PROJECT_NAME@::cmake {
         .minor       = @PROJECT_VERSION_MINOR@,
         .patch       = @PROJECT_VERSION_PATCH@
     };
-} // @PROJECT_NAME@::namespace cmake
+} // namespace @PROJECT_NAME@::cmake

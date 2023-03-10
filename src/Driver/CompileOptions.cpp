@@ -1,8 +1,8 @@
 //
 // Created by Albert Varaksin on 12/06/2021.
 //
-using namespace lbc;
 #include "CompileOptions.hpp"
+using namespace lbc;
 
 std::string CompileOptions::getFileExt(FileType type) {
     switch (type) {

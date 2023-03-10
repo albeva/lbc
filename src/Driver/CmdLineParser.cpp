@@ -3,6 +3,7 @@
 //
 #include "CmdLineParser.hpp"
 #include "CompileOptions.hpp"
+#include <cmake/config.hpp>
 #include <llvm/Support/FileSystem.h>
 using namespace lbc;
 
@@ -12,7 +13,7 @@ void CmdLineParser::parse(const Args& args) {
     }
 
     // compiler executable
-    fs::path executable = llvm::sys::fs::getMainExecutable(
+    fs::path const executable = llvm::sys::fs::getMainExecutable(
         args[0],
         reinterpret_cast<void*>(showHelp)); // NOLINT
     m_options.setCompilerPath(executable);
@@ -143,7 +144,7 @@ OPTIONS:
 }
 
 void CmdLineParser::showVersion() {
-    llvm::outs() << "LightBASIC version " << LBC_VERSION_STRING
+    llvm::outs() << "LightBASIC version " << lbc::cmake::project.version
                  << " (Based on LLVM " << LLVM_VERSION_STRING << ")\n"
                  << "(c) Albert Varaksin 2023"
                  << '\n';

@@ -83,12 +83,14 @@ add_library(
     Utils/Utils.cpp
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
-    Utils/Version.hpp
 )
 
-target_link_libraries(lbc_lib PUBLIC project_options project_warnings)
-target_precompile_headers(project_options INTERFACE pch.hpp)
+target_link_libraries(lbc_lib PRIVATE project_options project_warnings)
+target_precompile_headers(lbc_lib PRIVATE pch.hpp)
 target_include_directories(lbc_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(lbc_lib PUBLIC "${CMAKE_BINARY_DIR}/configured_files/include")
+
+include(../cmake/llvm.cmake)
 configure_llvm(lbc_lib)
 
 # lbc executable

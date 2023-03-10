@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.23)
-include(cmake/llvm.cmake)
 
 # Cmake complains about policy if this is not set
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
     set(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
 endif()
+
+# git commit FIXME get the sha automatically
+set(GIT_SHA
+    "Unknown"
+    CACHE STRING "SHA this build was generated from")
 
 # C++ language version to use
 set(CMAKE_CXX_STANDARD 20)
@@ -41,31 +45,11 @@ project(
 # set the startup project for the "play" button in MSVC
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT lbc)
 
-get_property(BUILDING_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-if(BUILDING_MULTI_CONFIG)
-    if(NOT CMAKE_BUILD_TYPE)
-        # Make sure that all supported configuration types have their associated conan packages available. You can
-        # reduce this list to only the configuration types you use, but only if one is not forced-set on the command
-        # line for VS
-        message(TRACE "Setting up multi-config build types")
-        set(CMAKE_CONFIGURATION_TYPES
-            Debug
-            Release
-            RelWithDebInfo
-            MinSizeRel
-            CACHE STRING "Enabled build types" FORCE)
-    else()
-        message(TRACE "User chose a specific build type, so we are using that")
-        set(CMAKE_CONFIGURATION_TYPES
-            ${CMAKE_BUILD_TYPE}
-            CACHE STRING "Enabled build types" FORCE)
-    endif()
-endif()
-
 # Initialize project_options variable related to this project This overwrites `project_options` and sets
 # `project_warnings` uncomment to enable the options. Some of them accept one or more inputs:
 project_options(
-    ENABLE_CPPCHECK
+    # enabling cppcheck has issues with gtest
+    # ENABLE_CPPCHECK
     CPPCHECK_OPTIONS
     --enable=style,performance,warning,portability
     --inline-suppr
@@ -85,7 +69,7 @@ project_options(
     ENABLE_PCH
     WARNINGS_AS_ERRORS)
 
-target_compile_features(project_options INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+# MSVC specific
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL)
     target_compile_options(project_options INTERFACE "/Zc:__cplusplus")
@@ -95,16 +79,18 @@ endif()
 add_subdirectory(configured_files)
 add_subdirectory(src)
 
-# If MSVC is being used, and ASAN is enabled, we need to set the debugger environment so that it behaves well with
-# MSVC's debugger, and we can run the target from visual studio
+# Tests
+if (ENABLE_DEVELOPER_MODE)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# MSVC specific
 if(MSVC)
     get_all_installable_targets(all_targets)
     message("all_targets=${all_targets}")
     set_target_properties(${all_targets} PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_x64);%PATH%")
-endif()
-
-if(CMAKE_SKIP_INSTALL_RULES OR NOT PROJECT_IS_TOP_LEVEL)
-    return()
 endif()
 
 # Experience shows that explicit package naming can help make it easier to sort out potential ABI related issues before
