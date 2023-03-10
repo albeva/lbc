@@ -344,7 +344,7 @@ void Lexer::numberLiteral(Token& result) {
     }
 
     const auto fromChars = [&](auto value, TokenKind kind) {
-        if (std::from_chars(start, m_input, value).ec == std::errc()) {
+        if (std::from_chars(start, m_input, value).ec == std::errc{}) {
             result.set(kind, makeRange(start, m_input), value);
         } else {
             invalid(result, start);
