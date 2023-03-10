@@ -125,7 +125,7 @@ public:
     // Error
     // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions)
-    : m_value{} {};
+    : m_value{} {}
 
     constexpr inline Result& operator=(ResultError /* _ */) {
         m_value.reset();

@@ -343,19 +343,23 @@ void Lexer::numberLiteral(Token& result) {
         break;
     }
 
-    const auto fromChars = [&](auto value, TokenKind kind) {
-        if (std::from_chars(start, m_input, value).ec == std::errc{}) {
-            result.set(kind, makeRange(start, m_input), value);
-        } else {
-            invalid(result, start);
-        }
-    };
-
     if (isFloatingPoint) {
-        fromChars(double{}, TokenKind::FloatingPointLiteral);
-    } else {
-        fromChars(uint64_t{}, TokenKind::IntegerLiteral);
+        std::string const number{ start, m_input };
+        std::size_t size{};
+        double value = std::stod(number, &size);
+        if (size == 0) {
+            return invalid(result, start);
+        }
+        result.set(TokenKind::FloatingPointLiteral, makeRange(start, m_input), value);
+        return;
     }
+
+    uint64_t value{};
+    constexpr int base10 = 10;
+    if (std::from_chars(start, m_input, value, base10).ec != std::errc()) {
+        return invalid(result, start);
+    }
+    result.set(TokenKind::IntegerLiteral, makeRange(start, m_input), value);
 }
 
 void Lexer::identifier(Token& result) {

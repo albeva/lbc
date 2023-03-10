@@ -70,7 +70,7 @@ struct AstModule final : AstRoot {
       fileId{ file },
       hasImplicitMain{ implicitMain },
       imports{ std::move(imports_) },
-      stmtList{ stms } {};
+      stmtList{ stms } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::Module;
@@ -104,7 +104,7 @@ struct AstStmtList final : AstStmt {
     : AstStmt{ AstKind::StmtList, range_ },
       decl{ std::move(decl_) },
       funcs{ std::move(funcs_) },
-      stmts{ std::move(stmts_) } {};
+      stmts{ std::move(stmts_) } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::StmtList;
@@ -154,7 +154,7 @@ struct AstExprStmt final : AstStmt {
         llvm::SMRange range_,
         AstExpr* expr_)
     : AstStmt{ AstKind::ExprStmt, range_ },
-      expr{ expr_ } {};
+      expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::ExprStmt;
@@ -170,7 +170,7 @@ struct AstFuncStmt final : AstStmt {
         AstStmtList* stmtList_)
     : AstStmt{ AstKind::FuncStmt, range_ },
       decl{ decl_ },
-      stmtList{ stmtList_ } {};
+      stmtList{ stmtList_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::FuncStmt;
@@ -185,7 +185,7 @@ struct AstReturnStmt final : AstStmt {
         llvm::SMRange range_,
         AstExpr* expr_)
     : AstStmt{ AstKind::ReturnStmt, range_ },
-      expr{ expr_ } {};
+      expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::ReturnStmt;
@@ -216,7 +216,7 @@ struct AstIfStmt final : AstStmt {
         llvm::SMRange range_,
         std::vector<AstIfStmtBlock*>&& blocks_)
     : AstStmt{ AstKind::IfStmt, range_ },
-      blocks{ std::move(blocks_) } {};
+      blocks{ std::move(blocks_) } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::IfStmt;
@@ -247,7 +247,7 @@ struct AstForStmt final : AstStmt {
       limit{ limit_ },
       step{ step_ },
       stmt{ stmt_ },
-      next{ next_ } {};
+      next{ next_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::ForStmt;
@@ -327,7 +327,7 @@ struct AstAttributeList final : AstRoot {
         llvm::SMRange range_,
         std::vector<AstAttribute*>&& attribs_)
     : AstRoot{ AstKind::AttributeList, range_ },
-      attribs{ std::move(attribs_) } {};
+      attribs{ std::move(attribs_) } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::AttributeList;
@@ -346,7 +346,7 @@ struct AstAttribute final : AstRoot {
         AstExprList* args_)
     : AstRoot{ AstKind::Attribute, range_ },
       identExpr{ ident },
-      args{ args_ } {};
+      args{ args_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::Attribute;
@@ -404,7 +404,7 @@ struct AstVarDecl final : AstDecl {
         AstExpr* expr_)
     : AstDecl{ AstKind::VarDecl, range_, name_, token_, callingConv_, attrs_ },
       typeExpr{ type_ },
-      expr{ expr_ } {};
+      expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::VarDecl;
@@ -429,7 +429,7 @@ struct AstFuncDecl final : AstDecl {
       params{ params_ },
       variadic{ variadic_ },
       retTypeExpr{ retType_ },
-      hasImpl{ hasImpl_ } {};
+      hasImpl{ hasImpl_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::FuncDecl;
@@ -451,7 +451,7 @@ struct AstFuncParamDecl final : AstDecl {
         AstAttributeList* attrs,
         AstTypeExpr* type_)
     : AstDecl{ AstKind::FuncParamDecl, range_, name_, token_, callingConv_, attrs },
-      typeExpr{ type_ } {};
+      typeExpr{ type_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::FuncParamDecl;
@@ -535,7 +535,7 @@ struct AstTypeExpr final : AstRoot {
         int deref)
     : AstRoot{ AstKind::TypeExpr, range_ },
       expr{ expr_ },
-      dereference{ deref } {};
+      dereference{ deref } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::TypeExpr;
@@ -577,7 +577,7 @@ struct AstAssignExpr final : AstExpr {
         AstExpr* rhs_)
     : AstExpr{ AstKind::AssignExpr, range_ },
       lhs{ lhs_ },
-      rhs{ rhs_ } {};
+      rhs{ rhs_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::AssignExpr;
@@ -592,7 +592,7 @@ struct AstIdentExpr final : AstExpr {
         llvm::SMRange range_,
         llvm::StringRef name_)
     : AstExpr{ AstKind::IdentExpr, range_ },
-      name{ name_ } {};
+      name{ name_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::IdentExpr;
@@ -609,7 +609,7 @@ struct AstCallExpr final : AstExpr {
         AstExprList* args_)
     : AstExpr{ AstKind::CallExpr, range_ },
       callable{ callable_ },
-      args{ args_ } {};
+      args{ args_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::CallExpr;
@@ -626,7 +626,7 @@ struct AstLiteralExpr final : AstExpr {
         llvm::SMRange range_,
         Value value_)
     : AstExpr{ AstKind::LiteralExpr, range_ },
-      value{ value_ } {};
+      value{ value_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::LiteralExpr;
@@ -642,7 +642,7 @@ struct AstUnaryExpr final : AstExpr {
         AstExpr* expr_)
     : AstExpr{ AstKind::UnaryExpr, range_ },
       tokenKind{ tokenKind_ },
-      expr{ expr_ } {};
+      expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::UnaryExpr;
@@ -657,7 +657,7 @@ struct AstDereference final : AstExpr {
         llvm::SMRange range_,
         AstExpr* expr_)
     : AstExpr{ AstKind::Dereference, range_ },
-      expr{ expr_ } {};
+      expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::Dereference;
@@ -671,7 +671,7 @@ struct AstAddressOf final : AstExpr {
         llvm::SMRange range_,
         AstExpr* expr_)
     : AstExpr{ AstKind::AddressOf, range_ },
-      expr{ expr_ } {};
+      expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::AddressOf;
@@ -685,7 +685,7 @@ struct AstMemberAccess final : AstExpr {
         llvm::SMRange range_,
         std::vector<AstExpr*>&& exprs_)
     : AstExpr{ AstKind::MemberAccess, range_ },
-      exprs{ std::move(exprs_) } {};
+      exprs{ std::move(exprs_) } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::MemberAccess;
@@ -703,7 +703,7 @@ struct AstBinaryExpr final : AstExpr {
     : AstExpr{ AstKind::BinaryExpr, range_ },
       tokenKind{ tokenKind_ },
       lhs{ lhs_ },
-      rhs{ rhs_ } {};
+      rhs{ rhs_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::BinaryExpr;
@@ -723,7 +723,7 @@ struct AstCastExpr final : AstExpr {
     : AstExpr{ AstKind::CastExpr, range_ },
       expr{ expr_ },
       typeExpr{ typeExpr_ },
-      implicit{ implicit_ } {};
+      implicit{ implicit_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::CastExpr;
@@ -743,7 +743,7 @@ struct AstIfExpr final : AstExpr {
     : AstExpr{ AstKind::IfExpr, range_ },
       expr{ expr_ },
       trueExpr{ trueExpr_ },
-      falseExpr{ falseExpr_ } {};
+      falseExpr{ falseExpr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::IfExpr;

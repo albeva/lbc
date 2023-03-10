@@ -1,4 +1,4 @@
-VERSION="llvm-project-14.0.5"
+VERSION="llvm-project-16.0.0rc3"
 SRC_DIR="$VERSION.src/llvm"
 BUILD_DIR="$VERSION.build"
 
@@ -13,7 +13,6 @@ cmake -G "Ninja" -S "$SRC_DIR" -B "$BUILD_DIR" \
   -DCMAKE_INSTALL_PREFIX=/usr/local  \
   -DCMAKE_CXX_STANDARD=20            \
   -DCMAKE_BUILD_TYPE=Release         \
-  -DCMAKE_OSX_ARCHITECTURES="arm64"  \
   -DDEFAULT_SYSROOT="$(xcrun --show-sdk-path)" \
   -DLLVM_ENABLE_ASSERTIONS=ON        \
   -DLLVM_TARGETS_TO_BUILD="$TARGETS" \

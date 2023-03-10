@@ -17,7 +17,7 @@ public:
     Lexer(Context& context, unsigned fileID);
     ~Lexer() override = default;
 
-    unsigned int getFileId() override { return m_fileId; };
+    unsigned int getFileId() override { return m_fileId; }
     void next(Token& result) override;
     void peek(Token& result) override;
 

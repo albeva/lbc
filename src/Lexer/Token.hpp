@@ -46,7 +46,7 @@ public:
     [[nodiscard]] std::string asString() const;
     [[nodiscard]] const Value& getValue() const { return m_value; }
     [[nodiscard]] llvm::StringRef getStringValue() const { return std::get<llvm::StringRef>(m_value); }
-    [[nodiscard]] const llvm::SMRange& range() const { return m_range; };
+    [[nodiscard]] const llvm::SMRange& range() const { return m_range; }
     [[nodiscard]] llvm::StringRef description() const { return description(m_kind); }
 
     // Info about operators
