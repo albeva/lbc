@@ -25,7 +25,7 @@ Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* 
     advance();
 }
 
-void Parser::reset() noexcept {
+void Parser::reset() {
     m_scope = Scope::Root;
     m_exprFlags = {};
     m_endLoc = {};
@@ -1347,7 +1347,7 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
     return lhs;
 }
 
-void Parser::fixExprOperators() noexcept {
+void Parser::fixExprOperators() {
     if (m_token.is(TokenKind::Assign)) {
         if (m_exprFlags.useAssign) {
             m_exprFlags.useAssign = false;
@@ -1594,13 +1594,13 @@ Result<AstExprList*> Parser::expressionList() {
 // Helpers
 //----------------------------------------
 
-void Parser::replace(TokenKind what, TokenKind with) noexcept {
+void Parser::replace(TokenKind what, TokenKind with) {
     if (m_token.is(what)) {
         m_token.setKind(with);
     }
 }
 
-[[nodiscard]] Result<void> Parser::expect(TokenKind kind) const noexcept {
+[[nodiscard]] Result<void> Parser::expect(TokenKind kind) const {
     if (m_token.is(kind)) {
         return {};
     }

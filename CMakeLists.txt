@@ -86,13 +86,6 @@ if (ENABLE_DEVELOPER_MODE)
     add_subdirectory(tests)
 endif()
 
-# MSVC specific
-if(MSVC)
-    get_all_installable_targets(all_targets)
-    message("all_targets=${all_targets}")
-    set_target_properties(${all_targets} PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_x64);%PATH%")
-endif()
-
 # Experience shows that explicit package naming can help make it easier to sort out potential ABI related issues before
 # they start, while helping you track a build to a specific GIT SHA
 set(CPACK_PACKAGE_FILE_NAME

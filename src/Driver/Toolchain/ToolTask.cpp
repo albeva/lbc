@@ -45,7 +45,7 @@ ToolTask& ToolTask::addArgs(std::initializer_list<std::string> args) {
     return *this;
 }
 
-int ToolTask::execute() const noexcept {
+int ToolTask::execute() const {
     std::vector<llvm::StringRef> args;
     args.reserve(m_args.size() + 1);
 

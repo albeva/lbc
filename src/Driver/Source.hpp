@@ -14,10 +14,10 @@ namespace lbc {
 struct Source final {
     NO_COPY_AND_MOVE(Source)
 
-    Source(CompileOptions::FileType ty, fs::path p, bool gen, const Source* o) noexcept
+    Source(CompileOptions::FileType ty, fs::path p, bool gen, const Source* o)
     : type{ ty }, path{ std::move(p) }, isGenerated{ gen }, origin{ o == nullptr ? *this : *o } {}
 
-    ~Source() noexcept = default;
+    ~Source() = default;
 
     [[nodiscard]] static std::unique_ptr<Source> create(CompileOptions::FileType type, fs::path path, bool generated, const Source* origin = nullptr) {
         return std::make_unique<Source>(type, std::forward<fs::path>(path), generated, origin);

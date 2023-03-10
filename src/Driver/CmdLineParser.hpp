@@ -17,8 +17,8 @@ public:
 
     using Args = llvm::ArrayRef<const char*>;
 
-    explicit CmdLineParser(CompileOptions& options) noexcept : m_options{ options } {}
-    ~CmdLineParser() noexcept = default;
+    explicit CmdLineParser(CompileOptions& options) : m_options{ options } {}
+    ~CmdLineParser() = default;
 
     void parse(const Args& args);
 

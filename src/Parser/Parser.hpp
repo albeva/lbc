@@ -26,14 +26,14 @@ public:
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
-    ~Parser() noexcept = default;
+    ~Parser() = default;
 
     [[nodiscard]] Result<AstModule*> parse();
     [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = {});
     [[nodiscard]] Result<AstTypeExpr*> typeExpr();
 
-    void reset() noexcept;
-    [[nodiscard]] inline const Token& getToken() const noexcept { return m_token; }
+    void reset() ;
+    [[nodiscard]] inline const Token& getToken() const { return m_token; }
 
 private:
     enum class Scope {
@@ -88,8 +88,8 @@ private:
     [[nodiscard]] Result<AstDecl*> udtMember(AstAttributeList* attribs);
 
     // replace token kind with another (e.g. Minus to Negate)
-    void replace(TokenKind what, TokenKind with) noexcept;
-    void fixExprOperators() noexcept;
+    void replace(TokenKind what, TokenKind with) ;
+    void fixExprOperators() ;
 
     // If token matches then advance and return true
     [[nodiscard]] bool accept(TokenKind kind) {
@@ -101,20 +101,20 @@ private:
     }
 
     // expects given token and advances.
-    [[nodiscard]] Result<void> consume(TokenKind kind) noexcept {
+    [[nodiscard]] Result<void> consume(TokenKind kind) {
         TRY(expect(kind))
         advance();
         return {};
     }
 
     // Expects a match, raises error when fails
-    [[nodiscard]] Result<void> expect(TokenKind kind) const noexcept;
+    [[nodiscard]] Result<void> expect(TokenKind kind) const ;
 
     // advance to the next token from the stream
     void advance();
 
     template<typename... Args>
-    [[nodiscard]] ResultError makeError(Diag diag, Args&&... args) const noexcept {
+    [[nodiscard]] ResultError makeError(Diag diag, Args&&... args) const {
         return m_diag.makeError(diag, m_token.range(), std::forward<Args>(args)...);
     }
 

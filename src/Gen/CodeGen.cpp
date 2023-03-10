@@ -24,7 +24,7 @@ CodeGen::CodeGen(Context& context)
   m_constantFalse{ m_builder.getFalse() } {
 }
 
-bool CodeGen::validate() const noexcept {
+bool CodeGen::validate() const {
     assert(m_module != nullptr); // NOLINT
     return !llvm::verifyModule(*m_module, &llvm::outs());
 }

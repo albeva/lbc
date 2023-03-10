@@ -6,7 +6,7 @@
 #include "Symbol.hpp"
 using namespace lbc;
 
-void SymbolTable::insert(Symbol* symbol) noexcept {
+void SymbolTable::insert(Symbol* symbol) {
     m_symbols.insert({ symbol->name(), symbol });
 }
 
@@ -14,7 +14,7 @@ void SymbolTable::import(SymbolTable* table) {
     m_imports.push_back(table);
 }
 
-Symbol* SymbolTable::find(llvm::StringRef name, bool recursive) const noexcept {
+Symbol* SymbolTable::find(llvm::StringRef name, bool recursive) const {
     if (auto iter = m_symbols.find(name); iter != m_symbols.end()) {
         return iter->second;
     }

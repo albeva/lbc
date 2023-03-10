@@ -21,7 +21,7 @@ std::string CompileOptions::getFileExt(FileType type) {
     }
 }
 
-void CompileOptions::validate() const noexcept {
+void CompileOptions::validate() const {
     auto count = getInputCount();
 
     if (count == 0) {
@@ -106,13 +106,13 @@ void CompileOptions::addInputFile(const fs::path& path) {
     m_inputFiles.at(index).emplace_back(path);
 }
 
-size_t CompileOptions::getInputCount() const noexcept {
+size_t CompileOptions::getInputCount() const {
     return std::accumulate(m_inputFiles.begin(), m_inputFiles.end(), size_t{}, [](auto cnt, const auto& vec) {
         return cnt + vec.size();
     });
 }
 
-const std::vector<fs::path>& CompileOptions::getInputFiles(FileType type) const noexcept {
+const std::vector<fs::path>& CompileOptions::getInputFiles(FileType type) const {
     return m_inputFiles.at(static_cast<size_t>(type));
 }
 
@@ -156,7 +156,7 @@ void CompileOptions::setCompilerPath(const fs::path& path) {
 #endif
 }
 
-bool CompileOptions::isMainFile(const fs::path& file) const noexcept { // NOLINT
+bool CompileOptions::isMainFile(const fs::path& file) const { // NOLINT
     if (!m_implicitMain) {
         return false;
     }

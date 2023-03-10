@@ -26,64 +26,64 @@ public:
     using Value = std::variant<std::monostate, llvm::StringRef, uint64_t, double, bool>;
 
     // Describe given token kind
-    static llvm::StringRef description(TokenKind kind) noexcept;
+    static llvm::StringRef description(TokenKind kind) ;
 
     // find matching token for string or return TokenKind::Identifier
-    static TokenKind findKind(llvm::StringRef str) noexcept;
+    static TokenKind findKind(llvm::StringRef str) ;
 
     // set token values
-    void set(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{}) noexcept {
+    void set(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{}) {
         m_kind = kind;
         m_range = range;
         m_value = value;
     }
 
     // Getters
-    [[nodiscard]] TokenKind getKind() const noexcept { return m_kind; }
-    void setKind(TokenKind kind) noexcept { m_kind = kind; }
+    [[nodiscard]] TokenKind getKind() const { return m_kind; }
+    void setKind(TokenKind kind) { m_kind = kind; }
 
-    [[nodiscard]] llvm::StringRef lexeme() const noexcept;
+    [[nodiscard]] llvm::StringRef lexeme() const ;
     [[nodiscard]] std::string asString() const;
-    [[nodiscard]] const Value& getValue() const noexcept { return m_value; }
+    [[nodiscard]] const Value& getValue() const { return m_value; }
     [[nodiscard]] llvm::StringRef getStringValue() const { return std::get<llvm::StringRef>(m_value); }
-    [[nodiscard]] const llvm::SMRange& range() const noexcept { return m_range; };
-    [[nodiscard]] llvm::StringRef description() const noexcept { return description(m_kind); }
+    [[nodiscard]] const llvm::SMRange& range() const { return m_range; };
+    [[nodiscard]] llvm::StringRef description() const { return description(m_kind); }
 
     // Info about operators
-    [[nodiscard]] bool isGeneral() const noexcept;
-    [[nodiscard]] bool isLiteral() const noexcept;
-    [[nodiscard]] bool isSymbol() const noexcept;
-    [[nodiscard]] bool isOperator() const noexcept;
-    [[nodiscard]] bool isKeyword() const noexcept;
+    [[nodiscard]] bool isGeneral() const ;
+    [[nodiscard]] bool isLiteral() const ;
+    [[nodiscard]] bool isSymbol() const ;
+    [[nodiscard]] bool isOperator() const ;
+    [[nodiscard]] bool isKeyword() const ;
 
-    [[nodiscard]] int getPrecedence() const noexcept;
-    [[nodiscard]] bool isBinary() const noexcept;
-    [[nodiscard]] bool isUnary() const noexcept;
-    [[nodiscard]] bool isLeftToRight() const noexcept;
-    [[nodiscard]] bool isRightToLeft() const noexcept;
+    [[nodiscard]] int getPrecedence() const ;
+    [[nodiscard]] bool isBinary() const ;
+    [[nodiscard]] bool isUnary() const ;
+    [[nodiscard]] bool isLeftToRight() const ;
+    [[nodiscard]] bool isRightToLeft() const ;
 
-    static OperatorType getOperatorType(TokenKind kind) noexcept;
+    static OperatorType getOperatorType(TokenKind kind) ;
 
     // Query keyword types
 
-    [[nodiscard]] bool isTypeKeyword() const noexcept;
+    [[nodiscard]] bool isTypeKeyword() const ;
 
     // comparisons
 
-    [[nodiscard]] inline bool is(TokenKind kind) const noexcept {
+    [[nodiscard]] inline bool is(TokenKind kind) const {
         return m_kind == kind;
     }
 
-    [[nodiscard]] inline bool isNot(TokenKind kind) const noexcept {
+    [[nodiscard]] inline bool isNot(TokenKind kind) const {
         return m_kind != kind;
     }
 
-    [[nodiscard]] inline bool isOneOf(TokenKind k1, TokenKind k2) const noexcept {
+    [[nodiscard]] inline bool isOneOf(TokenKind k1, TokenKind k2) const {
         return is(k1) || is(k2);
     }
 
     template<typename... Ts>
-    [[nodiscard]] inline bool isOneOf(TokenKind k1, TokenKind k2, Ts... ks) const noexcept {
+    [[nodiscard]] inline bool isOneOf(TokenKind k1, TokenKind k2, Ts... ks) const {
         return is(k1) || isOneOf(k2, ks...);
     }
 

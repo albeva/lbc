@@ -14,27 +14,27 @@ class Lexer final : public TokenSource {
 public:
     NO_COPY_AND_MOVE(Lexer)
 
-    Lexer(Context& context, unsigned fileID) noexcept;
-    ~Lexer() noexcept override = default;
+    Lexer(Context& context, unsigned fileID) ;
+    ~Lexer() override = default;
 
     unsigned int getFileId() override { return m_fileId; };
     void next(Token& result) override;
     void peek(Token& result) override;
 
 private:
-    void skipUntilLineEnd() noexcept;
-    void skipToNextLine() noexcept;
-    void skipMultilineComment() noexcept;
+    void skipUntilLineEnd() ;
+    void skipToNextLine() ;
+    void skipMultilineComment() ;
 
-    void endOfFile(Token& result) noexcept;
-    void endOfStatement(Token& result) noexcept;
-    void invalid(Token& result, const char* loc) const noexcept;
+    void endOfFile(Token& result) ;
+    void endOfStatement(Token& result) ;
+    void invalid(Token& result, const char* loc) const ;
     void stringLiteral(Token& result);
-    [[nodiscard]] char escape() noexcept;
-    void token(Token& result, TokenKind kind, int len = 1) noexcept;
+    [[nodiscard]] char escape() ;
+    void token(Token& result, TokenKind kind, int len = 1) ;
     void numberLiteral(Token& result);
     void identifier(Token& result);
-    [[nodiscard]] char peekChar(size_t offset) const noexcept;
+    [[nodiscard]] char peekChar(size_t offset) const ;
 
     Context& m_context;
     unsigned int m_fileId;

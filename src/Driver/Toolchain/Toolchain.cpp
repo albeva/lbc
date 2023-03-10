@@ -6,7 +6,7 @@
 
 using namespace lbc;
 
-ToolTask Toolchain::createTask(ToolKind kind) const noexcept {
+ToolTask Toolchain::createTask(ToolKind kind) const {
     return ToolTask{ m_context, getPath(kind), kind };
 }
 

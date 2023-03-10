@@ -17,21 +17,21 @@ constexpr std::array diagKind{
 };
 } // namespace
 
-DiagnosticEngine::DiagnosticEngine(Context& context) noexcept
+DiagnosticEngine::DiagnosticEngine(Context& context)
 : m_context{ context },
   m_sourceMgr{ context.getSourceMrg() } {
     (void)m_context;
 }
 
-const char* DiagnosticEngine::getText(Diag diag) noexcept {
+const char* DiagnosticEngine::getText(Diag diag) {
     return messages[static_cast<size_t>(diag)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 }
 
-llvm::SourceMgr::DiagKind DiagnosticEngine::getKind(Diag diag) noexcept {
+llvm::SourceMgr::DiagKind DiagnosticEngine::getKind(Diag diag) {
     return diagKind[static_cast<size_t>(diag)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 }
 
-void DiagnosticEngine::print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges) noexcept {
+void DiagnosticEngine::print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges) {
     if (m_ignoreErrors) {
         return;
     }

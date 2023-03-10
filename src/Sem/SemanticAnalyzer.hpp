@@ -38,13 +38,13 @@ public:
     /// Creates a CAST expression, without folding
     Result<void> cast(AstExpr*& ast, const TypeRoot* type);
 
-    [[nodiscard]] inline Context& getContext() noexcept { return m_context; }
-    [[nodiscard]] inline SymbolTable* getSymbolTable() noexcept { return m_table; }
-    [[nodiscard]] inline auto& getControlStack() noexcept { return m_controlStack; }
-    [[nodiscard]] inline Sem::TypePass& getTypePass() noexcept { return m_typePass; }
-    [[nodiscard]] inline Sem::ConstantFoldingPass& getConstantFoldingPass() noexcept { return m_constantFolder; }
-    [[nodiscard]] inline Sem::DeclPass& getDeclPass() noexcept { return m_declPass; }
-    [[nodiscard]] inline bool hasImplicitMain() const noexcept { return m_module->hasImplicitMain; }
+    [[nodiscard]] inline Context& getContext() { return m_context; }
+    [[nodiscard]] inline SymbolTable* getSymbolTable() { return m_table; }
+    [[nodiscard]] inline auto& getControlStack() { return m_controlStack; }
+    [[nodiscard]] inline Sem::TypePass& getTypePass() { return m_typePass; }
+    [[nodiscard]] inline Sem::ConstantFoldingPass& getConstantFoldingPass() { return m_constantFolder; }
+    [[nodiscard]] inline Sem::DeclPass& getDeclPass() { return m_declPass; }
+    [[nodiscard]] inline bool hasImplicitMain() const { return m_module->hasImplicitMain; }
 
     template<std::invocable Func>
     inline auto with(Func&& handler) -> std::invoke_result_t<Func> {
@@ -85,8 +85,8 @@ private:
     Result<void> logical(AstBinaryExpr& ast);
     Result<void> comparison(AstBinaryExpr& ast);
 
-    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const noexcept;
-    [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const noexcept;
+    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const ;
+    [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const ;
 
     Context& m_context;
     DiagnosticEngine& m_diag;

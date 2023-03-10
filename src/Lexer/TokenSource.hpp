@@ -10,8 +10,8 @@ class Token;
 class TokenSource {
 public:
     NO_COPY_AND_MOVE(TokenSource)
-    TokenSource() noexcept = default;
-    virtual ~TokenSource() noexcept = default;
+    TokenSource() = default;
+    virtual ~TokenSource() = default;
 
     virtual unsigned int getFileId() = 0;
     virtual void next(Token& result) = 0;

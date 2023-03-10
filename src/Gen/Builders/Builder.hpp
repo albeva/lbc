@@ -14,7 +14,7 @@ class Builder {
 public:
     NO_COPY_AND_MOVE(Builder)
 
-    Builder(CodeGen& gen, T& ast) noexcept
+    Builder(CodeGen& gen, T& ast)
     : m_gen{ gen },
       m_builder{ gen.getBuilder() },
       m_llvmContext{ m_builder.getContext() },

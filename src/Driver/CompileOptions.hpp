@@ -42,82 +42,82 @@ public:
     CompileOptions() = default;
     ~CompileOptions() = default;
 
-    void validate() const noexcept;
+    void validate() const ;
 
 public:
-    [[nodiscard]] CompilationTarget getCompilationTarget() const noexcept { return m_compilationTarget; }
-    void setCompilationTarget(CompilationTarget target) noexcept { m_compilationTarget = target; }
+    [[nodiscard]] CompilationTarget getCompilationTarget() const { return m_compilationTarget; }
+    void setCompilationTarget(CompilationTarget target) { m_compilationTarget = target; }
 
-    [[nodiscard]] bool is64Bit() const noexcept { return m_is64bit; }
-    void set64Bit() noexcept { m_is64bit = true; }
-    [[nodiscard]] bool is32Bit() const noexcept { return !m_is64bit; }
-    void set32Bit() noexcept { m_is64bit = false; }
+    [[nodiscard]] bool is64Bit() const { return m_is64bit; }
+    void set64Bit() { m_is64bit = true; }
+    [[nodiscard]] bool is32Bit() const { return !m_is64bit; }
+    void set32Bit() { m_is64bit = false; }
 
-    [[nodiscard]] OutputType getOutputType() const noexcept { return m_outputType; }
-    void setOutputType(OutputType outputType) noexcept {
+    [[nodiscard]] OutputType getOutputType() const { return m_outputType; }
+    void setOutputType(OutputType outputType) {
         m_outputType = outputType;
         if (m_compilationTarget == CompilationTarget::Executable) {
             setCompilationTarget(CompilationTarget::Assembly);
         }
     }
 
-    [[nodiscard]] bool getDumpAst() const noexcept { return m_astDump; }
-    void setDumpAst(bool dump) noexcept { m_astDump = dump; }
+    [[nodiscard]] bool getDumpAst() const { return m_astDump; }
+    void setDumpAst(bool dump) { m_astDump = dump; }
 
-    [[nodiscard]] bool getDumpCode() const noexcept { return m_codeDump; }
-    void setDumpCode(bool dump) noexcept { m_codeDump = dump; }
+    [[nodiscard]] bool getDumpCode() const { return m_codeDump; }
+    void setDumpCode(bool dump) { m_codeDump = dump; }
 
-    [[nodiscard]] OptimizationLevel getOptimizationLevel() const noexcept { return m_optimizationLevel; }
-    void setOptimizationLevel(OptimizationLevel level) noexcept { m_optimizationLevel = level; }
+    [[nodiscard]] OptimizationLevel getOptimizationLevel() const { return m_optimizationLevel; }
+    void setOptimizationLevel(OptimizationLevel level) { m_optimizationLevel = level; }
 
-    [[nodiscard]] bool isDebugBuild() const noexcept { return m_isDebug; }
-    void setDebugBuild(bool debug) noexcept { m_isDebug = debug; }
+    [[nodiscard]] bool isDebugBuild() const { return m_isDebug; }
+    void setDebugBuild(bool debug) { m_isDebug = debug; }
 
-    [[nodiscard]] bool isVerbose() const noexcept { return m_verbose; }
-    void setVerbose(bool verbose) noexcept { m_verbose = verbose; }
+    [[nodiscard]] bool isVerbose() const { return m_verbose; }
+    void setVerbose(bool verbose) { m_verbose = verbose; }
 
-    [[nodiscard]] bool getImplicitMain() const noexcept { return m_implicitMain; }
-    void setImplicitMain(bool implicitMain) noexcept { m_implicitMain = implicitMain; }
+    [[nodiscard]] bool getImplicitMain() const { return m_implicitMain; }
+    void setImplicitMain(bool implicitMain) { m_implicitMain = implicitMain; }
 
-    [[nodiscard]] const std::optional<fs::path>& getMainFile() const noexcept { return m_mainPath; }
+    [[nodiscard]] const std::optional<fs::path>& getMainFile() const { return m_mainPath; }
     void setMainFile(const fs::path& file);
 
-    [[nodiscard]] const std::vector<fs::path>& getInputFiles(FileType type) const noexcept;
+    [[nodiscard]] const std::vector<fs::path>& getInputFiles(FileType type) const ;
     void addInputFile(const fs::path& path);
 
-    [[nodiscard]] const fs::path& getOutputPath() const noexcept { return m_outputPath; }
+    [[nodiscard]] const fs::path& getOutputPath() const { return m_outputPath; }
     void setOutputPath(const fs::path& path);
 
-    [[nodiscard]] const fs::path& getToolchainDir() const noexcept { return m_toolchainDir; }
+    [[nodiscard]] const fs::path& getToolchainDir() const { return m_toolchainDir; }
     void setToolchainDir(const fs::path& path) { m_toolchainDir = path; }
 
-    [[nodiscard]] const fs::path& getCompilerPath() const noexcept { return m_compilerPath; }
+    [[nodiscard]] const fs::path& getCompilerPath() const { return m_compilerPath; }
     [[nodiscard]] fs::path getCompilerDir() const { return m_compilerPath.parent_path(); }
     void setCompilerPath(const fs::path& path);
 
-    [[nodiscard]] const fs::path& getWorkingDir() const noexcept { return m_workingDir; }
+    [[nodiscard]] const fs::path& getWorkingDir() const { return m_workingDir; }
     void setWorkingDir(const fs::path& path);
 
 public:
-    [[nodiscard]] bool isTargetLinkable() const noexcept {
+    [[nodiscard]] bool isTargetLinkable() const {
         return m_compilationTarget == CompilationTarget::Executable;
     }
 
-    [[nodiscard]] bool isTargetNative() const noexcept {
+    [[nodiscard]] bool isTargetNative() const {
         return m_compilationTarget == CompilationTarget::Executable;
     }
 
-    [[nodiscard]] bool isOutputLLVMIr() const noexcept {
+    [[nodiscard]] bool isOutputLLVMIr() const {
         return m_outputType == OutputType::LLVM && m_compilationTarget == CompilationTarget::Assembly;
     }
 
 public:
-    [[nodiscard]] bool isMainFile(const fs::path& file) const noexcept;
+    [[nodiscard]] bool isMainFile(const fs::path& file) const ;
     [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, const std::string& ext) const;
     [[nodiscard]] fs::path resolveFilePath(const fs::path& path) const;
 
 private:
-    [[nodiscard]] size_t getInputCount() const noexcept;
+    [[nodiscard]] size_t getInputCount() const ;
     [[nodiscard]] static bool validateFile(const fs::path& path);
 
     bool m_verbose = false;

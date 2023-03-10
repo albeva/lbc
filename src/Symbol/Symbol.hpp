@@ -25,41 +25,41 @@ public:
         llvm::StringRef name,
         SymbolTable* table,
         const TypeRoot* type,
-        AstDecl* decl) noexcept
+        AstDecl* decl)
     : m_name{ name }, m_table{ table }, m_type{ type }, m_decl{ decl }, m_alias{ "" } {}
 
-    ~Symbol() noexcept = default;
+    ~Symbol() = default;
 
-    [[nodiscard]] inline ValueFlags& valueFlags() noexcept { return m_flags; }
-    [[nodiscard]] inline StateFlags& stateFlags() noexcept { return m_state; }
+    [[nodiscard]] inline ValueFlags& valueFlags() { return m_flags; }
+    [[nodiscard]] inline StateFlags& stateFlags() { return m_state; }
 
-    [[nodiscard]] unsigned int getIndex() const noexcept { return m_index; }
-    inline void setIndex(unsigned index) noexcept { m_index = index; }
+    [[nodiscard]] unsigned int getIndex() const { return m_index; }
+    inline void setIndex(unsigned index) { m_index = index; }
 
-    [[nodiscard]] inline const TypeRoot* getType() const noexcept { return m_type; }
-    inline void setType(const TypeRoot* type) noexcept { m_type = type; }
+    [[nodiscard]] inline const TypeRoot* getType() const { return m_type; }
+    inline void setType(const TypeRoot* type) { m_type = type; }
 
-    [[nodiscard]] llvm::StringRef name() const noexcept { return m_name; }
+    [[nodiscard]] llvm::StringRef name() const { return m_name; }
 
-    [[nodiscard]] llvm::Value* getLlvmValue() const noexcept { return m_llvmValue; }
-    void setLlvmValue(llvm::Value* value) noexcept { m_llvmValue = value; }
+    [[nodiscard]] llvm::Value* getLlvmValue() const { return m_llvmValue; }
+    void setLlvmValue(llvm::Value* value) { m_llvmValue = value; }
 
-    [[nodiscard]] llvm::StringRef alias() const noexcept { return m_alias; }
-    void setAlias(llvm::StringRef alias) noexcept { m_alias = alias; }
+    [[nodiscard]] llvm::StringRef alias() const { return m_alias; }
+    void setAlias(llvm::StringRef alias) { m_alias = alias; }
 
-    [[nodiscard]] AstDecl* getDecl() const noexcept { return m_decl; }
-    void setDecl(AstDecl* decl) noexcept { m_decl = decl; }
+    [[nodiscard]] AstDecl* getDecl() const { return m_decl; }
+    void setDecl(AstDecl* decl) { m_decl = decl; }
 
-    [[nodiscard]] SymbolTable* getSymbolTable() const noexcept { return m_table; }
+    [[nodiscard]] SymbolTable* getSymbolTable() const { return m_table; }
 
-    [[nodiscard]] llvm::StringRef identifier() const noexcept {
+    [[nodiscard]] llvm::StringRef identifier() const {
         if (m_alias.empty()) {
             return m_name;
         }
         return m_alias;
     }
 
-    [[nodiscard]] llvm::GlobalValue::LinkageTypes getLlvmLinkage() const noexcept {
+    [[nodiscard]] llvm::GlobalValue::LinkageTypes getLlvmLinkage() const {
         if (m_flags.external) {
             return llvm::GlobalValue::LinkageTypes::ExternalLinkage;
         }

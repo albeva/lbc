@@ -9,7 +9,7 @@
 using namespace lbc;
 
 struct Context::Pimpl {
-    explicit Pimpl(Context& context) noexcept
+    explicit Pimpl(Context& context)
     : diag{ context },
       toolchain{ context } {}
 
@@ -34,7 +34,7 @@ Context::Context(const CompileOptions& options)
     }
 }
 
-Context::~Context() noexcept = default;
+Context::~Context() = default;
 
 llvm::StringRef Context::retainCopy(llvm::StringRef str) {
     return m_retainedStrings.insert(str).first->first();

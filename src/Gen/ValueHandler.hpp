@@ -19,34 +19,34 @@ namespace Gen {
     class ValueHandler final : llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
     public:
         /// Create temporary allocated variable - it is not inserted into symbol table
-        static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") noexcept;
+        static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") ;
 
         /// Create temporary variable if expression is not a constant
-        static ValueHandler createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") noexcept;
+        static ValueHandler createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") ;
 
         /// Create temporary from given llvm value
-        static ValueHandler createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept;
+        static ValueHandler createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) ;
 
-        constexpr ValueHandler() noexcept = default;
-        ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept;
-        ValueHandler(CodeGen* gen, Symbol* symbol) noexcept;
-        ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept;
-        ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept;
-        ValueHandler(CodeGen* gen, AstDereference& ast) noexcept;
-        ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept;
+        constexpr ValueHandler() = default;
+        ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) ;
+        ValueHandler(CodeGen* gen, Symbol* symbol) ;
+        ValueHandler(CodeGen* gen, AstIdentExpr& ast) ;
+        ValueHandler(CodeGen* gen, AstMemberAccess& ast) ;
+        ValueHandler(CodeGen* gen, AstDereference& ast) ;
+        ValueHandler(CodeGen* gen, AstAddressOf& ast) ;
 
-        [[nodiscard]] llvm::Value* getAddress() const noexcept;
-        [[nodiscard]] llvm::Value* load() const noexcept;
-        [[nodiscard]] llvm::Type* getLlvmType() const noexcept;
-        void store(llvm::Value* val) const noexcept;
-        void store(ValueHandler& val) const noexcept;
+        [[nodiscard]] llvm::Value* getAddress() const ;
+        [[nodiscard]] llvm::Value* load() const ;
+        [[nodiscard]] llvm::Type* getLlvmType() const ;
+        void store(llvm::Value* val) const ;
+        void store(ValueHandler& val) const ;
 
-        [[nodiscard]] constexpr inline bool isValid() const noexcept {
+        [[nodiscard]] constexpr inline bool isValid() const {
             return m_gen != nullptr;
         }
 
     private:
-        [[nodiscard]] llvm::Value* getAggregageAddress(AstMemberAccess& ast) const noexcept;
+        [[nodiscard]] llvm::Value* getAggregageAddress(AstMemberAccess& ast) const ;
 
         CodeGen* m_gen = nullptr;
         const TypeRoot* m_type = nullptr;

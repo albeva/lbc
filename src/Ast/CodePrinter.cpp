@@ -553,6 +553,6 @@ void CodePrinter::visit(AstIfExpr& ast) {
     m_os << ")";
 }
 
-std::string CodePrinter::indent() const noexcept {
+std::string CodePrinter::indent() const {
     return std::string(m_indent * SPACES, ' ');
 }

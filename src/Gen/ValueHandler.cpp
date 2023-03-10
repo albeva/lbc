@@ -11,7 +11,7 @@
 using namespace lbc;
 using namespace Gen;
 
-ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
+ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) {
     auto* value = gen.visit(expr).load();
     auto* var = gen.getBuilder().CreateAlloca(
         expr.type->getLlvmType(gen.getContext()),
@@ -22,7 +22,7 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringR
     return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) noexcept {
+ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) {
     auto* value = gen.visit(expr).load();
     if (llvm::isa<llvm::Constant>(value)) {
         return { &gen, expr.type, value };
@@ -37,31 +37,31 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llv
     return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) noexcept {
+ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) {
     auto* symbol = gen.getContext().create<Symbol>(name, /* symbol table */ nullptr, type, /* declaring ast node */ nullptr);
     symbol->setLlvmValue(value);
     return { &gen, symbol };
 }
 
-ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value)
 : PointerUnion{ value }, m_gen{ gen }, m_type{ type } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol)
 : PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->getType() } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast)
 : ValueHandler{ gen, ast.symbol } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, AstMemberAccess& ast)
 : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast)
 : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast) noexcept
+ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast)
 : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
-llvm::Value* ValueHandler::getAddress() const noexcept {
+llvm::Value* ValueHandler::getAddress() const {
     if (auto* value = dyn_cast<llvm::Value*>()) {
         return value;
     }
@@ -87,7 +87,7 @@ llvm::Value* ValueHandler::getAddress() const noexcept {
     llvm_unreachable("Unknown ValueHandler type");
 }
 
-llvm::Value* ValueHandler::load() const noexcept {
+llvm::Value* ValueHandler::load() const {
     auto* addr = getAddress();
     if (is<llvm::Value*>()) {
         return addr;
@@ -102,7 +102,7 @@ llvm::Value* ValueHandler::load() const noexcept {
     return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
 }
 
-llvm::Type* ValueHandler::getLlvmType() const noexcept {
+llvm::Type* ValueHandler::getLlvmType() const {
     if (auto* value = dyn_cast<llvm::Value*>()) {
         return value->getType();
     }
@@ -118,7 +118,7 @@ llvm::Type* ValueHandler::getLlvmType() const noexcept {
     llvm_unreachable("Unknown type in getLlvmType");
 }
 
-llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const noexcept {
+llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const {
     auto& builder = m_gen->getBuilder();
 
     llvm::SmallVector<llvm::Value*> idxs{};
@@ -164,11 +164,11 @@ llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const noexc
     return addr;
 }
 
-void ValueHandler::store(llvm::Value* val) const noexcept {
+void ValueHandler::store(llvm::Value* val) const {
     auto* addr = getAddress();
     m_gen->getBuilder().CreateStore(val, addr);
 }
 
-void ValueHandler::store(ValueHandler& val) const noexcept {
+void ValueHandler::store(ValueHandler& val) const {
     store(val.load());
 }

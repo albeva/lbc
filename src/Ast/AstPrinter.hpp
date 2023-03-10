@@ -11,7 +11,7 @@ class Context;
 
 class AstPrinter final : public AstVisitor<AstPrinter> {
 public:
-    explicit AstPrinter(Context& context, llvm::raw_ostream& os) noexcept;
+    explicit AstPrinter(Context& context, llvm::raw_ostream& os) ;
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 

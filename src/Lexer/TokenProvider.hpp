@@ -9,15 +9,15 @@
 namespace lbc {
 class TokenProvider final : public TokenSource {
 public:
-    TokenProvider(unsigned int fileId, std::vector<Token>&& tokens) noexcept
+    TokenProvider(unsigned int fileId, std::vector<Token>&& tokens)
     : m_fileId{ fileId }, m_tokens{ std::move(tokens) } {}
 
     unsigned int getFileId() override { return m_fileId; }
     void next(Token& result) override;
     void peek(Token& result) override;
-    void reset() noexcept { m_index = 0; }
+    void reset() { m_index = 0; }
 
-    llvm::SMRange getRange() const noexcept;
+    llvm::SMRange getRange() const ;
 
 private:
     unsigned int m_fileId;

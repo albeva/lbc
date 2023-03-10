@@ -13,7 +13,7 @@
 using namespace lbc;
 using namespace Sem;
 
-const TypeRoot* TypePass::visit(AstTypeExpr& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstTypeExpr& ast) const {
     const auto visitor = Visitor{
         [&](AstIdentExpr* ident) -> const TypeRoot* {
             return visit(*ident);
@@ -38,7 +38,7 @@ const TypeRoot* TypePass::visit(AstTypeExpr& ast) const noexcept {
     return type;
 }
 
-const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstIdentExpr& ast) const {
     auto* symbol = m_sem.getSymbolTable()->find(ast.name);
     if (symbol == nullptr) {
         fatalError("Undefined type "_t + ast.name);
@@ -56,7 +56,7 @@ const TypeRoot* TypePass::visit(AstIdentExpr& ast) const noexcept {
     return ast.type;
 }
 
-const TypeRoot* TypePass::visit(AstFuncDecl& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstFuncDecl& ast) const {
     // parameters
     std::vector<const TypeRoot*> paramTypes;
     if (ast.params != nullptr) {
@@ -81,7 +81,7 @@ const TypeRoot* TypePass::visit(AstFuncDecl& ast) const noexcept {
     return TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
 }
 
-const TypeRoot* TypePass::visit(AstTypeOf& ast) const noexcept {
+const TypeRoot* TypePass::visit(AstTypeOf& ast) const {
     if (ast.type != nullptr) {
         return ast.type;
     }

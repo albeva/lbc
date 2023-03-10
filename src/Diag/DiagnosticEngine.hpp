@@ -16,17 +16,17 @@ class DiagnosticEngine final {
 public:
     NO_COPY_AND_MOVE(DiagnosticEngine)
 
-    explicit DiagnosticEngine(Context& context) noexcept;
-    ~DiagnosticEngine() noexcept = default;
+    explicit DiagnosticEngine(Context& context) ;
+    ~DiagnosticEngine() = default;
 
-    [[nodiscard]] bool hasErrors() const noexcept { return m_errorCounter > 0; }
+    [[nodiscard]] bool hasErrors() const { return m_errorCounter > 0; }
 
     template<typename... Args>
-    static std::string format(Diag diag, Args&&... args) noexcept {
+    static std::string format(Diag diag, Args&&... args) {
         return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
     }
 
-    void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) noexcept;
+    void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) ;
 
     template<std::invocable Func>
     inline auto ignoringErrors(Func&& func) -> std::invoke_result_t<Func> {
@@ -36,7 +36,7 @@ public:
     }
 
     template<typename... Args>
-    [[nodiscard]] ResultError makeError(Diag diag, const llvm::SMRange& range, Args&&... args) noexcept {
+    [[nodiscard]] ResultError makeError(Diag diag, const llvm::SMRange& range, Args&&... args) {
         print(
             diag,
             range.Start,
@@ -46,8 +46,8 @@ public:
     }
 
 private:
-    static const char* getText(Diag diag) noexcept;
-    static llvm::SourceMgr::DiagKind getKind(Diag diag) noexcept;
+    static const char* getText(Diag diag) ;
+    static llvm::SourceMgr::DiagKind getKind(Diag diag) ;
 
     Context& m_context;
     llvm::SourceMgr& m_sourceMgr;

@@ -20,7 +20,7 @@ void TokenProvider::peek(Token& result) {
     result.set(TokenKind::EndOfStmt, {});
 }
 
-llvm::SMRange TokenProvider::getRange() const noexcept {
+llvm::SMRange TokenProvider::getRange() const {
     if (m_tokens.empty()) {
         return {};
     }

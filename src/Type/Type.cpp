@@ -34,7 +34,7 @@ constexpr TypePointer anyPtrTy{ &anyTy }; // void*
 
 } // namespace
 
-const TypeRoot* TypeRoot::fromTokenKind(TokenKind kind) noexcept {
+const TypeRoot* TypeRoot::fromTokenKind(TokenKind kind) {
     #define CASE_TYPE(ID, ...) case TokenKind::ID: return &ID##Ty;
     switch (kind) {
     PRIMITIVE_TYPES(CASE_TYPE)
@@ -55,18 +55,18 @@ const TypeRoot* TypeRoot::fromTokenKind(TokenKind kind) noexcept {
 
 // clang-format on
 
-bool TypeRoot::isAnyPointer() const noexcept {
+bool TypeRoot::isAnyPointer() const {
     return this == &anyPtrTy;
 }
 
-bool TypeRoot::isSignedIntegral() const noexcept {
+bool TypeRoot::isSignedIntegral() const {
     if (!isIntegral()) {
         return false;
     }
     return static_cast<const TypeIntegral*>(this)->isSigned();
 }
 
-bool TypeRoot::isUnsignedIntegral() const noexcept {
+bool TypeRoot::isUnsignedIntegral() const {
     if (!isIntegral()) {
         return false;
     }
@@ -75,7 +75,7 @@ bool TypeRoot::isUnsignedIntegral() const noexcept {
 
 // clang-format off
 #define CHECK_TYPE_IMPL(ID, ...)             \
-    bool TypeRoot::is##ID() const noexcept { \
+    bool TypeRoot::is##ID() const { \
         return this == &ID##Ty;              \
     }
     INTEGRAL_TYPES(CHECK_TYPE_IMPL)
@@ -83,7 +83,7 @@ bool TypeRoot::isUnsignedIntegral() const noexcept {
 #undef CHECK_TYPE_IMPL
 // clang-format on
 
-TypeComparison TypeRoot::compare(const TypeRoot* other) const noexcept {
+TypeComparison TypeRoot::compare(const TypeRoot* other) const {
     if (this == other) {
         return TypeComparison::Equal;
     }
@@ -135,11 +135,11 @@ TypeComparison TypeRoot::compare(const TypeRoot* other) const noexcept {
     return TypeComparison::Incompatible;
 }
 
-const TypePointer* TypeRoot::getPointer(Context& context) const noexcept {
+const TypePointer* TypeRoot::getPointer(Context& context) const {
     return TypePointer::get(context, this);
 }
 
-const TypeFunction* TypeRoot::getUnderlyingFunctionType() const noexcept {
+const TypeFunction* TypeRoot::getUnderlyingFunctionType() const {
     if (isFunction()) {
         return static_cast<const TypeFunction*>(this);
     }
@@ -151,7 +151,7 @@ const TypeFunction* TypeRoot::getUnderlyingFunctionType() const noexcept {
 
 // Void
 
-const TypeVoid* TypeVoid::get() noexcept {
+const TypeVoid* TypeVoid::get() {
     return &voidTy;
 }
 
@@ -164,7 +164,7 @@ std::string TypeVoid::asString() const {
 }
 
 // Any
-const TypeAny* TypeAny::get() noexcept {
+const TypeAny* TypeAny::get() {
     return &anyTy;
 }
 
@@ -178,7 +178,7 @@ std::string TypeAny::asString() const {
 
 // Pointer
 
-const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) noexcept {
+const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) {
     if (base == &anyTy) {
         return &anyPtrTy;
     }
@@ -205,7 +205,7 @@ std::string TypePointer::asString() const {
 
 // Bool
 
-const TypeBoolean* TypeBoolean::get() noexcept {
+const TypeBoolean* TypeBoolean::get() {
     return &BoolTy;
 }
 
@@ -219,7 +219,7 @@ std::string TypeBoolean::asString() const {
 
 // Integer
 
-const TypeIntegral* TypeIntegral::get(unsigned bits, bool isSigned) noexcept {
+const TypeIntegral* TypeIntegral::get(unsigned bits, bool isSigned) {
 #define USE_TYPE(ID, STR, KIND, BITS, IS_SIGNED, ...) \
     if (bits == BITS && isSigned == IS_SIGNED)        \
         return &ID##Ty;
@@ -229,11 +229,11 @@ const TypeIntegral* TypeIntegral::get(unsigned bits, bool isSigned) noexcept {
     fatalError("Invalid integer type size: "_t + llvm::Twine(bits), false);
 }
 
-const TypeIntegral* TypeIntegral::getSigned() const noexcept {
+const TypeIntegral* TypeIntegral::getSigned() const {
     return TypeIntegral::get(getBits(), true);
 }
 
-const TypeIntegral* TypeIntegral::getUnsigned() const noexcept {
+const TypeIntegral* TypeIntegral::getUnsigned() const {
     return TypeIntegral::get(getBits(), false);
 }
 
@@ -253,7 +253,7 @@ std::string TypeIntegral::asString() const {
 
 // Floating Point
 
-const TypeFloatingPoint* TypeFloatingPoint::get(unsigned bits) noexcept {
+const TypeFloatingPoint* TypeFloatingPoint::get(unsigned bits) {
     switch (bits) {
 #define USE_TYPE(ID, STR, KIND, BITS, ...) \
     case BITS:                             \
@@ -292,7 +292,7 @@ const TypeFunction* TypeFunction::get(
     Context& context,
     const TypeRoot* retType,
     std::vector<const TypeRoot*> paramTypes,
-    bool variadic) noexcept {
+    bool variadic) {
     for (const auto& ptr : context.funcTypes) {
         // cppcheck-suppress useStlAlgorithm
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {
@@ -334,7 +334,7 @@ std::string TypeFunction::asString() const {
 }
 
 // ZString
-const TypeZString* TypeZString::get() noexcept {
+const TypeZString* TypeZString::get() {
     return &ZStringTy;
 }
 

@@ -15,13 +15,13 @@ using namespace Sem;
 // Declare symbols
 //----------------------------------------
 
-void DeclPass::declare(AstStmtList& ast) noexcept {
+void DeclPass::declare(AstStmtList& ast) {
     for (auto* decl : ast.decl) {
         declare(*decl);
     }
 }
 
-void DeclPass::declare(AstDecl& ast) noexcept {
+void DeclPass::declare(AstDecl& ast) {
     auto* symbol = createNewSymbol(ast, nullptr);
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
@@ -35,13 +35,13 @@ void DeclPass::declare(AstDecl& ast) noexcept {
     ast.symbol = symbol;
 }
 
-void DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) noexcept {
+void DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) {
     for (auto* var : vars) {
         declareAndDefine(*var);
     }
 }
 
-void DeclPass::declareAndDefine(AstVarDecl& var) noexcept {
+void DeclPass::declareAndDefine(AstVarDecl& var) {
     declare(var);
     define(var.symbol);
     var.symbol->stateFlags().declared = true;
@@ -51,7 +51,7 @@ void DeclPass::declareAndDefine(AstVarDecl& var) noexcept {
 // Define symbol
 //----------------------------------------
 
-void DeclPass::define(Symbol* symbol) noexcept {
+void DeclPass::define(Symbol* symbol) {
     auto& state = symbol->stateFlags();
     if (state.beingDefined) {
         fatalError("Circular dependency detected on "_t + symbol->name());
@@ -75,7 +75,7 @@ void DeclPass::define(Symbol* symbol) noexcept {
     llvm_unreachable("Unknown decl type");
 }
 
-void DeclPass::defineAlias(AstTypeAlias& ast) noexcept {
+void DeclPass::defineAlias(AstTypeAlias& ast) {
     static constexpr auto getSymbol = Visitor{
         [](AstIdentExpr* ident) -> Symbol* {
             return ident->symbol;
@@ -98,7 +98,7 @@ void DeclPass::defineAlias(AstTypeAlias& ast) noexcept {
     }
 }
 
-void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
+void DeclPass::defineUdt(AstUdtDecl& ast) {
     auto* symbol = ast.symbol;
     bool packed = false;
     if (ast.attributes != nullptr) {
@@ -120,7 +120,7 @@ void DeclPass::defineUdt(AstUdtDecl& ast) noexcept {
     });
 }
 
-void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
+void DeclPass::defineFunc(AstFuncDecl& ast) {
     auto* symbol = ast.symbol;
 
     // main or external?
@@ -145,7 +145,7 @@ void DeclPass::defineFunc(AstFuncDecl& ast) noexcept {
     }
 }
 
-void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
+void DeclPass::defineFuncParam(AstFuncParamDecl& ast) {
     const auto* type = ast.typeExpr->type;
     if (type->isUDT()) {
         fatalError("Passing types by values is not implemented");
@@ -155,7 +155,7 @@ void DeclPass::defineFuncParam(AstFuncParamDecl& ast) noexcept {
     ast.symbol = symbol;
 }
 
-void DeclPass::defineVar(AstVarDecl& ast) noexcept {
+void DeclPass::defineVar(AstVarDecl& ast) {
     // m_type expr?
     const TypeRoot* type = nullptr;
     if (ast.typeExpr != nullptr) {
@@ -186,7 +186,7 @@ void DeclPass::defineVar(AstVarDecl& ast) noexcept {
 // Utils
 //----------------------------------------
 
-Symbol* DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) noexcept {
+Symbol* DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) {
     if (m_sem.getSymbolTable()->find(ast.name, false) != nullptr) {
         fatalError("Redefinition of "_t + ast.name);
     }

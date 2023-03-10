@@ -18,7 +18,7 @@
 
 using namespace lbc;
 
-Driver::Driver(Context& context) noexcept
+Driver::Driver(Context& context)
 : m_context{ context },
   m_options{ context.getOptions() } {}
 
@@ -88,7 +88,7 @@ void Driver::processInputs() {
     }
 }
 
-std::unique_ptr<Source> Driver::deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const noexcept {
+std::unique_ptr<Source> Driver::deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const {
     const auto& original = source.origin.path;
     const auto ext = CompileOptions::getFileExt(type);
     const auto path = temporary

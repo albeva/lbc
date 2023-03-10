@@ -14,31 +14,31 @@ class SymbolTable final {
 
 public:
     NO_COPY_AND_MOVE(SymbolTable)
-    explicit SymbolTable(SymbolTable* parent = nullptr, AstFuncDecl* function = nullptr) noexcept
+    explicit SymbolTable(SymbolTable* parent = nullptr, AstFuncDecl* function = nullptr)
     : m_parent{ parent }, m_function{ function } {}
 
-    ~SymbolTable() noexcept = default;
+    ~SymbolTable() = default;
 
-    [[nodiscard]] SymbolTable* getParent() const noexcept { return m_parent; }
-    void setParent(SymbolTable* parent) noexcept { m_parent = parent; }
+    [[nodiscard]] SymbolTable* getParent() const { return m_parent; }
+    void setParent(SymbolTable* parent) { m_parent = parent; }
 
-    [[nodiscard]] AstFuncDecl* getFunction() const noexcept {
+    [[nodiscard]] AstFuncDecl* getFunction() const {
         if (m_function == nullptr && m_parent != nullptr) {
             return m_parent->getFunction();
         }
         return m_function;
     }
 
-    void insert(Symbol* symbol) noexcept;
+    void insert(Symbol* symbol) ;
     void import(SymbolTable* table);
 
-    [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const noexcept {
+    [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const {
         return find(name, recursive) != nullptr;
     }
-    [[nodiscard]] Symbol* find(llvm::StringRef name, bool recursive = true) const noexcept;
+    [[nodiscard]] Symbol* find(llvm::StringRef name, bool recursive = true) const ;
     [[nodiscard]] std::vector<Symbol*> getSymbols() const;
 
-    [[nodiscard]] auto size() const noexcept { return m_symbols.size(); }
+    [[nodiscard]] auto size() const { return m_symbols.size(); }
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;

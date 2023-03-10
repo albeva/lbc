@@ -9,9 +9,9 @@ template<typename T>
     requires std::is_trivial_v<T>
 struct ValueRestorer final {
     NO_COPY_AND_MOVE(ValueRestorer)
-    constexpr explicit ValueRestorer(T& value) noexcept : m_target{ value }, m_value{ value } {}
+    constexpr explicit ValueRestorer(T& value) : m_target{ value }, m_value{ value } {}
 
-    ~ValueRestorer() noexcept {
+    ~ValueRestorer() {
         m_target = m_value;
     }
 

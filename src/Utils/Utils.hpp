@@ -47,7 +47,7 @@ concept PointersDerivedFrom =
 /**
  * Get Twine from "literal"_t
  */
-inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) noexcept {
+inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) {
     return { str };
 }
 

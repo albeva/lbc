@@ -16,13 +16,13 @@ public:
 
     [[nodiscard]] std::unique_ptr<llvm::Module> getModule();
 
-    [[nodiscard]] bool validate() const noexcept;
+    [[nodiscard]] bool validate() const ;
 
-    [[nodiscard]] Context& getContext() noexcept { return m_context; }
-    [[nodiscard]] llvm::IRBuilder<>& getBuilder() noexcept { return m_builder; }
-    [[nodiscard]] llvm::ConstantInt* getTrue() noexcept { return m_constantTrue; }
-    [[nodiscard]] llvm::ConstantInt* getFalse() noexcept { return m_constantFalse; }
-    [[nodiscard]] auto& getControlStack() noexcept { return m_controlStack; }
+    [[nodiscard]] Context& getContext() { return m_context; }
+    [[nodiscard]] llvm::IRBuilder<>& getBuilder() { return m_builder; }
+    [[nodiscard]] llvm::ConstantInt* getTrue() { return m_constantTrue; }
+    [[nodiscard]] llvm::ConstantInt* getFalse() { return m_constantFalse; }
+    [[nodiscard]] auto& getControlStack() { return m_controlStack; }
 
     void addBlock();
     void terminateBlock(llvm::BasicBlock* dest);

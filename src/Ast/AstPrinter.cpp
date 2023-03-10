@@ -8,7 +8,7 @@
 #include "Type/Type.hpp"
 using namespace lbc;
 
-AstPrinter::AstPrinter(Context& context, llvm::raw_ostream& os) noexcept
+AstPrinter::AstPrinter(Context& context, llvm::raw_ostream& os)
 : m_context{ context }, m_json{ os, 4 } {
 }
 

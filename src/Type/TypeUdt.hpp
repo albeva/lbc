@@ -26,8 +26,8 @@ public:
 
     [[nodiscard]] std::string asString() const final;
 
-    [[nodiscard]] Symbol& getSymbol() const noexcept { return m_symbol; }
-    [[nodiscard]] SymbolTable& getSymbolTable() const noexcept { return m_symbolTable; }
+    [[nodiscard]] Symbol& getSymbol() const { return m_symbol; }
+    [[nodiscard]] SymbolTable& getSymbolTable() const { return m_symbolTable; }
 
 protected:
     llvm::Type* genLlvmType(Context& context) const final;

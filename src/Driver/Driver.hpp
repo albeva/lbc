@@ -18,8 +18,8 @@ class Driver final {
 public:
     NO_COPY_AND_MOVE(Driver)
 
-    explicit Driver(Context& context) noexcept;
-    ~Driver() noexcept = default;
+    explicit Driver(Context& context) ;
+    ~Driver() = default;
 
     void drive();
 
@@ -27,7 +27,7 @@ private:
     using SourceVector = std::vector<std::unique_ptr<Source>>;
 
     void processInputs();
-    [[nodiscard]] std::unique_ptr<Source> deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const noexcept;
+    [[nodiscard]] std::unique_ptr<Source> deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const ;
     [[nodiscard]] SourceVector& getSources(CompileOptions::FileType type) {
         return m_sources.at(static_cast<size_t>(type));
     }

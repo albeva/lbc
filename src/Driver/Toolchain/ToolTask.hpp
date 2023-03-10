@@ -13,10 +13,10 @@ class ToolTask final {
 public:
     NO_COPY_AND_MOVE(ToolTask)
 
-    ToolTask(Context& context, fs::path path, ToolKind kind) noexcept
+    ToolTask(Context& context, fs::path path, ToolKind kind)
     : m_context{ context }, m_path{ std::move(path) }, m_kind{ kind } {}
 
-    ~ToolTask() noexcept = default;
+    ~ToolTask() = default;
 
     ToolTask& reset();
 
@@ -26,7 +26,7 @@ public:
     ToolTask& addPath(const std::string& name, const fs::path& value);
     ToolTask& addArgs(std::initializer_list<std::string> args);
 
-    [[nodiscard]] int execute() const noexcept;
+    [[nodiscard]] int execute() const ;
 
 private:
     std::vector<std::string> m_args;

@@ -343,7 +343,7 @@ Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
     return {};
 }
 
-bool SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const noexcept {
+bool SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const {
     return symbol->stateFlags().declared
         || m_flags.allowUseBeforDefiniation
         || symbol->valueFlags().kind != ValueFlags::Kind::variable
@@ -594,7 +594,7 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     }
 }
 
-bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const noexcept {
+bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const {
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }

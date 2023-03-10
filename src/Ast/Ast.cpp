@@ -14,13 +14,13 @@ constexpr std::array nodes {
 };
 } // namespace literals
 
-llvm::StringRef AstRoot::getClassName() const noexcept {
+llvm::StringRef AstRoot::getClassName() const {
     auto index = static_cast<size_t>(kind);
     assert(index < literals::nodes.size()); // NOLINT
     return literals::nodes.at(index);
 }
 
-std::optional<llvm::StringRef> AstAttributeList::getStringLiteral(llvm::StringRef key) const noexcept {
+std::optional<llvm::StringRef> AstAttributeList::getStringLiteral(llvm::StringRef key) const {
     for (const auto& attr : attribs) {
         if (attr->identExpr->name == key) {
             if (attr->args->exprs.size() != 1) {
@@ -37,7 +37,7 @@ std::optional<llvm::StringRef> AstAttributeList::getStringLiteral(llvm::StringRe
     return "";
 }
 
-bool AstAttributeList::exists(llvm::StringRef name) const noexcept {
+bool AstAttributeList::exists(llvm::StringRef name) const {
     auto iter = std::find_if(attribs.begin(), attribs.end(), [&](const auto& attr) {
         return attr->identExpr->name == name;
     });

@@ -9,7 +9,7 @@
 using namespace lbc;
 using namespace Sem;
 
-void ForStmtPass::visit(AstForStmt& ast) const noexcept {
+void ForStmtPass::visit(AstForStmt& ast) const {
     auto* current = m_sem.getSymbolTable();
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
     m_sem.with(ast.symbolTable, [&]() {
@@ -19,7 +19,7 @@ void ForStmtPass::visit(AstForStmt& ast) const noexcept {
     });
 }
 
-void ForStmtPass::declare(AstForStmt& ast) const noexcept {
+void ForStmtPass::declare(AstForStmt& ast) const {
     m_sem.getDeclPass().declareAndDefine(ast.decls);
     m_sem.getDeclPass().declareAndDefine(*ast.iterator);
     auto flags = ast.iterator->symbol->valueFlags();
@@ -27,7 +27,7 @@ void ForStmtPass::declare(AstForStmt& ast) const noexcept {
     ast.iterator->symbol->valueFlags() = flags;
 }
 
-void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
+void ForStmtPass::analyze(AstForStmt& ast) const {
     TRY_FATAL(m_sem.expression(ast.limit));
 
     if (ast.step != nullptr) {
@@ -107,7 +107,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const noexcept {
     }
 }
 
-void ForStmtPass::determineForDirection(AstForStmt& ast) const noexcept {
+void ForStmtPass::determineForDirection(AstForStmt& ast) const {
     auto* from = llvm::dyn_cast<AstLiteralExpr>(ast.iterator->expr);
     auto* to = llvm::dyn_cast<AstLiteralExpr>(ast.limit);
     const auto* type = ast.iterator->symbol->getType();

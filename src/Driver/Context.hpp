@@ -22,14 +22,14 @@ public:
     NO_COPY_AND_MOVE(Context)
 
     explicit Context(const CompileOptions& options);
-    ~Context() noexcept;
+    ~Context() ;
 
-    [[nodiscard]] const CompileOptions& getOptions() const noexcept { return m_options; }
-    [[nodiscard]] DiagnosticEngine& getDiag() noexcept { return m_diag; }
-    [[nodiscard]] Toolchain& getToolchain() noexcept { return m_toolchain; }
-    [[nodiscard]] llvm::Triple& getTriple() noexcept { return m_triple; }
-    [[nodiscard]] llvm::SourceMgr& getSourceMrg() noexcept { return m_sourceMgr; }
-    [[nodiscard]] llvm::LLVMContext& getLlvmContext() noexcept { return m_llvmContext; }
+    [[nodiscard]] const CompileOptions& getOptions() const { return m_options; }
+    [[nodiscard]] DiagnosticEngine& getDiag() { return m_diag; }
+    [[nodiscard]] Toolchain& getToolchain() { return m_toolchain; }
+    [[nodiscard]] llvm::Triple& getTriple() { return m_triple; }
+    [[nodiscard]] llvm::SourceMgr& getSourceMrg() { return m_sourceMgr; }
+    [[nodiscard]] llvm::LLVMContext& getLlvmContext() { return m_llvmContext; }
 
     /**
      * Retain a copy of the string in the context and return a llvm::StringRef that
@@ -47,7 +47,7 @@ public:
     /**
      * Allocate memory, this memory is not expected to be deallocated
      */
-    void* allocate(size_t bytes, unsigned alignment) noexcept {
+    void* allocate(size_t bytes, unsigned alignment) {
         return m_allocator.Allocate(bytes, alignment);
     }
 
@@ -57,7 +57,7 @@ public:
      * @tparam Args arguments to pass to T constructor
      */
     template<typename T, typename... Args>
-    T* create(Args&&... args) noexcept {
+    T* create(Args&&... args) {
         T* res = static_cast<T*>(allocate(sizeof(T), alignof(T)));
         new (res) T(std::forward<Args>(args)...);
         return res;

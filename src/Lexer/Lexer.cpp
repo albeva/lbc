@@ -15,16 +15,16 @@ namespace {
 using llvm::isAlpha;
 using llvm::isDigit;
 
-inline bool isIdentifierChar(char ch) noexcept {
+inline bool isIdentifierChar(char ch) {
     return isAlpha(ch) || isDigit(ch) || ch == '_';
 }
 
-inline llvm::SMRange makeRange(const char* start, const char* end) noexcept {
+inline llvm::SMRange makeRange(const char* start, const char* end) {
     return { llvm::SMLoc::getFromPointer(start), llvm::SMLoc::getFromPointer(end) };
 }
 } // namespace
 
-Lexer::Lexer(Context& context, unsigned fileID) noexcept
+Lexer::Lexer(Context& context, unsigned fileID)
 : m_context{ context },
   m_fileId{ fileID },
   m_buffer{ m_context.getSourceMrg().getMemoryBuffer(fileID) },
@@ -145,7 +145,7 @@ void Lexer::next(Token& result) {
     // clang-format on
 }
 
-char Lexer::peekChar(size_t offset) const noexcept {
+char Lexer::peekChar(size_t offset) const {
     const auto* ptr = m_input;
     std::advance(ptr, offset);
     if (ptr < m_buffer->getBufferEnd()) {
@@ -166,7 +166,7 @@ void Lexer::peek(Token& result) {
     m_hasStmt = hasStmt;
 }
 
-void Lexer::skipUntilLineEnd() noexcept {
+void Lexer::skipUntilLineEnd() {
     // assume m_input[0] != \r || \n
     while (true) {
         switch (*++m_input) {
@@ -180,7 +180,7 @@ void Lexer::skipUntilLineEnd() noexcept {
     }
 }
 
-void Lexer::skipToNextLine() noexcept {
+void Lexer::skipToNextLine() {
     // assume m_input != \r || \n
     skipUntilLineEnd();
     switch (*m_input) {
@@ -196,7 +196,7 @@ void Lexer::skipToNextLine() noexcept {
     }
 }
 
-void Lexer::skipMultilineComment() noexcept {
+void Lexer::skipMultilineComment() {
     // assume m_input[0] == '/' && m_input[1] == '\''
     m_input++;
     int level = 1;
@@ -223,7 +223,7 @@ void Lexer::skipMultilineComment() noexcept {
     }
 }
 
-void Lexer::endOfFile(Token& result) noexcept {
+void Lexer::endOfFile(Token& result) {
     if (m_hasStmt) {
         m_eolPos = m_input;
         return endOfStatement(result);
@@ -231,12 +231,12 @@ void Lexer::endOfFile(Token& result) noexcept {
     result.set(TokenKind::EndOfFile, makeRange(m_input, m_input));
 }
 
-void Lexer::endOfStatement(Token& result) noexcept {
+void Lexer::endOfStatement(Token& result) {
     m_hasStmt = false;
     result.set(TokenKind::EndOfStmt, makeRange(m_eolPos, m_input));
 }
 
-void Lexer::invalid(Token& result, const char* loc) const noexcept {
+void Lexer::invalid(Token& result, const char* loc) const {
     return result.set(TokenKind::Invalid, makeRange(loc, m_input));
 }
 
@@ -281,7 +281,7 @@ void Lexer::stringLiteral(Token& result) {
         m_context.retainCopy(literal));
 }
 
-char Lexer::escape() noexcept {
+char Lexer::escape() {
     // assume m_input[0] == '\\'
     switch (*++m_input) {
     case 'a':
@@ -310,7 +310,7 @@ char Lexer::escape() noexcept {
     }
 }
 
-void Lexer::token(Token& result, TokenKind kind, int len) noexcept {
+void Lexer::token(Token& result, TokenKind kind, int len) {
     // assume m_input[0] == op[0], m_input[len] == next ch
     m_hasStmt = true;
     const auto* start = m_input;
