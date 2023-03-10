@@ -3,7 +3,7 @@ green='\033[32m'
 reset='\033[0m'
 
 if grep -q microsoft <<< `uname -a`; then
-    LBC=../../bin/lbc.exe
+    LBC=../../bin/lbc
     FILECHECK=../../bin/toolchain/win64/bin/FileCheck.exe
     ECHO="echo -e"
 elif grep -q Msys <<< `uname -a`; then
@@ -19,6 +19,8 @@ else
     FILECHECK=FileCheck
     ECHO="echo -e"
 fi
+
+echo "Using lbs: \"$LBC\" and FileCheck: \"$FILECHECK\""
 
 #
 # test files that should succeed

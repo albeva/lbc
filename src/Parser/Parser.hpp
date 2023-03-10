@@ -19,17 +19,19 @@ struct AstExtern;
 class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
-    struct ExprFlags {
-        bool commaAsAnd : 1;
-        bool useAssign : 1;
-        bool callWithoutParens : 1;
+    enum class ExprFlags {
+        none                = 0U,
+        commaAsAnd          = 1U << 0U,
+        useAssign           = 1U << 1U,
+        callWithoutParens   = 1U << 2U,
+        LLVM_MARK_AS_BITMASK_ENUM(callWithoutParens)
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() = default;
 
     [[nodiscard]] Result<AstModule*> parse();
-    [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = {});
+    [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = ExprFlags::none);
     [[nodiscard]] Result<AstTypeExpr*> typeExpr();
 
     void reset();
@@ -41,11 +43,14 @@ private:
         Function
     };
 
-    struct FuncFlags {
+    enum class FuncFlags {
+        none                = 0,
         // Nameless declaration. For example in type definitions
-        bool isAnonymous : 1;
+        isAnonymous         = 1U << 0U,
         // Is following DECLARE keyword
-        bool isDeclaration : 1;
+        isDeclaration       = 1U << 1U,
+
+        LLVM_MARK_AS_BITMASK_ENUM(isDeclaration)
     };
 
     [[nodiscard]] Result<AstStmtList*> stmtList();

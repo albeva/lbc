@@ -13,6 +13,7 @@
 #include "Type/Type.hpp"
 #include <llvm/ADT/TypeSwitch.h>
 using namespace lbc;
+LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
 
 Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
 : m_context{ context },
@@ -96,11 +97,11 @@ Result<AstStmtList*> Parser::stmtList() {
                 m_imports.emplace_back(import);
             })
             .Case([&](AstExtern* ext) {
-                for (auto* stmt : ext->stmts) {
-                    if (auto* decl = llvm::dyn_cast<AstDecl>(stmt)) {
+                for (auto* eStmt : ext->stmts) {
+                    if (auto* decl = llvm::dyn_cast<AstDecl>(eStmt)) {
                         decls.emplace_back(decl);
                         stms.emplace_back(decl);
-                    } else if (auto* func = llvm::dyn_cast<AstFuncStmt>(stmt)) {
+                    } else if (auto* func = llvm::dyn_cast<AstFuncStmt>(eStmt)) {
                         decls.emplace_back(func->decl);
                         funcs.emplace_back(func);
                     } else {
@@ -172,7 +173,7 @@ Result<AstStmt*> Parser::statement() {
         break;
     }
 
-    auto expr = expression({ .useAssign = true, .callWithoutParens = true });
+    auto expr = expression(ExprFlags::useAssign | ExprFlags::callWithoutParens);
     TRY(expr)
     return m_context.create<AstExprStmt>(expr->range, *expr);
 }
@@ -461,7 +462,7 @@ Result<AstFuncDecl*> Parser::kwDeclare(AstAttributeList* attribs) {
     auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
     advance();
 
-    return funcSignature(start, attribs, { .isDeclaration = true });
+    return funcSignature(start, attribs, FuncFlags::isDeclaration);
 }
 
 /**
@@ -478,7 +479,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
 
     llvm::StringRef id;
     Token token;
-    if (funcFlags.isAnonymous) {
+    if ((funcFlags & FuncFlags::isAnonymous) != FuncFlags::none) {
         id = "";
     } else {
         TRY(expect(TokenKind::Identifier))
@@ -490,7 +491,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
     bool isVariadic = false;
     Result<AstFuncParamList*> params{};
     if (accept(TokenKind::ParenOpen)) {
-        params = funcParamList(isVariadic, funcFlags.isAnonymous);
+        params = funcParamList(isVariadic, (funcFlags & FuncFlags::isAnonymous) != FuncFlags::none);
         TRY(params)
         TRY(consume(TokenKind::ParenClose))
     }
@@ -511,7 +512,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
         *params,
         isVariadic,
         *ret,
-        !funcFlags.isDeclaration);
+        (funcFlags & FuncFlags::isDeclaration) == FuncFlags::none);
 }
 
 /**
@@ -880,7 +881,7 @@ Result<AstIfStmtBlock*> Parser::ifBlock() {
         TRY(consume(TokenKind::Comma))
     }
 
-    auto expr = expression({ .commaAsAnd = true });
+    auto expr = expression(ExprFlags::commaAsAnd);
     TRY(expr)
 
     TRY(consume(TokenKind::Then))
@@ -1055,22 +1056,22 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PostUntil;
-            expr = expression({ .commaAsAnd = true });
+            expr = expression(ExprFlags::commaAsAnd);
             TRY(expr)
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PostWhile;
-            expr = expression({ .commaAsAnd = true });
+            expr = expression(ExprFlags::commaAsAnd);
             TRY(expr)
         }
     } else {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PreUntil;
-            expr = expression({ .commaAsAnd = true });
+            expr = expression(ExprFlags::commaAsAnd);
             TRY(expr)
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PreWhile;
-            expr = expression({ .commaAsAnd = true });
+            expr = expression(ExprFlags::commaAsAnd);
             TRY(expr)
         }
 
@@ -1188,7 +1189,7 @@ Result<AstTypeExpr*> Parser::typeExpr() {
 
     AstTypeExpr::TypeExpr expr;
     if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        auto signature = funcSignature(start, nullptr, { .isAnonymous = true });
+        auto signature = funcSignature(start, nullptr, FuncFlags::isAnonymous);
         TRY(signature)
         expr = *signature;
         mustBePtr = true;
@@ -1302,7 +1303,7 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
     }
 
     // print "hello"
-    if (flags.callWithoutParens && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
+    if ((flags & ExprFlags::callWithoutParens) != ExprFlags::none && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
         auto args = expressionList();
         TRY(args)
@@ -1349,12 +1350,12 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
 
 void Parser::fixExprOperators() {
     if (m_token.is(TokenKind::Assign)) {
-        if (m_exprFlags.useAssign) {
-            m_exprFlags.useAssign = false;
+        if ((m_exprFlags & ExprFlags::useAssign) != ExprFlags::none) {
+            m_exprFlags &= ~ExprFlags::useAssign;
         } else {
             m_token.setKind(TokenKind::Equal);
         }
-    } else if (m_token.is(TokenKind::Comma) && m_exprFlags.commaAsAnd) {
+    } else if (m_token.is(TokenKind::Comma) && (m_exprFlags & ExprFlags::commaAsAnd) != ExprFlags::none) {
         m_token.setKind(TokenKind::CommaAnd);
     }
 }
@@ -1532,7 +1533,7 @@ Result<AstIfExpr*> Parser::ifExpr() {
     auto start = m_token.range().Start;
     advance();
 
-    auto expr = expression({ .commaAsAnd = true });
+    auto expr = expression(ExprFlags::commaAsAnd);
     TRY(expr)
 
     TRY(consume(TokenKind::Then))

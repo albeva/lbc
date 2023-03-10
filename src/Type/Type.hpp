@@ -56,7 +56,8 @@ public:
         }
         return m_llvmType;
     }
-    virtual ~TypeRoot() = default;
+    virtual constexpr ~TypeRoot() = default;
+
     [[nodiscard]] static const TypeRoot* fromTokenKind(TokenKind kind);
     [[nodiscard]] virtual std::string asString() const = 0;
 
