@@ -44,7 +44,7 @@ struct AstRoot {
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
-    void operator delete(void*) {}
+    void operator delete(void* /* ptr */) {}
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {

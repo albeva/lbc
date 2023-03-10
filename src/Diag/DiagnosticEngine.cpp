@@ -19,7 +19,9 @@ constexpr std::array diagKind{
 
 DiagnosticEngine::DiagnosticEngine(Context& context) noexcept
 : m_context{ context },
-  m_sourceMgr{ context.getSourceMrg() } {}
+  m_sourceMgr{ context.getSourceMrg() } {
+    (void)m_context;
+}
 
 const char* DiagnosticEngine::getText(Diag diag) noexcept {
     return messages[static_cast<size_t>(diag)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
