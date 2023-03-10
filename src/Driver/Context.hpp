@@ -22,7 +22,7 @@ public:
     NO_COPY_AND_MOVE(Context)
 
     explicit Context(const CompileOptions& options);
-    ~Context() ;
+    ~Context();
 
     [[nodiscard]] const CompileOptions& getOptions() const { return m_options; }
     [[nodiscard]] DiagnosticEngine& getDiag() { return m_diag; }

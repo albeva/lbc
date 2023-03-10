@@ -16,7 +16,7 @@ class DiagnosticEngine final {
 public:
     NO_COPY_AND_MOVE(DiagnosticEngine)
 
-    explicit DiagnosticEngine(Context& context) ;
+    explicit DiagnosticEngine(Context& context);
     ~DiagnosticEngine() = default;
 
     [[nodiscard]] bool hasErrors() const { return m_errorCounter > 0; }
@@ -26,7 +26,7 @@ public:
         return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
     }
 
-    void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {}) ;
+    void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {});
 
     template<std::invocable Func>
     inline auto ignoringErrors(Func&& func) -> std::invoke_result_t<Func> {
@@ -46,8 +46,8 @@ public:
     }
 
 private:
-    static const char* getText(Diag diag) ;
-    static llvm::SourceMgr::DiagKind getKind(Diag diag) ;
+    static const char* getText(Diag diag);
+    static llvm::SourceMgr::DiagKind getKind(Diag diag);
 
     Context& m_context;
     llvm::SourceMgr& m_sourceMgr;

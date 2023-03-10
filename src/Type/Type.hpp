@@ -57,10 +57,10 @@ public:
         return m_llvmType;
     }
     virtual ~TypeRoot() = default;
-    [[nodiscard]] static const TypeRoot* fromTokenKind(TokenKind kind) ;
+    [[nodiscard]] static const TypeRoot* fromTokenKind(TokenKind kind);
     [[nodiscard]] virtual std::string asString() const = 0;
 
-    [[nodiscard]] const TypePointer* getPointer(Context& context) const ;
+    [[nodiscard]] const TypePointer* getPointer(Context& context) const;
 
     // Type queries
     [[nodiscard]] constexpr bool isVoid() const { return m_kind == TypeFamily::Void; }
@@ -73,15 +73,15 @@ public:
     [[nodiscard]] constexpr bool isFunction() const { return m_kind == TypeFamily::Function; }
     [[nodiscard]] constexpr bool isZString() const { return m_kind == TypeFamily::ZString; }
     [[nodiscard]] constexpr bool isUDT() const { return m_kind == TypeFamily::UDT; }
-    [[nodiscard]] bool isAnyPointer() const ;
-    [[nodiscard]] bool isSignedIntegral() const ;
-    [[nodiscard]] bool isUnsignedIntegral() const ;
+    [[nodiscard]] bool isAnyPointer() const;
+    [[nodiscard]] bool isSignedIntegral() const;
+    [[nodiscard]] bool isUnsignedIntegral() const;
 
     // Handy shorthands
-    [[nodiscard]] const TypeFunction* getUnderlyingFunctionType() const ;
+    [[nodiscard]] const TypeFunction* getUnderlyingFunctionType() const;
 
     // Comparison
-    [[nodiscard]] TypeComparison compare(const TypeRoot* other) const ;
+    [[nodiscard]] TypeComparison compare(const TypeRoot* other) const;
 
     // clang-format off
 
@@ -110,7 +110,7 @@ private:
 class TypeVoid final : public TypeRoot {
 public:
     constexpr TypeVoid() : TypeRoot{ TypeFamily::Void } {}
-    static const TypeVoid* get() ;
+    static const TypeVoid* get();
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Void;
@@ -128,7 +128,7 @@ protected:
 class TypeAny final : public TypeRoot {
 public:
     constexpr TypeAny() : TypeRoot{ TypeFamily::Any } {}
-    [[nodiscard]] static const TypeAny* get() ;
+    [[nodiscard]] static const TypeAny* get();
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Any;
@@ -148,7 +148,7 @@ public:
     constexpr explicit TypePointer(const TypeRoot* base)
     : TypeRoot{ TypeFamily::Pointer }, m_base{ base } {}
 
-    [[nodiscard]] static const TypePointer* get(Context& context, const TypeRoot* base) ;
+    [[nodiscard]] static const TypePointer* get(Context& context, const TypeRoot* base);
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Pointer;
@@ -172,7 +172,7 @@ class TypeBoolean final : public TypeRoot {
 public:
     constexpr TypeBoolean() : TypeRoot{ TypeFamily::Boolean } {}
 
-    [[nodiscard]] static const TypeBoolean* get() ;
+    [[nodiscard]] static const TypeBoolean* get();
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Boolean;
@@ -213,7 +213,7 @@ public:
     constexpr TypeIntegral(unsigned bits, bool isSigned)
     : TypeNumeric{ TypeFamily::Integral, bits }, m_signed{ isSigned } {}
 
-    [[nodiscard]] static const TypeIntegral* get(unsigned bits, bool isSigned) ;
+    [[nodiscard]] static const TypeIntegral* get(unsigned bits, bool isSigned);
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Integral;
@@ -221,8 +221,8 @@ public:
 
     [[nodiscard]] constexpr bool isSigned() const { return m_signed; }
 
-    [[nodiscard]] const TypeIntegral* getSigned() const ;
-    [[nodiscard]] const TypeIntegral* getUnsigned() const ;
+    [[nodiscard]] const TypeIntegral* getSigned() const;
+    [[nodiscard]] const TypeIntegral* getUnsigned() const;
 
     [[nodiscard]] std::string asString() const final;
 
@@ -241,7 +241,7 @@ public:
     constexpr explicit TypeFloatingPoint(unsigned bits)
     : TypeNumeric{ TypeFamily::FloatingPoint, bits } {}
 
-    [[nodiscard]] static const TypeFloatingPoint* get(unsigned bits) ;
+    [[nodiscard]] static const TypeFloatingPoint* get(unsigned bits);
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::FloatingPoint;
@@ -268,7 +268,7 @@ public:
         Context& context,
         const TypeRoot* retType,
         std::vector<const TypeRoot*> paramTypes,
-        bool variadic) ;
+        bool variadic);
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Function;
@@ -302,7 +302,7 @@ class TypeZString final : public TypeRoot {
 public:
     constexpr TypeZString() : TypeRoot{ TypeFamily::ZString } {}
 
-    [[nodiscard]] static const TypeZString* get() ;
+    [[nodiscard]] static const TypeZString* get();
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::ZString;

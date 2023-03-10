@@ -26,10 +26,10 @@ public:
     using Value = std::variant<std::monostate, llvm::StringRef, uint64_t, double, bool>;
 
     // Describe given token kind
-    static llvm::StringRef description(TokenKind kind) ;
+    static llvm::StringRef description(TokenKind kind);
 
     // find matching token for string or return TokenKind::Identifier
-    static TokenKind findKind(llvm::StringRef str) ;
+    static TokenKind findKind(llvm::StringRef str);
 
     // set token values
     void set(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{}) {
@@ -42,7 +42,7 @@ public:
     [[nodiscard]] TokenKind getKind() const { return m_kind; }
     void setKind(TokenKind kind) { m_kind = kind; }
 
-    [[nodiscard]] llvm::StringRef lexeme() const ;
+    [[nodiscard]] llvm::StringRef lexeme() const;
     [[nodiscard]] std::string asString() const;
     [[nodiscard]] const Value& getValue() const { return m_value; }
     [[nodiscard]] llvm::StringRef getStringValue() const { return std::get<llvm::StringRef>(m_value); }
@@ -50,23 +50,23 @@ public:
     [[nodiscard]] llvm::StringRef description() const { return description(m_kind); }
 
     // Info about operators
-    [[nodiscard]] bool isGeneral() const ;
-    [[nodiscard]] bool isLiteral() const ;
-    [[nodiscard]] bool isSymbol() const ;
-    [[nodiscard]] bool isOperator() const ;
-    [[nodiscard]] bool isKeyword() const ;
+    [[nodiscard]] bool isGeneral() const;
+    [[nodiscard]] bool isLiteral() const;
+    [[nodiscard]] bool isSymbol() const;
+    [[nodiscard]] bool isOperator() const;
+    [[nodiscard]] bool isKeyword() const;
 
-    [[nodiscard]] int getPrecedence() const ;
-    [[nodiscard]] bool isBinary() const ;
-    [[nodiscard]] bool isUnary() const ;
-    [[nodiscard]] bool isLeftToRight() const ;
-    [[nodiscard]] bool isRightToLeft() const ;
+    [[nodiscard]] int getPrecedence() const;
+    [[nodiscard]] bool isBinary() const;
+    [[nodiscard]] bool isUnary() const;
+    [[nodiscard]] bool isLeftToRight() const;
+    [[nodiscard]] bool isRightToLeft() const;
 
-    static OperatorType getOperatorType(TokenKind kind) ;
+    static OperatorType getOperatorType(TokenKind kind);
 
     // Query keyword types
 
-    [[nodiscard]] bool isTypeKeyword() const ;
+    [[nodiscard]] bool isTypeKeyword() const;
 
     // comparisons
 

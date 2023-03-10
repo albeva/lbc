@@ -85,8 +85,8 @@ private:
     Result<void> logical(AstBinaryExpr& ast);
     Result<void> comparison(AstBinaryExpr& ast);
 
-    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const ;
-    [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const ;
+    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const;
+    [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const;
 
     Context& m_context;
     DiagnosticEngine& m_diag;

@@ -26,7 +26,7 @@ public:
     ToolTask& addPath(const std::string& name, const fs::path& value);
     ToolTask& addArgs(std::initializer_list<std::string> args);
 
-    [[nodiscard]] int execute() const ;
+    [[nodiscard]] int execute() const;
 
 private:
     std::vector<std::string> m_args;

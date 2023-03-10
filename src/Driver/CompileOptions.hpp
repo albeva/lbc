@@ -42,7 +42,7 @@ public:
     CompileOptions() = default;
     ~CompileOptions() = default;
 
-    void validate() const ;
+    void validate() const;
 
 public:
     [[nodiscard]] CompilationTarget getCompilationTarget() const { return m_compilationTarget; }
@@ -82,7 +82,7 @@ public:
     [[nodiscard]] const std::optional<fs::path>& getMainFile() const { return m_mainPath; }
     void setMainFile(const fs::path& file);
 
-    [[nodiscard]] const std::vector<fs::path>& getInputFiles(FileType type) const ;
+    [[nodiscard]] const std::vector<fs::path>& getInputFiles(FileType type) const;
     void addInputFile(const fs::path& path);
 
     [[nodiscard]] const fs::path& getOutputPath() const { return m_outputPath; }
@@ -112,12 +112,12 @@ public:
     }
 
 public:
-    [[nodiscard]] bool isMainFile(const fs::path& file) const ;
+    [[nodiscard]] bool isMainFile(const fs::path& file) const;
     [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, const std::string& ext) const;
     [[nodiscard]] fs::path resolveFilePath(const fs::path& path) const;
 
 private:
-    [[nodiscard]] size_t getInputCount() const ;
+    [[nodiscard]] size_t getInputCount() const;
     [[nodiscard]] static bool validateFile(const fs::path& path);
 
     bool m_verbose = false;

@@ -16,7 +16,7 @@ public:
 
     [[nodiscard]] std::unique_ptr<llvm::Module> getModule();
 
-    [[nodiscard]] bool validate() const ;
+    [[nodiscard]] bool validate() const;
 
     [[nodiscard]] Context& getContext() { return m_context; }
     [[nodiscard]] llvm::IRBuilder<>& getBuilder() { return m_builder; }

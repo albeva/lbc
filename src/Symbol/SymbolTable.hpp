@@ -29,13 +29,13 @@ public:
         return m_function;
     }
 
-    void insert(Symbol* symbol) ;
+    void insert(Symbol* symbol);
     void import(SymbolTable* table);
 
     [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const {
         return find(name, recursive) != nullptr;
     }
-    [[nodiscard]] Symbol* find(llvm::StringRef name, bool recursive = true) const ;
+    [[nodiscard]] Symbol* find(llvm::StringRef name, bool recursive = true) const;
     [[nodiscard]] std::vector<Symbol*> getSymbols() const;
 
     [[nodiscard]] auto size() const { return m_symbols.size(); }

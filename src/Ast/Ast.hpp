@@ -37,14 +37,14 @@ struct AstRoot {
 
     virtual ~AstRoot() = default;
 
-    [[nodiscard]] llvm::StringRef getClassName() const ;
+    [[nodiscard]] llvm::StringRef getClassName() const;
 
     const AstKind kind;
     const llvm::SMRange range;
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
-    void operator delete(void* /* ptr */) {}
+    void operator delete(void* /* ptr */) {} // NOLINT(cert-dcl54-cpp,hicpp-new-delete-operators,misc-new-delete-overloads)
 
     // Allow placement new
     void* operator new(size_t /*size*/, void* ptr) {
@@ -333,8 +333,8 @@ struct AstAttributeList final : AstRoot {
         return ast->kind == AstKind::AttributeList;
     }
 
-    [[nodiscard]] bool exists(llvm::StringRef name) const ;
-    [[nodiscard]] std::optional<llvm::StringRef> getStringLiteral(llvm::StringRef key) const ;
+    [[nodiscard]] bool exists(llvm::StringRef name) const;
+    [[nodiscard]] std::optional<llvm::StringRef> getStringLiteral(llvm::StringRef key) const;
 
     std::vector<AstAttribute*> attribs;
 };

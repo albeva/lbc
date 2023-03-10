@@ -32,7 +32,7 @@ public:
     [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = {});
     [[nodiscard]] Result<AstTypeExpr*> typeExpr();
 
-    void reset() ;
+    void reset();
     [[nodiscard]] inline const Token& getToken() const { return m_token; }
 
 private:
@@ -88,8 +88,8 @@ private:
     [[nodiscard]] Result<AstDecl*> udtMember(AstAttributeList* attribs);
 
     // replace token kind with another (e.g. Minus to Negate)
-    void replace(TokenKind what, TokenKind with) ;
-    void fixExprOperators() ;
+    void replace(TokenKind what, TokenKind with);
+    void fixExprOperators();
 
     // If token matches then advance and return true
     [[nodiscard]] bool accept(TokenKind kind) {
@@ -108,7 +108,7 @@ private:
     }
 
     // Expects a match, raises error when fails
-    [[nodiscard]] Result<void> expect(TokenKind kind) const ;
+    [[nodiscard]] Result<void> expect(TokenKind kind) const;
 
     // advance to the next token from the stream
     void advance();
