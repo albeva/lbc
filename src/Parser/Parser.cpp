@@ -13,7 +13,7 @@
 #include "Type/Type.hpp"
 #include <llvm/ADT/TypeSwitch.h>
 using namespace lbc;
-using namespace enums::operators;
+using namespace flags::operators;
 
 Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
 : m_context{ context },
@@ -479,7 +479,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
 
     llvm::StringRef id;
     Token token;
-    if (enums::has(funcFlags, FuncFlags::isAnonymous)) {
+    if (flags::has(funcFlags, FuncFlags::isAnonymous)) {
         id = "";
     } else {
         TRY(expect(TokenKind::Identifier))
@@ -491,7 +491,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
     bool isVariadic = false;
     Result<AstFuncParamList*> params{};
     if (accept(TokenKind::ParenOpen)) {
-        params = funcParamList(isVariadic, enums::has(funcFlags, FuncFlags::isAnonymous));
+        params = funcParamList(isVariadic, flags::has(funcFlags, FuncFlags::isAnonymous));
         TRY(params)
         TRY(consume(TokenKind::ParenClose))
     }
@@ -512,7 +512,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
         *params,
         isVariadic,
         *ret,
-        !enums::has(funcFlags, FuncFlags::isDeclaration));
+        !flags::has(funcFlags, FuncFlags::isDeclaration));
 }
 
 /**
@@ -1303,7 +1303,7 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
     }
 
     // print "hello"
-    if (enums::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
+    if (flags::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
         auto args = expressionList();
         TRY(args)
@@ -1350,12 +1350,12 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
 
 void Parser::fixExprOperators() {
     if (m_token.is(TokenKind::Assign)) {
-        if (enums::has(m_exprFlags, ExprFlags::useAssign)) {
-            enums::unset(m_exprFlags, ExprFlags::useAssign);
+        if (flags::has(m_exprFlags, ExprFlags::useAssign)) {
+            flags::unset(m_exprFlags, ExprFlags::useAssign);
         } else {
             m_token.setKind(TokenKind::Equal);
         }
-    } else if (m_token.is(TokenKind::Comma) && enums::has(m_exprFlags, ExprFlags::commaAsAnd)) {
+    } else if (m_token.is(TokenKind::Comma) && flags::has(m_exprFlags, ExprFlags::commaAsAnd)) {
         m_token.setKind(TokenKind::CommaAnd);
     }
 }

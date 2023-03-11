@@ -61,6 +61,5 @@ using namespace std::literals::string_literals;
 #if defined(_MSC_VER)
 #    pragma warning(disable : 4291)
 #endif
+#include "Utils/Flags.hpp"
 #include "Utils/Utils.hpp"
-#include "Utils/Enums.hpp"
-

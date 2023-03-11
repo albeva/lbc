@@ -13,15 +13,17 @@
  */
 #define MARK_AS_FLAGS_ENUM(TYPE) \
     template<>                   \
-    struct enums::EnumTag<TYPE> : std::true_type {}
+    struct flags::FlaggedEnum<TYPE> final : flags::Tag {}
 
-namespace lbc::enums {
+namespace lbc::flags {
+struct Tag{};
+
 template<typename T>
     requires std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>>
-struct EnumTag {};
+struct FlaggedEnum {};
 
 template<typename T>
-concept IsFlagsEnum = std::is_base_of_v<std::true_type, EnumTag<T>>;
+concept IsFlagsEnum = std::is_base_of_v<Tag, FlaggedEnum<T>>;
 
 template<typename T>
 constexpr auto underlying(T val) {
@@ -107,4 +109,4 @@ template<IsFlagsEnum E>
 constexpr void toggle(E& flags, E bits) {
     flags ^= bits;
 }
-} // namespace lbc::enums
+} // namespace lbc::flags
