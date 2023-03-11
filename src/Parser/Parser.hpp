@@ -19,7 +19,8 @@ struct AstExtern;
 class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
-    enum class ExprFlags {
+
+    enum class ExprFlags: unsigned {
         commaAsAnd          = 1U << 0U,
         useAssign           = 1U << 1U,
         callWithoutParens   = 1U << 2U
@@ -36,12 +37,13 @@ public:
     [[nodiscard]] inline const Token& getToken() const { return m_token; }
 
 private:
-    enum class Scope {
+
+    enum class Scope: unsigned {
         Root,
         Function
     };
 
-    enum class FuncFlags {
+    enum class FuncFlags: unsigned {
         none                = 0,
         // Nameless declaration. For example in type definitions
         isAnonymous         = 1U << 0U,

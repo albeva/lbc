@@ -7,27 +7,21 @@
 /**
  * Mark an enum as bitmasked enum
  * \code
- *   enum Flags { a = 1, b = 2, c = 4 };
+ *   enum class Flags: unsigned { a = 1, b = 2, c = 4 };
  *   MARK_AS_FLAGS_ENUM(Flags);
  * \endcode
  */
-#define MARK_AS_FLAGS_ENUM(TYPE)  \
-    template<>                    \
-    struct enums::EnumTag<TYPE> { \
-        std::true_type marked;    \
-    }
+#define MARK_AS_FLAGS_ENUM(TYPE) \
+    template<>                   \
+    struct enums::EnumTag<TYPE> : std::true_type {}
 
 namespace lbc::enums {
 template<typename T>
-    requires std::is_enum_v<T>
-struct EnumTag {
-};
+    requires std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>>
+struct EnumTag {};
 
 template<typename T>
-concept IsFlagsEnum =
-    requires(T) {
-        { EnumTag<T>::marked };
-    };
+concept IsFlagsEnum = std::is_base_of_v<std::true_type, EnumTag<T>>;
 
 template<typename T>
 constexpr auto underlying(T val) {
@@ -35,7 +29,7 @@ constexpr auto underlying(T val) {
 }
 
 inline namespace operators {
-    // Binary expr
+    // Binary operators
 
     template<IsFlagsEnum E>
     constexpr E operator&(E lhs, E rhs) {
@@ -52,14 +46,14 @@ inline namespace operators {
         return static_cast<E>(underlying(lhs) ^ underlying(rhs));
     }
 
-    // unary expr
+    // unary operator
 
     template<IsFlagsEnum E>
     constexpr E operator~(E val) {
         return static_cast<E>(~underlying(val));
     }
 
-    // assign expressions
+    // assignment
 
     template<IsFlagsEnum E>
     constexpr E& operator|=(E& lhs, E rhs) {
@@ -94,22 +88,22 @@ inline namespace operators {
 
 // helper functions
 template<IsFlagsEnum E>
-constexpr bool has(E flags, E flag) {
-    return (flags & flag) != 0;
+constexpr bool has(E flags, E bits) {
+    return (flags & bits) == bits;
 }
 
 template<IsFlagsEnum E>
-constexpr void set(E& flags, E flag) {
-    flags |= flag;
+constexpr void set(E& flags, E bits) {
+    flags |= bits;
 }
 
 template<IsFlagsEnum E>
-constexpr void unset(E& flags, E flag) {
-    flags &= ~flag;
+constexpr void unset(E& flags, E bits) {
+    flags &= ~bits;
 }
 
 template<IsFlagsEnum E>
-constexpr void toggle(E& flags, E flag) {
-    flags ^= flag;
+constexpr void toggle(E& flags, E bits) {
+    flags ^= bits;
 }
 } // namespace lbc::enums
