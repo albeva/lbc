@@ -77,16 +77,17 @@ inline namespace operators {
 
     template<IsFlagsEnum E, typename U = std::underlying_type<E>>
     constexpr bool operator==(E lhs, U rhs) {
-        return lhs == static_cast<E>(rhs);
+        return underlying(lhs) == rhs;
     }
 
     template<IsFlagsEnum E, typename U = std::underlying_type<E>>
     constexpr bool operator!=(E lhs, U rhs) {
-        return lhs != static_cast<E>(rhs);
+        return underlying(lhs) != rhs;
     }
 } // namespace operators
 
 // helper functions
+
 template<IsFlagsEnum E>
 constexpr bool has(E flags, E bits) {
     return (flags & bits) == bits;
