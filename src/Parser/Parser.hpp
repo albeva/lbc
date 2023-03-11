@@ -44,7 +44,6 @@ private:
     };
 
     enum class FuncFlags: unsigned {
-        none                = 0,
         // Nameless declaration. For example in type definitions
         isAnonymous         = 1U << 0U,
         // Is following DECLARE keyword

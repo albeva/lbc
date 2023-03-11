@@ -479,7 +479,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
 
     llvm::StringRef id;
     Token token;
-    if ((funcFlags & FuncFlags::isAnonymous) != FuncFlags::none) {
+    if (enums::has(funcFlags, FuncFlags::isAnonymous)) {
         id = "";
     } else {
         TRY(expect(TokenKind::Identifier))
@@ -491,7 +491,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
     bool isVariadic = false;
     Result<AstFuncParamList*> params{};
     if (accept(TokenKind::ParenOpen)) {
-        params = funcParamList(isVariadic, (funcFlags & FuncFlags::isAnonymous) != FuncFlags::none);
+        params = funcParamList(isVariadic, enums::has(funcFlags, FuncFlags::isAnonymous));
         TRY(params)
         TRY(consume(TokenKind::ParenClose))
     }
@@ -512,7 +512,7 @@ Result<AstFuncDecl*> Parser::funcSignature(llvm::SMLoc start, AstAttributeList* 
         *params,
         isVariadic,
         *ret,
-        (funcFlags & FuncFlags::isDeclaration) == FuncFlags::none);
+        !enums::has(funcFlags, FuncFlags::isDeclaration));
 }
 
 /**
@@ -1303,7 +1303,7 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
     }
 
     // print "hello"
-    if ((flags & ExprFlags::callWithoutParens) != 0 && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
+    if (enums::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
         auto args = expressionList();
         TRY(args)
