@@ -13,7 +13,7 @@
 #include "Type/Type.hpp"
 #include <llvm/ADT/TypeSwitch.h>
 using namespace lbc;
-LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
+using namespace enums::operators;
 
 Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
 : m_context{ context },
@@ -1303,7 +1303,7 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
     }
 
     // print "hello"
-    if ((flags & ExprFlags::callWithoutParens) != ExprFlags::none && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
+    if ((flags & ExprFlags::callWithoutParens) != 0 && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
         auto start = expr->range.Start;
         auto args = expressionList();
         TRY(args)
@@ -1350,12 +1350,12 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
 
 void Parser::fixExprOperators() {
     if (m_token.is(TokenKind::Assign)) {
-        if ((m_exprFlags & ExprFlags::useAssign) != ExprFlags::none) {
-            m_exprFlags &= ~ExprFlags::useAssign;
+        if (enums::has(m_exprFlags, ExprFlags::useAssign)) {
+            enums::unset(m_exprFlags, ExprFlags::useAssign);
         } else {
             m_token.setKind(TokenKind::Equal);
         }
-    } else if (m_token.is(TokenKind::Comma) && (m_exprFlags & ExprFlags::commaAsAnd) != ExprFlags::none) {
+    } else if (m_token.is(TokenKind::Comma) && enums::has(m_exprFlags, ExprFlags::commaAsAnd)) {
         m_token.setKind(TokenKind::CommaAnd);
     }
 }

@@ -83,7 +83,7 @@ add_library(
     Utils/Utils.cpp
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
-)
+    Utils/Enums.hpp)
 
 target_link_libraries(lbc_lib PRIVATE project_options project_warnings)
 target_precompile_headers(lbc_lib PRIVATE pch.hpp)

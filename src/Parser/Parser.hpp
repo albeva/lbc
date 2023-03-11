@@ -20,18 +20,16 @@ class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
     enum class ExprFlags {
-        none                = 0U,
         commaAsAnd          = 1U << 0U,
         useAssign           = 1U << 1U,
-        callWithoutParens   = 1U << 2U,
-        LLVM_MARK_AS_BITMASK_ENUM(callWithoutParens)
+        callWithoutParens   = 1U << 2U
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() = default;
 
     [[nodiscard]] Result<AstModule*> parse();
-    [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = ExprFlags::none);
+    [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = {});
     [[nodiscard]] Result<AstTypeExpr*> typeExpr();
 
     void reset();
@@ -49,8 +47,6 @@ private:
         isAnonymous         = 1U << 0U,
         // Is following DECLARE keyword
         isDeclaration       = 1U << 1U,
-
-        LLVM_MARK_AS_BITMASK_ENUM(isDeclaration)
     };
 
     [[nodiscard]] Result<AstStmtList*> stmtList();
@@ -136,5 +132,7 @@ private:
     std::vector<AstImport*> m_imports{};
     ExprFlags m_exprFlags{};
 };
+MARK_AS_FLAGS_ENUM(Parser::ExprFlags);
+MARK_AS_FLAGS_ENUM(Parser::FuncFlags);
 
 } // namespace lbc

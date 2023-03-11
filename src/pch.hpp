@@ -62,3 +62,5 @@ using namespace std::literals::string_literals;
 #    pragma warning(disable : 4291)
 #endif
 #include "Utils/Utils.hpp"
+#include "Utils/Enums.hpp"
+
