@@ -5,8 +5,6 @@
 #include "Driver/TempFileCache.hpp"
 
 void lbc::fatalError(const llvm::Twine& message, bool prefix) {
-    TempFileCache::removeTemporaryFiles();
-
     if (prefix) {
         llvm::errs() << "lbc: error: ";
     }
