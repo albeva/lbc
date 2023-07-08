@@ -18,6 +18,23 @@
 
 using namespace lbc;
 
+namespace {
+std::string exec(const char* cmd) {
+    constexpr auto bufferSize = 1024;
+    std::array<char, bufferSize> buffer{};
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> const pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        fatalError("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    auto ref = llvm::StringRef(result);
+    return ref.trim().str();
+}
+}
+
 Driver::Driver(Context& context)
 : m_context{ context },
   m_options{ context.getOptions() } {}
@@ -223,10 +240,6 @@ void Driver::emitExecutable() {
         fatalError("No objects to link");
     }
 
-    if (!triple.isX86()) {
-        fatalError("Currently only x86 is supported");
-    }
-
     if (triple.isArch32Bit()) {
         fatalError("32bit is not implemented yet");
     }
@@ -274,9 +287,10 @@ void Driver::emitExecutable() {
                 "-)" })
             .addPath(sysLibPath / "crtend.o");
     } else if (triple.isMacOSX()) {
+        auto macosSdk = exec("xcrun --show-sdk-path");
         linker
             .addPath("-L", "/usr/local/lib")
-            .addPath("-syslibroot", "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
+            .addPath("-syslibroot", macosSdk)
             .addArg("-lSystem")
             .addPath("-o", output);
 
@@ -284,7 +298,7 @@ void Driver::emitExecutable() {
             linker.addPath(obj->path);
         }
     } else if (triple.isOSLinux()) {
-        std::string linuxSysPath = "/usr/lib/x86_64-linux-gnu";
+        std::string const linuxSysPath = "/usr/lib/x86_64-linux-gnu";
         linker
             .addArg("-m", "elf_x86_64")
             .addArg("-dynamic-linker", "/lib64/ld-linux-x86-64.so.2")

@@ -27,12 +27,12 @@ Checks: '*,
         -bugprone-easily-swappable-parameters,
         -cppcoreguidelines-virtual-class-destructor,
         -cppcoreguidelines-avoid-const-or-ref-data-members,
-        -readability-duplicate-include'
+        -readability-duplicate-include
+        -cert-env33-c'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
-FormatStyle: none
+FormatStyle: webkit
 CheckOptions:
-  - key:    readability-identifier-length.MinimumVariableNameLength
-    value:  2
-  - key:    readability-identifier-length.MinimumParameterNameLength
-    value:  2
+  readability-identifier-length:
+    MinimumVariableNameLength: 2
+    MinimumParameterNameLength: 2
