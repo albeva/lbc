@@ -20,7 +20,7 @@ using namespace lbc;
 
 namespace {
 std::string exec(const char* cmd) {
-    constexpr auto bufferSize = 1024;
+    constexpr auto bufferSize = 128;
     std::array<char, bufferSize> buffer{};
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> const pipe(popen(cmd, "r"), pclose);
