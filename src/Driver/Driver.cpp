@@ -20,6 +20,7 @@ using namespace lbc;
 
 namespace {
 std::string exec(const char* cmd) {
+#ifdef __APPLE__
     constexpr auto bufferSize = 128;
     std::array<char, bufferSize> buffer{};
     std::string result;
@@ -32,6 +33,10 @@ std::string exec(const char* cmd) {
     }
     auto ref = llvm::StringRef(result);
     return ref.trim().str();
+#else
+    (void)cmd;
+    fatalError("exec unsupported");
+#endif
 }
 }
 
