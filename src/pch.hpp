@@ -32,7 +32,7 @@ using namespace std::literals::string_literals;
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/StringSet.h>
-#include <llvm/ADT/Triple.h>
+#include <llvm/TargetParser/Triple.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/Config/llvm-config.h>
 #include <llvm/IR/BasicBlock.h>
