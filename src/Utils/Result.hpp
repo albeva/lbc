@@ -23,7 +23,7 @@ public:
     constexpr Result() = default;
 
     // cppcheck-suppress noExplicitConstructor
-    /* explicit */ constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions)
+    /* explicit */ constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError{ true } {}
 
     constexpr Result& operator=(ResultError /* _ */) {
@@ -50,7 +50,7 @@ public:
 
     /// Null value with defined error
     // cppcheck-suppress noExplicitConstructor
-    constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ nullptr, true } {}
 
     constexpr Result& operator=(ResultError /* _ */) {
@@ -60,7 +60,7 @@ public:
 
     /// given pointer value without error
     // cppcheck-suppress noExplicitConstructor
-    constexpr Result(T pointer) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(T pointer) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ pointer, false } {}
 
     constexpr Result& operator=(T pointer) {
@@ -73,7 +73,7 @@ public:
     friend class Result;
 
     template<PointersDerivedFrom<T> U>
-    constexpr Result(Result<U>&& other) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(Result<U>&& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ other.m_value.getPointer(), other.m_value.getInt() } {}
 
     template<PointersDerivedFrom<T> U>
@@ -124,7 +124,7 @@ public:
 
     // Error
     // cppcheck-suppress noExplicitConstructor
-    constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{} {}
 
     constexpr inline Result& operator=(ResultError /* _ */) {
@@ -134,7 +134,7 @@ public:
 
     // Move value
     // cppcheck-suppress noExplicitConstructor
-    constexpr Result(T&& value) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(T&& value) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ std::forward<T>(value) } {}
 
     constexpr inline Result& operator=(T&& other) {
@@ -144,7 +144,7 @@ public:
 
     // Copy value
     // cppcheck-suppress noExplicitConstructor
-    constexpr Result(const T& value) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(const T& value) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ value } {}
 
     constexpr inline Result& operator=(const T& other) {
@@ -155,7 +155,7 @@ public:
     /// Downcast from derived type to base type
     // cppcheck-suppress noExplicitConstructor
     template<std::convertible_to<T> U>
-    constexpr Result(Result<U>&& other) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(Result<U>&& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
         requires std::movable<U>
     : m_value{} {
         if (!other.hasError()) {
@@ -176,7 +176,7 @@ public:
 
     // cppcheck-suppress noExplicitConstructor
     template<std::convertible_to<T> U>
-    constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions)
+    constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
         requires std::copyable<U>
     : m_value{} {
         if (!other.hasError()) {

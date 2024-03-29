@@ -10,6 +10,8 @@ void lbc::fatalError(const llvm::Twine& message, bool prefix) {
     }
     llvm::errs() << message << '\n';
 
+    TempFileCache::removeTemporaryFiles();
+
     std::exit(EXIT_FAILURE);
 }
 
