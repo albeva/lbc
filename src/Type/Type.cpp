@@ -340,7 +340,7 @@ const TypeZString* TypeZString::get() {
 }
 
 llvm::Type* TypeZString::genLlvmType(Context& context) const {
-    return llvm::Type::getInt8PtrTy(context.getLlvmContext());
+    return llvm::PointerType::get(context.getLlvmContext(), 0);
 }
 
 std::string TypeZString::asString() const {

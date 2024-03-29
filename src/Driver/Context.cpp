@@ -5,7 +5,7 @@
 #include "CompileOptions.hpp"
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
-#include <llvm/Support/Host.h>
+#include <llvm/TargetParser/Host.h>
 using namespace lbc;
 
 struct Context::Pimpl {
