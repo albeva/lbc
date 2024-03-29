@@ -27,7 +27,7 @@ Checks: '*,
         -bugprone-easily-swappable-parameters,
         -cppcoreguidelines-virtual-class-destructor,
         -cppcoreguidelines-avoid-const-or-ref-data-members,
-        -readability-duplicate-include
+        -readability-duplicate-include,
         -cert-env33-c,
         -misc-no-recursion'
 WarningsAsErrors: '*'
