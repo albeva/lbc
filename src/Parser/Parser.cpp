@@ -250,7 +250,6 @@ Result<AstExtern*> Parser::kwExtern() {
 
     std::vector<AstStmt*> stmts{};
 
-    Result<AstStmt*> const stmt = nullptr;
     if (accept(TokenKind::EndOfStmt)) {
         while (m_token.isNot(TokenKind::End)) {
             auto decl = declaration();
@@ -265,7 +264,7 @@ Result<AstExtern*> Parser::kwExtern() {
         TRY(consume(TokenKind::Extern))
     } else {
         auto decl = declaration();
-        TRY(stmt)
+        TRY(decl)
         stmts.emplace_back(*decl);
     }
 

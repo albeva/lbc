@@ -17,7 +17,7 @@ public:
     void peek(Token& result) override;
     void reset() { m_index = 0; }
 
-    llvm::SMRange getRange() const;
+    [[nodiscard]] llvm::SMRange getRange() const;
 
 private:
     unsigned int m_fileId;

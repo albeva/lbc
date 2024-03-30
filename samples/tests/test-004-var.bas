@@ -17,7 +17,7 @@ sendMessage c
 sub sendMessage(greeting as zstring)
     dim exclamation = getExclamation()
     printf "%s, %s%s", greeting, b, exclamation
-end sub'
+end sub
 
 function getExclamation() as zstring
     return "!"
