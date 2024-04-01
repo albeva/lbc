@@ -20,7 +20,7 @@ else
     ECHO="echo -e"
 fi
 
-echo "Using lbs: \"$LBC\" and FileCheck: \"$FILECHECK\""
+echo "Using lbc: \"$LBC\" and FileCheck: \"$FILECHECK\""
 
 #
 # test files that should succeed

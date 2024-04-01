@@ -95,5 +95,6 @@ configure_llvm(lbc_lib)
 
 # lbc executable
 add_executable(lbc main.cpp)
-target_link_libraries(lbc PRIVATE lbc_lib)
+target_link_libraries(lbc PRIVATE lbc_lib project_options project_warnings)
+target_precompile_headers(lbc REUSE_FROM lbc_lib)
 set_target_properties(lbc PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
