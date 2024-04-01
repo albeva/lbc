@@ -1,14 +1,14 @@
 //
 // Created by Albert Varaksin on 01/04/2024.
 //
+#include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "Driver/Driver.hpp"
-#include "Driver/CompileOptions.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
 namespace {
 
-struct CompilerBase: testing::TestWithParam<std::filesystem::path> {
+struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     void SetUp() override {
         auto workingPath = std::filesystem::current_path();
         auto compilerPath = canonical(workingPath / "../bin/lbc");
@@ -33,18 +33,21 @@ struct CompilerBase: testing::TestWithParam<std::filesystem::path> {
 
     std::string expected() {
         (void)this;
-        static constexpr std::string_view prefix{"'' CHECK: "};
+        static constexpr std::string_view prefix{ "'' CHECK: " };
 
-        std::string checks {};
-        std::ifstream file { GetParam(), std::ios::in };
+        std::string checks{};
+        std::ifstream file{ GetParam(), std::ios::in };
 
         std::string line;
         bool first = true;
-        while(std::getline(file, line)) {
-            if (!line.starts_with(prefix)) continue;
+        while (std::getline(file, line)) {
+            if (!line.starts_with(prefix))
+                continue;
 
-            if (first) first = false;
-            else checks += '\n';
+            if (first)
+                first = false;
+            else
+                checks += '\n';
 
             checks += llvm::StringRef(line).substr(prefix.length()).trim();
         }
@@ -63,19 +66,21 @@ struct CompilerBase: testing::TestWithParam<std::filesystem::path> {
 
         // Output
         std::string out = binary + ".out";
-        llvm::ArrayRef<std::optional<llvm::StringRef>> redirects = {std::nullopt, out, std::nullopt};
+        llvm::ArrayRef<std::optional<llvm::StringRef>> redirects = { std::nullopt, out, std::nullopt };
 
         // Execute
         EXPECT_EQ(llvm::sys::ExecuteAndWait(binary, args, std::nullopt, redirects), EXIT_SUCCESS);
 
         // Read the output
-        std::ifstream file { out, std::ios::in };
+        std::ifstream file{ out, std::ios::in };
         std::string result{};
         std::string line{};
         bool first = true;
-        while(std::getline(file, line)) {
-            if (first) first = false;
-            else result += '\n';
+        while (std::getline(file, line)) {
+            if (first)
+                first = false;
+            else
+                result += '\n';
             result += llvm::StringRef(line).trim();
         }
 
@@ -86,10 +91,9 @@ struct CompilerBase: testing::TestWithParam<std::filesystem::path> {
         return result;
     }
 
-    static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path>
-    {
+    static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path> {
         std::vector<std::filesystem::path> paths;
-        std::ranges::for_each(std::filesystem::directory_iterator { base },
+        std::ranges::for_each(std::filesystem::directory_iterator{ base },
             [&](const auto& dir_entry) {
                 paths.push_back(dir_entry);
             });
@@ -105,14 +109,14 @@ private:
 
 // Tests
 
-struct CompileSuccess : CompilerBase { };
+struct CompileSuccess : CompilerBase {};
 
-TEST_P(CompileSuccess, Success)
-{
+TEST_P(CompileSuccess, Success) {
     EXPECT_EQ(expected(), reality());
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    Run, CompileSuccess,
+    Run,
+    CompileSuccess,
     testing::ValuesIn(CompilerBase::enumerate("success/")));
 } // namespace

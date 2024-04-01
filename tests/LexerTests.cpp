@@ -10,8 +10,8 @@
 #    pragma ide diagnostic ignored "cppcoreguidelines-avoid-magic-numbers"
 #endif
 
-#include "Driver/Context.hpp"
 #include "Driver/CompileOptions.hpp"
+#include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
 #include <gtest/gtest.h>
@@ -54,7 +54,7 @@ protected:
 private:
     std::unique_ptr<lbc::Lexer> m_lexer;
     lbc::CompileOptions m_options{};
-    lbc::Context m_context{m_options};
+    lbc::Context m_context{ m_options };
 };
 
 #define EXPECT_TOKEN(KIND, ...)      \
