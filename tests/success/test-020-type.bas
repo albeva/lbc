@@ -2,10 +2,10 @@
 '' test-020-type.bas
 '' - TYPE User defined
 ''
-'' CHECK:       Player1.name = Albert
-'' CHECK-NEXT:  Player1.age = 35
-'' CHECK-NEXT:  Player2.name = Mario
-'' CHECK-NEXT:  Player2.age = 58
+'' CHECK: Player1.name = Albert
+'' CHECK: Player1.age = 35
+'' CHECK: Player2.name = Mario
+'' CHECK: Player2.age = 58
 ''------------------------------------------------------------------------------
 import cstd
 

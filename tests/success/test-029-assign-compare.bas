@@ -2,8 +2,8 @@
 '' test-029-assign-compare.bas
 '' - test assignment and equality compare operator
 ''
-'' CHECK:       true
-'' CHECK-NEXT:  true
+'' CHECK: true
+'' CHECK: true
 ''------------------------------------------------------------------------------
 import cstd
 

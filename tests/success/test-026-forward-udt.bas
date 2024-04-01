@@ -2,9 +2,9 @@
 '' test-026-forward-udt.bas
 '' - forward declare UDT
 ''
-'' CHECK:       name = Albert
-'' CHECK-NEXT:  age = 35
-'' CHECK-NEXT:  score = 99
+'' CHECK: name = Albert
+'' CHECK: age = 35
+'' CHECK: score = 99
 ''------------------------------------------------------------------------------
 import cstd
 

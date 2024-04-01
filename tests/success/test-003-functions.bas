@@ -10,12 +10,13 @@
 ''------------------------------------------------------------------------------
 import cstd
 
-sub main
+function main as integer
     say "Hello"
-end sub
+    return 0
+end function
 
 sub say(prefix as zstring)
-    printf "%s, %s!", prefix, getSuffix()
+    printf "%s, %s!\n", prefix, getSuffix()
 end sub
 
 function getSuffix() as zstring

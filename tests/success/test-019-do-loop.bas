@@ -5,12 +5,12 @@
 '' - UNTIL and WHILE conditions
 '' - EXIT / CONTINUE statements
 ''
-'' CHECK:      1, 2, 3, 4
-'' CHECK-NEXT: 1, 2, 3, 4
-'' CHECK-NEXT: 1, 2, 3, 4
-'' CHECK-NEXT: 1, 2, 3, 4
-'' CHECK-NEXT: 2, 4, 6, 8, 10
-'' CHECK-NEXT: 1, 2, 3, 4
+'' CHECK: 1, 2, 3, 4
+'' CHECK: 1, 2, 3, 4
+'' CHECK: 1, 2, 3, 4
+'' CHECK: 1, 2, 3, 4
+'' CHECK: 2, 4, 6, 8, 10
+'' CHECK: 1, 2, 3, 4,
 ''------------------------------------------------------------------------------
 import cstd
 

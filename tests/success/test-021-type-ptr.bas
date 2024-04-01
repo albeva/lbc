@@ -2,8 +2,8 @@
 '' test-021-type-ptr.bas
 '' - Pass type by ptr
 ''
-'' CHECK:       name = Albert
-'' CHECK-NEXT:  age = 36
+'' CHECK: name = Albert
+'' CHECK: age = 36
 ''------------------------------------------------------------------------------
 import cstd
 
