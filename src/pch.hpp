@@ -28,11 +28,11 @@ using namespace std::literals::string_literals;
 #    pragma warning(push)
 #    pragma warning(disable : 4100 4127 4242 4244 4245 4267 4310 4324 4456 4458 4624)
 #endif
+#include <llvm/ADT/ScopeExit.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/StringSet.h>
-#include <llvm/TargetParser/Triple.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/Config/llvm-config.h>
 #include <llvm/IR/BasicBlock.h>
@@ -52,6 +52,7 @@ using namespace std::literals::string_literals;
 #include <llvm/Support/Program.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/TargetParser/Triple.h>
 #if defined(_MSC_VER)
 #    pragma warning(pop)
 #endif

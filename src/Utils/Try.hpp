@@ -23,8 +23,8 @@ namespace lbc {
         return ResultError{};      \
     }
 
-#define MUST(expression)                                   \
-    if ((expression).hasError()) {                         \
+#define MUST(expression)                                    \
+    if ((expression).hasError()) {                          \
         fatalError("MUST(" #expression ") returned error"); \
     }
 

@@ -20,10 +20,10 @@ class Parser final {
 public:
     NO_COPY_AND_MOVE(Parser)
 
-    enum class ExprFlags: unsigned {
-        commaAsAnd          = 1U << 0U,
-        useAssign           = 1U << 1U,
-        callWithoutParens   = 1U << 2U
+    enum class ExprFlags : unsigned {
+        commaAsAnd = 1U << 0U,
+        useAssign = 1U << 1U,
+        callWithoutParens = 1U << 2U
     };
 
     Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
@@ -37,17 +37,16 @@ public:
     [[nodiscard]] inline const Token& getToken() const { return m_token; }
 
 private:
-
-    enum class Scope: unsigned {
+    enum class Scope : unsigned {
         Root,
         Function
     };
 
-    enum class FuncFlags: unsigned {
+    enum class FuncFlags : unsigned {
         // Nameless declaration. For example in type definitions
-        isAnonymous         = 1U << 0U,
+        isAnonymous = 1U << 0U,
         // Is following DECLARE keyword
-        isDeclaration       = 1U << 1U,
+        isDeclaration = 1U << 1U,
     };
 
     [[nodiscard]] Result<AstStmtList*> stmtList();

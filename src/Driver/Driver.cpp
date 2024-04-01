@@ -38,7 +38,7 @@ std::string exec(const char* cmd) {
     fatalError("exec unsupported");
 #endif
 }
-}
+} // namespace
 
 Driver::Driver(Context& context)
 : m_context{ context },

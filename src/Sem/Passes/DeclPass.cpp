@@ -57,7 +57,10 @@ void DeclPass::define(Symbol* symbol) {
         fatalError("Circular dependency detected on "_t + symbol->name());
     }
     state.beingDefined = true;
-    SCOPE_GAURD(state.beingDefined = false);
+
+    DEFER {
+        state.beingDefined = false;
+    };
 
     auto* ast = symbol->getDecl();
     if (auto* alias = llvm::dyn_cast<AstTypeAlias>(ast)) {

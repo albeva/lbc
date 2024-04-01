@@ -16,7 +16,7 @@
     struct flags::FlaggedEnum<TYPE> final : flags::Tag {}
 
 namespace lbc::flags {
-struct Tag{};
+struct Tag {};
 
 template<typename T>
     requires std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>>

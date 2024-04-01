@@ -78,7 +78,7 @@ add_library(
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
     Utils/Result.hpp
-    Utils/ScopeGuard.hpp
+    Utils/Defer.hpp
     Utils/Try.hpp
     Utils/Utils.cpp
     Utils/Utils.hpp

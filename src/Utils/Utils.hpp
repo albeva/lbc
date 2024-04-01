@@ -68,7 +68,7 @@ inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) {
 void warning(const llvm::Twine& message, bool prefix = true);
 } // namespace lbc
 
+#include "Defer.hpp"
 #include "Result.hpp"
-#include "ScopeGuard.hpp"
 #include "Try.hpp"
 #include "ValueRestorer.hpp"
