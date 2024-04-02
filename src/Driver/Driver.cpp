@@ -15,7 +15,6 @@
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/FileSystem.h>
-#include <iostream>
 
 using namespace lbc;
 
@@ -103,9 +102,9 @@ void Driver::compile() {
     compileSources();
 }
 
-#include <llvm/Support/TargetSelect.h>
 #include "JIT.hpp"
 #include "Utils/StdCapture.hpp"
+#include <llvm/Support/TargetSelect.h>
 
 /**
  * Execute modules in JIT
@@ -121,7 +120,7 @@ std::string Driver::execute(std::unique_ptr<llvm::LLVMContext> llvmContext) {
 
     bool hasInit = first->llvmModule->getFunction("__lbc_global_var_init") != nullptr;
 
-    llvm::orc::ThreadSafeModule module{std::move(first->llvmModule), std::move(llvmContext)};
+    llvm::orc::ThreadSafeModule module{ std::move(first->llvmModule), std::move(llvmContext) };
     auto res = m_context.jit->addModule(std::move(module));
     if (res) {
         fatalError("Failed to add module"s + toString(std::move(res)));
@@ -130,14 +129,14 @@ std::string Driver::execute(std::unique_ptr<llvm::LLVMContext> llvmContext) {
     if (hasInit) {
         auto initSym = m_context.jit->lookup("__lbc_global_var_init");
         if (initSym) {
-            void (*initProc)() = initSym->toPtr<void (*)()>();
+            auto initProc = initSym->toPtr<void (*)()>();
             initProc();
         }
     }
 
     auto mainSym = m_context.jit->lookup("main");
     if (mainSym) {
-        int(*mainProc)() = mainSym->toPtr<int(*)()>();
+        auto mainProc = mainSym->toPtr<int (*)()>();
 
         auto cap = CaptureStd::out();
         mainProc();

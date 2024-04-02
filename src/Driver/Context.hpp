@@ -3,8 +3,8 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "llvm/Support/Allocator.h"
 #include "JIT.hpp"
+#include "llvm/Support/Allocator.h"
 
 namespace lbc {
 class CompileOptions;

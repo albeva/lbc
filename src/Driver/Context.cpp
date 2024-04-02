@@ -23,8 +23,7 @@ Context::Context(const CompileOptions& options, llvm::LLVMContext* llvmContext)
   m_diag{ m_pimpl->diag },
   m_toolchain{ m_pimpl->toolchain },
   m_triple{ llvm::sys::getDefaultTargetTriple() },
-  m_llvmContext{ llvmContext }
-  {
+  m_llvmContext{ llvmContext } {
     if (m_options.is64Bit()) {
         m_triple = m_triple.get64BitArchVariant();
     } else {
