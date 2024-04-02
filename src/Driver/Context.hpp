@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "JIT.hpp"
 #include "llvm/Support/Allocator.h"
 
 namespace lbc {
@@ -12,6 +11,7 @@ class TypeFunction;
 class TypePointer;
 class DiagnosticEngine;
 class Toolchain;
+class JIT;
 
 /**
  * Context holds various data and memory allocations required for the compilation process.

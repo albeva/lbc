@@ -5,6 +5,7 @@
 #include "CompileOptions.hpp"
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
+#include "JIT.hpp"
 #include <llvm/TargetParser/Host.h>
 using namespace lbc;
 
