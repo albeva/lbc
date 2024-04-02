@@ -127,33 +127,21 @@ void Driver::execute() {
         return;
     }
 
-    // get module
-    auto first = std::move(m_modules.back());
-    m_modules.pop_back();
-
-    bool hasInit = first->llvmModule->getFunction("__lbc_global_var_init") != nullptr;
-
-    auto res = m_context.jit->addModule({ std::move(first->llvmModule),
-        std::make_unique<llvm::LLVMContext>() });
-    if (res) {
-        fatalError("Failed to add module"s + toString(std::move(res)));
+    // Add modules
+    for (auto& module: m_modules) {
+        exitOnErr(m_context.jit->addModule({ std::move(module->llvmModule),
+            std::make_unique<llvm::LLVMContext>() }));
     }
 
-    if (hasInit) {
-        auto initSym = m_context.jit->lookup("__lbc_global_var_init");
-        if (initSym) {
-            auto initProc = initSym->toPtr<void (*)()>();
-            initProc();
-        }
-    }
+    // init
+    exitOnErr(m_context.jit->initialize());
 
-    auto mainSym = m_context.jit->lookup("main");
-    if (mainSym) {
-        auto mainProc = mainSym->toPtr<int (*)()>();
-        mainProc();
-    } else {
-        fatalError("No entry symbol found"s + toString(mainSym.takeError()));
-    }
+    // run main
+    auto main = exitOnErr(m_context.jit->lookup("main"));
+    main.toPtr<int (*)()>()();
+
+    // clean up
+    exitOnErr(m_context.jit->deinitialize());
 }
 
 /**
@@ -429,7 +417,7 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
 
     // Analyze
     SemanticAnalyzer sem{ m_context };
-    MUST(sem.visit(*ast));
+    MUST(sem.visit(*ast))
 
     if (m_options.getDumpAst() || m_options.getDumpCode()) {
         m_modules.emplace_back(std::make_unique<TranslationUnit>(

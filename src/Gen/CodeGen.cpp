@@ -129,16 +129,11 @@ llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
     if (m_globalCtorFunc == nullptr) {
         m_globalCtorFunc = llvm::Function::Create(
             llvm::FunctionType::get(llvm::Type::getVoidTy(m_llvmContext), false),
-            llvm::Function::ExternalLinkage,
-            "__lbc_global_var_init",
+            llvm::Function::InternalLinkage,
+            "lbc_global_var_init",
             *m_module);
         m_globalCtorFunc->setCallingConv(llvm::CallingConv::C);
-        if (m_context.getTriple().isOSBinFormatMachO()) {
-            m_globalCtorFunc->setSection("__TEXT,__StaticInit,regular,pure_instructions");
-        } else if (m_context.getTriple().isOSBinFormatELF()) {
-            m_globalCtorFunc->setSection(".text.startup");
-        }
-        llvm::appendToGlobalCtors(*m_module, m_globalCtorFunc, 0, nullptr);
+        llvm::appendToGlobalCtors(*m_module, m_globalCtorFunc, 0);
         llvm::BasicBlock::Create(m_llvmContext, "entry", m_globalCtorFunc);
     }
     return &m_globalCtorFunc->back();

@@ -33,6 +33,14 @@ public:
         return m_llJit->lookup(name);
     }
 
+    llvm::Error initialize() noexcept {
+        return m_llJit->initialize(m_llJit->getMainJITDylib());
+    }
+
+    llvm::Error deinitialize() noexcept {
+        return m_llJit->deinitialize(m_llJit->getMainJITDylib());
+    }
+
 private:
     std::unique_ptr<llvm::orc::LLJIT> m_llJit;
 };
