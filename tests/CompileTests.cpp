@@ -16,31 +16,17 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     void SetUp() override {
         auto workingPath = std::filesystem::current_path();
         auto compilerPath = canonical(workingPath / "../bin/lbc");
-        auto source = GetParam();
-
-        m_binary = workingPath / source.stem();
 
         // Options
         m_options = std::make_unique<lbc::CompileOptions>();
-        m_options->addInputFile(source);
+        m_options->addInputFile(GetParam());
         m_options->setOptimizationLevel(lbc::CompileOptions::OptimizationLevel::O0);
+        m_options->setCompilationTarget(lbc::CompileOptions::CompilationTarget::JIT);
         m_options->setWorkingDir(workingPath);
         m_options->setCompilerPath(compilerPath);
-        m_options->setOutputPath(m_binary);
 
         // The context
         m_ctx = std::make_unique<lbc::Context>(*m_options);
-
-        // Init the JIT
-        llvm::InitializeNativeTarget();
-        LLVMInitializeNativeAsmPrinter();
-        LLVMInitializeNativeAsmParser();
-
-        auto jitOrError = lbc::JIT::create();
-        if (!jitOrError) {
-            lbc::fatalError("Failed to create JIT: " + toString(jitOrError.takeError()));
-        }
-        m_ctx->jit = std::move(*jitOrError);
 
         // The driver
         m_driver = std::make_unique<lbc::Driver>(*m_ctx);
@@ -71,11 +57,9 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     }
 
     std::string reality() {
-        // Compile
-        m_driver->compile();
-
+        // Run
         auto capture = lbc::CaptureStd::out();
-        m_driver->execute();
+        m_driver->drive();
         auto out = capture.finish();
 
         // Read the output
@@ -104,7 +88,6 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     }
 
 private:
-    std::filesystem::path m_binary{};
     std::unique_ptr<lbc::CompileOptions> m_options;
     std::unique_ptr<lbc::Context> m_ctx;
     std::unique_ptr<lbc::Driver> m_driver;
