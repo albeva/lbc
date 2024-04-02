@@ -17,13 +17,12 @@ struct Context::Pimpl {
     Toolchain toolchain;
 };
 
-Context::Context(const CompileOptions& options, llvm::LLVMContext* llvmContext)
+Context::Context(const CompileOptions& options)
 : m_pimpl{ std::make_unique<Pimpl>(*this) },
   m_options{ options },
   m_diag{ m_pimpl->diag },
   m_toolchain{ m_pimpl->toolchain },
-  m_triple{ llvm::sys::getDefaultTargetTriple() },
-  m_llvmContext{ llvmContext } {
+  m_triple{ llvm::sys::getDefaultTargetTriple() } {
     if (m_options.is64Bit()) {
         m_triple = m_triple.get64BitArchVariant();
     } else {

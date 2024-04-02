@@ -12,7 +12,7 @@ public:
     : m_llJit(std::move(llJit)) {
     }
 
-    static llvm::Expected<std::unique_ptr<JIT>> Create() {
+    static llvm::Expected<std::unique_ptr<JIT>> create() {
         auto llJit = llvm::orc::LLJITBuilder().create();
         if (!llJit) {
             return llJit.takeError();

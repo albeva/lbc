@@ -7,18 +7,23 @@
 #include "Context.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "Gen/CodeGen.hpp"
+#include "JIT.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "TempFileCache.hpp"
 #include "Toolchain/ToolTask.hpp"
+#include <llvm-c/Target.h>
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/FileSystem.h>
+#include <llvm/Support/TargetSelect.h>
 
 using namespace lbc;
 
 namespace {
+llvm::ExitOnError exitOnErr;
+
 std::string exec(const char* cmd) {
 #ifdef __APPLE__
     constexpr auto bufferSize = 128;
@@ -45,6 +50,13 @@ Driver::Driver(Context& context)
   m_options{ context.getOptions() } {}
 
 void Driver::drive() {
+    if (m_options.getCompilationTarget() == CompileOptions::CompilationTarget::JIT) {
+        llvm::InitializeNativeTarget();
+        LLVMInitializeNativeAsmPrinter();
+        LLVMInitializeNativeAsmParser();
+        m_context.jit = exitOnErr(JIT::create());
+    }
+
     compile();
 
     if (m_options.getDumpAst()) {
@@ -89,6 +101,11 @@ void Driver::drive() {
             optimize();
             break;
         }
+        break;
+    case CompileOptions::CompilationTarget::JIT: {
+        execute();
+        break;
+    }
     }
 
     TempFileCache::removeTemporaryFiles();
@@ -102,16 +119,12 @@ void Driver::compile() {
     compileSources();
 }
 
-#include "JIT.hpp"
-#include "Utils/StdCapture.hpp"
-#include <llvm/Support/TargetSelect.h>
-
 /**
  * Execute modules in JIT
  */
-std::string Driver::execute(std::unique_ptr<llvm::LLVMContext> llvmContext) {
+void Driver::execute() {
     if (m_modules.empty() || !m_context.jit) {
-        return "";
+        return;
     }
 
     // get module
@@ -120,8 +133,8 @@ std::string Driver::execute(std::unique_ptr<llvm::LLVMContext> llvmContext) {
 
     bool hasInit = first->llvmModule->getFunction("__lbc_global_var_init") != nullptr;
 
-    llvm::orc::ThreadSafeModule module{ std::move(first->llvmModule), std::move(llvmContext) };
-    auto res = m_context.jit->addModule(std::move(module));
+    auto res = m_context.jit->addModule({ std::move(first->llvmModule),
+        std::make_unique<llvm::LLVMContext>() });
     if (res) {
         fatalError("Failed to add module"s + toString(std::move(res)));
     }
@@ -137,10 +150,7 @@ std::string Driver::execute(std::unique_ptr<llvm::LLVMContext> llvmContext) {
     auto mainSym = m_context.jit->lookup("main");
     if (mainSym) {
         auto mainProc = mainSym->toPtr<int (*)()>();
-
-        auto cap = CaptureStd::out();
         mainProc();
-        return cap.finish();
     } else {
         fatalError("No entry symbol found"s + toString(mainSym.takeError()));
     }

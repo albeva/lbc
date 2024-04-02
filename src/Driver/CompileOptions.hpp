@@ -11,7 +11,8 @@ public:
     enum class CompilationTarget {
         Executable,
         Object,
-        Assembly
+        Assembly,
+        JIT
     };
 
     enum class OutputType {

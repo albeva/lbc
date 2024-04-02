@@ -16,8 +16,7 @@ int main(int argc, const char* argv[]) {
     cmdLineParser.parse({ argv, static_cast<size_t>(argc) });
     options.validate();
 
-    llvm::LLVMContext llvmContext{};
-    Context context{ options, &llvmContext };
+    Context context{ options };
     Driver{ context }.drive();
 
     return EXIT_SUCCESS;

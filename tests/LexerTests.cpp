@@ -54,8 +54,7 @@ protected:
 private:
     std::unique_ptr<lbc::Lexer> m_lexer;
     lbc::CompileOptions m_options{};
-    llvm::LLVMContext m_llvmContext{};
-    lbc::Context m_context{ m_options, &m_llvmContext };
+    lbc::Context m_context{ m_options };
 };
 
 #define EXPECT_TOKEN(KIND, ...)      \

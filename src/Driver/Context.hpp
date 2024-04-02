@@ -22,7 +22,7 @@ class Context final {
 public:
     NO_COPY_AND_MOVE(Context)
 
-    explicit Context(const CompileOptions& options, llvm::LLVMContext* llvmContext);
+    explicit Context(const CompileOptions& options);
     ~Context();
 
     [[nodiscard]] const CompileOptions& getOptions() const { return m_options; }
@@ -30,7 +30,7 @@ public:
     [[nodiscard]] Toolchain& getToolchain() { return m_toolchain; }
     [[nodiscard]] llvm::Triple& getTriple() { return m_triple; }
     [[nodiscard]] llvm::SourceMgr& getSourceMrg() { return m_sourceMgr; }
-    [[nodiscard]] llvm::LLVMContext& getLlvmContext() { return *m_llvmContext; }
+    [[nodiscard]] llvm::LLVMContext& getLlvmContext() { return m_llvmContext; }
 
     /**
      * Retain a copy of the string in the context and return a llvm::StringRef that
@@ -79,7 +79,7 @@ private:
 
     llvm::Triple m_triple;
     llvm::SourceMgr m_sourceMgr{};
-    llvm::LLVMContext* m_llvmContext;
+    llvm::LLVMContext m_llvmContext{};
 
     llvm::StringSet<> m_retainedStrings{};
     llvm::StringSet<> m_imports;

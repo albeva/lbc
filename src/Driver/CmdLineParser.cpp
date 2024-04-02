@@ -64,6 +64,8 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
         m_options.setCompilationTarget(CompileOptions::CompilationTarget::Object);
     } else if (arg == "-S") {
         m_options.setCompilationTarget(CompileOptions::CompilationTarget::Assembly);
+    } else if (arg == "-jit") {
+        m_options.setCompilationTarget(CompileOptions::CompilationTarget::JIT);
     } else if (arg == "-emit-llvm") {
         m_options.setOutputType(CompileOptions::OutputType::LLVM);
     } else if (arg == "-ast-dump") {
