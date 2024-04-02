@@ -45,8 +45,7 @@ Driver::Driver(Context& context)
   m_options{ context.getOptions() } {}
 
 void Driver::drive() {
-    processInputs();
-    compileSources();
+    compile();
 
     if (m_options.getDumpAst()) {
         dumpAst();
@@ -93,6 +92,21 @@ void Driver::drive() {
     }
 
     TempFileCache::removeTemporaryFiles();
+}
+
+/**
+ * Compile sources
+ */
+void Driver::compile() {
+    processInputs();
+    compileSources();
+}
+
+/**
+ * Execute modules in JIT
+ */
+void Driver::execute() {
+
 }
 
 /**
@@ -364,7 +378,7 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     if (astOrErr.hasError()) {
         std::exit(EXIT_FAILURE);
     }
-    auto* ast = astOrErr.getValue();
+    AstModule* ast = astOrErr.getValue();
 
     // Analyze
     SemanticAnalyzer sem{ m_context };

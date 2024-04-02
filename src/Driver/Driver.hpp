@@ -22,6 +22,8 @@ public:
     ~Driver() = default;
 
     void drive();
+    void compile();
+    void execute();
 
 private:
     using SourceVector = std::vector<std::unique_ptr<Source>>;
