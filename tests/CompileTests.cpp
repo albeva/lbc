@@ -8,8 +8,8 @@
 #include "Utils/StdCapture.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
-#include <llvm/Support/TargetSelect.h>
 #include <llvm-c/Target.h>
+#include <llvm/Support/TargetSelect.h>
 namespace {
 
 struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
@@ -57,25 +57,9 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     }
 
     std::string reality() {
-        // Run
         auto capture = lbc::CaptureStd::out();
         m_driver->drive();
-        auto out = capture.finish();
-
-        // Read the output
-        std::stringstream file{ out, std::ios::in };
-        std::string result{};
-        std::string line{};
-        bool first = true;
-        while (std::getline(file, line)) {
-            if (first)
-                first = false;
-            else
-                result += '\n';
-            result += llvm::StringRef(line).trim();
-        }
-
-        return result;
+        return llvm::StringRef{ capture.finish() }.trim().str();
     }
 
     static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path> {
