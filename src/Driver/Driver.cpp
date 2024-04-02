@@ -138,7 +138,7 @@ void Driver::execute() {
 
     // run main
     auto main = exitOnErr(m_context.jit->lookup("main"));
-    main.toPtr<int (*)()>()();
+    main.toPtr<int()>()();
 
     // clean up
     exitOnErr(m_context.jit->deinitialize());
