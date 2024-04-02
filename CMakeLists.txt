@@ -13,7 +13,7 @@ set(GIT_SHA
 
 # C++ language version to use
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
 
 # Note: by default ENABLE_DEVELOPER_MODE is True This means that all analysis (sanitizers, static analysis) is enabled
 # and all warnings are treated as errors if you want to switch this behavior, change TRUE to FALSE

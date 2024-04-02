@@ -15,6 +15,7 @@
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/FileSystem.h>
+#include <iostream>
 
 using namespace lbc;
 
@@ -102,11 +103,48 @@ void Driver::compile() {
     compileSources();
 }
 
+#include <llvm/Support/TargetSelect.h>
+#include "JIT.hpp"
+#include "Utils/StdCapture.hpp"
+
 /**
  * Execute modules in JIT
  */
-void Driver::execute() {
+std::string Driver::execute(std::unique_ptr<llvm::LLVMContext> llvmContext) {
+    if (m_modules.empty() || !m_context.jit) {
+        return "";
+    }
 
+    // get module
+    auto first = std::move(m_modules.back());
+    m_modules.pop_back();
+
+    bool hasInit = first->llvmModule->getFunction("__lbc_global_var_init") != nullptr;
+
+    llvm::orc::ThreadSafeModule module{std::move(first->llvmModule), std::move(llvmContext)};
+    auto res = m_context.jit->addModule(std::move(module));
+    if (res) {
+        fatalError("Failed to add module"s + toString(std::move(res)));
+    }
+
+    if (hasInit) {
+        auto initSym = m_context.jit->lookup("__lbc_global_var_init");
+        if (initSym) {
+            void (*initProc)() = initSym->toPtr<void (*)()>();
+            initProc();
+        }
+    }
+
+    auto mainSym = m_context.jit->lookup("main");
+    if (mainSym) {
+        int(*mainProc)() = mainSym->toPtr<int(*)()>();
+
+        auto cap = CaptureStd::out();
+        mainProc();
+        return cap.finish();
+    } else {
+        fatalError("No entry symbol found"s + toString(mainSym.takeError()));
+    }
 }
 
 /**

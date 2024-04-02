@@ -58,7 +58,11 @@ void CodeGen::visit(AstModule& ast) {
     auto file = m_context.getSourceMrg().getMemoryBuffer(m_fileId)->getBufferIdentifier();
 
     m_module = std::make_unique<llvm::Module>(file, m_llvmContext);
-    m_module->setTargetTriple(m_context.getTriple().str());
+    if (auto* jit = m_context.jit.get()) {
+        m_module->setDataLayout(jit->getDataLayout());
+    } else {
+        m_module->setTargetTriple(m_context.getTriple().str());
+    }
 
     if (m_context.getTriple().isOSWindows()) {
         auto* chkstk = llvm::Function::Create(
@@ -124,14 +128,15 @@ llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
     if (m_globalCtorFunc == nullptr) {
         m_globalCtorFunc = llvm::Function::Create(
             llvm::FunctionType::get(llvm::Type::getVoidTy(m_llvmContext), false),
-            llvm::Function::InternalLinkage,
+            llvm::Function::ExternalLinkage,
             "__lbc_global_var_init",
             *m_module);
-        if (m_context.getTriple().isOSBinFormatMachO()) {
-            m_globalCtorFunc->setSection("__TEXT,__StaticInit,regular,pure_instructions");
-        } else if (m_context.getTriple().isOSBinFormatELF()) {
-            m_globalCtorFunc->setSection(".text.startup");
-        }
+        m_globalCtorFunc->setCallingConv(llvm::CallingConv::C);
+//        if (m_context.getTriple().isOSBinFormatMachO()) {
+//            m_globalCtorFunc->setSection("__TEXT,__StaticInit,regular,pure_instructions");
+//        } else if (m_context.getTriple().isOSBinFormatELF()) {
+//            m_globalCtorFunc->setSection(".text.startup");
+//        }
         llvm::appendToGlobalCtors(*m_module, m_globalCtorFunc, 0, nullptr);
         llvm::BasicBlock::Create(m_llvmContext, "entry", m_globalCtorFunc);
     }

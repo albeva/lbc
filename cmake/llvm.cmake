@@ -7,6 +7,7 @@ function(configure_llvm project_name)
         bitwriter
         transformUtils
         orcJIT
+        native
     )
     target_include_directories(${project_name} SYSTEM PUBLIC ${LLVM_INCLUDE_DIRS})
     add_definitions(${LLVM_DEFINITIONS})

@@ -23,7 +23,7 @@ public:
 
     void drive();
     void compile();
-    void execute();
+    std::string execute(std::unique_ptr<llvm::LLVMContext> llvmContext);
 
 private:
     using SourceVector = std::vector<std::unique_ptr<Source>>;

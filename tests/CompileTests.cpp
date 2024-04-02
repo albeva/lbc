@@ -4,8 +4,11 @@
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "Driver/Driver.hpp"
+#include "Driver/JIT.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm-c/Target.h>
 namespace {
 
 struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
@@ -25,7 +28,19 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
         m_options->setOutputPath(m_binary);
 
         // The context
-        m_ctx = std::make_unique<lbc::Context>(*m_options);
+        m_llvmContext = std::make_unique<llvm::LLVMContext>();
+        m_ctx = std::make_unique<lbc::Context>(*m_options, m_llvmContext.get());
+
+        // Init the JIT
+        llvm::InitializeNativeTarget();
+        LLVMInitializeNativeAsmPrinter();
+        LLVMInitializeNativeAsmParser();
+
+        auto jitOrError = lbc::JIT::Create();
+        if (!jitOrError) {
+            lbc::fatalError("Failed to create JIT: " + toString(jitOrError.takeError()));
+        }
+        m_ctx->jit = std::move(*jitOrError);
 
         // The driver
         m_driver = std::make_unique<lbc::Driver>(*m_ctx);
@@ -57,22 +72,11 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
 
     std::string reality() {
         // Compile
-        m_driver->drive();
-
-        // Args
-        std::vector<llvm::StringRef> args;
-        std::string binary = m_binary.string();
-        args.emplace_back(binary);
-
-        // Output
-        std::string out = binary + ".out";
-        llvm::ArrayRef<std::optional<llvm::StringRef>> redirects = { std::nullopt, out, std::nullopt };
-
-        // Execute
-        EXPECT_EQ(llvm::sys::ExecuteAndWait(binary, args, std::nullopt, redirects), EXIT_SUCCESS);
+        m_driver->compile();
+        auto out = m_driver->execute(std::move(m_llvmContext));
 
         // Read the output
-        std::ifstream file{ out, std::ios::in };
+        std::stringstream file{ out, std::ios::in };
         std::string result{};
         std::string line{};
         bool first = true;
@@ -83,10 +87,6 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
                 result += '\n';
             result += llvm::StringRef(line).trim();
         }
-
-        // clean up
-        std::filesystem::remove(binary);
-        std::filesystem::remove(out);
 
         return result;
     }
@@ -103,6 +103,7 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
 private:
     std::filesystem::path m_binary{};
     std::unique_ptr<lbc::CompileOptions> m_options;
+    std::unique_ptr<llvm::LLVMContext> m_llvmContext;
     std::unique_ptr<lbc::Context> m_ctx;
     std::unique_ptr<lbc::Driver> m_driver;
 };
