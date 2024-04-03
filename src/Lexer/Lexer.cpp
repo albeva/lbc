@@ -364,7 +364,6 @@ void Lexer::numberLiteral(Token& result) {
 
 void Lexer::identifier(Token& result) {
     // assume m_input[0] == '_' || char
-    m_hasStmt = true;
     const auto* start = m_input;
 
     while (isIdentifierChar(*++m_input)) {}
@@ -382,6 +381,8 @@ void Lexer::identifier(Token& result) {
         next(result);
         return;
     }
+
+    m_hasStmt = true;
 
     auto range = makeRange(start, m_input);
     auto kind = Token::findKind(uppercased);
