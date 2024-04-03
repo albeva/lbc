@@ -99,6 +99,7 @@ Result<AstStmtList*> Parser::stmtList() {
             .Case([&](AstExtern* ext) {
                 for (auto* eStmt : ext->stmts) {
                     if (auto* decl = llvm::dyn_cast<AstDecl>(eStmt)) {
+                        decl->local = false;
                         decls.emplace_back(decl);
                         stms.emplace_back(decl);
                     } else if (auto* func = llvm::dyn_cast<AstFuncStmt>(eStmt)) {

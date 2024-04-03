@@ -1,11 +1,14 @@
 import cstd
 
+'' Declare vars
+dim secret as integer
+dim answer as integer
+
 '' initialize a random seed
 srand time(null)
 
-'' the secret number
-dim secret = rand() Mod 100
-dim answer = 0
+'' Get the random number
+secret = rand() Mod 100
 
 '' show help
 printf "Guess a number between 1 and 100. 0 to exit. You have 25 tries\n"
@@ -15,7 +18,7 @@ For i = 1 To 25
     printf "Attempt %d: ", i
     scanf "%d", @answer
     If answer = 0 Then
-        Return
+        Exit For
     Else If answer = secret Then
         printf "Correct\n"
         Return

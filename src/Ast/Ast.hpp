@@ -382,6 +382,7 @@ struct AstDecl : AstStmt {
     Token token;
     CallingConv callingConv;
     AstAttributeList* attributes;
+    bool local = true;
     Symbol* symbol = nullptr;
 };
 

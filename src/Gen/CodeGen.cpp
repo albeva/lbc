@@ -258,13 +258,14 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
         ast.symbol->identifier(),
         *m_module);
     fn->setCallingConv(llvm::CallingConv::C);
-    fn->setDSOLocal(true);
+    fn->setDSOLocal(ast.local);
     ast.symbol->setLlvmValue(fn);
 
     if (ast.params != nullptr) {
         auto* iter = fn->arg_begin();
         for (const auto& param : ast.params->params) {
             iter->setName(param->symbol->identifier());
+            iter->addAttr(llvm::Attribute::NoUndef);
             param->symbol->setLlvmValue(iter);
             iter++; // NOLINT
         }
