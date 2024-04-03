@@ -128,7 +128,7 @@ void Driver::execute() {
     }
 
     // Add modules
-    for (auto& module: m_modules) {
+    for (auto& module : m_modules) {
         exitOnErr(m_context.jit->addModule({ std::move(module->llvmModule),
             std::make_unique<llvm::LLVMContext>() }));
     }

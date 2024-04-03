@@ -85,10 +85,10 @@ void CodeGen::visit(AstModule& ast) {
             hasMainDefined = true;
         }
     }
-    bool const generateMain = !hasMainDefined && ast.hasImplicitMain;
+    m_hasImplicitMain = !hasMainDefined && ast.hasImplicitMain;
 
     llvm::Function* mainFn = nullptr;
-    if (generateMain) {
+    if (m_hasImplicitMain) {
         mainFn = llvm::Function::Create(
             llvm::FunctionType::get(llvm::Type::getInt32Ty(m_llvmContext), false),
             llvm::Function::ExternalLinkage,
@@ -188,7 +188,7 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
     auto* sym = ast.symbol;
     llvm::Constant* constant = nullptr;
     llvm::Type* exprType = sym->getType()->getLlvmType(m_context);
-    bool generateStoreInCtror = false;
+    bool needsValueAssignment = false;
 
     // has an init expr?
     if (ast.expr != nullptr) {
@@ -196,7 +196,7 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
             auto rvalue = visit(*litExpr);
             constant = llvm::cast<llvm::Constant>(rvalue.load());
         } else {
-            generateStoreInCtror = true;
+            needsValueAssignment = true;
         }
     }
 
@@ -211,12 +211,17 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
         constant,
         ast.symbol->identifier());
 
-    if (generateStoreInCtror) {
-        auto* block = m_builder.GetInsertBlock();
-        m_builder.SetInsertPoint(getGlobalCtorBlock());
-        auto rvalue = visit(*ast.expr);
-        m_builder.CreateStore(rvalue.load(), lvalue);
-        m_builder.SetInsertPoint(block);
+    if (needsValueAssignment) {
+        if (m_hasImplicitMain) {
+            auto rvalue = visit(*ast.expr);
+            m_builder.CreateStore(rvalue.load(), lvalue);
+        } else {
+            auto* block = m_builder.GetInsertBlock();
+            m_builder.SetInsertPoint(getGlobalCtorBlock());
+            auto rvalue = visit(*ast.expr);
+            m_builder.CreateStore(rvalue.load(), lvalue);
+            m_builder.SetInsertPoint(block);
+        }
     }
 
     sym->setLlvmValue(lvalue);
