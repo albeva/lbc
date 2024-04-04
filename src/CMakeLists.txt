@@ -86,8 +86,6 @@ add_library(
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
     Utils/Flags.hpp
-    Utils/StdCapture.hpp
-    Utils/StdCapture.cpp
 )
 
 target_link_libraries(lbc_lib PRIVATE project_options project_warnings)

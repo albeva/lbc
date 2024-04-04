@@ -7,6 +7,7 @@
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "JIT.hpp"
 #include <llvm/TargetParser/Host.h>
+#include <llvm-c/Target.h>
 using namespace lbc;
 
 struct Context::Pimpl {
@@ -36,6 +37,16 @@ Context::Context(const CompileOptions& options)
 }
 
 Context::~Context() = default;
+
+JIT& Context::getJIT() noexcept {
+    if (!m_jit) {
+        LLVMInitializeNativeTarget();
+        LLVMInitializeNativeAsmPrinter();
+        LLVMInitializeNativeAsmParser();
+        m_jit = llvm::ExitOnError()(JIT::create());
+    }
+    return *m_jit;
+}
 
 llvm::StringRef Context::retainCopy(llvm::StringRef str) {
     return m_retainedStrings.insert(str).first->first();

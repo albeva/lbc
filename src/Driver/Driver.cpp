@@ -13,12 +13,10 @@
 #include "Sem/SemanticAnalyzer.hpp"
 #include "TempFileCache.hpp"
 #include "Toolchain/ToolTask.hpp"
-#include <llvm-c/Target.h>
-#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/TargetSelect.h>
-
+#include <llvm/IR/IRPrintingPasses.h>
 using namespace lbc;
 
 namespace {
@@ -50,13 +48,12 @@ Driver::Driver(Context& context)
   m_options{ context.getOptions() } {}
 
 void Driver::drive() {
+    // make sure jit is loaded if targeting it
     if (m_options.getCompilationTarget() == CompileOptions::CompilationTarget::JIT) {
-        llvm::InitializeNativeTarget();
-        LLVMInitializeNativeAsmPrinter();
-        LLVMInitializeNativeAsmParser();
-        m_context.jit = exitOnErr(JIT::create());
+        (void)m_context.getJIT();
     }
 
+    // compile sources
     compile();
 
     if (m_options.getDumpAst()) {
@@ -123,25 +120,27 @@ void Driver::compile() {
  * Execute modules in JIT
  */
 void Driver::execute() {
-    if (m_modules.empty() || !m_context.jit) {
+    if (m_modules.empty()) {
         return;
     }
 
+    auto& jit = m_context.getJIT();
+
     // Add modules
     for (auto& module : m_modules) {
-        exitOnErr(m_context.jit->addModule({ std::move(module->llvmModule),
+        exitOnErr(jit.addModule({ std::move(module->llvmModule),
             std::make_unique<llvm::LLVMContext>() }));
     }
 
     // init
-    exitOnErr(m_context.jit->initialize());
+    exitOnErr(jit.initialize());
 
     // run main
-    auto main = exitOnErr(m_context.jit->lookup("main"));
+    auto main = exitOnErr(jit.lookup("main"));
     main.toPtr<int()>()();
 
     // clean up
-    exitOnErr(m_context.jit->deinitialize());
+    exitOnErr(jit.deinitialize());
 }
 
 /**

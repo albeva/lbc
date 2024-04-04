@@ -85,8 +85,8 @@ add_subdirectory(src)
 
 # Tests
 if (ENABLE_DEVELOPER_MODE)
-    include(CTest)
     enable_testing()
+    include(CTest)
     add_subdirectory(tests)
 endif()
 

@@ -14,6 +14,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
+#include "Driver/CompileOptions.hpp"
 using namespace lbc;
 using namespace Gen;
 
@@ -59,8 +60,8 @@ void CodeGen::visit(AstModule& ast) {
     auto file = m_context.getSourceMrg().getMemoryBuffer(m_fileId)->getBufferIdentifier();
 
     m_module = std::make_unique<llvm::Module>(file, m_llvmContext);
-    if (auto* jit = m_context.jit.get()) {
-        m_module->setDataLayout(jit->getDataLayout());
+    if (m_context.getOptions().getCompilationTarget() == CompileOptions::CompilationTarget::JIT) {
+        m_module->setDataLayout(m_context.getJIT().getDataLayout());
     } else {
         m_module->setTargetTriple(m_context.getTriple().str());
     }

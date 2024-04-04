@@ -5,12 +5,43 @@
 #include "Driver/Context.hpp"
 #include "Driver/Driver.hpp"
 #include "Driver/JIT.hpp"
-#include "Utils/StdCapture.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <llvm-c/Target.h>
 #include <llvm/Support/TargetSelect.h>
 namespace {
+// capture stdout into stream
+thread_local std::stringstream stdoutput = {};
+
+// proxy printf
+int capturePrintF(const char * format __restrict, ...) {
+    va_list args;
+    va_start (args, format);
+
+    // figure out the length
+    int length = std::vsnprintf(nullptr, 0, format, args);
+    if (length <= 0) {
+        return length;
+    }
+
+    // printf to a buffer
+    char* buf = new char[length + 1];
+    std::vsnprintf(buf, length + 1, format, args);
+
+    // clean up and done
+    va_end(args);
+    stdoutput << buf;
+    delete[] buf;
+    return length;
+}
+
+// proxy puts
+int capturePuts(const char* str) {
+    stdoutput << str;
+    return static_cast<int>(strlen(str));
+}
+
+llvm::ExitOnError exitOnErr{};
 
 struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     void SetUp() override {
@@ -27,6 +58,10 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
 
         // The context
         m_ctx = std::make_unique<lbc::Context>(*m_options);
+
+        // redirect printf
+        exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags{llvm::JITSymbolFlags::Callable}));
+        exitOnErr(m_ctx->getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags{llvm::JITSymbolFlags::Callable}));
 
         // The driver
         m_driver = std::make_unique<lbc::Driver>(*m_ctx);
@@ -57,9 +92,9 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     }
 
     std::string reality() {
-        auto capture = lbc::CaptureStd::out();
+        stdoutput.clear();
         m_driver->drive();
-        return llvm::StringRef{ capture.finish() }.trim().str();
+        return llvm::StringRef{ stdoutput.str() }.trim().str();
     }
 
     static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path> {

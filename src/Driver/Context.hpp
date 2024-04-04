@@ -31,6 +31,7 @@ public:
     [[nodiscard]] llvm::Triple& getTriple() { return m_triple; }
     [[nodiscard]] llvm::SourceMgr& getSourceMrg() { return m_sourceMgr; }
     [[nodiscard]] llvm::LLVMContext& getLlvmContext() { return m_llvmContext; }
+    [[nodiscard]] JIT& getJIT() noexcept;
 
     /**
      * Retain a copy of the string in the context and return a llvm::StringRef that
@@ -67,8 +68,6 @@ public:
     llvm::SmallVector<TypeFunction*> funcTypes;
     llvm::SmallVector<TypePointer*> ptrTypes;
 
-    std::unique_ptr<JIT> jit;
-
 private:
     struct Pimpl;
     std::unique_ptr<Pimpl> m_pimpl;
@@ -83,6 +82,8 @@ private:
 
     llvm::StringSet<> m_retainedStrings{};
     llvm::StringSet<> m_imports;
+
+    std::unique_ptr<JIT> m_jit;
 
     // Allocations
     llvm::BumpPtrAllocator m_allocator;
