@@ -13,10 +13,10 @@
 #include "Sem/SemanticAnalyzer.hpp"
 #include "TempFileCache.hpp"
 #include "Toolchain/ToolTask.hpp"
+#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/TargetSelect.h>
-#include <llvm/IR/IRPrintingPasses.h>
 using namespace lbc;
 
 namespace {

@@ -6,8 +6,8 @@
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "JIT.hpp"
-#include <llvm/TargetParser/Host.h>
 #include <llvm-c/Target.h>
+#include <llvm/TargetParser/Host.h>
 using namespace lbc;
 
 struct Context::Pimpl {

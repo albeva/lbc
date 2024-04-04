@@ -5,20 +5,20 @@
 #include "Driver/Context.hpp"
 #include "Driver/Driver.hpp"
 #include "Driver/JIT.hpp"
+#include <cstdarg>
+#include <cstdio>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <llvm-c/Target.h>
 #include <llvm/Support/TargetSelect.h>
-#include <stdarg.h>
-#include <stdio.h>
 namespace {
 // capture stdout into stream
 thread_local std::stringstream stdoutput = {};
 
 // proxy printf
-int capturePrintF(const char * format, ...) {
+int capturePrintF(const char* format, ...) {
     va_list args;
-    va_start (args, format);
+    va_start(args, format);
 
     // figure out the length
     int length = std::vsnprintf(nullptr, 0, format, args);
@@ -68,8 +68,8 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
         m_options->setCompilerPath(compilerPath);
 
         // redirect printf
-        exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags{llvm::JITSymbolFlags::Callable}));
-        exitOnErr(m_ctx->getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags{llvm::JITSymbolFlags::Callable}));
+        exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags{ llvm::JITSymbolFlags::Callable }));
+        exitOnErr(m_ctx->getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags{ llvm::JITSymbolFlags::Callable }));
 
         // The driver
         m_driver = std::make_unique<lbc::Driver>(*m_ctx);

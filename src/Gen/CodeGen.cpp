@@ -6,6 +6,7 @@
 #include "Builders/DoLoopBuilder.hpp"
 #include "Builders/ForStmtBuilder.hpp"
 #include "Builders/IfStmtBuilder.hpp"
+#include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "Driver/JIT.hpp"
 #include "Helpers.hpp"
@@ -14,7 +15,6 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
-#include "Driver/CompileOptions.hpp"
 using namespace lbc;
 using namespace Gen;
 
