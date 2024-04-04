@@ -59,7 +59,7 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
         // The context
         m_ctx = std::make_unique<lbc::Context>(*m_options);
 
-        // when targetting windowd, compiler executable has .exe file extension
+        // when targeting windows, compiler executable has .exe file extension
         std::string binary = "lbc";
         if (m_ctx->getTriple().isOSWindows()) {
             binary += ".exe";
