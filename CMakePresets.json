@@ -24,12 +24,15 @@
                 "rhs": "Windows"
             },
             "architecture": {
-                "value": "x64",
+                "value": "arm64",
                 "strategy": "external"
             },
             "toolset": {
-                "value": "host=x64",
+                "value": "host=arm64",
                 "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_SYSTEM_PROCESSOR": "arm64"
             }
         },
         {

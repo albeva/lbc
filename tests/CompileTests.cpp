@@ -9,12 +9,14 @@
 #include <gtest/gtest.h>
 #include <llvm-c/Target.h>
 #include <llvm/Support/TargetSelect.h>
+#include <stdarg.h>
+#include <stdio.h>
 namespace {
 // capture stdout into stream
 thread_local std::stringstream stdoutput = {};
 
 // proxy printf
-int capturePrintF(const char * format __restrict, ...) {
+int capturePrintF(const char * format, ...) {
     va_list args;
     va_start (args, format);
 
@@ -46,7 +48,6 @@ llvm::ExitOnError exitOnErr{};
 struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     void SetUp() override {
         auto workingPath = std::filesystem::current_path();
-        auto compilerPath = canonical(workingPath / "../bin/lbc");
 
         // Options
         m_options = std::make_unique<lbc::CompileOptions>();
@@ -54,10 +55,17 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
         m_options->setOptimizationLevel(lbc::CompileOptions::OptimizationLevel::O0);
         m_options->setCompilationTarget(lbc::CompileOptions::CompilationTarget::JIT);
         m_options->setWorkingDir(workingPath);
-        m_options->setCompilerPath(compilerPath);
 
         // The context
         m_ctx = std::make_unique<lbc::Context>(*m_options);
+
+        // when targetting windowd, compiler executable has .exe file extension
+        std::string binary = "lbc";
+        if (m_ctx->getTriple().isOSWindows()) {
+            binary += ".exe";
+        }
+        auto compilerPath = canonical(workingPath / ("../bin/" + binary));
+        m_options->setCompilerPath(compilerPath);
 
         // redirect printf
         exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags{llvm::JITSymbolFlags::Callable}));
