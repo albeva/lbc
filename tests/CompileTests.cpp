@@ -68,8 +68,8 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
         m_options->setCompilerPath(compilerPath);
 
         // redirect printf
-        exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags{ llvm::JITSymbolFlags::Callable }));
-        exitOnErr(m_ctx->getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags{ llvm::JITSymbolFlags::Callable }));
+        exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags::Callable));
+        exitOnErr(m_ctx->getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags::Callable));
 
         // The driver
         m_driver = std::make_unique<lbc::Driver>(*m_ctx);

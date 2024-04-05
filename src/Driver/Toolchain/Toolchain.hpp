@@ -31,15 +31,13 @@ public:
     explicit Toolchain(Context& context) : m_context{ context } {}
     ~Toolchain() = default;
 
-    void setBasePath(fs::path path) { m_basePath = std::move(path); }
-    [[nodiscard]] const fs::path& getBasePath() const { return m_basePath; }
+    [[nodiscard]] const fs::path& getBasePath() const;
 
     [[nodiscard]] fs::path getPath(ToolKind tool) const;
 
     [[nodiscard]] ToolTask createTask(ToolKind kind) const;
 
 private:
-    fs::path m_basePath{};
     Context& m_context;
 };
 

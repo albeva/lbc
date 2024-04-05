@@ -30,10 +30,6 @@ Context::Context(const CompileOptions& options)
     } else {
         m_triple = m_triple.get32BitArchVariant();
     }
-
-    if (!m_options.getToolchainDir().empty()) {
-        m_toolchain.setBasePath(m_options.getToolchainDir());
-    }
 }
 
 Context::~Context() = default;
