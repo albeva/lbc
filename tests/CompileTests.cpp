@@ -29,11 +29,11 @@ int capturePrintF(const char* format, ...) {
     // printf to a buffer
     char* buf = new char[length + 1];
     std::vsnprintf(buf, length + 1, format, args);
-
-    // clean up and done
-    va_end(args);
     stdoutput << buf;
     delete[] buf;
+
+    // done
+    va_end(args);
     return length;
 }
 
