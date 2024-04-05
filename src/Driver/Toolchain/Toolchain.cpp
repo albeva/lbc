@@ -16,7 +16,7 @@ ToolTask Toolchain::createTask(ToolKind kind) const {
 static fs::path getToolPath(const fs::path& base, ToolKind tool) {
     std::string ext{};
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-        ext = ".exe"
+        ext = ".exe";
     #endif
 
     switch (tool) {

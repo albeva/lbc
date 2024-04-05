@@ -14,14 +14,14 @@
             "binaryDir": "${sourceDir}/build/${presetName}"
         },
         {
-            "name": "conf-windows-common",
-            "description": "Windows settings for MSBuild toolchain that apply to msvc and clang",
-            "hidden": true,
+            "name": "conf-windows-arm-base",
+            "description": "Settings for ARM version of Windows",
             "inherits": "conf-common",
+            "hidden": true,
             "condition": {
                 "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
+                "lhs": "$env{PROCESSOR_ARCHITECTURE}",
+                "rhs": "ARM64"
             },
             "architecture": {
                 "value": "arm64",
@@ -33,6 +33,62 @@
             },
             "cacheVariables": {
                 "CMAKE_SYSTEM_PROCESSOR": "arm64"
+            }
+        },
+        {
+            "name": "conf-windows-x86-base",
+            "description": "Settings for X86 version of Windows",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "$env{PROCESSOR_ARCHITECTURE}",
+                "rhs": "X86"
+            },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_SYSTEM_PROCESSOR": "x64"
+            }
+        },
+        {
+            "name": "conf-windows-common",
+            "description": "Windows settings for MSBuild toolchain that apply to msvc and clang",
+            "hidden": true,
+            "inherits": ["conf-windows-arm-base", "conf-windows-x86-base"],
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl"
+            }
+        },
+        {
+            "name": "windows-msvc-debug",
+            "displayName": "MSVC Debug",
+            "description": "Target Windows with the msvc compiler, debug build type",
+            "inherits": "conf-windows-common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_DEVELOPER_MODE": "ON"
+            }
+        },
+        {
+            "name": "windows-msvc-release",
+            "displayName": "MSVC Release",
+            "description": "Target Windows with the msvc compiler, release build type",
+            "inherits": "conf-windows-common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_DEVELOPER_MODE": "OFF"
             }
         },
         {
@@ -51,62 +107,6 @@
             "vendor": {
                 "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
                     "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-                }
-            }
-        },
-        {
-            "name": "windows-msvc-debug",
-            "displayName": "MSVC Debug",
-            "description": "Target Windows with the msvc compiler, debug build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "ENABLE_DEVELOPER_MODE": "ON"
-            }
-        },
-        {
-            "name": "windows-msvc-release",
-            "displayName": "MSVC Release",
-            "description": "Target Windows with the msvc compiler, release build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "Release",
-                "ENABLE_DEVELOPER_MODE": "OFF"
-            }
-        },
-        {
-            "name": "windows-clang-debug",
-            "displayName": "Clang Debug",
-            "description": "Target Windows with the clang compiler, debug build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "Debug"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-clang-x64"
-                }
-            }
-        },
-        {
-            "name": "windows-clang-release",
-            "displayName": "Clang Release",
-            "description": "Target Windows with the clang compiler, release build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "Release"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-clang-x64"
                 }
             }
         },
