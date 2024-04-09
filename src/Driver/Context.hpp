@@ -5,6 +5,10 @@
 #include "pch.hpp"
 #include "llvm/Support/Allocator.h"
 
+namespace llvm {
+class DataLayout;
+}
+
 namespace lbc {
 class CompileOptions;
 class TypeFunction;
@@ -32,6 +36,7 @@ public:
     [[nodiscard]] llvm::SourceMgr& getSourceMrg() { return m_sourceMgr; }
     [[nodiscard]] llvm::LLVMContext& getLlvmContext() { return m_llvmContext; }
     [[nodiscard]] JIT& getJIT() noexcept;
+    [[nodiscard]] const llvm::DataLayout& getDataLayout() noexcept;
 
     /**
      * Retain a copy of the string in the context and return a llvm::StringRef that

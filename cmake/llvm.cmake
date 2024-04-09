@@ -8,6 +8,10 @@ function(configure_llvm project_name)
         transformUtils
         orcJIT
         native
+        AllTargetsCodeGens
+        AllTargetsDescs
+        AllTargetsInfos
+        TargetParser
     )
     target_include_directories(${project_name} SYSTEM PUBLIC ${LLVM_INCLUDE_DIRS})
     add_definitions(${LLVM_DEFINITIONS})

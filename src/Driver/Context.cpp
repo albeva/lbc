@@ -8,6 +8,11 @@
 #include "JIT.hpp"
 #include <llvm-c/Target.h>
 #include <llvm/TargetParser/Host.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/TargetSelect.h>
 using namespace lbc;
 
 struct Context::Pimpl {
@@ -17,6 +22,7 @@ struct Context::Pimpl {
 
     DiagnosticEngine diag;
     Toolchain toolchain;
+    std::optional<llvm::DataLayout> dataLayout{};
 };
 
 Context::Context(const CompileOptions& options)
@@ -42,6 +48,38 @@ JIT& Context::getJIT() noexcept {
         m_jit = llvm::ExitOnError()(JIT::create());
     }
     return *m_jit;
+}
+
+[[nodiscard]] const llvm::DataLayout& Context::getDataLayout() noexcept {
+    if (m_jit) {
+        return m_jit->getDataLayout();
+    }
+
+    if (!m_pimpl->dataLayout) {
+        llvm::InitializeAllTargets();
+        llvm::InitializeAllTargetMCs();
+
+        std::string error{};
+        const llvm::Target* target = llvm::TargetRegistry::lookupTarget(getTriple().str(), error);
+        if (target == nullptr) {
+            fatalError("Failed to find the target for triple: " + error);
+        }
+
+        std::unique_ptr<llvm::TargetMachine> machine{ target->createTargetMachine(
+            getTriple().str(),
+            /* cpu */ "",
+            /* features*/ "",
+            llvm::TargetOptions(),
+            /*Reloc::Model=*/std::nullopt) };
+
+        if (!machine) {
+            fatalError("Failed to create target machine");
+        }
+
+        m_pimpl->dataLayout = machine->createDataLayout();
+    }
+
+    return m_pimpl->dataLayout.value();
 }
 
 llvm::StringRef Context::retainCopy(llvm::StringRef str) {

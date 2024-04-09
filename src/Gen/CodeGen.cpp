@@ -60,11 +60,8 @@ void CodeGen::visit(AstModule& ast) {
     auto file = m_context.getSourceMrg().getMemoryBuffer(m_fileId)->getBufferIdentifier();
 
     m_module = std::make_unique<llvm::Module>(file, m_llvmContext);
-    if (m_context.getOptions().getCompilationTarget() == CompileOptions::CompilationTarget::JIT) {
-        m_module->setDataLayout(m_context.getJIT().getDataLayout());
-    } else {
-        m_module->setTargetTriple(m_context.getTriple().str());
-    }
+    m_module->setTargetTriple(m_context.getTriple().str());
+    m_module->setDataLayout(m_context.getDataLayout());
 
     if (m_context.getTriple().isOSWindows()) {
         auto* chkstk = llvm::Function::Create(
@@ -73,7 +70,6 @@ void CodeGen::visit(AstModule& ast) {
             "__chkstk",
             *m_module);
         chkstk->setCallingConv(llvm::CallingConv::C);
-        chkstk->setDSOLocal(true);
         chkstk->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
         auto* block = llvm::BasicBlock::Create(m_llvmContext, "entry", chkstk);
         m_builder.SetInsertPoint(block);
@@ -96,7 +92,6 @@ void CodeGen::visit(AstModule& ast) {
             "main",
             *m_module);
         mainFn->setCallingConv(llvm::CallingConv::C);
-        mainFn->setDSOLocal(true);
         mainFn->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
         auto* block = llvm::BasicBlock::Create(m_llvmContext, "entry", mainFn);
         m_builder.SetInsertPoint(block);
