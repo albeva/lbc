@@ -259,7 +259,7 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
         ast.symbol->identifier(),
         *m_module);
     fn->setCallingConv(llvm::CallingConv::C);
-    fn->setDSOLocal(ast.local);
+    fn->setLinkage(ast.local ? llvm::GlobalValue::InternalLinkage : llvm::GlobalValue::ExternalLinkage);
     ast.symbol->setLlvmValue(fn);
 
     if (ast.params != nullptr) {

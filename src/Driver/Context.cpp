@@ -65,12 +65,30 @@ JIT& Context::getJIT() noexcept {
             fatalError("Failed to find the target for triple: " + error);
         }
 
+        auto level = [&]() -> llvm::CodeGenOptLevel {
+            switch (m_options.getOptimizationLevel()) {
+            case CompileOptions::OptimizationLevel::O0:
+                return llvm::CodeGenOptLevel::None;
+            case CompileOptions::OptimizationLevel::OS:
+                return llvm::CodeGenOptLevel::Default;
+            case CompileOptions::OptimizationLevel::O1:
+                return llvm::CodeGenOptLevel::Less;
+            case CompileOptions::OptimizationLevel::O2:
+                return llvm::CodeGenOptLevel::Default;
+            case CompileOptions::OptimizationLevel::O3:
+                return llvm::CodeGenOptLevel::Aggressive;
+            }
+        }();
+
         std::unique_ptr<llvm::TargetMachine> machine{ target->createTargetMachine(
             getTriple().str(),
             /* cpu */ "",
             /* features*/ "",
             llvm::TargetOptions(),
-            /*Reloc::Model=*/std::nullopt) };
+            /*Reloc::Model*/std::nullopt,
+            /*CodeModel::Model*/std::nullopt,
+            /*CodeGenOptLevel*/level
+        )};
 
         if (!machine) {
             fatalError("Failed to create target machine");
