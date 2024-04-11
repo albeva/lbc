@@ -5,7 +5,7 @@
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
-#include "Lexer/TokenProvider.hpp"
+#include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
 #include "Passes/DeclPass.hpp"
 #include "Passes/ForStmtPass.hpp"
@@ -224,10 +224,9 @@ Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
-    if (auto* tokens = std::get_if<std::vector<Token>>(&ast.typeExpr)) {
-        // let provider take ownership of tokens
-        TokenProvider provider{ m_module->fileId, std::move(*tokens) };
-        Parser parser{ m_context, provider, false, m_table };
+    if (auto range = std::get_if<llvm::SMRange>(&ast.typeExpr)) {
+        Lexer lexer{ m_context, m_module->fileId, *range };
+        Parser parser{ m_context, lexer, false, m_table };
 
         auto parsedExpression = m_diag.ignoringErrors([&]() -> bool {
             if (auto* type = parser.typeExpr().getValueOrNull()) {
@@ -235,7 +234,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
                 return true;
             }
 
-            provider.reset();
+            lexer.reset(*range);
             parser.reset();
             if (auto* expr = parser.expression().getValueOrNull()) {
                 ast.typeExpr = expr;
@@ -246,7 +245,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
         });
 
         if (not parsedExpression) {
-            return m_diag.makeError(Diag::invalidTypeOfExpression, provider.getRange());
+            return m_diag.makeError(Diag::invalidTypeOfExpression, *range);
         }
 
         if (not parser.getToken().is(TokenKind::EndOfStmt)) {
@@ -256,7 +255,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
 
     using ResTy = Result<void>;
     const auto getType = Visitor{
-        [](std::vector<Token>&) -> ResTy {
+        [](llvm::SMRange&) -> ResTy {
             llvm_unreachable("unresolved typeof expression");
         },
         [&](AstTypeExpr* typeExpr) -> ResTy {

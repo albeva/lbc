@@ -8,16 +8,15 @@
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
-#include "Lexer/TokenSource.hpp"
 #include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
 #include <llvm/ADT/TypeSwitch.h>
 using namespace lbc;
 using namespace flags::operators;
 
-Parser::Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable)
+Parser::Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable)
 : m_context{ context },
-  m_source{ source },
+  m_lexer{ lexer },
   m_isMain{ isMain },
   m_symbolTable{ symbolTable },
   m_language{ CallingConv::Default },
@@ -45,7 +44,7 @@ Result<AstModule*> Parser::parse() {
     TRY(stmts)
 
     return m_context.create<AstModule>(
-        m_source.getFileId(),
+        m_lexer.getFileId(),
         stmts->range,
         m_isMain,
         std::move(m_imports),
@@ -560,7 +559,7 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
     if (isAnonymous) {
         if (m_token.is(TokenKind::Identifier)) {
             Token next;
-            m_source.peek(next);
+            m_lexer.peek(next);
             if (next.is(TokenKind::As)) {
                 id = m_token.getStringValue();
                 token = m_token;
@@ -830,7 +829,7 @@ Result<AstIfStmt*> Parser::kwIf() {
 
     if (m_token.is(TokenKind::EndOfStmt)) {
         Token next;
-        m_source.peek(next);
+        m_lexer.peek(next);
         if (next.getKind() == TokenKind::Else) {
             advance();
         }
@@ -849,7 +848,7 @@ Result<AstIfStmt*> Parser::kwIf() {
 
         if (m_token.is(TokenKind::EndOfStmt)) {
             Token next;
-            m_source.peek(next);
+            m_lexer.peek(next);
             if (next.getKind() == TokenKind::Else) {
                 advance();
             }
@@ -1242,7 +1241,7 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
     advance();
 
     TRY(consume(TokenKind::ParenOpen))
-    std::vector<Token> tokens;
+    llvm::SMRange exprRange = m_token.range();
     int parens = 1;
     while (true) {
         if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile, TokenKind::Invalid)) {
@@ -1251,6 +1250,10 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
         if (m_token.is(TokenKind::ParenClose)) {
             parens--;
             if (parens == 0) {
+                if (exprRange.End == m_token.range().End) {
+                    return makeError(Diag::unexpectedToken, "type expression", m_token.description());
+                }
+                advance();
                 break;
             }
             if (parens < 0) {
@@ -1259,15 +1262,10 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
         } else if (m_token.is(TokenKind::ParenOpen)) {
             parens++;
         }
-        tokens.emplace_back(m_token);
+        exprRange.End = m_token.range().End;
         advance();
     }
-    if (tokens.empty()) {
-        return makeError(Diag::unexpectedToken, "type expression", m_token.description());
-    }
-    TRY(consume(TokenKind::ParenClose))
-
-    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, std::move(tokens));
+    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, exprRange);
 }
 
 //----------------------------------------
@@ -1611,5 +1609,5 @@ void Parser::replace(TokenKind what, TokenKind with) {
 
 void Parser::advance() {
     m_endLoc = m_token.range().End;
-    m_source.next(m_token);
+    m_lexer.next(m_token);
 }

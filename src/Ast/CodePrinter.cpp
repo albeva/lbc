@@ -130,10 +130,9 @@ void CodePrinter::visit(AstTypeExpr& ast) {
 void CodePrinter::visit(AstTypeOf& ast) {
     m_os << "TYPEOF(";
     const auto visitor = Visitor{
-        [&](std::vector<Token>& tokens) {
-            for (auto& tkn : tokens) {
-                m_os << tkn.lexeme() << " ";
-            }
+        [&](llvm::SMRange /* range */) {
+            // TODO: re-lex the input and emit it
+            m_os << " /' emitting SMRange not implemented '/ ";
         },
         [&](AstTypeExpr* typeExpr) {
             visit(*typeExpr);

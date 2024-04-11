@@ -512,12 +512,12 @@ struct AstTypeAlias final : AstDecl {
 // Types
 //----------------------------------------
 struct AstTypeOf final : AstRoot {
-    using TypeExpr = std::variant<std::vector<Token>, AstTypeExpr*, AstExpr*>;
+    using TypeExpr = std::variant<llvm::SMRange, AstTypeExpr*, AstExpr*>;
 
     explicit AstTypeOf(
         llvm::SMRange range_,
         TypeExpr&& typeExpr_)
-    : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ std::move(typeExpr_) } {}
+    : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ typeExpr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::TypeOf;

@@ -359,12 +359,13 @@ void AstPrinter::visit(AstTypeOf& ast) {
     m_json.object([&] {
         writeHeader(ast);
         const auto visitor = Visitor{
-            [&](std::vector<Token>& tokens) {
-                m_json.attributeArray("tokens", [&]() {
-                    for (auto& tkn : tokens) {
-                        m_json.value(tkn.lexeme());
-                    }
-                });
+            [&](llvm::SMRange&) {
+                // TODO: Implement printing out TYPEOF(SMRange)
+                // m_json.attributeArray("tokens", [&]() {
+                //     for (auto& tkn : tokens) {
+                //         m_json.value(tkn.lexeme());
+                //     }
+                // });
             },
             [&](AstTypeExpr* typeExpr) {
                 writeType(typeExpr);

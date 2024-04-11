@@ -3,23 +3,24 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "TokenSource.hpp"
 
 namespace lbc {
 class Token;
 class Context;
 enum class TokenKind;
 
-class Lexer final : public TokenSource {
+class Lexer final {
 public:
     NO_COPY_AND_MOVE(Lexer)
 
     Lexer(Context& context, unsigned fileID);
-    ~Lexer() override = default;
+    Lexer(Context& context, unsigned fileID, llvm::SMRange range);
 
-    unsigned int getFileId() override { return m_fileId; }
-    void next(Token& result) override;
-    void peek(Token& result) override;
+    void reset(llvm::SMRange range);
+
+    [[nodiscard]] unsigned int getFileId() const { return m_fileId; }
+    void next(Token& result);
+    void peek(Token& result);
 
 private:
     void skipUntilLineEnd();
@@ -34,12 +35,13 @@ private:
     void token(Token& result, TokenKind kind, int len = 1);
     void numberLiteral(Token& result);
     void identifier(Token& result);
-    [[nodiscard]] char peekChar(size_t offset) const;
+    [[nodiscard]] char peekChar(size_t offset = 1) const;
+    void clampInput() { if (m_input > m_end) { m_input = m_end; } }
 
     Context& m_context;
     unsigned int m_fileId;
-    const llvm::MemoryBuffer* m_buffer;
     const char* m_input;
+    const char* m_end;
     const char* m_eolPos;
     bool m_hasStmt;
 };

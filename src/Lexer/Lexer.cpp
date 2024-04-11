@@ -27,14 +27,39 @@ inline llvm::SMRange makeRange(const char* start, const char* end) {
 Lexer::Lexer(Context& context, unsigned fileID)
 : m_context{ context },
   m_fileId{ fileID },
-  m_buffer{ m_context.getSourceMrg().getMemoryBuffer(fileID) },
-  m_input{ m_buffer->getBufferStart() },
-  m_eolPos{ m_input },
-  m_hasStmt{ false } {}
+  m_hasStmt{ false } {
+    const auto* buffer = m_context.getSourceMrg().getMemoryBuffer(m_fileId);
+    if (buffer == nullptr) {
+        fatalError("Invalid buffer id");
+    }
+    m_input = buffer->getBufferStart();
+    m_end = buffer->getBufferEnd();
+    m_eolPos = m_input;
+}
+
+Lexer::Lexer(Context& context, unsigned fileID, llvm::SMRange range)
+: m_context{ context },
+  m_fileId{ fileID },
+  m_hasStmt{ false } {
+    m_input = range.Start.getPointer();
+    m_end = range.End.getPointer();
+    m_eolPos = m_input;
+}
+
+void Lexer::reset(llvm::SMRange range) {
+    m_input = range.Start.getPointer();
+    m_end = range.End.getPointer();
+    m_eolPos = m_input;
+    m_hasStmt = false;
+}
 
 void Lexer::next(Token& result) {
     // clang-format off
     while (true) {
+        if (m_input == m_end) {
+            return endOfFile(result);
+        }
+
         switch (*m_input) {
         case 0:
             return endOfFile(result);
@@ -42,7 +67,9 @@ void Lexer::next(Token& result) {
             m_eolPos = m_input;
             m_input++;
             if (*m_input == '\n') { // CR+LF
-                m_input++;
+                if (m_input < m_end) {
+                    m_input++;
+                }
             }
             if (m_hasStmt) {
                 return endOfStatement(result);
@@ -62,7 +89,7 @@ void Lexer::next(Token& result) {
             skipUntilLineEnd();
             continue;
         case '/':
-            if (m_input[1] == '\'') {
+            if (peekChar() == '\'') {
                 skipMultilineComment();
                 continue;
             }
@@ -76,14 +103,14 @@ void Lexer::next(Token& result) {
         case '"':
             return stringLiteral(result);
         case '=':
-            if (m_input[1] == '>') {
+            if (peekChar() == '>') {
                 return token(result, TokenKind::LambdaBody, 2);
             }
             return token(result, TokenKind::Assign);
         case ',':
             return token(result, TokenKind::Comma);
         case '.': {
-            auto nextCh = m_input[1];
+            auto nextCh = peekChar();
             if (nextCh == '.') {
                 if (peekChar(2) == '.') {
                     return token(result, TokenKind::Ellipsis, 3);
@@ -110,7 +137,7 @@ void Lexer::next(Token& result) {
         case '*':
             return token(result, TokenKind::Multiply);
         case '<': {
-            auto la = m_input[1];
+            auto la = peekChar();
             if (la == '>') {
                 return token(result, TokenKind::NotEqual, 2);
             }
@@ -120,7 +147,7 @@ void Lexer::next(Token& result) {
             return token(result, TokenKind::LessThan);
         }
         case '>':
-            if (m_input[1] == '=') {
+            if (peekChar() == '=') {
                 return token(result, TokenKind::GreaterOrEqual, 2);
             }
             return token(result, TokenKind::GreaterThan);
@@ -148,7 +175,7 @@ void Lexer::next(Token& result) {
 char Lexer::peekChar(size_t offset) const {
     const auto* ptr = m_input;
     std::advance(ptr, offset);
-    if (ptr < m_buffer->getBufferEnd()) {
+    if (ptr < m_end) {
         return *ptr;
     }
     return '\0';
@@ -173,6 +200,7 @@ void Lexer::skipUntilLineEnd() {
         case 0:
         case '\r':
         case '\n':
+            clampInput();
             return;
         default:
             continue;
@@ -183,6 +211,14 @@ void Lexer::skipUntilLineEnd() {
 void Lexer::skipToNextLine() {
     // assume m_input != \r || \n
     skipUntilLineEnd();
+    if (m_input == m_end) {
+        return;
+    }
+
+    DEFER {
+        clampInput();
+    };
+
     switch (*m_input) {
     case '\r':
         m_input++;
@@ -198,6 +234,11 @@ void Lexer::skipToNextLine() {
 
 void Lexer::skipMultilineComment() {
     // assume m_input[0] == '/' && m_input[1] == '\''
+
+    DEFER {
+        clampInput();
+    };
+
     m_input++;
     int level = 1;
     while (true) {
@@ -247,7 +288,7 @@ void Lexer::stringLiteral(Token& result) {
 
     std::string literal;
     const auto* begin = m_input + 1;
-    while (true) {
+    while (m_input < m_end) {
         auto ch = *++m_input;
         switch (ch) {
         case '\t':
@@ -264,6 +305,7 @@ void Lexer::stringLiteral(Token& result) {
                 literal.append(begin, m_input);
             }
             m_input++;
+            clampInput();
             break;
         default:
             constexpr char visibleFrom = 32;
@@ -328,7 +370,7 @@ void Lexer::numberLiteral(Token& result) {
         m_input++;
     }
 
-    while (true) {
+    while (m_input < m_end) {
         auto ch = *++m_input;
         if (ch == '.') {
             if (isFloatingPoint) {
@@ -367,6 +409,7 @@ void Lexer::identifier(Token& result) {
     const auto* start = m_input;
 
     while (isIdentifierChar(*++m_input)) {}
+    clampInput();
 
     std::string uppercased;
     auto length = std::distance(start, m_input);

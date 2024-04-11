@@ -10,7 +10,7 @@
 namespace lbc {
 class Context;
 class SymbolTable;
-class TokenSource;
+class Lexer;
 struct AstIfStmtBlock;
 enum class CallingConv;
 AST_FORWARD_DECLARE()
@@ -26,7 +26,7 @@ public:
         callWithoutParens = 1U << 2U
     };
 
-    Parser(Context& context, TokenSource& source, bool isMain, SymbolTable* symbolTable = nullptr);
+    Parser(Context& context, Lexer& source, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() = default;
 
     [[nodiscard]] Result<AstModule*> parse();
@@ -120,7 +120,7 @@ private:
     }
 
     Context& m_context;
-    TokenSource& m_source;
+    Lexer& m_lexer;
     const bool m_isMain;
     SymbolTable* m_symbolTable;
     CallingConv m_language;
