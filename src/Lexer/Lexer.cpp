@@ -1,10 +1,6 @@
 //
 // Created by Albert Varaksin on 03/07/2020.
 //
-#if defined(__CLION_IDE__)
-#    pragma ide diagnostic ignored "cppcoreguidelines-pro-bounds-pointer-arithmetic"
-#endif
-
 #include "Lexer.hpp"
 #include "Driver/Context.hpp"
 #include "Token.hpp"
@@ -55,11 +51,7 @@ void Lexer::reset(llvm::SMRange range) {
 
 void Lexer::next(Token& result) {
     // clang-format off
-    while (true) {
-        if (m_input == m_end) {
-            return endOfFile(result);
-        }
-
+    while (m_input != m_end) {
         switch (*m_input) {
         case 0:
             return endOfFile(result);
@@ -95,7 +87,7 @@ void Lexer::next(Token& result) {
             }
             return token(result, TokenKind::Divide);
         case '_':
-            if (isIdentifierChar(m_input[1])) {
+            if (isIdentifierChar(peekChar())) {
                 return identifier(result);
             }
             skipToNextLine();
@@ -170,6 +162,8 @@ void Lexer::next(Token& result) {
         return invalid(result, m_input);
     }
     // clang-format on
+
+    return endOfFile(result);
 }
 
 void Lexer::skipUntilLineEnd() {
@@ -214,18 +208,14 @@ void Lexer::skipToNextLine() {
 void Lexer::skipMultilineComment() {
     // assume m_input[0] == '/' && m_input[1] == '\''
 
-    DEFER {
-        clampInput();
-    };
-
     m_input++;
     int level = 1;
-    while (true) {
-        switch (*++m_input) {
+    while (m_input++ != m_end) {
+        switch (*m_input) {
         case '\0':
             return;
         case '\'':
-            if (m_input[1] == '/') {
+            if (peekChar() == '/') {
                 m_input++;
                 level--;
                 if (level == 0) {
@@ -235,7 +225,7 @@ void Lexer::skipMultilineComment() {
             }
             continue;
         case '/':
-            if (m_input[1] == '\'') {
+            if (peekChar() == '\'') {
                 m_input++;
                 level++;
             }
