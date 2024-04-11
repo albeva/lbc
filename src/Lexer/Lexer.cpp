@@ -18,6 +18,10 @@ inline bool isIdentifierChar(char ch) {
 inline llvm::SMRange makeRange(const char* start, const char* end) {
     return { llvm::SMLoc::getFromPointer(start), llvm::SMLoc::getFromPointer(end) };
 }
+
+inline bool isLineOrFileEnd(char ch) {
+    return ch == '\0' || ch == '\n' || ch == '\r';
+}
 } // namespace
 
 Lexer::Lexer(Context& context, unsigned fileID)
@@ -168,15 +172,9 @@ void Lexer::next(Token& result) {
 
 void Lexer::skipUntilLineEnd() {
     // assume m_input[0] != \r || \n
-    while (true) {
-        switch (*++m_input) {
-        case 0:
-        case '\r':
-        case '\n':
-            clampInput();
+    while (m_input++ != m_end) {
+        if (isLineOrFileEnd(*m_input)) {
             return;
-        default:
-            continue;
         }
     }
 }
@@ -188,14 +186,10 @@ void Lexer::skipToNextLine() {
         return;
     }
 
-    DEFER {
-        clampInput();
-    };
-
     switch (*m_input) {
     case '\r':
         m_input++;
-        if (*m_input == '\n') { // CR+LF
+        if (m_input != m_end && *m_input == '\n') { // CR+LF
             m_input++;
         }
         return;
@@ -386,8 +380,7 @@ void Lexer::identifier(Token& result) {
     std::transform(start, m_input, std::back_inserter(uppercased), llvm::toUpper);
 
     if (uppercased == "REM") {
-        auto ch = *m_input;
-        if (ch != 0 && ch != '\n' && ch != '\r') {
+        if (m_input != m_end && !isLineOrFileEnd(*m_input)) {
             skipUntilLineEnd();
         }
         next(result);
