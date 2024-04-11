@@ -172,25 +172,9 @@ void Lexer::next(Token& result) {
     // clang-format on
 }
 
-char Lexer::peekChar(size_t offset) const {
-    const auto* ptr = m_input;
-    std::advance(ptr, offset);
-    if (ptr < m_end) {
-        return *ptr;
-    }
-    return '\0';
-}
-
 void Lexer::peek(Token& result) {
-    const auto* input = m_input;
-    const char* eolPos = m_eolPos;
-    bool const hasStmt = m_hasStmt;
-
-    next(result);
-
-    m_input = input;
-    m_eolPos = eolPos;
-    m_hasStmt = hasStmt;
+    auto copy = *this;
+    copy.next(result);
 }
 
 void Lexer::skipUntilLineEnd() {

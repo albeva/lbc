@@ -11,8 +11,6 @@ enum class TokenKind;
 
 class Lexer final {
 public:
-    NO_COPY_AND_MOVE(Lexer)
-
     Lexer(Context& context, unsigned fileID);
     Lexer(Context& context, unsigned fileID, llvm::SMRange range);
 
@@ -35,8 +33,20 @@ private:
     void token(Token& result, TokenKind kind, int len = 1);
     void numberLiteral(Token& result);
     void identifier(Token& result);
-    [[nodiscard]] char peekChar(size_t offset = 1) const;
-    void clampInput() { if (m_input > m_end) { m_input = m_end; } }
+
+    [[nodiscard]] inline char peekChar(std::size_t offset = 1) const {
+        const char* peek = m_input + offset;
+        if (peek < m_end) {
+            return *peek;
+        }
+        return '\0';
+    }
+
+    inline void clampInput() {
+        if (m_input > m_end) {
+            m_input = m_end;
+        }
+    }
 
     Context& m_context;
     unsigned int m_fileId;
