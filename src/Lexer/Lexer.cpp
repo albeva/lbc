@@ -172,7 +172,7 @@ void Lexer::next(Token& result) {
     // clang-format on
 }
 
-void Lexer::peek(Token& result) {
+void Lexer::peek(Token& result) const {
     Lexer{ *this }.next(result);
 }
 

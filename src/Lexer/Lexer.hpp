@@ -23,7 +23,7 @@ public:
 
     [[nodiscard]] unsigned int getFileId() const { return m_fileId; }
     void next(Token& result);
-    void peek(Token& result);
+    void peek(Token& result) const;
 
 private:
     Lexer(const Lexer&) = default;
