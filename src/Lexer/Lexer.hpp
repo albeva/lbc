@@ -22,8 +22,12 @@ public:
     void reset(llvm::SMRange range);
 
     [[nodiscard]] unsigned int getFileId() const { return m_fileId; }
+
     void next(Token& result);
-    void peek(Token& result) const;
+
+    inline void peek(Token& result) const {
+        Lexer{ *this }.next(result);
+    }
 
 private:
     Lexer(const Lexer&) = default;

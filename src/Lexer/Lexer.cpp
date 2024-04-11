@@ -172,10 +172,6 @@ void Lexer::next(Token& result) {
     // clang-format on
 }
 
-void Lexer::peek(Token& result) const {
-    Lexer{ *this }.next(result);
-}
-
 void Lexer::skipUntilLineEnd() {
     // assume m_input[0] != \r || \n
     while (true) {
