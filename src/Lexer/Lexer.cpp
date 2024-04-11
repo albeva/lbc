@@ -173,8 +173,7 @@ void Lexer::next(Token& result) {
 }
 
 void Lexer::peek(Token& result) {
-    auto copy = *this;
-    copy.next(result);
+    Lexer{ *this }.next(result);
 }
 
 void Lexer::skipUntilLineEnd() {

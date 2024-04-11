@@ -11,6 +11,11 @@ enum class TokenKind;
 
 class Lexer final {
 public:
+    Lexer() = delete;
+    Lexer(Lexer&&) = delete;
+    Lexer& operator=(const Lexer&) = delete;
+    Lexer& operator=(Lexer&&) = delete;
+
     Lexer(Context& context, unsigned fileID);
     Lexer(Context& context, unsigned fileID, llvm::SMRange range);
 
@@ -21,6 +26,8 @@ public:
     void peek(Token& result);
 
 private:
+    Lexer(const Lexer&) = default;
+
     void skipUntilLineEnd();
     void skipToNextLine();
     void skipMultilineComment();
