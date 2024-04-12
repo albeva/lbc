@@ -53,12 +53,6 @@ private:
         return '\0';
     }
 
-    inline void clampInput() {
-        if (m_input > m_end) {
-            m_input = m_end;
-        }
-    }
-
     Context& m_context;
     unsigned int m_fileId;
     const char* m_input;

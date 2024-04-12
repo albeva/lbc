@@ -203,7 +203,7 @@ void Lexer::next(Token& result) {
 
 void Lexer::skipUntilLineEnd() {
     // assume m_input[0] != \r || \n
-    while (m_input++ != m_end) {
+    while (++m_input != m_end) {
         if (isLineOrFileEnd(*m_input)) {
             return;
         }
@@ -235,7 +235,7 @@ void Lexer::skipMultilineComment() {
 
     m_input++;
     int level = 1;
-    while (m_input++ != m_end) {
+    while (++m_input != m_end) {
         switch (*m_input) {
         case '\0':
             return;
@@ -282,7 +282,7 @@ void Lexer::stringLiteral(Token& result) {
 
     std::string literal;
     const auto* begin = m_input + 1;
-    while (m_input++ != m_end) {
+    while (++m_input != m_end) {
         auto ch = *m_input;
         switch (ch) {
         case '\t':
@@ -380,8 +380,7 @@ void Lexer::identifier(Token& result) {
     // assume m_input[0] == '_' || char
     const auto* start = m_input;
 
-    while (isIdentifierChar(*++m_input)) {}
-    clampInput();
+    while (++m_input != m_end && isIdentifierChar(*m_input)) {}
 
     std::string uppercased;
     auto length = std::distance(start, m_input);
