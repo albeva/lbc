@@ -16,7 +16,7 @@ inline bool isIdentifierChar(char ch) {
 }
 
 inline bool isLineOrFileEnd(char ch) {
-    return  ch == '\n' || ch == '\r' || ch == '\0';
+    return ch == '\n' || ch == '\r' || ch == '\0';
 }
 
 inline llvm::SMRange makeRange(const char* start, const char* end) {
