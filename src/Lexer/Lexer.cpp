@@ -15,12 +15,43 @@ inline bool isIdentifierChar(char ch) {
     return isAlpha(ch) || isDigit(ch) || ch == '_';
 }
 
+inline bool isLineOrFileEnd(char ch) {
+    return  ch == '\n' || ch == '\r' || ch == '\0';
+}
+
 inline llvm::SMRange makeRange(const char* start, const char* end) {
     return { llvm::SMLoc::getFromPointer(start), llvm::SMLoc::getFromPointer(end) };
 }
 
-inline bool isLineOrFileEnd(char ch) {
-    return ch == '\0' || ch == '\n' || ch == '\r';
+inline std::optional<char> getEscapeChar(char ch) {
+    switch (ch) {
+    case 'a':
+        return '\a';
+    case 'b':
+        return '\b';
+    case 'f':
+        return '\f';
+    case 'n':
+        return '\n';
+    case 'r':
+        return '\r';
+    case 't':
+        return '\t';
+    case 'v':
+        return '\v';
+    case '\\':
+        return '\\';
+    case '\'':
+        return '\'';
+    case '"':
+        return '"';
+    case '\?':
+        return '?';
+    case '0':
+        return '\0';
+    default:
+        return std::nullopt;
+    }
 }
 } // namespace
 
@@ -251,8 +282,8 @@ void Lexer::stringLiteral(Token& result) {
 
     std::string literal;
     const auto* begin = m_input + 1;
-    while (m_input < m_end) {
-        auto ch = *++m_input;
+    while (m_input++ != m_end) {
+        auto ch = *m_input;
         switch (ch) {
         case '\t':
             continue;
@@ -268,7 +299,6 @@ void Lexer::stringLiteral(Token& result) {
                 literal.append(begin, m_input);
             }
             m_input++;
-            clampInput();
             break;
         default:
             constexpr char visibleFrom = 32;
@@ -287,32 +317,11 @@ void Lexer::stringLiteral(Token& result) {
 }
 
 char Lexer::escape() {
-    // assume m_input[0] == '\\'
-    switch (*++m_input) {
-    case 'a':
-        return '\a';
-    case 'b':
-        return '\b';
-    case 'f':
-        return '\f';
-    case 'n':
-        return '\n';
-    case 'r':
-        return '\r';
-    case 't':
-        return '\t';
-    case 'v':
-        return '\v';
-    case '\\':
-        return '\\';
-    case '\'':
-        return '\'';
-    case '"':
-        return '"';
-    default:
-        m_input--;
-        return '\\';
+    if (auto ch = getEscapeChar(peekChar())) {
+        m_input++;
+        return *ch;
     }
+    return '\0';
 }
 
 void Lexer::token(Token& result, TokenKind kind, int len) {
@@ -333,7 +342,7 @@ void Lexer::numberLiteral(Token& result) {
         m_input++;
     }
 
-    while (m_input < m_end) {
+    do {
         auto ch = *++m_input;
         if (ch == '.') {
             if (isFloatingPoint) {
@@ -346,7 +355,7 @@ void Lexer::numberLiteral(Token& result) {
             continue;
         }
         break;
-    }
+    } while (m_input != m_end);
 
     if (isFloatingPoint) {
         std::string const number{ start, m_input };
