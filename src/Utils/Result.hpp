@@ -15,10 +15,10 @@ template<typename T>
 class Result;
 
 /// Specialise for no type
-template<std::same_as<void> T>
-class [[nodiscard]] Result<T> final {
+template<>
+class [[nodiscard]] Result<void> final {
 public:
-    using value_type = T;
+    using value_type = void;
 
     constexpr Result() = default;
 
@@ -44,6 +44,7 @@ template<IsPointer T>
 class [[nodiscard]] Result<T> final {
 public:
     using value_type = T;
+    using base_type = std::remove_pointer_t<T>;
 
     // default to null, valid
     constexpr Result() : m_value{ nullptr, false } {}
@@ -102,158 +103,24 @@ public:
         return getValue();
     }
 
-    [[nodiscard]] constexpr inline T operator*() const {
+    [[nodiscard]] constexpr inline std::add_lvalue_reference_t<base_type> operator*() const {
+        return *getValue();
+    }
+
+    bool constexpr inline operator==(std::nullptr_t) const {
+        return getValueOrNull() == nullptr;
+    }
+
+    bool constexpr inline operator!=(std::nullptr_t) const {
+        return getValueOrNull() != nullptr;
+    }
+
+    /* explicit */ constexpr inline operator T () const { // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
         return getValue();
     }
 
 private:
     llvm::PointerIntPair<T, 1, bool> m_value;
-};
-
-// Specialise for any non pointer which is copyable
-template<std::copyable T>
-    requires(not IsPointer<T>)
-class [[nodiscard]] Result<T> final {
-public:
-    using value_type = T;
-
-    // Default value
-    constexpr Result()
-        requires std::is_default_constructible_v<T>
-    : m_value{ std::in_place_type<T> } {}
-
-    // Error
-    // cppcheck-suppress noExplicitConstructor
-    constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{} {}
-
-    constexpr inline Result& operator=(ResultError /* _ */) {
-        m_value.reset();
-        return *this;
-    }
-
-    // Move value
-    // cppcheck-suppress noExplicitConstructor
-    constexpr Result(T&& value) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{ std::forward<T>(value) } {}
-
-    constexpr inline Result& operator=(T&& other) {
-        m_value = std::move(other.m_value);
-        return *this;
-    }
-
-    // Copy value
-    // cppcheck-suppress noExplicitConstructor
-    constexpr Result(const T& value) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{ value } {}
-
-    constexpr inline Result& operator=(const T& other) {
-        m_value = other.m_value;
-        return *this;
-    }
-
-    /// Downcast from derived type to base type
-    // cppcheck-suppress noExplicitConstructor
-    template<std::convertible_to<T> U>
-    constexpr Result(Result<U>&& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-        requires std::movable<U>
-    : m_value{} {
-        if (!other.hasError()) {
-            m_value = static_cast<T&&>(std::move(other.getValue()));
-        }
-    }
-
-    template<std::convertible_to<T> U>
-    constexpr inline Result& operator=(Result<U>&& other)
-        requires std::movable<U>
-    {
-        if (other.hasError()) {
-            m_value.reset();
-        } else {
-            m_value = static_cast<T&&>(std::move(other.getValue()));
-        }
-    }
-
-    // cppcheck-suppress noExplicitConstructor
-    template<std::convertible_to<T> U>
-    constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-        requires std::copyable<U>
-    : m_value{} {
-        if (!other.hasError()) {
-            m_value = static_cast<T>(other.getValue());
-        }
-    }
-
-    template<std::convertible_to<T> U>
-    constexpr inline Result& operator=(const Result<U>& other)
-        requires std::copyable<U>
-    {
-        if (other.hasError()) {
-            m_value.reset();
-        } else {
-            m_value = static_cast<T>(other.getValue());
-        }
-    }
-
-    [[nodiscard]] constexpr inline bool hasError() const {
-        return not m_value.has_value();
-    }
-
-    [[nodiscard]] constexpr inline T getValueOrDefault() const
-        requires std::is_default_constructible_v<T> && std::copyable<T>
-    {
-        if (hasError()) {
-            return T();
-        }
-        return m_value.value();
-    }
-
-    [[nodiscard]] constexpr inline T& getValue() & {
-        assert(not hasError() && "Getting value from erronous Result");
-        return m_value.value();
-    }
-
-    [[nodiscard]] constexpr inline const T& getValue() const& {
-        assert(not hasError() && "Getting value from erronous Result");
-        return m_value.value();
-    }
-
-    [[nodiscard]] constexpr inline T&& getValue() && {
-        assert(not hasError() && "Getting value from erronous Result");
-        return std::move(m_value.value());
-    }
-
-    [[nodiscard]] constexpr inline const T&& getValue() const&& {
-        assert(not hasError() && "Getting value from erronous Result");
-        return std::move(m_value.value());
-    }
-
-    [[nodiscard]] constexpr inline const T* operator->() const {
-        return &getValue();
-    }
-
-    [[nodiscard]] constexpr inline T* operator->() {
-        return &getValue();
-    }
-
-    [[nodiscard]] constexpr const T& operator*() const& {
-        return getValue();
-    }
-
-    [[nodiscard]] constexpr T& operator*() & {
-        return getValue();
-    }
-
-    [[nodiscard]] constexpr const T&& operator*() const&& {
-        return getValue();
-    }
-
-    [[nodiscard]] constexpr T&& operator*() && {
-        return getValue();
-    }
-
-private:
-    std::optional<T> m_value;
 };
 
 } // namespace lbc
