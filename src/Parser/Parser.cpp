@@ -14,6 +14,13 @@
 using namespace lbc;
 using namespace flags::operators;
 
+static inline llvm::SMLoc getStart(const AstAttributeList* attribs, const Token& token) {
+    if (attribs == nullptr) {
+        return token.range().Start;
+    }
+    return  attribs->range.Start;
+}
+
 Parser::Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable)
 : m_context{ context },
   m_lexer{ lexer },
@@ -409,7 +416,7 @@ Result<AstExprList*> Parser::attributeArgList() {
  */
 Result<AstVarDecl*> Parser::kwDim(AstAttributeList* attribs) {
     // assume m_token == VAR
-    auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
+    auto start = getStart(attribs, m_token);
     advance();
 
     TRY(expect(TokenKind::Identifier))
@@ -458,7 +465,7 @@ Result<AstFuncDecl*> Parser::kwDeclare(AstAttributeList* attribs) {
     if (m_scope != Scope::Root) {
         return makeError(Diag::unexpectedNestedDeclaration, m_token.description());
     }
-    auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
+    auto start = getStart(attribs, m_token);
     advance();
 
     return funcSignature(start, attribs, FuncFlags::isDeclaration);
@@ -737,7 +744,7 @@ Result<AstFuncStmt*> Parser::kwFunction(AstAttributeList* attribs) {
     }
 
     bool const isFunction = m_token.is(TokenKind::Function);
-    auto start = attribs != nullptr ? attribs->range.Start : m_token.range().Start;
+    auto start = getStart(attribs, m_token);
     auto decl = funcSignature(start, attribs, {});
     TRY(decl)
 
