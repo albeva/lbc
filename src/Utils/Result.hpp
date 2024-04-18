@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "pch.hpp"
-#include <llvm/ADT/PointerIntPair.h>
 
 namespace lbc {
 
@@ -46,26 +45,27 @@ public:
     using value_type = T;
     using base_type = std::remove_pointer_t<T>;
 
-    // default to null, valid
-    constexpr Result() : m_value{ nullptr, false } {}
+    constexpr Result() = default;
 
     /// Null value with defined error
     // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{ nullptr, true } {}
+    : m_hasError{ true } {}
 
     constexpr Result& operator=(ResultError /* _ */) {
-        m_value.setPointerAndInt(nullptr, true);
+        m_hasError = true;
+        m_value = nullptr;
         return *this;
     }
 
     /// given pointer value without error
     // cppcheck-suppress noExplicitConstructor
     constexpr Result(T pointer) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{ pointer, false } {}
+    : m_value{ pointer } {}
 
     constexpr Result& operator=(T pointer) {
-        m_value.setPointerAndInt(pointer, false);
+        m_hasError = false;
+        m_value = pointer;
         return *this;
     }
 
@@ -75,28 +75,29 @@ public:
 
     template<PointersDerivedFrom<T> U>
     constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{ other.m_value.getPointer(), other.m_value.getInt() } {}
+    : m_hasError{ other.m_hasError }, m_value{ other.m_value } {}
 
     template<PointersDerivedFrom<T> U>
     constexpr inline Result& operator=(const Result<U>& other) {
-        m_value.setPointerAndInt(other.m_value.getPointer(), other.m_value.getInt());
+        m_hasError = other.m_hasError;
+        m_value = other.m_value;
         return *this;
     }
 
     [[nodiscard]] constexpr inline bool hasError() const {
-        return m_value.getInt();
+        return m_hasError;
     }
 
     [[nodiscard]] constexpr inline T getValue() const {
-        assert(not hasError() && "Getting value from erronous Result");
-        return m_value.getPointer();
+        assert(not m_hasError && "Getting value from erronous Result");
+        return m_value;
     }
 
     [[nodiscard]] constexpr inline T getValueOrNull() const {
-        if (hasError()) {
+        if (m_hasError) {
             return nullptr;
         }
-        return m_value.getPointer();
+        return m_value;
     }
 
     [[nodiscard]] constexpr inline T operator->() const {
@@ -131,7 +132,8 @@ public:
     }
 
 private:
-    llvm::PointerIntPair<T, 1, bool> m_value;
+    T m_value{};
+    bool m_hasError{};
 };
 
 } // namespace lbc
