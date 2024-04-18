@@ -74,11 +74,11 @@ public:
     friend class Result;
 
     template<PointersDerivedFrom<T> U>
-    constexpr Result(Result<U>&& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
+    constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ other.m_value.getPointer(), other.m_value.getInt() } {}
 
     template<PointersDerivedFrom<T> U>
-    constexpr inline Result& operator=(Result<U>&& other) {
+    constexpr inline Result& operator=(const Result<U>& other) {
         m_value.setPointerAndInt(other.m_value.getPointer(), other.m_value.getInt());
         return *this;
     }
