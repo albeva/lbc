@@ -115,6 +115,17 @@ public:
         return getValueOrNull() != nullptr;
     }
 
+    /// Since Result value is not required and can be null, casting to bool is ambigious
+    ///
+    /// Use following to check:
+    ///    auto result = getResult();
+    ///    if (result != nullptr) { ... }                     // if result contains a valid pointer
+    ///    if (auto* value = result.getValueOrNull()) { ... } // similar to above, but also bind the value
+    ///    if (!result.hasError()) { ... }                    // check that result does not contain an error
+    operator bool() = delete;
+    operator bool() const = delete;
+
+    /// Implicitly cast result to type T. This is UNSAFE and must be checked for error first!
     /* explicit */ constexpr inline operator T () const { // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
         return getValue();
     }
