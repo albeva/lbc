@@ -114,21 +114,21 @@ Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
 
     if (ast.expr == nullptr) {
         if (!isVoid && !canOmitExpression) {
-            return m_diag.makeError(Diag::functionMustReturnAValue, ast.range);
+            return makeError(Diag::functionMustReturnAValue, ast);
         }
         return {};
     }
 
     if (isVoid) {
-        return m_diag.makeError(Diag::subShouldNotReturnAValue, ast.expr->range);
+        return makeError(Diag::subShouldNotReturnAValue, ast.expr);
     }
 
     TRY(expression(ast.expr))
 
     if (ast.expr->type != retType) {
-        return m_diag.makeError(
+        return makeError(
             Diag::invalidFunctionReturnType,
-            ast.expr->range,
+            ast.expr,
             ast.expr->type->asString(),
             retType->asString());
     }
@@ -154,9 +154,9 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
         if (block->expr != nullptr) {
             TRY(expression(block->expr))
             if (!block->expr->type->isBoolean()) {
-                return m_diag.makeError(
+                return makeError(
                     Diag::noViableConversionToType,
-                    block->expr->range,
+                    block->expr,
                     block->expr->type->asString(),
                     TypeBoolean::get()->asString());
             }
@@ -180,9 +180,9 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     if (ast.expr != nullptr) {
         TRY(expression(ast.expr))
         if (!ast.expr->type->isBoolean()) {
-            return m_diag.makeError(
+            return makeError(
                 Diag::noViableConversionToType,
-                ast.expr->range,
+                ast.expr,
                 ast.expr->type->asString(),
                 TypeBoolean::get()->asString());
         }
@@ -245,11 +245,11 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
         });
 
         if (not parsedExpression) {
-            return m_diag.makeError(Diag::invalidTypeOfExpression, *range);
+            return makeError(Diag::invalidTypeOfExpression, *range);
         }
 
         if (not parser.getToken().is(TokenKind::EndOfStmt)) {
-            return m_diag.makeError(Diag::unexpectedTokenInTypeOf, parser.getToken().range());
+            return makeError(Diag::unexpectedTokenInTypeOf, parser.getToken().range());
         }
     }
 
@@ -313,9 +313,9 @@ Result<void> SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) {
 Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
     TRY(visit(*ast.lhs))
     if (not ast.lhs->flags.assignable) {
-        return m_diag.makeError(
+        return makeError(
             Diag::targetNotAssignable,
-            ast.lhs->range,
+            ast.lhs,
             ast.lhs->type->asString());
     }
     return expression(ast.rhs, ast.lhs->type);
@@ -324,7 +324,7 @@ Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
 Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
     auto* symbol = m_table->find(ast.name);
     if (symbol == nullptr) {
-        fatalError("Unknown identifier "_t + ast.name);
+        return makeError(Diag::unknownIdentifier, ast, ast.name);
     }
 
     if (symbol->getType() == nullptr) {
@@ -332,7 +332,7 @@ Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
     }
 
     if (not isVariableAccessible(symbol)) {
-        fatalError("Use of '"_t + symbol->name() + "' before definition");
+        return makeError(Diag::useBeforeDefinition, ast, ast.name);
     }
 
     ast.type = symbol->getType();
@@ -354,7 +354,7 @@ Result<void> SemanticAnalyzer::visit(AstCallExpr& ast) {
 
     const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->type);
     if (type == nullptr) {
-        fatalError("Trying to call a non callable");
+        return makeError(Diag::targetNotCallable, ast.callable, ast.callable->type->asString());
     }
 
     const auto& paramTypes = type->getParams();
@@ -362,10 +362,10 @@ Result<void> SemanticAnalyzer::visit(AstCallExpr& ast) {
 
     if (type->isVariadic()) {
         if (paramTypes.size() > args.size()) {
-            fatalError("Argument count mismatch");
+            return makeError(Diag::noMatchingSubOrFunction, ast);
         }
     } else if (paramTypes.size() != args.size()) {
-        fatalError("Argument count mismatch");
+        return makeError(Diag::noMatchingSubOrFunction, ast);
     }
 
     for (size_t index = 0; index < args.size(); index++) {
@@ -377,7 +377,6 @@ Result<void> SemanticAnalyzer::visit(AstCallExpr& ast) {
     }
 
     ast.type = type->getReturn();
-
     return {};
 }
 
@@ -422,13 +421,13 @@ Result<void> SemanticAnalyzer::visit(AstUnaryExpr& ast) {
             ast.type = type;
             break;
         }
-        fatalError("Applying unary NOT to non bool type");
+        return makeError(Diag::cannotUseTypeAsBoolean, ast.expr, type->asString());
     case TokenKind::Negate:
         if (type->isNumeric()) {
             ast.type = type;
             break;
         }
-        fatalError("Applying unary negate to non-numeric type");
+        return makeError(Diag::unaryOperatorAppledToType, ast.expr, '-', type->asString());
     default:
         llvm_unreachable("unknown unary operator");
     }
@@ -441,16 +440,14 @@ Result<void> SemanticAnalyzer::visit(AstUnaryExpr& ast) {
 //------------------------------------------------------------------
 
 Result<void> SemanticAnalyzer::visit(AstDereference& ast) {
-    // TODO dereference needs to return a reference to value, NOT value itself
-
     TRY(visit(*ast.expr))
+
     if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->type)) {
         ast.type = type->getBase();
+        ast.flags = ast.expr->flags;
     } else {
-        fatalError("dereferencing a non pointer");
+        return makeError(Diag::dereferencingNonPointerType, ast.expr, ast.expr->type->asString());
     }
-
-    ast.flags = ast.expr->flags;
 
     return {};
 }
@@ -553,6 +550,7 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
 }
 
 Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
+    (void)this;
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -594,6 +592,7 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
 }
 
 bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const {
+    (void)this;
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }

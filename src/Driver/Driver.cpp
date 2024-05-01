@@ -416,7 +416,9 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
 
     // Analyze
     SemanticAnalyzer sem{ m_context };
-    MUST(sem.visit(*ast))
+    if (sem.visit(*ast).hasError()) {
+        std::exit(EXIT_FAILURE);
+    }
 
     if (m_options.getDumpAst() || m_options.getDumpCode()) {
         m_modules.emplace_back(std::make_unique<TranslationUnit>(

@@ -116,7 +116,8 @@ private:
 
     template<typename... Args>
     [[nodiscard]] ResultError makeError(Diag diag, Args&&... args) const {
-        return m_diag.makeError(diag, m_token.range(), std::forward<Args>(args)...);
+        m_diag.log(diag, m_token.range(), std::forward<Args>(args)...);
+        return {};
     }
 
     Context& m_context;

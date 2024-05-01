@@ -57,7 +57,7 @@ inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) {
  * @param message to print
  * @param prefix add standard prefix before the message
  */
-[[noreturn]] void fatalError(const llvm::Twine& message, bool prefix = true);
+[[noreturn]] void fatalError(const llvm::Twine& message, bool prefix = true, bool showLoc = false, std::source_location loc = std::source_location::current());
 
 /**
  * Emit compiler warning, but continue compilation process

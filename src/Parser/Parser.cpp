@@ -206,7 +206,8 @@ Result<AstImport*> Parser::kwImport() {
         return m_context.create<AstImport>(llvm::SMRange{ range.Start, m_endLoc }, import);
     }
     if (!fs::exists(source)) {
-        return m_diag.makeError(Diag::moduleNotFound, range, import);
+        m_diag.log(Diag::moduleNotFound, range, import);
+        return ResultError{};
     }
 
     // Load import into Source Mgr
@@ -216,7 +217,8 @@ Result<AstImport*> Parser::kwImport() {
         range.Start,
         included);
     if (ID == ~0U) {
-        return m_diag.makeError(Diag::failedToLoadModule, range, source.string());
+        m_diag.log(Diag::failedToLoadModule, range, source.string());
+        return ResultError{};
     }
 
     // parse the module

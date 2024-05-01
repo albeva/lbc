@@ -4,10 +4,15 @@
 #include "Utils.hpp"
 #include "Driver/TempFileCache.hpp"
 
-void lbc::fatalError(const llvm::Twine& message, bool prefix) {
+void lbc::fatalError(const llvm::Twine& message, bool prefix, bool showLoc, std::source_location loc) {
     if (prefix) {
         llvm::errs() << "lbc: error: ";
     }
+
+    if (showLoc) {
+        llvm::errs() << loc.file_name() << ':' << loc.line() << ':' << loc.column() << ": ";
+    }
+
     llvm::errs() << message << '\n';
 
     TempFileCache::removeTemporaryFiles();

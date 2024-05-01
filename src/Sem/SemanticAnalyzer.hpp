@@ -79,6 +79,22 @@ public:
         return with(std::forward<Args>(rest)...);
     }
 
+    template<typename... Args>
+    [[nodiscard]] ResultError makeError(Diag diag, const llvm::SMRange& range, Args&&... args) const {
+        m_diag.log(diag, range, std::forward<Args>(args)...);
+        return {};
+    }
+
+    template<typename... Args>
+    [[nodiscard]] ResultError makeError(Diag diag, const AstRoot* ast, Args&&... args) const {
+        return makeError(diag, ast->range, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    [[nodiscard]] ResultError makeError(Diag diag, const AstRoot& ast, Args&&... args) const {
+        return makeError(diag, ast.range, std::forward<Args>(args)...);
+    }
+
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 private:
     Result<void> arithmetic(AstBinaryExpr& ast);

@@ -59,6 +59,20 @@ ERROR(unexpectedTokenInTypeOf,
     "Unexpected token in TYPEOF expression")
 ERROR(targetNotAssignable,
     "Non-object type '{0}' is not assignable")
+ERROR(targetNotCallable,
+    "Type '{0}' is not a sub or a function")
+ERROR(noMatchingSubOrFunction,
+    "No matching SUB or FUNCTION to call")
+ERROR(unknownIdentifier,
+    "Unknown identifier '{0}'")
+ERROR(useBeforeDefinition,
+    "Use of variable '{0}' before definition")
+ERROR(cannotUseTypeAsBoolean,
+    "Cannot use '{0}' as boolean")
+ERROR(unaryOperatorAppledToType,
+    "Unary operator '{0}' cannot be applied to type '{1}'")
+ERROR(dereferencingNonPointerType,
+    "Dereferencing a non pointer type '{0}'")
 
 #undef DIAG
 #undef ERROR

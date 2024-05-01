@@ -23,9 +23,9 @@ namespace lbc {
         return ResultError{};      \
     }
 
-#define MUST(expression)                                    \
-    if ((expression).hasError()) {                          \
-        fatalError("MUST(" #expression ") returned error"); \
+#define MUST(expression)                                              \
+    if ((expression).hasError()) {                                    \
+        fatalError("MUST(" #expression ") has error. ", false, true); \
     }
 
 } // namespace lbc

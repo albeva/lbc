@@ -13,6 +13,7 @@
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <source_location>
 #include <string>
 #include <type_traits>
 #include <variant>

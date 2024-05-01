@@ -2,7 +2,8 @@
 add_executable(tests
     CompileTests.cpp
     LexerTests.cpp
-    CmdLineParserTests.cpp)
+    CmdLineParserTests.cpp
+    CompileOptionsTests.cpp)
 
 # Get GoogleTest
 include(FetchContent)

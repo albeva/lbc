@@ -18,10 +18,7 @@ constexpr std::array diagKind{
 } // namespace
 
 DiagnosticEngine::DiagnosticEngine(Context& context)
-: m_context{ context },
-  m_sourceMgr{ context.getSourceMrg() } {
-    (void)m_context;
-}
+: m_context{ context } {}
 
 const char* DiagnosticEngine::getText(Diag diag) {
     return messages[static_cast<size_t>(diag)]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -39,5 +36,5 @@ void DiagnosticEngine::print(Diag diag, llvm::SMLoc loc, const std::string& str,
     if (kind == llvm::SourceMgr::DK_Error) {
         m_errorCounter++;
     }
-    m_sourceMgr.PrintMessage(loc, kind, str, ranges);
+    m_context.getSourceMrg().PrintMessage(loc, kind, str, ranges);
 }
