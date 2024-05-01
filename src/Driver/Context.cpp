@@ -26,15 +26,20 @@ struct Context::Pimpl {
 };
 
 Context::Context(const CompileOptions& options)
-: m_pimpl{ std::make_unique<Pimpl>(*this) },
-  m_options{ options },
-  m_diag{ m_pimpl->diag },
-  m_toolchain{ m_pimpl->toolchain },
-  m_triple{ llvm::sys::getDefaultTargetTriple() } {
-    if (m_options.is64Bit()) {
-        m_triple = m_triple.get64BitArchVariant();
-    } else {
-        m_triple = m_triple.get32BitArchVariant();
+    : m_pimpl{ std::make_unique<Pimpl>(*this) },
+      m_options{ options },
+      m_diag{ m_pimpl->diag },
+      m_toolchain{ m_pimpl->toolchain },
+      m_triple{ llvm::sys::getDefaultTargetTriple() } {
+    switch (m_options.getCompilationMode()) {
+        case CompileOptions::CompilationMode::Bit32:
+            m_triple = m_triple.get32BitArchVariant();
+            break;
+        case CompileOptions::CompilationMode::Bit64:
+            m_triple = m_triple.get64BitArchVariant();
+            break;
+        default:
+            llvm_unreachable("Unknown compilation mode");
     }
 }
 

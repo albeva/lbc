@@ -28,6 +28,17 @@ public:
         O3
     };
 
+    enum class CompilationMode {
+        Bit32,
+        Bit64
+    };
+
+    enum class LogLevel {
+        Silent,
+        Verbose,
+        Debug
+    };
+
     enum class FileType {
         Source,   // anything, but mostly .bas
         Assembly, // .s
@@ -49,10 +60,13 @@ public:
     [[nodiscard]] CompilationTarget getCompilationTarget() const { return m_compilationTarget; }
     void setCompilationTarget(CompilationTarget target) { m_compilationTarget = target; }
 
-    [[nodiscard]] bool is64Bit() const { return m_is64bit; }
-    void set64Bit() { m_is64bit = true; }
-    [[nodiscard]] bool is32Bit() const { return !m_is64bit; }
-    void set32Bit() { m_is64bit = false; }
+    [[nodiscard]] CompilationMode getCompilationMode() const {
+        return m_compilationMode;
+    }
+
+    void setCompilationMode(CompilationMode mode) {
+        m_compilationMode = mode;
+    }
 
     [[nodiscard]] OutputType getOutputType() const { return m_outputType; }
     void setOutputType(OutputType outputType) {
@@ -74,8 +88,10 @@ public:
     [[nodiscard]] bool isDebugBuild() const { return m_isDebug; }
     void setDebugBuild(bool debug) { m_isDebug = debug; }
 
-    [[nodiscard]] bool isVerbose() const { return m_verbose; }
-    void setVerbose(bool verbose) { m_verbose = verbose; }
+    [[nodiscard]] bool logVerbose() const { return m_logLevel == LogLevel::Verbose; }
+    [[nodiscard]] bool logDebug() const { return m_logLevel == LogLevel::Verbose || m_logLevel == LogLevel::Debug; }
+    [[nodiscard]] LogLevel getLogLevel() const { return m_logLevel; }
+    void setLogLevel(LogLevel level) { m_logLevel = level; }
 
     [[nodiscard]] bool getImplicitMain() const { return m_implicitMain; }
     void setImplicitMain(bool implicitMain) { m_implicitMain = implicitMain; }
@@ -121,10 +137,10 @@ private:
     [[nodiscard]] size_t getInputCount() const;
     [[nodiscard]] static bool validateFile(const fs::path& path);
 
-    bool m_verbose = false;
+    LogLevel m_logLevel = LogLevel::Silent;
     OutputType m_outputType = OutputType::Native;
     CompilationTarget m_compilationTarget = CompilationTarget::Executable;
-    bool m_is64bit = true;
+    CompilationMode m_compilationMode = CompilationMode::Bit64;
     OptimizationLevel m_optimizationLevel = OptimizationLevel::O2;
     bool m_implicitMain = true;
     bool m_isDebug = false;

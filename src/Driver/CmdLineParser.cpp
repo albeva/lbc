@@ -35,7 +35,7 @@ void CmdLineParser::parse(const Args& args) {
 void CmdLineParser::processOption(const Args& args, size_t& index) {
     const llvm::StringRef arg{ args[index] };
     if (arg == "-v") {
-        m_options.setVerbose(true);
+        m_options.setLogLevel(CompileOptions::LogLevel::Verbose);
     } else if (arg == "-o") {
         index++;
         if (index >= args.size()) {
@@ -43,9 +43,9 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
         }
         m_options.setOutputPath(args[index]);
     } else if (arg == "-m32") {
-        m_options.set32Bit();
+        m_options.setCompilationMode(CompileOptions::CompilationMode::Bit32);
     } else if (arg == "-m64") {
-        m_options.set64Bit();
+        m_options.setCompilationMode(CompileOptions::CompilationMode::Bit64);
     } else if (arg == "--help") {
         showHelp();
     } else if (arg == "--version") {

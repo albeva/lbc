@@ -54,7 +54,7 @@ int ToolTask::execute() const {
 
     std::copy(m_args.begin(), m_args.end(), std::back_inserter(args));
 
-    if (m_context.getOptions().isVerbose()) {
+    if (m_context.getOptions().logVerbose()) {
         switch (m_kind) {
         case ToolKind::Optimizer:
             llvm::outs() << "Optimize:\n";

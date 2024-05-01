@@ -378,7 +378,7 @@ void Driver::emitExecutable() {
 // Compile
 
 void Driver::compileSources() {
-    if (m_options.isVerbose()) {
+    if (m_options.logVerbose()) {
         llvm::outs() << "Compile:\n";
     }
 
@@ -393,14 +393,14 @@ void Driver::compileSources() {
         compileSource(source.get(), ID);
     }
 
-    if (m_options.isVerbose()) {
+    if (m_options.logVerbose()) {
         llvm::outs() << '\n';
     }
 }
 
 void Driver::compileSource(const Source* source, unsigned int ID) {
     const auto& path = source->path;
-    if (m_options.isVerbose()) {
+    if (m_options.logVerbose()) {
         llvm::outs() << path.string() << '\n';
     }
 
