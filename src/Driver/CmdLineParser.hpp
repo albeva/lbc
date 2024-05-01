@@ -1,8 +1,6 @@
-/**
- * @file CmdLineParser.hpp
- * @brief Contains the declaration of the CmdLineParser class.
- */
-
+//
+// Created by Albert Varaksin on 17/04/2021.
+//
 #pragma once
 #include "pch.hpp"
 

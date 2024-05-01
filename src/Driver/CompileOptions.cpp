@@ -94,6 +94,13 @@ void CompileOptions::validate() const {
     }
 }
 
+void CompileOptions::setOutputType(CompileOptions::OutputType outputType) {
+    m_outputType = outputType;
+    if (m_compilationTarget == CompilationTarget::Executable) {
+        setCompilationTarget(CompilationTarget::Assembly);
+    }
+}
+
 void CompileOptions::setMainFile(const fs::path& file) {
     if (file.extension() != getFileExt(FileType::Source)) {
         fatalError("main file must have '"_t + getFileExt(FileType::Source) + "' extension");
@@ -112,10 +119,6 @@ size_t CompileOptions::getInputCount() const {
     return std::accumulate(m_inputFiles.begin(), m_inputFiles.end(), size_t{}, [](auto cnt, const auto& vec) {
         return cnt + vec.second.size();
     });
-}
-
-const CompileOptions::FilesVector& CompileOptions::getInputFiles(FileType type) const {
-    return m_inputFiles[type];
 }
 
 void CompileOptions::setWorkingDir(const fs::path& path) {
@@ -196,6 +199,7 @@ fs::path CompileOptions::resolveOutputPath(const fs::path& path, std::string_vie
 
     fatalError("output path handling is not implemented");
 }
+
 fs::path CompileOptions::resolveFilePath(const fs::path& path) const {
     if (path.is_absolute()) {
         if (validateFile(path)) {
@@ -209,6 +213,7 @@ fs::path CompileOptions::resolveFilePath(const fs::path& path) const {
 
     fatalError("File '"_t + path.string() + "' not found");
 }
+
 [[nodiscard]] bool CompileOptions::validateFile(const fs::path& path) {
     if (!fs::exists(path)) {
         return false;
