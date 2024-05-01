@@ -148,10 +148,10 @@ void Driver::execute() {
  * ansure they exost and store in driver paths structure
  */
 void Driver::processInputs() {
-    for (size_t index = 0; index < CompileOptions::FILETYPE_COUNT; index++) {
-        auto type = static_cast<CompileOptions::FileType>(index);
+    for (const auto& paths : m_options.getInputFiles()) {
+        auto type = paths.first;
         auto& dst = getSources(type);
-        for (const auto& path : m_options.getInputFiles(type)) {
+        for (const auto& path : paths.second) {
             // cppcheck-suppress useStlAlgorithm
             dst.emplace_back(Source::create(type, m_options.resolveFilePath(path), false));
         }

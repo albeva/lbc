@@ -4,21 +4,32 @@
 #include "CompileOptions.hpp"
 using namespace lbc;
 
-std::string CompileOptions::getFileExt(FileType type) {
-    switch (type) {
-    case FileType::Source:
-        return ".bas";
-    case FileType::Assembly:
-        return ".s";
-    case FileType::Object:
-        return ".o";
-    case FileType::LLVMIr:
-        return ".ll";
-    case FileType::BitCode:
-        return ".bc";
-    default:
-        llvm_unreachable("Invalid file type");
+namespace {
+using TypeExpPair = std::pair<std::string_view, CompileOptions::FileType>;
+constexpr std::array fileTypeExtMap = {
+    TypeExpPair{ ".bas", CompileOptions::FileType::Source },
+    TypeExpPair{ ".s", CompileOptions::FileType::Assembly },
+    TypeExpPair{ ".o", CompileOptions::FileType::Object },
+    TypeExpPair{ ".ll", CompileOptions::FileType::LLVMIr },
+    TypeExpPair{ ".bc", CompileOptions::FileType::BitCode }
+};
+} // namespace
+
+std::string_view CompileOptions::getFileExt(FileType type) {
+    auto it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
+    if (it != fileTypeExtMap.end()) {
+        return it->first;
     }
+    fatalError("unknown file type");
+}
+
+CompileOptions::FileType CompileOptions::getFileType(const fs::path& path) {
+    auto it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
+    if (it != fileTypeExtMap.end()) {
+        return it->second;
+    }
+    // default to source
+    return FileType::Source;
 }
 
 void CompileOptions::validate() const {
@@ -93,27 +104,18 @@ void CompileOptions::setMainFile(const fs::path& file) {
 }
 
 void CompileOptions::addInputFile(const fs::path& path) {
-    auto ext = path.extension();
-    auto index = static_cast<size_t>(FileType::Source);
-
-    for (size_t typeIdx = 0; typeIdx < FILETYPE_COUNT; typeIdx++) {
-        if (getFileExt(static_cast<FileType>(typeIdx)) == ext) {
-            index = typeIdx;
-            break;
-        }
-    }
-
-    m_inputFiles.at(index).emplace_back(path);
+    auto type = getFileType(path);
+    m_inputFiles[type].emplace_back(path);
 }
 
 size_t CompileOptions::getInputCount() const {
     return std::accumulate(m_inputFiles.begin(), m_inputFiles.end(), size_t{}, [](auto cnt, const auto& vec) {
-        return cnt + vec.size();
+        return cnt + vec.second.size();
     });
 }
 
-const std::vector<fs::path>& CompileOptions::getInputFiles(FileType type) const {
-    return m_inputFiles.at(static_cast<size_t>(type));
+const CompileOptions::FilesVector& CompileOptions::getInputFiles(FileType type) const {
+    return m_inputFiles[type];
 }
 
 void CompileOptions::setWorkingDir(const fs::path& path) {
@@ -175,7 +177,7 @@ bool CompileOptions::isMainFile(const fs::path& file) const { // NOLINT
     return resolveFilePath(sources[0]) == file;
 }
 
-fs::path CompileOptions::resolveOutputPath(const fs::path& path, const std::string& ext) const {
+fs::path CompileOptions::resolveOutputPath(const fs::path& path, std::string_view ext) const {
     if (!fs::exists(path)) {
         fatalError("File '"_t + path.string() + "' not found");
     }

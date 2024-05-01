@@ -2,9 +2,9 @@
 // Created by Albert Varaksin on 07/02/2021.
 //
 #include "Toolchain.hpp"
-#include "ToolTask.hpp"
-#include "Driver/Context.hpp"
 #include "Driver/CompileOptions.hpp"
+#include "Driver/Context.hpp"
+#include "ToolTask.hpp"
 
 using namespace lbc;
 
@@ -15,9 +15,9 @@ ToolTask Toolchain::createTask(ToolKind kind) const {
 
 static fs::path getToolPath(const fs::path& base, ToolKind tool) {
     std::string ext{};
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-        ext = ".exe";
-    #endif
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+    ext = ".exe";
+#endif
 
     switch (tool) {
     case ToolKind::Optimizer:

@@ -127,7 +127,7 @@ public:
     operator bool() const = delete;
 
     /// Implicitly cast result to type T. This is UNSAFE and must be checked for error first!
-    /* explicit */ constexpr inline operator T () const { // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
+    /* explicit */ constexpr inline operator T() const { // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
         return getValue();
     }
 

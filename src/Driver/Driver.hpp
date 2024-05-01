@@ -31,7 +31,7 @@ private:
     void processInputs();
     [[nodiscard]] std::unique_ptr<Source> deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const;
     [[nodiscard]] SourceVector& getSources(CompileOptions::FileType type) {
-        return m_sources.at(static_cast<size_t>(type));
+        return m_sources[type];
     }
 
     void emitLLVMIr(bool temporary);
@@ -51,7 +51,7 @@ private:
     Context& m_context;
     const CompileOptions& m_options;
 
-    std::array<SourceVector, CompileOptions::FILETYPE_COUNT> m_sources{};
+    std::unordered_map<CompileOptions::FileType, SourceVector> m_sources{};
     std::vector<std::unique_ptr<TranslationUnit>> m_modules{};
     void dumpCode();
 };

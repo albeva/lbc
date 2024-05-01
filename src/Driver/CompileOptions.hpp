@@ -46,8 +46,12 @@ public:
         LLVMIr,   // .ll
         BitCode   // .bc
     };
-    static constexpr size_t FILETYPE_COUNT = 5;
-    [[nodiscard]] static std::string getFileExt(FileType type);
+
+    using FilesVector = std::vector<fs::path>;
+    using FilesMap = std::unordered_map<FileType, FilesVector>;
+
+    [[nodiscard]] static std::string_view getFileExt(FileType type);
+    [[nodiscard]] static FileType getFileType(const fs::path& path);
 
 public:
     NO_COPY_AND_MOVE(CompileOptions)
@@ -99,7 +103,8 @@ public:
     [[nodiscard]] const std::optional<fs::path>& getMainFile() const { return m_mainPath; }
     void setMainFile(const fs::path& file);
 
-    [[nodiscard]] const std::vector<fs::path>& getInputFiles(FileType type) const;
+    [[nodiscard]] const FilesMap& getInputFiles() const { return m_inputFiles; }
+    [[nodiscard]] const FilesVector& getInputFiles(FileType type) const;
     void addInputFile(const fs::path& path);
 
     [[nodiscard]] const fs::path& getOutputPath() const { return m_outputPath; }
@@ -130,7 +135,7 @@ public:
 
 public:
     [[nodiscard]] bool isMainFile(const fs::path& file) const;
-    [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, const std::string& ext) const;
+    [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, std::string_view ext) const;
     [[nodiscard]] fs::path resolveFilePath(const fs::path& path) const;
 
 private:
@@ -147,7 +152,7 @@ private:
     bool m_astDump = false;
     bool m_codeDump = false;
     std::optional<fs::path> m_mainPath{};
-    std::array<std::vector<fs::path>, FILETYPE_COUNT> m_inputFiles{};
+    mutable FilesMap m_inputFiles{};
     fs::path m_outputPath{};
     fs::path m_toolchainDir{};
     fs::path m_compilerPath{};

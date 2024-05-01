@@ -18,7 +18,7 @@ static inline llvm::SMLoc getStart(const AstAttributeList* attribs, const Token&
     if (attribs == nullptr) {
         return token.range().Start;
     }
-    return  attribs->range.Start;
+    return attribs->range.Start;
 }
 
 Parser::Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable)
