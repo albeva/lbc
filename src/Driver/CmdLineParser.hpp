@@ -6,7 +6,7 @@
 
 namespace lbc {
 
-class CompileOptions;
+struct CompileOptions;
 
 /**
  * @class CmdLineParser

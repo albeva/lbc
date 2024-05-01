@@ -10,7 +10,7 @@ class DataLayout;
 }
 
 namespace lbc {
-class CompileOptions;
+struct CompileOptions;
 class TypeFunction;
 class TypePointer;
 class DiagnosticEngine;

@@ -7,15 +7,15 @@
 namespace lbc {
 
 /**
- * @class CompileOptions
+ * @struct CompileOptions
  * @brief Handles the compilation options for the LightBASIC compiler.
  *
  * This class is responsible for managing the compilation options
  * provided to the program. It includes options for the target
  * architecture, output type, optimization level, and more.
  */
-class CompileOptions final {
-public:
+struct CompileOptions final {
+
     /**
      * @enum CompilationTarget
      * @brief Specifies the target of the compilation process.
@@ -111,14 +111,16 @@ public:
      */
     [[nodiscard]] static FileType getFileType(const fs::path& path);
 
-public:
-    NO_COPY_AND_MOVE(CompileOptions)
-    CompileOptions() = default;
-    ~CompileOptions() = default;
-
+    /**
+     * @brief Validate the current compilation options.
+     *
+     * This function checks the current state of the compilation options and ensures they are valid.
+     * If the options are not valid, it will terminate the program with an error message.
+     *
+     * This function should be called after all options have been set and before they are used.
+     */
     void validate() const;
 
-public:
     /**
      * @brief Get the current compilation target.
      *
@@ -362,7 +364,6 @@ public:
      */
     void setWorkingDir(const fs::path& path);
 
-public:
     /**
      * @brief Checks whether the target is linkable.
      * 
@@ -390,7 +391,6 @@ public:
         return m_outputType == OutputType::LLVM && m_compilationTarget == CompilationTarget::Assembly;
     }
 
-public:
     /**
      * Checks if the given file is the main file.
      * 
