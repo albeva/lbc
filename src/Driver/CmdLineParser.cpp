@@ -76,7 +76,7 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
         m_options.setDebugBuild(true);
     } else if (arg == "--toolchain") {
         index++;
-        if (index > args.size()) {
+        if (index >= args.size()) {
             showError("Toolchain path is missing");
         }
         m_options.setToolchainDir(args[index]);

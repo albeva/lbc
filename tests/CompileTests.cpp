@@ -106,8 +106,9 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     }
 
     static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path> {
+        std::filesystem::path testsPath(__FILE__);
         std::vector<std::filesystem::path> paths;
-        std::ranges::for_each(std::filesystem::directory_iterator{ base },
+        std::ranges::for_each(std::filesystem::directory_iterator{ testsPath.parent_path() / base },
             [&](const auto& dir_entry) {
                 paths.push_back(dir_entry);
             });

@@ -15,7 +15,6 @@ namespace lbc {
  * architecture, output type, optimization level, and more.
  */
 struct CompileOptions final {
-
     /**
      * @enum CompilationTarget
      * @brief Specifies the target of the compilation process.
@@ -366,7 +365,7 @@ struct CompileOptions final {
 
     /**
      * @brief Checks whether the target is linkable.
-     * 
+     *
      * @return true if the target is linkable, false otherwise.
      */
     [[nodiscard]] bool isTargetLinkable() const {
@@ -375,7 +374,7 @@ struct CompileOptions final {
 
     /**
      * @brief Checks whether the target is native executable.
-     * 
+     *
      * @return true if the target is native, false otherwise.
      */
     [[nodiscard]] bool isTargetNative() const {
@@ -393,7 +392,7 @@ struct CompileOptions final {
 
     /**
      * Checks if the given file is the main file.
-     * 
+     *
      * Main file includes the optional implicit or explicit main function
      *
      * @param file The file to check.
