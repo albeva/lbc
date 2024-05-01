@@ -177,7 +177,7 @@ bool CompileOptions::isMainFile(const fs::path& file) const { // NOLINT
         return false;
     }
 
-    return resolveFilePath(sources[0]) == file;
+    return resolveFilePath(sources.front()) == file;
 }
 
 fs::path CompileOptions::resolveOutputPath(const fs::path& path, std::string_view ext) const {
