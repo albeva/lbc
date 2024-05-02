@@ -2,7 +2,7 @@
 '' test-027-func-single-liner.bas
 '' - function / sub declared on single line
 ''
-'' CHECK:       42
+'' CHECK: 42
 ''------------------------------------------------------------------------------
 import cstd
 

@@ -2,7 +2,7 @@
 '' test-025-forward-alias.bas
 '' - forward declare type aliases
 ''
-'' CHECK:       10
+'' CHECK: 10
 ''------------------------------------------------------------------------------
 import cstd
 

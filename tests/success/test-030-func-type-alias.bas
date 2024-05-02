@@ -4,7 +4,7 @@
 '' - typeof function result
 '' - forward referencing
 ''
-'' CHECK:       42
+'' CHECK: 42
 ''------------------------------------------------------------------------------
 import cstd
 

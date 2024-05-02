@@ -2,7 +2,7 @@
 '' test-023-func-ptr-2.bas
 '' - get & call func by ptr
 ''
-'' CHECK:       hello, world!
+'' CHECK: hello, world!
 ''------------------------------------------------------------------------------
 import cstd
 

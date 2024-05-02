@@ -1,12 +1,8 @@
 ''------------------------------------------------------------------------------
-'' test-024-typealias.bas
-'' - alias a type to a identifier
+'' Test undefined variable
 ''
-'' CHECK: 10
+'' CHECK: __FILE__:8:1: error: Unknown identifier 'FOO'
+'' CHECK: foo = 10
+'' CHECK: ^~~
 ''------------------------------------------------------------------------------
-import cstd
-
-type IntPtr as integer ptr
-dim i = 10
-dim ip As IntPtr = @i
-printf "%d", *ip
+foo = 10

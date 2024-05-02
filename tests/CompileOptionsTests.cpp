@@ -96,7 +96,7 @@ TEST_F(CompileOptionsTests, ResolveOutputPathIsDirectory) {
     fs::path dirPath = fs::current_path();
     std::string_view ext = ".txt";
     EXPECT_EXIT((void)options.resolveOutputPath(dirPath, ext), ::testing::ExitedWithCode(EXIT_FAILURE),
-        "lbc: error: Path '" + dirPath.string() + "' is not a file");
+        ::testing::Eq("lbc: error: Path '" + dirPath.string() + "' is not a file\n"));
 }
 
 TEST_F(CompileOptionsTests, ResolveOutputPathIsNotDirectory) {
@@ -104,7 +104,7 @@ TEST_F(CompileOptionsTests, ResolveOutputPathIsNotDirectory) {
     std::string_view ext = ".txt";
 
     EXPECT_EXIT((void)options.resolveOutputPath(filePath, ext), ::testing::ExitedWithCode(EXIT_FAILURE),
-        "lbc: error: File '" + filePath.string() + "' not found");
+        ::testing::Eq("lbc: error: File '" + filePath.string() + "' not found\n"));
 }
 
 TEST_F(CompileOptionsTests, ResolveFilePathAbsolute) {

@@ -1,12 +1,8 @@
 ''------------------------------------------------------------------------------
-'' test-024-typealias.bas
-'' - alias a type to a identifier
+'' Test vairable declaration
 ''
-'' CHECK: 10
+'' CHECK: __FILE__:8:8: error: expected '=' got 'End-Of-Stmt'
+'' CHECK: dim foo
+'' CHECK:        ^
 ''------------------------------------------------------------------------------
-import cstd
-
-type IntPtr as integer ptr
-dim i = 10
-dim ip As IntPtr = @i
-printf "%d", *ip
+dim foo
