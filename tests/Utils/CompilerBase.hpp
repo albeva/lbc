@@ -2,14 +2,13 @@
 // Created by Albert Varaksin on 02/05/2024.
 //
 #pragma once
-#include <fstream>
 #include <gtest/gtest.h>
 
 namespace lbc {
 class CompileOptions;
 class Context;
 class Driver;
-}
+} // namespace lbc
 
 struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     CompilerBase();
@@ -25,14 +24,7 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
         return std::filesystem::path{ __FILE__ }.parent_path().parent_path();
     }
 
-    static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path> {
-        std::vector<std::filesystem::path> paths;
-        std::ranges::for_each(std::filesystem::directory_iterator{getBasePath() / base },
-            [&](const auto& dir_entry) {
-                paths.push_back(dir_entry);
-            });
-        return paths;
-    }
+    static std::vector<std::filesystem::path> enumerate(const std::filesystem::path& base);
 
     llvm::ExitOnError exitOnErr{};
 

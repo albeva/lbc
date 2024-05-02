@@ -18,6 +18,7 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
+#include <ranges>
 
 namespace lbc {
 namespace fs = std::filesystem;

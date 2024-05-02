@@ -1,13 +1,13 @@
 //
 // Created by Albert Varaksin on 01/05/2024.
 //
-#include <gtest/gtest.h>
-#include <filesystem>
-#include <fstream>
-#include "Driver/CompileOptions.hpp"
 #include "Driver/CmdLineParser.hpp"
+#include "Driver/CompileOptions.hpp"
 #include "Driver/Driver.hpp"
 #include "Driver/TempFileCache.hpp"
+#include <filesystem>
+#include <fstream>
+#include <gtest/gtest.h>
 using namespace lbc;
 namespace fs = std::filesystem;
 
@@ -83,7 +83,8 @@ TEST_F(CompileOptionsTests, AddInputFile) {
 }
 
 TEST_F(CompileOptionsTests, ResolveOutputPathExists) {
-    fs::path existingPath = TempFileCache::createUniquePath("test.bas");;
+    fs::path existingPath = TempFileCache::createUniquePath("test.bas");
+    ;
     std::string_view ext = ".txt";
 
     touch(existingPath);
@@ -95,16 +96,14 @@ TEST_F(CompileOptionsTests, ResolveOutputPathExists) {
 TEST_F(CompileOptionsTests, ResolveOutputPathIsDirectory) {
     fs::path dirPath = fs::current_path();
     std::string_view ext = ".txt";
-    EXPECT_EXIT((void)options.resolveOutputPath(dirPath, ext), ::testing::ExitedWithCode(EXIT_FAILURE),
-        ::testing::Eq("lbc: error: Path '" + dirPath.string() + "' is not a file\n"));
+    EXPECT_EXIT((void)options.resolveOutputPath(dirPath, ext), ::testing::ExitedWithCode(EXIT_FAILURE), ::testing::Eq("lbc: error: Path '" + dirPath.string() + "' is not a file\n"));
 }
 
 TEST_F(CompileOptionsTests, ResolveOutputPathIsNotDirectory) {
     fs::path filePath = "/path/to/nonexistent/file";
     std::string_view ext = ".txt";
 
-    EXPECT_EXIT((void)options.resolveOutputPath(filePath, ext), ::testing::ExitedWithCode(EXIT_FAILURE),
-        ::testing::Eq("lbc: error: File '" + filePath.string() + "' not found\n"));
+    EXPECT_EXIT((void)options.resolveOutputPath(filePath, ext), ::testing::ExitedWithCode(EXIT_FAILURE), ::testing::Eq("lbc: error: File '" + filePath.string() + "' not found\n"));
 }
 
 TEST_F(CompileOptionsTests, ResolveFilePathAbsolute) {

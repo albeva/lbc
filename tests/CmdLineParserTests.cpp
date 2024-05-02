@@ -33,7 +33,8 @@ TEST_F(CmdLineParserTest, ParseValidArguments) {
 TEST_F(CmdLineParserTest, ParseInvalidArguments) {
     TEST_FAILURE(
         "Unrecognized option -invalid. Use --help for more info\n",
-        "lbc", "-invalid");
+        "lbc",
+        "-invalid");
 }
 
 TEST_F(CmdLineParserTest, ParseNoArguments) {
@@ -45,31 +46,36 @@ TEST_F(CmdLineParserTest, ParseNoArguments) {
 TEST_F(CmdLineParserTest, ParseMissingOutputFile) {
     TEST_FAILURE(
         "output file path missing. Use --help for more info\n",
-        "lbc", "-o");
+        "lbc",
+        "-o");
 }
 
 TEST_F(CmdLineParserTest, ParseMissingMainFile) {
     TEST_FAILURE(
         "file path missing. Use --help for more info\n",
-        "lbc", "-main");
+        "lbc",
+        "-main");
 }
 
 TEST_F(CmdLineParserTest, ParseMissingToolchainPath) {
     TEST_FAILURE(
         "Toolchain path is missing Use --help for more info\n",
-        "lbc", "--toolchain");
+        "lbc",
+        "--toolchain");
 }
 
 TEST_F(CmdLineParserTest, ParseInvalidOptimizationLevel) {
     TEST_FAILURE(
         "Unrecognized option -O4. Use --help for more info\n",
-        "lbc", "-O4");
+        "lbc",
+        "-O4");
 }
 
 TEST_F(CmdLineParserTest, ParseInvalidCompilationMode) {
     TEST_FAILURE(
         "Unrecognized option -m128. Use --help for more info\n",
-        "lbc", "-m128");
+        "lbc",
+        "-m128");
 }
 
 TEST_F(CmdLineParserTest, ParseHelpOption) {
