@@ -353,7 +353,9 @@ void CodePrinter::visit(AstForStmt& ast) {
     if (ast.stmt->kind == AstKind::StmtList) {
         m_os << '\n';
         m_indent++;
-        visit(*ast.stmt);
+        m_controlStack.with(ControlFlowStatement::For, [&] {
+            visit(*ast.stmt);
+        });
         m_indent--;
         m_os << indent() << "NEXT";
         if (!ast.next.empty()) {
@@ -361,7 +363,9 @@ void CodePrinter::visit(AstForStmt& ast) {
         }
     } else {
         m_os << " DO ";
-        visit(*ast.stmt);
+        m_controlStack.with(ControlFlowStatement::For, [&] {
+            visit(*ast.stmt);
+        });
     }
 }
 
@@ -392,7 +396,9 @@ void CodePrinter::visit(AstDoLoopStmt& ast) {
     if (ast.stmt->kind == AstKind::StmtList) {
         m_os << "\n";
         m_indent++;
-        visit(*ast.stmt);
+        m_controlStack.with(ControlFlowStatement::Do, [&] {
+            visit(*ast.stmt);
+        });
         m_indent--;
         m_os << indent() << "LOOP";
 
@@ -405,7 +411,9 @@ void CodePrinter::visit(AstDoLoopStmt& ast) {
         }
     } else {
         m_os << " DO ";
-        visit(*ast.stmt);
+        m_controlStack.with(ControlFlowStatement::Do, [&] {
+            visit(*ast.stmt);
+        });
     }
 }
 
@@ -420,18 +428,25 @@ void CodePrinter::visit(AstContinuationStmt& ast) {
         break;
     }
 
-//    if (!ast.destination.empty()) {
-//        for (auto target : ast.destination) {
-//            switch (target) {
-//            case ControlFlowStatement::For:
-//                m_os << " FOR";
-//                continue;
-//            case ControlFlowStatement::Do:
-//                m_os << " DO";
-//                continue;
-//            }
-//        }
-//    }
+    auto iter = m_controlStack.cbegin();
+    auto end = m_controlStack.from(ast.destination);
+
+    while (true) {
+        switch (iter->first) {
+        case ControlFlowStatement::For:
+            m_os << " FOR";
+            break;
+        case ControlFlowStatement::Do:
+            m_os << " DO";
+            break;
+        }
+
+        if (iter != end) {
+            iter++;
+        } else {
+            break;
+        }
+    }
 }
 
 // Expressions

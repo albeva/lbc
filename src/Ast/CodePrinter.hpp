@@ -18,6 +18,7 @@ private:
     llvm::raw_ostream& m_os;
     static constexpr auto SPACES = 4;
     bool m_emitDimKeyword = true;
+    ControlFlowStack<> m_controlStack{};
 };
 
 } // namespace lbc

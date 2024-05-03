@@ -42,8 +42,18 @@ public:
         return m_container.empty();
     }
 
+    [[nodiscard]] inline size_t size() const {
+        return m_container.size();
+    }
+
     [[nodiscard]] inline size_t indexOf(const_iterator iter) const {
         return static_cast<size_t>(std::distance(m_container.begin(), iter.base()) - 1);
+    }
+
+    [[nodiscard]] inline const_iterator from(size_t index) const {
+        auto iter = cbegin();
+        std::advance(iter, size() - index - 1);
+        return iter;
     }
 
     [[nodiscard]] inline Entry& operator[](size_t index) {

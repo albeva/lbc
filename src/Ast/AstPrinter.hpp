@@ -27,6 +27,7 @@ private:
 
     Context& m_context;
     llvm::json::OStream m_json;
+    ControlFlowStack<> m_controlStack{};
 };
 
 } // namespace lbc
