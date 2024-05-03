@@ -1150,35 +1150,32 @@ Result<AstContinuationStmt*> Parser::continuation(AstContinuationAction action) 
     advance();
 
     auto iter = m_controlStack.cbegin();
+    auto index = m_controlStack.indexOf(iter);
     const auto target = [&](ControlFlowStatement look) -> Result<void> {
         iter = m_controlStack.find(iter, look);
         if (iter == m_controlStack.cend()) {
             return makeError(Diag::unexpectedContinuationTarget, control, m_token.description());
         }
+        index = m_controlStack.indexOf(iter);
         iter++;
         advance();
         return {};
     };
 
-    if (m_token.is(TokenKind::EndOfStmt)) {
-        iter++;
-    } else {
-        while (true) {
-            switch (m_token.getKind()) {
-            case TokenKind::For:
-                TRY(target(ControlFlowStatement::For));
-                continue;
-            case TokenKind::Do:
-                TRY(target(ControlFlowStatement::Do));
-                continue;
-            default:
-                break;
-            }
+    while (true) {
+        switch (m_token.getKind()) {
+        case TokenKind::For:
+            TRY(target(ControlFlowStatement::For));
+            continue;
+        case TokenKind::Do:
+            TRY(target(ControlFlowStatement::Do));
+            continue;
+        default:
             break;
         }
+        break;
     }
 
-    auto index = m_controlStack.nextIndexAfter(iter);
     return m_context.create<AstContinuationStmt>(
         llvm::SMRange{ start, m_endLoc },
         action,

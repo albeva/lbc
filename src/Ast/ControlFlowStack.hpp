@@ -46,10 +46,6 @@ public:
         return static_cast<size_t>(std::distance(m_container.begin(), iter.base()) - 1);
     }
 
-    [[nodiscard]] inline size_t nextIndexAfter(const_iterator iter) const {
-        return static_cast<size_t>(std::distance(m_container.begin(), iter.base()));
-    }
-
     [[nodiscard]] inline Entry& operator[](size_t index) {
         return m_container[index];
     }
