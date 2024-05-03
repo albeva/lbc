@@ -229,12 +229,12 @@ void AstPrinter::visit(AstForStmt& ast) {
         writeExpr(ast.step, "step");
 
         if (auto* list = llvm::dyn_cast<AstStmtList>(ast.stmt)) {
-            m_controlStack.with(ControlFlowStatement::For, [&](){
+            m_controlStack.with(ControlFlowStatement::For, [&]() {
                 writeStmts(list);
             });
         } else {
             m_json.attributeBegin("stmt");
-            m_controlStack.with(ControlFlowStatement::For, [&](){
+            m_controlStack.with(ControlFlowStatement::For, [&]() {
                 visit(*ast.stmt);
             });
             m_json.attributeEnd();
@@ -269,12 +269,12 @@ void AstPrinter::visit(AstDoLoopStmt& ast) {
         writeExpr(ast.expr);
 
         if (auto* list = llvm::dyn_cast<AstStmtList>(ast.stmt)) {
-            m_controlStack.with(ControlFlowStatement::Do, [&](){
+            m_controlStack.with(ControlFlowStatement::Do, [&]() {
                 writeStmts(list);
             });
         } else {
             m_json.attributeBegin("stmt");
-            m_controlStack.with(ControlFlowStatement::Do, [&](){
+            m_controlStack.with(ControlFlowStatement::Do, [&]() {
                 visit(*ast.stmt);
             });
             m_json.attributeEnd();
@@ -298,11 +298,8 @@ void AstPrinter::visit(AstContinuationStmt& ast) {
         m_json.attributeEnd();
 
         m_json.attributeArray("dest", [&] {
-            auto iter = m_controlStack.cbegin();
-            auto end = m_controlStack.iterFrom(ast.destination);
-
-            while (true) {
-                switch (iter->first) {
+            std::for_each(m_controlStack.cbegin(), m_controlStack.after(ast.destination), [&](const auto& entry) {
+                switch (entry.first) {
                 case ControlFlowStatement::For:
                     m_json.value("FOR");
                     break;
@@ -310,29 +307,8 @@ void AstPrinter::visit(AstContinuationStmt& ast) {
                     m_json.value("DO");
                     break;
                 }
-
-                if (iter != end) {
-                    iter++;
-                } else {
-                    break;
-                }
-            }
+            });
         });
-
-//        if (!ast.destination.empty()) {
-//            m_json.attributeArray("dest", [&] {
-//                for (auto target : ast.destination) {
-//                    switch (target) {
-//                    case ControlFlowStatement::For:
-//                        m_json.value("FOR");
-//                        continue;
-//                    case ControlFlowStatement::Do:
-//                        m_json.value("DO");
-//                        continue;
-//                    }
-//                }
-//            });
-//        }
     });
 }
 

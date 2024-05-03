@@ -428,11 +428,8 @@ void CodePrinter::visit(AstContinuationStmt& ast) {
         break;
     }
 
-    auto iter = m_controlStack.cbegin();
-    auto end = m_controlStack.iterFrom(ast.destination);
-
-    while (true) {
-        switch (iter->first) {
+    std::for_each(m_controlStack.cbegin(), m_controlStack.after(ast.destination), [&](const auto& entry) {
+        switch (entry.first) {
         case ControlFlowStatement::For:
             m_os << " FOR";
             break;
@@ -440,13 +437,7 @@ void CodePrinter::visit(AstContinuationStmt& ast) {
             m_os << " DO";
             break;
         }
-
-        if (iter != end) {
-            iter++;
-        } else {
-            break;
-        }
-    }
+    });
 }
 
 // Expressions

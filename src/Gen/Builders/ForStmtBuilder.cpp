@@ -171,9 +171,9 @@ void ForStmtBuilder::build() {
 
     // Body
     m_gen.switchBlock(m_bodyBlock);
-    m_gen.getControlStack().push(ControlFlowStatement::For, { m_iterBlock, m_exitBlock });
-    m_gen.visit(*m_ast.stmt);
-    m_gen.getControlStack().pop();
+    m_gen.getControlStack().with({ ControlFlowStatement::For, { m_iterBlock, m_exitBlock } }, [&] {
+        m_gen.visit(*m_ast.stmt);
+    });
 
     // Iteration
     m_gen.switchBlock(m_iterBlock);

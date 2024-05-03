@@ -39,9 +39,10 @@ void DoLoopBuilder::build() {
 
     // body
     m_gen.switchBlock(m_bodyBlock);
-    m_gen.getControlStack().push(ControlFlowStatement::Do, { m_continueBlock, m_exitBlock });
-    m_gen.visit(*m_ast.stmt);
-    m_gen.getControlStack().pop();
+
+    m_gen.getControlStack().with({ ControlFlowStatement::Do, { m_continueBlock, m_exitBlock } }, [&] {
+        m_gen.visit(*m_ast.stmt);
+    });
 
     // post makeCondition
     switch (m_ast.condition) {

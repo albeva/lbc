@@ -19,7 +19,8 @@ enum class ControlFlowStatement : uint8_t {
  *
  * Each control structure can have data (e.g. control exit and continue labels)
  */
-template<typename Data = std::monostate> requires(std::is_trivial_v<Data>)
+template<typename Data = std::monostate>
+    requires(std::is_trivial_v<Data>)
 class ControlFlowStack final {
 public:
     using Entry = std::pair<ControlFlowStatement, Data>;
@@ -50,9 +51,9 @@ public:
         return static_cast<size_t>(std::distance(m_container.begin(), iter.base()) - 1);
     }
 
-    [[nodiscard]] inline const_iterator iterFrom(size_t index) const {
+    [[nodiscard]] inline const_iterator after(size_t index) const {
         auto iter = cbegin();
-        std::advance(iter, size() - index - 1);
+        std::advance(iter, size() - index);
         return iter;
     }
 

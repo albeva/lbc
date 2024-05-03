@@ -13,12 +13,12 @@
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <source_location>
 #include <string>
 #include <type_traits>
 #include <variant>
 #include <vector>
-#include <ranges>
 
 namespace lbc {
 namespace fs = std::filesystem;
