@@ -1149,11 +1149,11 @@ Result<AstContinuationStmt*> Parser::continuation(AstContinuationAction action) 
 
     advance();
 
-    auto iter = m_controlStack.cbegin();
+    auto iter = m_controlStack.begin();
     auto index = m_controlStack.indexOf(iter);
     const auto target = [&](ControlFlowStatement look) -> Result<void> {
         iter = m_controlStack.find(iter, look);
-        if (iter == m_controlStack.cend()) {
+        if (iter == m_controlStack.end()) {
             return makeError(Diag::unexpectedContinuationTarget, control, m_token.description());
         }
         index = m_controlStack.indexOf(iter);

@@ -428,7 +428,7 @@ void CodePrinter::visit(AstContinuationStmt& ast) {
         break;
     }
 
-    std::for_each(m_controlStack.cbegin(), m_controlStack.after(ast.destination), [&](const auto& entry) {
+    std::for_each(m_controlStack.begin(), m_controlStack.after(ast.destination), [&](const auto& entry) {
         switch (entry.first) {
         case ControlFlowStatement::For:
             m_os << " FOR";

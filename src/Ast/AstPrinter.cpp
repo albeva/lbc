@@ -298,7 +298,7 @@ void AstPrinter::visit(AstContinuationStmt& ast) {
         m_json.attributeEnd();
 
         m_json.attributeArray("dest", [&] {
-            std::for_each(m_controlStack.cbegin(), m_controlStack.after(ast.destination), [&](const auto& entry) {
+            std::for_each(m_controlStack.begin(), m_controlStack.after(ast.destination), [&](const auto& entry) {
                 switch (entry.first) {
                 case ControlFlowStatement::For:
                     m_json.value("FOR");
