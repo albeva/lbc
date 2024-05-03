@@ -299,7 +299,7 @@ void AstPrinter::visit(AstContinuationStmt& ast) {
 
         m_json.attributeArray("dest", [&] {
             auto iter = m_controlStack.cbegin();
-            auto end = m_controlStack.from(ast.destination);
+            auto end = m_controlStack.iterFrom(ast.destination);
 
             while (true) {
                 switch (iter->first) {

@@ -50,7 +50,7 @@ public:
         return static_cast<size_t>(std::distance(m_container.begin(), iter.base()) - 1);
     }
 
-    [[nodiscard]] inline const_iterator from(size_t index) const {
+    [[nodiscard]] inline const_iterator iterFrom(size_t index) const {
         auto iter = cbegin();
         std::advance(iter, size() - index - 1);
         return iter;
