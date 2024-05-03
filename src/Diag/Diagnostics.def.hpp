@@ -73,6 +73,10 @@ ERROR(unaryOperatorAppledToType,
     "Unary operator '{0}' cannot be applied to type '{1}'")
 ERROR(dereferencingNonPointerType,
     "Dereferencing a non pointer type '{0}'")
+ERROR(unexpectedContinuation,
+    "{0} not allowed outside FOR or DO loops")
+ERROR(unexpectedContinuationTarget,
+    "Unexpected {0} target '{1}'")
 
 #undef DIAG
 #undef ERROR

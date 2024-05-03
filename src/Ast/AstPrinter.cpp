@@ -280,29 +280,29 @@ void AstPrinter::visit(AstContinuationStmt& ast) {
 
         m_json.attributeBegin("op");
         switch (ast.action) {
-        case AstContinuationStmt::Action::Exit:
+        case AstContinuationAction::Exit:
             m_json.value("EXIT");
             break;
-        case AstContinuationStmt::Action::Continue:
+        case AstContinuationAction::Continue:
             m_json.value("CONTINUE");
             break;
         }
         m_json.attributeEnd();
 
-        if (!ast.destination.empty()) {
-            m_json.attributeArray("dest", [&] {
-                for (auto target : ast.destination) {
-                    switch (target) {
-                    case ControlFlowStatement::For:
-                        m_json.value("FOR");
-                        continue;
-                    case ControlFlowStatement::Do:
-                        m_json.value("DO");
-                        continue;
-                    }
-                }
-            });
-        }
+//        if (!ast.destination.empty()) {
+//            m_json.attributeArray("dest", [&] {
+//                for (auto target : ast.destination) {
+//                    switch (target) {
+//                    case ControlFlowStatement::For:
+//                        m_json.value("FOR");
+//                        continue;
+//                    case ControlFlowStatement::Do:
+//                        m_json.value("DO");
+//                        continue;
+//                    }
+//                }
+//            });
+//        }
     });
 }
 

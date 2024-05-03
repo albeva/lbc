@@ -37,6 +37,7 @@ void Parser::reset() {
     m_exprFlags = {};
     m_endLoc = {};
     m_token = {};
+    m_controlStack.clear();
     advance();
     m_endLoc = m_token.range().Start;
 }
@@ -995,11 +996,15 @@ Result<AstForStmt*> Parser::kwFor() {
     Result<AstStmt*> stmt{};
     llvm::StringRef next;
     if (accept(TokenKind::LambdaBody)) {
-        stmt = statement();
+        m_controlStack.with(ControlFlowStatement::For, [&] {
+            stmt = statement();
+        });
         TRY(stmt)
     } else {
         TRY(consume(TokenKind::EndOfStmt))
-        stmt = stmtList();
+        m_controlStack.with(ControlFlowStatement::For, [&] {
+            stmt = stmtList();
+        });
         TRY(stmt)
 
         TRY(consume(TokenKind::Next))
@@ -1056,7 +1061,9 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
 
     // ( EoS StmtList "LOOP" [ Condition ]
     if (accept(TokenKind::EndOfStmt)) {
-        stmt = stmtList();
+        m_controlStack.with(ControlFlowStatement::Do, [&] {
+            stmt = stmtList();
+        });
         TRY(stmt)
 
         TRY(consume(TokenKind::Loop))
@@ -1085,15 +1092,18 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
 
         // EoS StmtList "LOOP"
         if (accept(TokenKind::EndOfStmt)) {
-            stmt = stmtList();
+            m_controlStack.with(ControlFlowStatement::Do, [&] {
+                stmt = stmtList();
+            });
             TRY(stmt)
-
             TRY(consume(TokenKind::Loop))
         }
         // "=>" Statement
         else {
             TRY(consume(TokenKind::LambdaBody))
-            stmt = statement();
+            m_controlStack.with(ControlFlowStatement::Do, [&] {
+                stmt = statement();
+            });
             TRY(stmt)
         }
     }
@@ -1112,36 +1122,11 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
 
 /**
  * CONTINUE
- *   = "CONTINUE" { "FOR" }
+ *   = "CONTINUE" { "FOR" | "DO" }
  *   .
  */
 Result<AstContinuationStmt*> Parser::kwContinue() {
-    // assume m_token == CONTINUE
-    auto start = m_token.range().Start;
-    advance();
-
-    std::vector<ControlFlowStatement> returnControl;
-
-    while (true) {
-        switch (m_token.getKind()) {
-        case TokenKind::For:
-            advance();
-            returnControl.emplace_back(ControlFlowStatement::For);
-            continue;
-        case TokenKind::Do:
-            advance();
-            returnControl.emplace_back(ControlFlowStatement::Do);
-            continue;
-        default:
-            break;
-        }
-        break;
-    }
-
-    return m_context.create<AstContinuationStmt>(
-        llvm::SMRange{ start, m_endLoc },
-        AstContinuationStmt::Action::Continue,
-        std::move(returnControl));
+    return continuation(AstContinuationAction::Continue);
 }
 
 /**
@@ -1150,32 +1135,54 @@ Result<AstContinuationStmt*> Parser::kwContinue() {
  *   .
  */
 Result<AstContinuationStmt*> Parser::kwExit() {
-    // assume m_token == EXIT
+    return continuation(AstContinuationAction::Exit);
+}
+
+Result<AstContinuationStmt*> Parser::continuation(AstContinuationAction action) {
+    // assume m_token == CONTINUE | EXIT
     auto start = m_token.range().Start;
-    advance();
+    auto control = m_token.description();
 
-    std::vector<ControlFlowStatement> returnControl;
-
-    while (true) {
-        switch (m_token.getKind()) {
-        case TokenKind::For:
-            advance();
-            returnControl.emplace_back(ControlFlowStatement::For);
-            continue;
-        case TokenKind::Do:
-            advance();
-            returnControl.emplace_back(ControlFlowStatement::Do);
-            continue;
-        default:
-            break;
-        }
-        break;
+    if (m_controlStack.empty()) {
+        return makeError(Diag::unexpectedContinuation, control);
     }
 
+    advance();
+
+    auto iter = m_controlStack.cbegin();
+    const auto target = [&](ControlFlowStatement look) -> Result<void> {
+        iter = m_controlStack.find(iter, look);
+        if (iter == m_controlStack.cend()) {
+            return makeError(Diag::unexpectedContinuationTarget, control, m_token.description());
+        }
+        iter++;
+        advance();
+        return {};
+    };
+
+    if (m_token.is(TokenKind::EndOfStmt)) {
+        iter++;
+    } else {
+        while (true) {
+            switch (m_token.getKind()) {
+            case TokenKind::For:
+                TRY(target(ControlFlowStatement::For));
+                continue;
+            case TokenKind::Do:
+                TRY(target(ControlFlowStatement::Do));
+                continue;
+            default:
+                break;
+            }
+            break;
+        }
+    }
+
+    auto index = m_controlStack.nextIndexAfter(iter);
     return m_context.create<AstContinuationStmt>(
         llvm::SMRange{ start, m_endLoc },
-        AstContinuationStmt::Action::Exit,
-        std::move(returnControl));
+        action,
+        index);
 }
 
 //----------------------------------------

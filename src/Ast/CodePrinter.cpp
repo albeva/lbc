@@ -412,26 +412,26 @@ void CodePrinter::visit(AstDoLoopStmt& ast) {
 void CodePrinter::visit(AstContinuationStmt& ast) {
     m_os << indent();
     switch (ast.action) {
-    case AstContinuationStmt::Action::Continue:
+    case AstContinuationAction::Continue:
         m_os << "CONTINUE";
         break;
-    case AstContinuationStmt::Action::Exit:
+    case AstContinuationAction::Exit:
         m_os << "EXIT";
         break;
     }
 
-    if (!ast.destination.empty()) {
-        for (auto target : ast.destination) {
-            switch (target) {
-            case ControlFlowStatement::For:
-                m_os << " FOR";
-                continue;
-            case ControlFlowStatement::Do:
-                m_os << " DO";
-                continue;
-            }
-        }
-    }
+//    if (!ast.destination.empty()) {
+//        for (auto target : ast.destination) {
+//            switch (target) {
+//            case ControlFlowStatement::For:
+//                m_os << " FOR";
+//                continue;
+//            case ControlFlowStatement::Do:
+//                m_os << " DO";
+//                continue;
+//            }
+//        }
+//    }
 }
 
 // Expressions

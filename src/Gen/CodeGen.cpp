@@ -363,17 +363,14 @@ void CodeGen::visit(AstDoLoopStmt& ast) {
 }
 
 void CodeGen::visit(AstContinuationStmt& ast) {
-    auto target = m_controlStack.find(ast.destination);
-    if (target == m_controlStack.cend()) {
-        fatalError("control statement not found");
-    }
+    const auto& target = m_controlStack[ast.destination];
 
     switch (ast.action) {
-    case AstContinuationStmt::Action::Continue:
-        m_builder.CreateBr(target->second.continueBlock);
+    case AstContinuationAction::Continue:
+        m_builder.CreateBr(target.second.continueBlock);
         break;
-    case AstContinuationStmt::Action::Exit:
-        m_builder.CreateBr(target->second.exitBlock);
+    case AstContinuationAction::Exit:
+        m_builder.CreateBr(target.second.exitBlock);
         break;
     }
 

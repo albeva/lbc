@@ -19,39 +19,51 @@ enum class ControlFlowStatement : uint8_t {
  *
  * Each control structure can have data (e.g. control exit and continue labels)
  */
-template<
-    typename Data = std::monostate,
-    std::enable_if_t<std::is_trivial_v<Data>, int> = 0>
+template<typename Data = std::monostate> requires(std::is_trivial_v<Data>)
 class ControlFlowStack final {
 public:
     using Entry = std::pair<ControlFlowStatement, Data>;
     using Container = std::vector<Entry>;
     using const_iterator = typename Container::const_reverse_iterator;
 
-    NO_COPY_AND_MOVE(ControlFlowStack)
-    ControlFlowStack() = default;
-    ~ControlFlowStack() = default;
-
-    void push(ControlFlowStatement control, Data data = {}) {
+    inline void push(ControlFlowStatement control, Data data = {}) {
         m_container.emplace_back(control, data);
     }
 
-    void pop() {
+    inline void pop() {
         m_container.pop_back();
     }
 
-    [[nodiscard]] const_iterator find(const std::vector<ControlFlowStatement>& destination) const {
-        auto iter = cbegin();
-        auto target = iter;
-        for (auto control : destination) {
-            iter = find(iter, control);
-            if (iter == cend()) {
-                return cend();
-            }
-            target = iter;
-            iter++;
-        }
-        return target;
+    inline void clear() {
+        m_container.clear();
+    }
+
+    [[nodiscard]] inline bool empty() const {
+        return m_container.empty();
+    }
+
+    [[nodiscard]] inline size_t indexOf(const_iterator iter) const {
+        return static_cast<size_t>(std::distance(m_container.begin(), iter.base()) - 1);
+    }
+
+    [[nodiscard]] inline size_t nextIndexAfter(const_iterator iter) const {
+        return static_cast<size_t>(std::distance(m_container.begin(), iter.base()));
+    }
+
+    [[nodiscard]] inline Entry& operator[](size_t index) {
+        return m_container[index];
+    }
+
+    template<std::invocable Func>
+    inline auto with(Entry entry, Func handler) {
+        m_container.push_back(std::move(entry));
+        DEFER { pop(); };
+        return handler();
+    }
+
+    template<std::invocable Func>
+    inline auto with(ControlFlowStatement control, Func handler) {
+        return with({ control, {} }, handler);
     }
 
     [[nodiscard]] const_iterator find(const_iterator from, ControlFlowStatement control) const {
@@ -60,11 +72,11 @@ public:
         });
     }
 
-    [[nodiscard]] const_iterator cbegin() const { return m_container.crbegin(); }
-    [[nodiscard]] const_iterator cend() const { return m_container.crend(); }
+    [[nodiscard]] inline const_iterator cbegin() const { return m_container.crbegin(); }
+    [[nodiscard]] inline const_iterator cend() const { return m_container.crend(); }
 
 private:
-    Container m_container;
+    Container m_container{};
 };
 
 } // namespace lbc

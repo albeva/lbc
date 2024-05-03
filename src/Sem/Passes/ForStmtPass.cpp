@@ -96,9 +96,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const {
         }
     }
 
-    m_sem.getControlStack().push(ControlFlowStatement::For);
     MUST(m_sem.visit(*ast.stmt));
-    m_sem.getControlStack().pop();
 
     if (!ast.next.empty()) {
         if (ast.next != ast.iterator->name) {

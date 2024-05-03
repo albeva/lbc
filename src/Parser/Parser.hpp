@@ -4,6 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Ast/Ast.def.hpp"
+#include "Ast/ControlFlowStack.hpp"
 #include "Diag/DiagnosticEngine.hpp"
 #include "Lexer/Token.hpp"
 
@@ -13,6 +14,7 @@ class SymbolTable;
 class Lexer;
 struct AstIfStmtBlock;
 enum class CallingConv;
+enum class AstContinuationAction;
 AST_FORWARD_DECLARE()
 struct AstExtern;
 
@@ -72,6 +74,7 @@ private:
     [[nodiscard]] Result<AstDoLoopStmt*> kwDo();
     [[nodiscard]] Result<AstContinuationStmt*> kwContinue();
     [[nodiscard]] Result<AstContinuationStmt*> kwExit();
+    [[nodiscard]] Result<AstContinuationStmt*> continuation(AstContinuationAction action);
     [[nodiscard]] Result<AstAttributeList*> attributeList();
     [[nodiscard]] Result<AstAttribute*> attribute();
     [[nodiscard]] Result<AstExprList*> attributeArgList();
@@ -132,6 +135,7 @@ private:
     llvm::SMLoc m_endLoc{};
     std::vector<AstImport*> m_imports{};
     ExprFlags m_exprFlags{};
+    ControlFlowStack<> m_controlStack{};
 };
 MARK_AS_FLAGS_ENUM(Parser::ExprFlags);
 MARK_AS_FLAGS_ENUM(Parser::FuncFlags);

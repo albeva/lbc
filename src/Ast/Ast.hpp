@@ -296,16 +296,16 @@ struct AstDoLoopStmt final : AstStmt {
     SymbolTable* symbolTable = nullptr;
 };
 
-struct AstContinuationStmt final : AstStmt {
-    enum class Action {
-        Continue,
-        Exit
-    };
+enum class AstContinuationAction {
+    Continue,
+    Exit
+};
 
+struct AstContinuationStmt final : AstStmt {
     explicit AstContinuationStmt(
         llvm::SMRange range_,
-        Action action_,
-        std::vector<ControlFlowStatement>&& destination_)
+        AstContinuationAction action_,
+        std::size_t destination_)
     : AstStmt{ AstKind::ContinuationStmt, range_ },
       action{ action_ },
       destination{ std::move(destination_) } {}
@@ -314,8 +314,8 @@ struct AstContinuationStmt final : AstStmt {
         return ast->kind == AstKind::ContinuationStmt;
     }
 
-    Action action;
-    std::vector<ControlFlowStatement> destination;
+    AstContinuationAction action;
+    std::size_t destination;
 };
 
 //----------------------------------------

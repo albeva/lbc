@@ -40,7 +40,6 @@ public:
 
     [[nodiscard]] inline Context& getContext() { return m_context; }
     [[nodiscard]] inline SymbolTable* getSymbolTable() { return m_table; }
-    [[nodiscard]] inline auto& getControlStack() { return m_controlStack; }
     [[nodiscard]] inline Sem::TypePass& getTypePass() { return m_typePass; }
     [[nodiscard]] inline Sem::ConstantFoldingPass& getConstantFoldingPass() { return m_constantFolder; }
     [[nodiscard]] inline Sem::DeclPass& getDeclPass() { return m_declPass; }
@@ -115,8 +114,6 @@ private:
     Sem::ConstantFoldingPass m_constantFolder;
     Sem::TypePass m_typePass;
     Sem::DeclPass m_declPass;
-
-    ControlFlowStack<> m_controlStack;
 };
 
 } // namespace lbc
