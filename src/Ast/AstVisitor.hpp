@@ -7,11 +7,7 @@
 
 namespace lbc {
 
-template<class This,
-    typename RetTy = void,
-    typename StmtTy = RetTy,
-    typename ExprTy = RetTy,
-    typename TypeTy = RetTy>
+template<class This, typename RetTy = void, typename StmtTy = RetTy, typename ExprTy = RetTy, typename TypeTy = RetTy>
 class AstVisitor {
 public:
     using GenRetTy = RetTy;

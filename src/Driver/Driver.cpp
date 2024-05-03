@@ -129,7 +129,7 @@ void Driver::execute() {
     // Add modules
     for (auto& module : m_modules) {
         exitOnErr(jit.addModule({ std::move(module->llvmModule),
-            std::make_unique<llvm::LLVMContext>() }));
+                                  std::make_unique<llvm::LLVMContext>() }));
     }
 
     // init
@@ -331,13 +331,13 @@ void Driver::emitExecutable() {
 
         linker
             .addArgs({ "-(",
-                "-lgcc",
-                "-lmsvcrt",
-                "-lkernel32",
-                "-luser32",
-                "-lmingw32",
-                "-lmingwex",
-                "-)" })
+                       "-lgcc",
+                       "-lmsvcrt",
+                       "-lkernel32",
+                       "-luser32",
+                       "-lmingw32",
+                       "-lmingwex",
+                       "-)" })
             .addPath(sysLibPath / "crtend.o");
     } else if (triple.isMacOSX()) {
         auto macosSdk = exec("xcrun --show-sdk-path");
@@ -424,7 +424,8 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
         m_modules.emplace_back(std::make_unique<TranslationUnit>(
             nullptr,
             source,
-            ast));
+            ast
+        ));
         return;
     }
 
@@ -441,7 +442,8 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     m_modules.emplace_back(std::make_unique<TranslationUnit>(
         gen.getModule(),
         source,
-        ast));
+        ast
+    ));
 }
 
 void Driver::dumpAst() {

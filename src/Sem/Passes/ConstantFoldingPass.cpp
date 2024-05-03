@@ -133,7 +133,8 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
             ast.range,
             ast.expr,
             nullptr,
-            true);
+            true
+        );
         cast->type = ast.type;
         return cast;
     }
@@ -142,13 +143,15 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
         auto* unary = m_sem.getContext().create<AstUnaryExpr>(
             ast.range,
             TokenKind::LogicalNot,
-            ast.expr);
+            ast.expr
+        );
 
         auto* cast = m_sem.getContext().create<AstCastExpr>(
             ast.range,
             unary,
             nullptr,
-            true);
+            true
+        );
         cast->type = ast.type;
         return cast;
     }

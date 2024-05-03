@@ -34,7 +34,8 @@ public:
             diag,
             range.Start,
             format(diag, std::forward<Args>(args)...),
-            range);
+            range
+        );
     }
 
 private:

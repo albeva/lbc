@@ -130,7 +130,8 @@ Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
             Diag::invalidFunctionReturnType,
             ast.expr,
             ast.expr->type->asString(),
-            retType->asString());
+            retType->asString()
+        );
     }
     return {};
 }
@@ -158,7 +159,8 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
                     Diag::noViableConversionToType,
                     block->expr,
                     block->expr->type->asString(),
-                    TypeBoolean::get()->asString());
+                    TypeBoolean::get()->asString()
+                );
             }
         }
         TRY(visit(*block->stmt))
@@ -184,7 +186,8 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
                 Diag::noViableConversionToType,
                 ast.expr,
                 ast.expr->type->asString(),
-                TypeBoolean::get()->asString());
+                TypeBoolean::get()->asString()
+            );
         }
     }
 
@@ -312,7 +315,8 @@ Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
         return makeError(
             Diag::targetNotAssignable,
             ast.lhs,
-            ast.lhs->type->asString());
+            ast.lhs->type->asString()
+        );
     }
     return expression(ast.rhs, ast.lhs->type);
 }
@@ -634,7 +638,8 @@ Result<void> SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
         fatalError(
             "Type mismatch."_t
             + " Expected '" + type->asString() + "'"
-            + " got '" + ast->type->asString() + "'");
+            + " got '" + ast->type->asString() + "'"
+        );
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);
@@ -651,7 +656,8 @@ Result<void> SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
         ast->range,
         ast,
         nullptr,
-        true);
+        true
+    );
     cast->type = type;
     cast->flags = category;
     ast = cast; // NOLINT

@@ -269,7 +269,8 @@ public:
         Context& context,
         const TypeRoot* retType,
         std::vector<const TypeRoot*> paramTypes,
-        bool variadic);
+        bool variadic
+    );
 
     constexpr static bool classof(const TypeRoot* type) {
         return type->getKind() == TypeFamily::Function;

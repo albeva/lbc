@@ -65,7 +65,8 @@ struct AstModule final : AstRoot {
         llvm::SMRange range_,
         bool implicitMain,
         std::vector<AstImport*>&& imports_,
-        AstStmtList* stms)
+        AstStmtList* stms
+    )
     : AstRoot{ AstKind::Module, range_ },
       fileId{ file },
       hasImplicitMain{ implicitMain },
@@ -100,7 +101,8 @@ struct AstStmtList final : AstStmt {
         llvm::SMRange range_,
         std::vector<AstDecl*>&& decl_,
         std::vector<AstFuncStmt*>&& funcs_,
-        std::vector<AstStmt*>&& stmts_)
+        std::vector<AstStmt*>&& stmts_
+    )
     : AstStmt{ AstKind::StmtList, range_ },
       decl{ std::move(decl_) },
       funcs{ std::move(funcs_) },
@@ -119,7 +121,8 @@ struct AstImport final : AstStmt {
     AstImport(
         llvm::SMRange range_,
         llvm::StringRef import_,
-        AstModule* module_ = nullptr)
+        AstModule* module_ = nullptr
+    )
     : AstStmt{ AstKind::Import, range_ },
       import{ import_ },
       module{ module_ } {}
@@ -136,7 +139,8 @@ struct AstExtern final : AstStmt {
     AstExtern(
         llvm::SMRange range_,
         CallingConv language_,
-        std::vector<AstStmt*>&& stmts_)
+        std::vector<AstStmt*>&& stmts_
+    )
     : AstStmt{ AstKind::Extern, range_ },
       langauge{ language_ },
       stmts{ std::move(stmts_) } {}
@@ -152,7 +156,8 @@ struct AstExtern final : AstStmt {
 struct AstExprStmt final : AstStmt {
     AstExprStmt(
         llvm::SMRange range_,
-        AstExpr* expr_)
+        AstExpr* expr_
+    )
     : AstStmt{ AstKind::ExprStmt, range_ },
       expr{ expr_ } {}
 
@@ -167,7 +172,8 @@ struct AstFuncStmt final : AstStmt {
     AstFuncStmt(
         llvm::SMRange range_,
         AstFuncDecl* decl_,
-        AstStmtList* stmtList_)
+        AstStmtList* stmtList_
+    )
     : AstStmt{ AstKind::FuncStmt, range_ },
       decl{ decl_ },
       stmtList{ stmtList_ } {}
@@ -183,7 +189,8 @@ struct AstFuncStmt final : AstStmt {
 struct AstReturnStmt final : AstStmt {
     AstReturnStmt(
         llvm::SMRange range_,
-        AstExpr* expr_)
+        AstExpr* expr_
+    )
     : AstStmt{ AstKind::ReturnStmt, range_ },
       expr{ expr_ } {}
 
@@ -204,7 +211,8 @@ struct AstIfStmtBlock final {
         std::vector<AstVarDecl*>&& decls_,
         SymbolTable* symbolTable_,
         AstExpr* expr_,
-        AstStmt* stmt_)
+        AstStmt* stmt_
+    )
     : decls{ std::move(decls_) },
       symbolTable{ symbolTable_ },
       expr{ expr_ },
@@ -214,7 +222,8 @@ struct AstIfStmtBlock final {
 struct AstIfStmt final : AstStmt {
     AstIfStmt(
         llvm::SMRange range_,
-        std::vector<AstIfStmtBlock*>&& blocks_)
+        std::vector<AstIfStmtBlock*>&& blocks_
+    )
     : AstStmt{ AstKind::IfStmt, range_ },
       blocks{ std::move(blocks_) } {}
 
@@ -240,7 +249,8 @@ struct AstForStmt final : AstStmt {
         AstExpr* limit_,
         AstExpr* step_,
         AstStmt* stmt_,
-        llvm::StringRef next_)
+        llvm::StringRef next_
+    )
     : AstStmt{ AstKind::ForStmt, range_ },
       decls{ std::move(decls_) },
       iterator{ iter_ },
@@ -278,7 +288,8 @@ struct AstDoLoopStmt final : AstStmt {
         std::vector<AstVarDecl*>&& decls_,
         Condition condition_,
         AstExpr* expr_,
-        AstStmt* stmt_)
+        AstStmt* stmt_
+    )
     : AstStmt{ AstKind::DoLoopStmt, range_ },
       decls{ std::move(decls_) },
       condition{ condition_ },
@@ -305,7 +316,8 @@ struct AstContinuationStmt final : AstStmt {
     explicit AstContinuationStmt(
         llvm::SMRange range_,
         AstContinuationAction action_,
-        std::size_t destination_)
+        std::size_t destination_
+    )
     : AstStmt{ AstKind::ContinuationStmt, range_ },
       action{ action_ },
       destination{ std::move(destination_) } {}
@@ -325,7 +337,8 @@ struct AstContinuationStmt final : AstStmt {
 struct AstAttributeList final : AstRoot {
     AstAttributeList(
         llvm::SMRange range_,
-        std::vector<AstAttribute*>&& attribs_)
+        std::vector<AstAttribute*>&& attribs_
+    )
     : AstRoot{ AstKind::AttributeList, range_ },
       attribs{ std::move(attribs_) } {}
 
@@ -343,7 +356,8 @@ struct AstAttribute final : AstRoot {
     AstAttribute(
         llvm::SMRange range_,
         AstIdentExpr* ident,
-        AstExprList* args_)
+        AstExprList* args_
+    )
     : AstRoot{ AstKind::Attribute, range_ },
       identExpr{ ident },
       args{ args_ } {}
@@ -367,7 +381,8 @@ struct AstDecl : AstStmt {
         llvm::StringRef name_,
         Token token_,
         CallingConv callingConv_,
-        AstAttributeList* attribs)
+        AstAttributeList* attribs
+    )
     : AstStmt{ kind_, range_ },
       name{ name_ },
       token{ token_ },
@@ -402,7 +417,8 @@ struct AstVarDecl final : AstDecl {
         CallingConv callingConv_,
         AstAttributeList* attrs_,
         AstTypeExpr* type_,
-        AstExpr* expr_)
+        AstExpr* expr_
+    )
     : AstDecl{ AstKind::VarDecl, range_, name_, token_, callingConv_, attrs_ },
       typeExpr{ type_ },
       expr{ expr_ } {}
@@ -425,7 +441,8 @@ struct AstFuncDecl final : AstDecl {
         AstFuncParamList* params_,
         bool variadic_,
         AstTypeExpr* retType_,
-        bool hasImpl_)
+        bool hasImpl_
+    )
     : AstDecl{ AstKind::FuncDecl, range_, name_, token_, callingConv_, attrs_ },
       params{ params_ },
       variadic{ variadic_ },
@@ -450,7 +467,8 @@ struct AstFuncParamDecl final : AstDecl {
         Token token_,
         CallingConv callingConv_,
         AstAttributeList* attrs,
-        AstTypeExpr* type_)
+        AstTypeExpr* type_
+    )
     : AstDecl{ AstKind::FuncParamDecl, range_, name_, token_, callingConv_, attrs },
       typeExpr{ type_ } {}
 
@@ -464,7 +482,8 @@ struct AstFuncParamDecl final : AstDecl {
 struct AstFuncParamList final : AstRoot {
     AstFuncParamList(
         llvm::SMRange range_,
-        std::vector<AstFuncParamDecl*>&& params_)
+        std::vector<AstFuncParamDecl*>&& params_
+    )
     : AstRoot{ AstKind::FuncParamList, range_ },
       params{ std::move(params_) } {}
 
@@ -478,7 +497,8 @@ struct AstUdtDecl final : AstDecl {
         Token token_,
         CallingConv callingConv_,
         AstAttributeList* attrs,
-        AstDeclList* decls_)
+        AstDeclList* decls_
+    )
     : AstDecl{ AstKind::UdtDecl, range_, name_, token_, callingConv_, attrs },
       decls{ decls_ } {}
 
@@ -497,7 +517,8 @@ struct AstTypeAlias final : AstDecl {
         Token token_,
         CallingConv callingConv_,
         AstAttributeList* attrs,
-        AstTypeExpr* typeExpr_)
+        AstTypeExpr* typeExpr_
+    )
     : AstDecl{ AstKind::TypeAlias, range_, name_, token_, callingConv_, attrs },
       typeExpr{ typeExpr_ } {}
 
@@ -516,7 +537,8 @@ struct AstTypeOf final : AstRoot {
 
     explicit AstTypeOf(
         llvm::SMRange range_,
-        TypeExpr&& typeExpr_)
+        TypeExpr&& typeExpr_
+    )
     : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ typeExpr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
@@ -533,7 +555,8 @@ struct AstTypeExpr final : AstRoot {
     AstTypeExpr(
         llvm::SMRange range_,
         TypeExpr expr_,
-        int deref)
+        int deref
+    )
     : AstRoot{ AstKind::TypeExpr, range_ },
       expr{ expr_ },
       dereference{ deref } {}
@@ -564,7 +587,8 @@ struct AstExpr : AstRoot {
 struct AstExprList : AstRoot {
     AstExprList(
         llvm::SMRange range_,
-        std::vector<AstExpr*>&& exprs_)
+        std::vector<AstExpr*>&& exprs_
+    )
     : AstRoot{ AstKind::ExprList, range_ },
       exprs{ std::move(exprs_) } {}
 
@@ -575,7 +599,8 @@ struct AstAssignExpr final : AstExpr {
     AstAssignExpr(
         llvm::SMRange range_,
         AstExpr* lhs_,
-        AstExpr* rhs_)
+        AstExpr* rhs_
+    )
     : AstExpr{ AstKind::AssignExpr, range_ },
       lhs{ lhs_ },
       rhs{ rhs_ } {}
@@ -591,7 +616,8 @@ struct AstAssignExpr final : AstExpr {
 struct AstIdentExpr final : AstExpr {
     AstIdentExpr(
         llvm::SMRange range_,
-        llvm::StringRef name_)
+        llvm::StringRef name_
+    )
     : AstExpr{ AstKind::IdentExpr, range_ },
       name{ name_ } {}
 
@@ -607,7 +633,8 @@ struct AstCallExpr final : AstExpr {
     AstCallExpr(
         llvm::SMRange range_,
         AstExpr* callable_,
-        AstExprList* args_)
+        AstExprList* args_
+    )
     : AstExpr{ AstKind::CallExpr, range_ },
       callable{ callable_ },
       args{ args_ } {}
@@ -625,7 +652,8 @@ struct AstLiteralExpr final : AstExpr {
 
     AstLiteralExpr(
         llvm::SMRange range_,
-        Value value_)
+        Value value_
+    )
     : AstExpr{ AstKind::LiteralExpr, range_ },
       value{ value_ } {}
 
@@ -640,7 +668,8 @@ struct AstUnaryExpr final : AstExpr {
     AstUnaryExpr(
         llvm::SMRange range_,
         TokenKind tokenKind_,
-        AstExpr* expr_)
+        AstExpr* expr_
+    )
     : AstExpr{ AstKind::UnaryExpr, range_ },
       tokenKind{ tokenKind_ },
       expr{ expr_ } {}
@@ -656,7 +685,8 @@ struct AstUnaryExpr final : AstExpr {
 struct AstDereference final : AstExpr {
     AstDereference(
         llvm::SMRange range_,
-        AstExpr* expr_)
+        AstExpr* expr_
+    )
     : AstExpr{ AstKind::Dereference, range_ },
       expr{ expr_ } {}
 
@@ -670,7 +700,8 @@ struct AstDereference final : AstExpr {
 struct AstAddressOf final : AstExpr {
     AstAddressOf(
         llvm::SMRange range_,
-        AstExpr* expr_)
+        AstExpr* expr_
+    )
     : AstExpr{ AstKind::AddressOf, range_ },
       expr{ expr_ } {}
 
@@ -684,7 +715,8 @@ struct AstAddressOf final : AstExpr {
 struct AstMemberAccess final : AstExpr {
     AstMemberAccess(
         llvm::SMRange range_,
-        std::vector<AstExpr*>&& exprs_)
+        std::vector<AstExpr*>&& exprs_
+    )
     : AstExpr{ AstKind::MemberAccess, range_ },
       exprs{ std::move(exprs_) } {}
 
@@ -700,7 +732,8 @@ struct AstBinaryExpr final : AstExpr {
         llvm::SMRange range_,
         TokenKind tokenKind_,
         AstExpr* lhs_,
-        AstExpr* rhs_)
+        AstExpr* rhs_
+    )
     : AstExpr{ AstKind::BinaryExpr, range_ },
       tokenKind{ tokenKind_ },
       lhs{ lhs_ },
@@ -720,7 +753,8 @@ struct AstCastExpr final : AstExpr {
         llvm::SMRange range_,
         AstExpr* expr_,
         AstTypeExpr* typeExpr_,
-        bool implicit_)
+        bool implicit_
+    )
     : AstExpr{ AstKind::CastExpr, range_ },
       expr{ expr_ },
       typeExpr{ typeExpr_ },
@@ -740,7 +774,8 @@ struct AstIfExpr final : AstExpr {
         llvm::SMRange range_,
         AstExpr* expr_,
         AstExpr* trueExpr_,
-        AstExpr* falseExpr_)
+        AstExpr* falseExpr_
+    )
     : AstExpr{ AstKind::IfExpr, range_ },
       expr{ expr_ },
       trueExpr{ trueExpr_ },

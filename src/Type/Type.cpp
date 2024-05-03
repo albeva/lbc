@@ -293,7 +293,8 @@ const TypeFunction* TypeFunction::get(
     Context& context,
     const TypeRoot* retType,
     std::vector<const TypeRoot*> paramTypes,
-    bool variadic) {
+    bool variadic
+) {
     for (const auto& ptr : context.funcTypes) {
         // cppcheck-suppress useStlAlgorithm
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {

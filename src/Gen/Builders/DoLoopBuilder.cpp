@@ -10,8 +10,8 @@ DoLoopBuilder::DoLoopBuilder(CodeGen& gen, AstDoLoopStmt& ast)
 : Builder{ gen, ast },
   m_bodyBlock{ llvm::BasicBlock::Create(m_llvmContext, "do_loop.body") },
   m_condBlock{ (m_ast.condition == AstDoLoopStmt::Condition::None)
-          ? nullptr
-          : llvm::BasicBlock::Create(m_llvmContext, "do_loop.cond") },
+                   ? nullptr
+                   : llvm::BasicBlock::Create(m_llvmContext, "do_loop.cond") },
   m_exitBlock{ llvm::BasicBlock::Create(m_llvmContext, "do_loop.end") },
   m_continueBlock{ m_condBlock } {
     build();

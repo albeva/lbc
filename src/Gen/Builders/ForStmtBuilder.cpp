@@ -47,7 +47,8 @@ void ForStmtBuilder::checkDirection() {
             getCmpPred(m_type, TokenKind::LessThan),
             limitValue,
             iterValue,
-            "for.isdecr");
+            "for.isdecr"
+        );
     }
 }
 
@@ -107,7 +108,8 @@ void ForStmtBuilder::configureStep() {
         getCmpPred(m_ast.step->type, TokenKind::LessThan),
         stepValue,
         llvm::Constant::getNullValue(m_llvmType),
-        "for.isStepNeg");
+        "for.isStepNeg"
+    );
 
     auto* negateBlock = llvm::BasicBlock::Create(m_llvmContext, "for.step.negate");
 

@@ -198,7 +198,8 @@ Symbol* DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) {
         ast.name,
         m_sem.getSymbolTable(),
         type,
-        &ast);
+        &ast
+    );
 
     m_sem.getSymbolTable()->insert(symbol);
 

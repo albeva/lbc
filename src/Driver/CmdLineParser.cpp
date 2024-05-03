@@ -15,7 +15,8 @@ void CmdLineParser::parse(const Args& args) {
     // compiler executable
     fs::path const executable = llvm::sys::fs::getMainExecutable(
         args[0],
-        reinterpret_cast<void*>(showHelp)); // NOLINT
+        reinterpret_cast<void*>(showHelp) // NOLINT
+    );
     m_options.setCompilerPath(executable);
 
     // working directory

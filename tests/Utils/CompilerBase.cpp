@@ -48,7 +48,8 @@ std::vector<std::filesystem::path> CompilerBase::enumerate(const std::filesystem
         std::back_inserter(paths),
         [](const auto& entry) {
             return entry.is_regular_file();
-        });
+        }
+    );
     return paths;
 }
 

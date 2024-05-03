@@ -14,4 +14,5 @@ TEST_P(Fail, error) {
 INSTANTIATE_TEST_SUITE_P(
     Compile,
     Fail,
-    testing::ValuesIn(CompilerBase::enumerate("failures/")));
+    testing::ValuesIn(CompilerBase::enumerate("failures/"))
+);

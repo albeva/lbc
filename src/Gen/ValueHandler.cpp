@@ -16,7 +16,8 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringR
     auto* var = gen.getBuilder().CreateAlloca(
         expr.type->getLlvmType(gen.getContext()),
         nullptr,
-        name);
+        name
+    );
     gen.getBuilder().CreateStore(value, var);
 
     return createOpaqueValue(gen, expr.type, var, name);
@@ -31,7 +32,8 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llv
     auto* var = gen.getBuilder().CreateAlloca(
         expr.type->getLlvmType(gen.getContext()),
         nullptr,
-        name);
+        name
+    );
     gen.getBuilder().CreateStore(value, var);
 
     return createOpaqueValue(gen, expr.type, var, name);
@@ -156,7 +158,8 @@ llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const {
             type = llvm::cast<TypePointer>(symbol->getType())->getBase()->getLlvmType(m_gen->getContext());
             addr = builder.CreateLoad(
                 symbol->getType()->getLlvmType(m_gen->getContext()),
-                addr);
+                addr
+            );
         }
     }
     createGEP();

@@ -24,7 +24,8 @@ fs::path TempFileCache::createUniquePath(const fs::path& file, llvm::StringRef s
     llvm::sys::fs::createUniquePath(
         "lbc-"_t + file.stem().string() + "-%%%%%%%%%%%%" + suffix,
         filenameCache,
-        true);
+        true
+    );
     return tempFiles.emplace_back(filenameCache.begin(), filenameCache.end());
 }
 

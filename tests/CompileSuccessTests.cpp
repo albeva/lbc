@@ -12,4 +12,5 @@ TEST_P(Success, run) {
 INSTANTIATE_TEST_SUITE_P(
     Compile,
     Success,
-    testing::ValuesIn(CompilerBase::enumerate("success/")));
+    testing::ValuesIn(CompilerBase::enumerate("success/"))
+);

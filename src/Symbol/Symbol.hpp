@@ -25,7 +25,8 @@ public:
         llvm::StringRef name,
         SymbolTable* table,
         const TypeRoot* type,
-        AstDecl* decl)
+        AstDecl* decl
+    )
     : m_name{ name }, m_table{ table }, m_type{ type }, m_decl{ decl }, m_alias{ "" } {}
 
     ~Symbol() = default;

@@ -68,7 +68,8 @@ void CodeGen::visit(AstModule& ast) {
             llvm::FunctionType::get(llvm::Type::getVoidTy(m_llvmContext), false),
             llvm::Function::InternalLinkage,
             "__chkstk",
-            *m_module);
+            *m_module
+        );
         chkstk->setCallingConv(llvm::CallingConv::C);
         chkstk->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
         auto* block = llvm::BasicBlock::Create(m_llvmContext, "entry", chkstk);
@@ -90,7 +91,8 @@ void CodeGen::visit(AstModule& ast) {
             llvm::FunctionType::get(llvm::Type::getInt32Ty(m_llvmContext), false),
             llvm::Function::ExternalLinkage,
             "main",
-            *m_module);
+            *m_module
+        );
         mainFn->setCallingConv(llvm::CallingConv::C);
         mainFn->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
         auto* block = llvm::BasicBlock::Create(m_llvmContext, "entry", mainFn);
@@ -127,7 +129,8 @@ llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
             llvm::FunctionType::get(llvm::Type::getVoidTy(m_llvmContext), false),
             llvm::Function::InternalLinkage,
             "lbc_global_var_init",
-            *m_module);
+            *m_module
+        );
         m_globalCtorFunc->setCallingConv(llvm::CallingConv::C);
         llvm::appendToGlobalCtors(*m_module, m_globalCtorFunc, 0);
         llvm::BasicBlock::Create(m_llvmContext, "entry", m_globalCtorFunc);
@@ -205,7 +208,8 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
         false,
         sym->getLlvmLinkage(),
         constant,
-        ast.symbol->identifier());
+        ast.symbol->identifier()
+    );
 
     if (needsValueAssignment) {
         if (m_hasImplicitMain) {
@@ -257,7 +261,8 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
         fnTy,
         sym->getLlvmLinkage(),
         ast.symbol->identifier(),
-        *m_module);
+        *m_module
+    );
     fn->setCallingConv(llvm::CallingConv::C);
     ast.symbol->setLlvmValue(fn);
 
@@ -296,7 +301,8 @@ void CodeGen::visit(AstFuncStmt& ast) {
             sym->setLlvmValue(m_builder.CreateAlloca(
                 sym->getType()->getLlvmType(m_context),
                 nullptr,
-                sym->identifier() + ".addr"));
+                sym->identifier() + ".addr"
+            ));
             m_builder.CreateStore(value, sym->getLlvmValue());
         }
     }
@@ -447,7 +453,8 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
     const auto visitor = Visitor{
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
-                llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context)));
+                llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context))
+            );
         },
         [&](llvm::StringRef str) -> llvm::Value* {
             return getStringConstant(str);
@@ -456,12 +463,14 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
             return llvm::ConstantInt::get(
                 ast.type->getLlvmType(m_context),
                 value,
-                ast.type->isSignedIntegral());
+                ast.type->isSignedIntegral()
+            );
         },
         [&](double value) -> llvm::Value* {
             return llvm::ConstantFP::get(
                 ast.type->getLlvmType(m_context),
-                value);
+                value
+            );
         },
         [&](bool value) -> llvm::Value* {
             return value ? m_constantTrue : m_constantFalse;
@@ -524,7 +533,8 @@ ValueHandler CodeGen::visit(AstCastExpr& ast) {
         value,
         srcIsSigned,
         ast.type->getLlvmType(m_context),
-        dstIsSigned);
+        dstIsSigned
+    );
     auto* casted = m_builder.CreateCast(opcode, value, ast.type->getLlvmType(m_context));
 
     return { this, ast.type, casted };

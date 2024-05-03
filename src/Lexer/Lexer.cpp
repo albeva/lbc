@@ -313,7 +313,8 @@ void Lexer::stringLiteral(Token& result) {
     result.set(
         TokenKind::StringLiteral,
         makeRange(start, m_input),
-        m_context.retainCopy(literal));
+        m_context.retainCopy(literal)
+    );
 }
 
 char Lexer::escape() {

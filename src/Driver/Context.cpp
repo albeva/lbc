@@ -91,7 +91,8 @@ JIT& Context::getJIT() noexcept {
             llvm::TargetOptions(),
             /*Reloc::Model*/ std::nullopt,
             /*CodeModel::Model*/ std::nullopt,
-            /*CodeGenOptLevel*/ level) };
+            /*CodeGenOptLevel*/ level
+        ) };
 
         if (!machine) {
             fatalError("Failed to create target machine");

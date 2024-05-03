@@ -42,5 +42,6 @@ llvm::Type* TypeUDT::genLlvmType(Context& context) const {
         context.getLlvmContext(),
         elems,
         m_symbol.identifier(),
-        m_packed);
+        m_packed
+    );
 }
