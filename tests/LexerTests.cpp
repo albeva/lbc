@@ -36,8 +36,8 @@ protected:
             EXPECT_EQ(token.asString(), lexeme);
         }
 
-        auto start = m_context.getSourceMrg().getLineAndColumn(token.range().Start);
-        auto end = m_context.getSourceMrg().getLineAndColumn(token.range().End);
+        auto start = m_context.getSourceMrg().getLineAndColumn(token.getRange().Start);
+        auto end = m_context.getSourceMrg().getLineAndColumn(token.getRange().End);
 
         if (line > 0) {
             EXPECT_EQ(start.first, line);

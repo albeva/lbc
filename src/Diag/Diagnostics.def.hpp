@@ -77,6 +77,8 @@ ERROR(unexpectedContinuation,
     "{0} not allowed outside FOR or DO loops")
 ERROR(unexpectedContinuationTarget,
     "Unexpected {0} target '{1}'")
+ERROR(accessingMemberOnNonUDTType,
+    "Accessing a member on '{0}' which is not a user defined type")
 
 #undef DIAG
 #undef ERROR

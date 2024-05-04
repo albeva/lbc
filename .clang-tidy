@@ -33,6 +33,7 @@ Checks: '*,
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: webkit
+Standard: C++20
 CheckOptions:
   readability-identifier-length:
     MinimumVariableNameLength: 2

@@ -38,6 +38,7 @@ struct AstRoot {
     virtual ~AstRoot() = default;
 
     [[nodiscard]] llvm::StringRef getClassName() const;
+    [[nodiscard]] inline llvm::SMRange getRange() const { return range; }
 
     const AstKind kind;
     const llvm::SMRange range;

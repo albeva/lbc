@@ -17,8 +17,8 @@
 using namespace lbc;
 
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
-: m_context{ context },
-  m_diag{ context.getDiag() },
+: ErrorLogger( context.getDiag() ),
+  m_context{ context },
   m_constantFolder{ *this },
   m_typePass{ *this },
   m_declPass{ *this } {}
@@ -114,7 +114,8 @@ Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
 
     if (ast.expr == nullptr) {
         if (!isVoid && !canOmitExpression) {
-            return makeError(Diag::functionMustReturnAValue, ast);
+             return makeError(Diag::functionMustReturnAValue, ast);
+
         }
         return {};
     }
@@ -244,11 +245,11 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
         });
 
         if (not parsedExpression) {
-            return makeError(Diag::invalidTypeOfExpression, *range);
+            return makeError(Diag::invalidTypeOfExpression, range->Start, *range);
         }
 
         if (not parser.getToken().is(TokenKind::EndOfStmt)) {
-            return makeError(Diag::unexpectedTokenInTypeOf, parser.getToken().range());
+            return makeError(Diag::unexpectedTokenInTypeOf, parser.getToken());
         }
     }
 
@@ -482,14 +483,10 @@ Result<void> SemanticAnalyzer::visit(AstMemberAccess& ast) {
             const TypeUDT* udt = nullptr;
             if (type->isUDT()) {
                 udt = static_cast<const TypeUDT*>(type);
-            } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type)) {
-                if (ptr->getBase()->isUDT()) {
-                    udt = static_cast<const TypeUDT*>(ptr->getBase());
-                }
-            }
-
-            if (udt == nullptr) {
-                fatalError("Accessing member of non UDT type");
+            } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type); ptr != nullptr && ptr->getBase()->isUDT()) {
+                udt = static_cast<const TypeUDT*>(ptr->getBase());
+            } else {
+                return makeError(Diag::accessingMemberOnNonUDTType, ast, type->asString());
             }
 
             m_table = &udt->getSymbolTable();

@@ -18,7 +18,7 @@ enum class AstContinuationAction;
 AST_FORWARD_DECLARE()
 struct AstExtern;
 
-class Parser final {
+class Parser final: private ErrorLogger {
 public:
     NO_COPY_AND_MOVE(Parser)
 
@@ -117,19 +117,12 @@ private:
     // advance to the next token from the stream
     void advance();
 
-    template<typename... Args>
-    [[nodiscard]] ResultError makeError(Diag diag, Args&&... args) const {
-        m_diag.log(diag, m_token.range(), std::forward<Args>(args)...);
-        return {};
-    }
-
     Context& m_context;
     Lexer& m_lexer;
     const bool m_isMain;
     SymbolTable* m_symbolTable;
     CallingConv m_language;
 
-    DiagnosticEngine& m_diag;
     Scope m_scope;
     Token m_token{};
     llvm::SMLoc m_endLoc{};
