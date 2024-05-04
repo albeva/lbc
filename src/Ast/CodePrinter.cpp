@@ -514,7 +514,7 @@ void CodePrinter::visit(AstMemberAccess& ast) {
         if (i != 0) {
             m_os << '.';
         }
-        visit(*ast.exprs[i]);
+        visit(*ast.exprs[i].second);
     }
 }
 

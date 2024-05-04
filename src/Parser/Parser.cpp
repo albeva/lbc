@@ -1362,11 +1362,11 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
  */
 Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
     while (m_token.getPrecedence() >= precedence) {
-        auto current = m_token.getPrecedence();
-        auto kind = m_token.getKind();
         if (!m_token.isBinary()) {
             return makeError(Diag::unexpectedToken, m_token, "binary operator", m_token.description());
         }
+        auto current = m_token.getPrecedence();
+        auto op = m_token;
         advance();
 
         auto rhs = factor();
@@ -1380,7 +1380,7 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
         }
 
         auto start = lhs->range.Start;
-        auto bin = binary({ start, m_endLoc }, kind, lhs, rhs);
+        auto bin = binary({ start, m_endLoc }, op, lhs, rhs);
         TRY(bin)
         lhs = bin;
     }
@@ -1511,22 +1511,23 @@ Result<AstExpr*> Parser::unary(llvm::SMRange range, TokenKind op, AstExpr* expr)
     }
 }
 
-Result<AstExpr*> Parser::binary(llvm::SMRange range, TokenKind op, AstExpr* lhs, AstExpr* rhs) {
-    switch (op) {
+Result<AstExpr*> Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) {
+    switch (tkn.getKind()) {
     case TokenKind::CommaAnd:
         return m_context.create<AstBinaryExpr>(range, TokenKind::LogicalAnd, lhs, rhs);
     case TokenKind::Assign:
         return m_context.create<AstAssignExpr>(range, lhs, rhs);
     case TokenKind::MemberAccess:
         if (auto* member = llvm::dyn_cast<AstMemberAccess>(lhs)) {
-            member->exprs.push_back(rhs);
+            member->range.End = range.End;
+            member->exprs.emplace_back(tkn.getRange().Start, rhs);
             return member;
         } else {
-            std::vector<AstExpr*> exprs{ lhs, rhs };
+            std::vector<AstMemberAccess::Entry> exprs{ {range.Start, lhs}, { tkn.getRange().Start, rhs} };
             return m_context.create<AstMemberAccess>(range, std::move(exprs));
         }
     default:
-        return m_context.create<AstBinaryExpr>(range, op, lhs, rhs);
+        return m_context.create<AstBinaryExpr>(range, tkn.getKind(), lhs, rhs);
     }
 }
 

@@ -141,7 +141,7 @@ llvm::Value* ValueHandler::getAggregageAddress(AstMemberAccess& ast) const {
     for (size_t i = 0; i < ast.exprs.size(); i++) {
         bool const last = i == (ast.exprs.size() - 1);
 
-        auto* symbol = m_gen->visit(*ast.exprs[i]).dyn_cast<Symbol*>();
+        auto* symbol = m_gen->visit(*ast.exprs[i].second).dyn_cast<Symbol*>();
         if (symbol == nullptr) {
             fatalError("MemberAccess expressions shoudl be symbols!");
         }

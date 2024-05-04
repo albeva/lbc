@@ -465,7 +465,7 @@ void AstPrinter::visit(AstMemberAccess& ast) {
         writeHeader(ast);
         m_json.attributeArray("exprs", [&]() {
             for (auto& expr : ast.exprs) {
-                visit(*expr);
+                visit(*expr.second);
             }
         });
     });

@@ -471,7 +471,7 @@ Result<void> SemanticAnalyzer::visit(AstMemberAccess& ast) {
     RESTORE_ON_EXIT(m_table);
 
     for (size_t i = 0; i < ast.exprs.size(); i++) {
-        auto* expr = ast.exprs[i];
+        auto* expr = ast.exprs[i].second;
         TRY(visit(*expr))
         const auto* type = expr->type;
 
@@ -485,7 +485,8 @@ Result<void> SemanticAnalyzer::visit(AstMemberAccess& ast) {
             } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type); ptr != nullptr && ptr->getBase()->isUDT()) {
                 udt = static_cast<const TypeUDT*>(ptr->getBase());
             } else {
-                return makeError(Diag::accessingMemberOnNonUDTType, ast, type->asString());
+                auto loc = ast.exprs[i + 1].first;
+                return makeError(Diag::accessingMemberOnNonUDTType, loc, ast.getRange(), type->asString());
             }
 
             m_table = &udt->getSymbolTable();

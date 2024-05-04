@@ -41,7 +41,7 @@ struct AstRoot {
     [[nodiscard]] inline llvm::SMRange getRange() const { return range; }
 
     const AstKind kind;
-    const llvm::SMRange range;
+    llvm::SMRange range;
 
     // Make vanilla new/delete illegal.
     void* operator new(size_t) = delete;
@@ -714,9 +714,12 @@ struct AstAddressOf final : AstExpr {
 };
 
 struct AstMemberAccess final : AstExpr {
+    /// Pair of location of the member access token (the '.') and expression
+    using Entry = std::pair<llvm::SMLoc, AstExpr*>;
+
     AstMemberAccess(
         llvm::SMRange range_,
-        std::vector<AstExpr*>&& exprs_
+        std::vector<Entry>&& exprs_
     )
     : AstExpr{ AstKind::MemberAccess, range_ },
       exprs{ std::move(exprs_) } {}
@@ -725,7 +728,7 @@ struct AstMemberAccess final : AstExpr {
         return ast->kind == AstKind::MemberAccess;
     }
 
-    std::vector<AstExpr*> exprs;
+    std::vector<Entry> exprs;
 };
 
 struct AstBinaryExpr final : AstExpr {
