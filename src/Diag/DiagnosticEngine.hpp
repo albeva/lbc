@@ -108,8 +108,8 @@ private:
      */
     void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {});
 
-    Context& m_context; ///< Reference to a Context object.
-    int m_errorCounter = 0; ///< Counter for the number of errors.
+    Context& m_context;          ///< Reference to a Context object.
+    int m_errorCounter = 0;      ///< Counter for the number of errors.
     bool m_ignoreErrors = false; ///< Flag to indicate if errors should be ignored.
 };
 

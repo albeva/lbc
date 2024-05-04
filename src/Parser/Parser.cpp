@@ -22,7 +22,7 @@ static inline llvm::SMLoc getStart(const AstAttributeList* attribs, const Token&
 }
 
 Parser::Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable)
-: ErrorLogger( context.getDiag() ),
+: ErrorLogger(context.getDiag()),
   m_context{ context },
   m_lexer{ lexer },
   m_isMain{ isMain },

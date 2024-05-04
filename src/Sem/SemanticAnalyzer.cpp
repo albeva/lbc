@@ -17,7 +17,7 @@
 using namespace lbc;
 
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
-: ErrorLogger( context.getDiag() ),
+: ErrorLogger(context.getDiag()),
   m_context{ context },
   m_constantFolder{ *this },
   m_typePass{ *this },
@@ -114,8 +114,7 @@ Result<void> SemanticAnalyzer::visit(AstReturnStmt& ast) {
 
     if (ast.expr == nullptr) {
         if (!isVoid && !canOmitExpression) {
-             return makeError(Diag::functionMustReturnAValue, ast);
-
+            return makeError(Diag::functionMustReturnAValue, ast);
         }
         return {};
     }

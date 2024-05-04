@@ -18,7 +18,8 @@ class SymbolTable;
 class TypeRoot;
 class Context;
 
-class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer, Result<void>>, public ErrorLogger {
+class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer, Result<void>>
+, public ErrorLogger {
 public:
     struct StateFlags final {
         bool allowUseBeforDefiniation : 1;
