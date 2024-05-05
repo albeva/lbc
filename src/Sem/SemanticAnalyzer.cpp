@@ -415,7 +415,7 @@ Result<void> SemanticAnalyzer::visit(AstUnaryExpr& ast) {
     TRY(expression(ast.expr))
     const auto* type = ast.expr->type;
 
-    switch (ast.tokenKind) {
+    switch (ast.token.getKind()) {
     case TokenKind::LogicalNot:
         if (type->isBoolean()) {
             ast.type = type;
@@ -504,7 +504,7 @@ Result<void> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
     TRY(expression(ast.lhs))
     TRY(expression(ast.rhs))
 
-    switch (Token::getOperatorType(ast.tokenKind)) {
+    switch (Token::getOperatorType(ast.token.getKind())) {
     case OperatorType::Arithmetic:
         return arithmetic(ast);
     case OperatorType::Comparison:
@@ -562,7 +562,7 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
-    if (!canPerformBinary(ast.tokenKind, left, right)) {
+    if (!canPerformBinary(ast.token.getKind(), left, right)) {
         fatalError("Cannot apply operationg to types");
     }
 

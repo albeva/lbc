@@ -668,18 +668,18 @@ struct AstLiteralExpr final : AstExpr {
 struct AstUnaryExpr final : AstExpr {
     AstUnaryExpr(
         llvm::SMRange range_,
-        TokenKind tokenKind_,
+        Token token_,
         AstExpr* expr_
     )
     : AstExpr{ AstKind::UnaryExpr, range_ },
-      tokenKind{ tokenKind_ },
+      token{ token_ },
       expr{ expr_ } {}
 
     constexpr static bool classof(const AstRoot* ast) {
         return ast->kind == AstKind::UnaryExpr;
     }
 
-    const TokenKind tokenKind;
+    Token token;
     AstExpr* expr;
 };
 
@@ -734,12 +734,12 @@ struct AstMemberAccess final : AstExpr {
 struct AstBinaryExpr final : AstExpr {
     AstBinaryExpr(
         llvm::SMRange range_,
-        TokenKind tokenKind_,
+        Token token_,
         AstExpr* lhs_,
         AstExpr* rhs_
     )
     : AstExpr{ AstKind::BinaryExpr, range_ },
-      tokenKind{ tokenKind_ },
+      token{ token_ },
       lhs{ lhs_ },
       rhs{ rhs_ } {}
 
@@ -747,7 +747,7 @@ struct AstBinaryExpr final : AstExpr {
         return ast->kind == AstKind::BinaryExpr;
     }
 
-    const TokenKind tokenKind;
+    Token token;
     AstExpr* lhs;
     AstExpr* rhs;
 };

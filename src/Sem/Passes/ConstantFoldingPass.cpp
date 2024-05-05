@@ -55,7 +55,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
         return nullptr;
     }
 
-    auto value = unary(ast.tokenKind, *literal);
+    auto value = unary(ast.token.getKind(), *literal);
     auto* repl = m_sem.getContext().create<AstLiteralExpr>(ast.range, value);
     repl->type = ast.type;
     return repl;
@@ -140,9 +140,12 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
     }
 
     if (*lval == 0 && *rval == 1) {
+        // TODO: Set correct token range
+        Token tkn{};
+        tkn.set(TokenKind::LogicalNot, ast.range);
         auto* unary = m_sem.getContext().create<AstUnaryExpr>(
             ast.range,
-            TokenKind::LogicalNot,
+            tkn,
             ast.expr
         );
 

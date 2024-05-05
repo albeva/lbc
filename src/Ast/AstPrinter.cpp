@@ -441,7 +441,7 @@ void AstPrinter::visit(AstLiteralExpr& ast) {
 void AstPrinter::visit(AstUnaryExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        m_json.attribute("op", Token::description(ast.tokenKind));
+        m_json.attribute("op", Token::description(ast.token.getKind()));
         writeExpr(ast.expr);
     });
 }
@@ -474,7 +474,7 @@ void AstPrinter::visit(AstMemberAccess& ast) {
 void AstPrinter::visit(AstBinaryExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        m_json.attribute("op", Token::description(ast.tokenKind));
+        m_json.attribute("op", Token::description(ast.token.getKind()));
         writeExpr(ast.lhs, "lhs");
         writeExpr(ast.rhs, "rhs");
     });

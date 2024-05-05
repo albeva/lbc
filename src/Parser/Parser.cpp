@@ -1410,9 +1410,9 @@ Result<AstExpr*> Parser::factor() {
     while (true) {
         // <Right Unary Op>
         if (m_token.isUnary() && m_token.isRightToLeft()) {
-            auto kind = m_token.getKind();
+            auto tkn = m_token;
             advance();
-            expr = unary({ start, m_endLoc }, kind, expr);
+            expr = unary({ start, m_endLoc }, tkn, expr);
             TRY(expr)
 
             continue;
@@ -1483,38 +1483,39 @@ Result<AstExpr*> Parser::primary() {
     replace(TokenKind::Minus, TokenKind::Negate);
     replace(TokenKind::Multiply, TokenKind::Dereference);
     if (m_token.isUnary() && m_token.isLeftToRight()) {
-        auto start = m_token.getRange().Start;
-        auto prec = m_token.getPrecedence();
-        auto kind = m_token.getKind();
+        auto tkn = m_token;
         advance();
 
         auto fact = factor();
         TRY(fact)
 
-        auto expr = expression(fact, prec);
+        auto expr = expression(fact, tkn.getPrecedence());
         TRY(expr)
 
-        return unary({ start, m_endLoc }, kind, expr);
+        return unary({ tkn.getRange().Start, m_endLoc }, tkn, expr);
     }
 
     return makeError(Diag::expectedExpression, m_token, m_token.description());
 }
 
-Result<AstExpr*> Parser::unary(llvm::SMRange range, TokenKind op, AstExpr* expr) {
-    switch (op) {
+Result<AstExpr*> Parser::unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) {
+    switch (tkn.getKind()) {
     case TokenKind::Dereference:
         return m_context.create<AstDereference>(range, expr);
     case TokenKind::AddressOf:
         return m_context.create<AstAddressOf>(range, expr);
     default:
-        return m_context.create<AstUnaryExpr>(range, op, expr);
+        return m_context.create<AstUnaryExpr>(range, tkn, expr);
     }
 }
 
 Result<AstExpr*> Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) {
     switch (tkn.getKind()) {
-    case TokenKind::CommaAnd:
-        return m_context.create<AstBinaryExpr>(range, TokenKind::LogicalAnd, lhs, rhs);
+    case TokenKind::CommaAnd: {
+        auto copy = tkn;
+        copy.setKind(TokenKind::LogicalAnd);
+        return m_context.create<AstBinaryExpr>(range, copy, lhs, rhs);
+    }
     case TokenKind::Assign:
         return m_context.create<AstAssignExpr>(range, lhs, rhs);
     case TokenKind::MemberAccess:
@@ -1527,7 +1528,7 @@ Result<AstExpr*> Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* 
             return m_context.create<AstMemberAccess>(range, std::move(exprs));
         }
     default:
-        return m_context.create<AstBinaryExpr>(range, tkn.getKind(), lhs, rhs);
+        return m_context.create<AstBinaryExpr>(range, tkn, lhs, rhs);
     }
 }
 

@@ -488,7 +488,7 @@ llvm::Constant* CodeGen::getStringConstant(llvm::StringRef str) {
 }
 
 ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
-    switch (ast.tokenKind) {
+    switch (ast.token.getKind()) {
     case TokenKind::Negate: {
         auto* value = visit(*ast.expr).load();
 

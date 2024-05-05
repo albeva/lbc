@@ -58,7 +58,7 @@ private:
     [[nodiscard]] Result<AstStmt*> declaration();
     [[nodiscard]] Result<AstExpr*> factor();
     [[nodiscard]] Result<AstExpr*> primary();
-    [[nodiscard]] Result<AstExpr*> unary(llvm::SMRange range, TokenKind op, AstExpr* expr);
+    [[nodiscard]] Result<AstExpr*> unary(llvm::SMRange range, const Token& tkn, AstExpr* expr);
     [[nodiscard]] Result<AstExpr*> binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs);
     [[nodiscard]] Result<AstExpr*> expression(AstExpr* lhs, int precedence);
     [[nodiscard]] Result<AstIdentExpr*> identifier();

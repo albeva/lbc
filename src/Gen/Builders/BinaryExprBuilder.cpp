@@ -9,7 +9,7 @@ using namespace lbc;
 using namespace Gen;
 
 ValueHandler BinaryExprBuilder::build() {
-    switch (Token::getOperatorType(m_ast.tokenKind)) {
+    switch (Token::getOperatorType(m_ast.token.getKind())) {
     case OperatorType::Arithmetic:
         return arithmetic();
     case OperatorType::Logical:
@@ -26,7 +26,7 @@ ValueHandler BinaryExprBuilder::comparison() {
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
     const auto* ty = m_ast.lhs->type;
-    auto pred = Gen::getCmpPred(ty, m_ast.tokenKind);
+    auto pred = Gen::getCmpPred(ty, m_ast.token.getKind());
     return { &m_gen, m_ast.type, m_builder.CreateCmp(pred, lhsValue, rhsValue) };
 }
 
@@ -34,7 +34,7 @@ ValueHandler BinaryExprBuilder::arithmetic() {
     auto* lhsValue = m_gen.visit(*m_ast.lhs).load();
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
-    auto op = getBinOpPred(m_ast.lhs->type, m_ast.tokenKind);
+    auto op = getBinOpPred(m_ast.lhs->type, m_ast.token.getKind());
     return { &m_gen, m_ast.type, m_builder.CreateBinOp(op, lhsValue, rhsValue) };
 }
 
@@ -44,7 +44,7 @@ ValueHandler BinaryExprBuilder::logical() {
     auto* lhsBlock = m_builder.GetInsertBlock();
 
     auto* func = lhsBlock->getParent();
-    const auto isAnd = m_ast.tokenKind == TokenKind::LogicalAnd;
+    const auto isAnd = m_ast.token.getKind() == TokenKind::LogicalAnd;
     auto prefix = isAnd ? "and"s : "or"s;
     auto* elseBlock = llvm::BasicBlock::Create(m_llvmContext, prefix, func);
     auto* endBlock = llvm::BasicBlock::Create(m_llvmContext, prefix + ".end", func);
