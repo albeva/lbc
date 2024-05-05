@@ -9,14 +9,14 @@ namespace lbc {
 class CodeGen;
 struct AstExpr;
 struct AstIdentExpr;
-struct AstBinaryExpr;
+struct AstMemberExpr;
 struct AstDereference;
 struct AstAddressOf;
 class TypeRoot;
 class Symbol;
 
 namespace Gen {
-    class ValueHandler final : llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
+    class ValueHandler final : public llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
     public:
         /// Create temporary allocated variable - it is not inserted into symbol table
         static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "");
@@ -31,7 +31,7 @@ namespace Gen {
         ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value);
         ValueHandler(CodeGen* gen, Symbol* symbol);
         ValueHandler(CodeGen* gen, AstIdentExpr& ast);
-        ValueHandler(CodeGen* gen, AstBinaryExpr& ast);
+        ValueHandler(CodeGen* gen, AstMemberExpr& ast);
         ValueHandler(CodeGen* gen, AstDereference& ast);
         ValueHandler(CodeGen* gen, AstAddressOf& ast);
 
@@ -46,8 +46,6 @@ namespace Gen {
         }
 
     private:
-        [[nodiscard]] llvm::Value* getAggregageAddress(AstBinaryExpr& ast) const;
-
         CodeGen* m_gen = nullptr;
         const TypeRoot* m_type = nullptr;
     };

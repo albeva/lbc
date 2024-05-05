@@ -76,9 +76,10 @@
     _( CastExpr     ) \
     _( IfExpr       ) \
     _( Dereference  ) \
-    _( AddressOf    )
+    _( AddressOf    ) \
+    _( MemberExpr   )
 
-#define AST_EXPR_RANGE(_) _(AssignExpr, AddressOf)
+#define AST_EXPR_RANGE(_) _(AssignExpr, MemberExpr)
 
 //----------------------------------------
 // All content nodes

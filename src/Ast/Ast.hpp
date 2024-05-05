@@ -734,6 +734,32 @@ struct AstBinaryExpr final : AstExpr {
     AstExpr* rhs;
 };
 
+struct AstMemberExpr final : AstExpr {
+    AstMemberExpr(
+        llvm::SMRange range_,
+        Token token_,
+        AstExpr* base_,
+        AstExpr* member_
+    )
+    : AstExpr{ AstKind::MemberExpr, range_ },
+      token{ token_ },
+      base{ base_ },
+      member{ member_ } {}
+
+    constexpr static bool classof(const AstRoot* ast) {
+        return ast->kind == AstKind::MemberExpr;
+    }
+
+    /// The location of the member access operator '.'
+    Token token;
+
+    /// In member expression F.X, this is F
+    AstExpr* base;
+
+    /// In member expression F.X, this is X
+    AstExpr* member;
+};
+
 struct AstCastExpr final : AstExpr {
     AstCastExpr(
         llvm::SMRange range_,

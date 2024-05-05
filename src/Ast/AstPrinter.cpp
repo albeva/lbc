@@ -469,6 +469,14 @@ void AstPrinter::visit(AstBinaryExpr& ast) {
     });
 }
 
+void AstPrinter::visit(AstMemberExpr& ast) {
+    m_json.object([&] {
+        writeHeader(ast);
+        writeExpr(ast.base, "base");
+        writeExpr(ast.member, "member");
+    });
+}
+
 void AstPrinter::visit(AstCastExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);

@@ -510,21 +510,21 @@ void CodePrinter::visit(AstAddressOf& ast) {
 }
 
 void CodePrinter::visit(AstBinaryExpr& ast) {
-    if (ast.token.getKind() == TokenKind::MemberAccess) {
-        visit(*ast.lhs);
-        m_os << ".";
-        visit(*ast.rhs);
-    } else {
-        m_os << "(";
-        visit(*ast.lhs);
+    m_os << "(";
+    visit(*ast.lhs);
 
-        Token token;
-        token.set(ast.token.getKind(), ast.range);
-        m_os << " " << token.description() << " ";
+    Token token;
+    token.set(ast.token.getKind(), ast.range);
+    m_os << " " << token.description() << " ";
 
-        visit(*ast.rhs);
-        m_os << ")";
-    }
+    visit(*ast.rhs);
+    m_os << ")";
+}
+
+void CodePrinter::visit(AstMemberExpr& ast) {
+    visit(*ast.base);
+    m_os << ".";
+    visit(*ast.member);
 }
 
 void CodePrinter::visit(AstCastExpr& ast) {

@@ -1516,6 +1516,8 @@ Result<AstExpr*> Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* 
         copy.setKind(TokenKind::LogicalAnd);
         return m_context.create<AstBinaryExpr>(range, copy, lhs, rhs);
     }
+    case TokenKind::MemberAccess:
+        return m_context.create<AstMemberExpr>(range, tkn, lhs, rhs);
     case TokenKind::Assign:
         return m_context.create<AstAssignExpr>(range, lhs, rhs);
     default:

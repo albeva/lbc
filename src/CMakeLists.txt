@@ -42,6 +42,8 @@ add_library(
     Gen/Builders/ForStmtBuilder.hpp
     Gen/Builders/IfStmtBuilder.cpp
     Gen/Builders/IfStmtBuilder.hpp
+    Gen/Builders/MemberExprBuilder.cpp
+    Gen/Builders/MemberExprBuilder.hpp
     Gen/CallingConv/CallingConvention.hpp
     Gen/CodeGen.cpp
     Gen/CodeGen.hpp
@@ -76,13 +78,13 @@ add_library(
     Type/Type.hpp
     Type/TypeUdt.cpp
     Type/TypeUdt.hpp
-    Utils/Result.hpp
     Utils/Defer.hpp
+    Utils/Flags.hpp
+    Utils/Result.hpp
     Utils/Try.hpp
     Utils/Utils.cpp
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
-    Utils/Flags.hpp
 )
 
 target_link_libraries(lbc_lib PRIVATE project_options project_warnings)

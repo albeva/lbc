@@ -468,29 +468,14 @@ Result<void> SemanticAnalyzer::visit(AstAddressOf& ast) {
 }
 
 //------------------------------------------------------------------
-// Binary Expressions
+// MemberExpr
 //------------------------------------------------------------------
 
-Result<void> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
-    switch (Token::getOperatorType(ast.token.getKind())) {
-    case OperatorType::Arithmetic:
-        return arithmetic(ast);
-    case OperatorType::Comparison:
-        return comparison(ast);
-    case OperatorType::Logical:
-        return logical(ast);
-    case OperatorType::Memory:
-        return memory(ast);
-    default:
-        llvm_unreachable("invalid operator");
-    }
-}
-
-Result<void> SemanticAnalyzer::memory(AstBinaryExpr& ast) {
-    TRY(visit(*ast.lhs))
+Result<void> SemanticAnalyzer::visit(AstMemberExpr& ast) {
+    TRY(visit(*ast.base))
 
     const TypeUDT* udt = nullptr;
-    if (const auto* type = ast.lhs->type; type->isUDT()) {
+    if (const auto* type = ast.base->type; type->isUDT()) {
         udt = static_cast<const TypeUDT*>(type);
     } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type); ptr != nullptr && ptr->getBase()->isUDT()) {
         udt = static_cast<const TypeUDT*>(ptr->getBase());
@@ -501,19 +486,36 @@ Result<void> SemanticAnalyzer::memory(AstBinaryExpr& ast) {
     auto flags = m_flags;
     flags.allowRecursiveSymbolLookup = false;
     TRY(with(&udt->getSymbolTable(), flags, [&] {
-        return visit(*ast.rhs);
+        return visit(*ast.member);
     }))
 
-    ast.type = ast.rhs->type;
-    ast.flags = ast.rhs->flags;
+    ast.type = ast.member->type;
+    ast.flags = ast.member->flags;
 
     return {};
 }
 
-Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
+//------------------------------------------------------------------
+// Binary Expressions
+//------------------------------------------------------------------
+
+Result<void> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
     TRY(expression(ast.lhs))
     TRY(expression(ast.rhs))
 
+    switch (Token::getOperatorType(ast.token.getKind())) {
+    case OperatorType::Arithmetic:
+        return arithmetic(ast);
+    case OperatorType::Comparison:
+        return comparison(ast);
+    case OperatorType::Logical:
+        return logical(ast);
+    default:
+        llvm_unreachable("invalid operator");
+    }
+}
+
+Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -544,9 +546,7 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
 }
 
 Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
-    TRY(expression(ast.lhs))
-    TRY(expression(ast.rhs))
-
+    (void)this;
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -558,9 +558,6 @@ Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
 }
 
 Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
-    TRY(expression(ast.lhs))
-    TRY(expression(ast.rhs))
-
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 

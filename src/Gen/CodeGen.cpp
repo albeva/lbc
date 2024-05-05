@@ -507,14 +507,11 @@ ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
     }
 }
 
-//------------------------------------------------------------------
-// Binary Operation
-//------------------------------------------------------------------
+ValueHandler CodeGen::visit(AstMemberExpr& ast) {
+    return { this, ast };
+}
 
 ValueHandler CodeGen::visit(AstBinaryExpr& ast) {
-    if (ast.token.getKind() == TokenKind::MemberAccess) {
-        return { this, ast };
-    }
     return Gen::BinaryExprBuilder(*this, ast).build();
 }
 

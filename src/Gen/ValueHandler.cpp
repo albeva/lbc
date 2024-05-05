@@ -3,6 +3,7 @@
 //
 #include "ValueHandler.hpp"
 #include "Ast/Ast.hpp"
+#include "Builders/MemberExprBuilder.hpp"
 #include "CodeGen.hpp"
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
@@ -54,7 +55,7 @@ ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol)
 ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast)
 : ValueHandler{ gen, ast.symbol } {}
 
-ValueHandler::ValueHandler(CodeGen* gen, AstBinaryExpr& ast)
+ValueHandler::ValueHandler(CodeGen* gen, AstMemberExpr& ast)
 : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast)
@@ -82,8 +83,8 @@ llvm::Value* ValueHandler::getAddress() const {
         return m_gen->visit(*addrOf->expr).getAddress();
     }
 
-    if (auto* member = llvm::dyn_cast<AstBinaryExpr>(ast)) {
-        return getAggregageAddress(*member);
+    if (auto* member = llvm::dyn_cast<AstMemberExpr>(ast)) {
+        return MemberExprBuilder{ *m_gen, *member }.build();
     }
 
     llvm_unreachable("Unknown ValueHandler type");
@@ -118,71 +119,6 @@ llvm::Type* ValueHandler::getLlvmType() const {
     }
 
     llvm_unreachable("Unknown type in getLlvmType");
-}
-
-llvm::Value* ValueHandler::getAggregageAddress(AstBinaryExpr& ast) const {
-    auto& builder = m_gen->getBuilder();
-
-    // Very dumb code to serialize member access
-    // TODO: Refactor this to a builder which generates code recursively
-    struct Generator final {
-        std::vector<AstExpr*> exprs{};
-        // // a.b.c.d = <<<a, b>, c>, d>
-        void build(AstBinaryExpr& ast) {
-            if (auto* left = llvm::dyn_cast<AstBinaryExpr>(ast.lhs)) {
-                build(*left);
-            } else {
-                exprs.push_back(ast.lhs);
-            }
-            exprs.push_back(ast.rhs);
-        }
-    };
-    Generator gen{};
-    gen.build(ast);
-    auto exprs = std::move(gen.exprs);
-
-    llvm::SmallVector<llvm::Value*> idxs{};
-    idxs.push_back(builder.getInt32(0));
-
-    llvm::Value* addr = nullptr;
-    llvm::Type* type = nullptr;
-
-    const auto createGEP = [&]() {
-        if (idxs.size() < 2) {
-            return;
-        }
-        addr = builder.CreateGEP(type, addr, idxs);
-        idxs.pop_back_n(idxs.size() - 1);
-    };
-
-    // a.b.c.d = [a, b, c, d]
-    for (size_t i = 0; i < exprs.size(); i++) {
-        bool const last = i == (exprs.size() - 1);
-
-        auto* symbol = m_gen->visit(*exprs[i]).dyn_cast<Symbol*>();
-        if (symbol == nullptr) {
-            fatalError("MemberAccess expressions shoudl be symbols!");
-        }
-
-        if (i == 0) {
-            type = symbol->getType()->getLlvmType(m_gen->getContext());
-            addr = symbol->getLlvmValue();
-        } else {
-            idxs.push_back(builder.getInt32(symbol->getIndex()));
-        }
-
-        if (symbol->getType()->isPointer() && !last) {
-            createGEP();
-            type = llvm::cast<TypePointer>(symbol->getType())->getBase()->getLlvmType(m_gen->getContext());
-            addr = builder.CreateLoad(
-                symbol->getType()->getLlvmType(m_gen->getContext()),
-                addr
-            );
-        }
-    }
-    createGEP();
-
-    return addr;
 }
 
 void ValueHandler::store(llvm::Value* val) const {
