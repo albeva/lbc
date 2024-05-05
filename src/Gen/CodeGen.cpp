@@ -419,10 +419,6 @@ ValueHandler CodeGen::visit(AstIdentExpr& ast) {
     return { this, ast };
 }
 
-ValueHandler CodeGen::visit(AstMemberAccess& ast) {
-    return { this, ast };
-}
-
 ValueHandler CodeGen::visit(AstDereference& ast) {
     return { this, ast };
 }
@@ -516,6 +512,9 @@ ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
 //------------------------------------------------------------------
 
 ValueHandler CodeGen::visit(AstBinaryExpr& ast) {
+    if (ast.token.getKind() == TokenKind::MemberAccess) {
+        return { this, ast };
+    }
     return Gen::BinaryExprBuilder(*this, ast).build();
 }
 

@@ -9,7 +9,7 @@ namespace lbc {
 class CodeGen;
 struct AstExpr;
 struct AstIdentExpr;
-struct AstMemberAccess;
+struct AstBinaryExpr;
 struct AstDereference;
 struct AstAddressOf;
 class TypeRoot;
@@ -31,7 +31,7 @@ namespace Gen {
         ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value);
         ValueHandler(CodeGen* gen, Symbol* symbol);
         ValueHandler(CodeGen* gen, AstIdentExpr& ast);
-        ValueHandler(CodeGen* gen, AstMemberAccess& ast);
+        ValueHandler(CodeGen* gen, AstBinaryExpr& ast);
         ValueHandler(CodeGen* gen, AstDereference& ast);
         ValueHandler(CodeGen* gen, AstAddressOf& ast);
 
@@ -46,7 +46,7 @@ namespace Gen {
         }
 
     private:
-        [[nodiscard]] llvm::Value* getAggregageAddress(AstMemberAccess& ast) const;
+        [[nodiscard]] llvm::Value* getAggregageAddress(AstBinaryExpr& ast) const;
 
         CodeGen* m_gen = nullptr;
         const TypeRoot* m_type = nullptr;

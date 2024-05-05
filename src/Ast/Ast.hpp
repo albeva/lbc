@@ -713,24 +713,6 @@ struct AstAddressOf final : AstExpr {
     AstExpr* expr;
 };
 
-struct AstMemberAccess final : AstExpr {
-    /// Pair of location of the member access token (the '.') and expression
-    using Entry = std::pair<llvm::SMLoc, AstExpr*>;
-
-    AstMemberAccess(
-        llvm::SMRange range_,
-        std::vector<Entry>&& exprs_
-    )
-    : AstExpr{ AstKind::MemberAccess, range_ },
-      exprs{ std::move(exprs_) } {}
-
-    constexpr static bool classof(const AstRoot* ast) {
-        return ast->kind == AstKind::MemberAccess;
-    }
-
-    std::vector<Entry> exprs;
-};
-
 struct AstBinaryExpr final : AstExpr {
     AstBinaryExpr(
         llvm::SMRange range_,

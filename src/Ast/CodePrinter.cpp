@@ -509,25 +509,22 @@ void CodePrinter::visit(AstAddressOf& ast) {
     m_os << ")";
 }
 
-void CodePrinter::visit(AstMemberAccess& ast) {
-    for (size_t i = 0; i < ast.exprs.size(); i++) {
-        if (i != 0) {
-            m_os << '.';
-        }
-        visit(*ast.exprs[i].second);
-    }
-}
-
 void CodePrinter::visit(AstBinaryExpr& ast) {
-    m_os << "(";
-    visit(*ast.lhs);
+    if (ast.token.getKind() == TokenKind::MemberAccess) {
+        visit(*ast.lhs);
+        m_os << ".";
+        visit(*ast.rhs);
+    } else {
+        m_os << "(";
+        visit(*ast.lhs);
 
-    Token token;
-    token.set(ast.token.getKind(), ast.range);
-    m_os << " " << token.description() << " ";
+        Token token;
+        token.set(ast.token.getKind(), ast.range);
+        m_os << " " << token.description() << " ";
 
-    visit(*ast.rhs);
-    m_os << ")";
+        visit(*ast.rhs);
+        m_os << ")";
+    }
 }
 
 void CodePrinter::visit(AstCastExpr& ast) {

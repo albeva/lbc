@@ -23,6 +23,7 @@ class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer, Result<void>>
 public:
     struct StateFlags final {
         bool allowUseBeforDefiniation : 1;
+        bool allowRecursiveSymbolLookup : 1;
     };
 
     explicit SemanticAnalyzer(Context& context);
@@ -84,6 +85,7 @@ private:
     Result<void> arithmetic(AstBinaryExpr& ast);
     Result<void> logical(AstBinaryExpr& ast);
     Result<void> comparison(AstBinaryExpr& ast);
+    Result<void> memory(AstBinaryExpr& ast);
 
     [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const;
     [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const;

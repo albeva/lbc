@@ -1518,15 +1518,6 @@ Result<AstExpr*> Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* 
     }
     case TokenKind::Assign:
         return m_context.create<AstAssignExpr>(range, lhs, rhs);
-    case TokenKind::MemberAccess:
-        if (auto* member = llvm::dyn_cast<AstMemberAccess>(lhs)) {
-            member->range.End = range.End;
-            member->exprs.emplace_back(tkn.getRange().Start, rhs);
-            return member;
-        } else {
-            std::vector<AstMemberAccess::Entry> exprs{ {range.Start, lhs}, { tkn.getRange().Start, rhs} };
-            return m_context.create<AstMemberAccess>(range, std::move(exprs));
-        }
     default:
         return m_context.create<AstBinaryExpr>(range, tkn, lhs, rhs);
     }

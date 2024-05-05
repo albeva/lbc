@@ -21,11 +21,14 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
   m_context{ context },
   m_constantFolder{ *this },
   m_typePass{ *this },
-  m_declPass{ *this } {}
+  m_declPass{ *this } {
+}
 
 Result<void> SemanticAnalyzer::visit(AstModule& ast) {
+    auto flags = StateFlags{ .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
+
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
-    return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), StateFlags{}, [&]() -> Result<void> {
+    return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), flags, [&]() -> Result<void> {
         for (auto* import : ast.imports) {
             // cppcheck-suppress useStlAlgorithm
             TRY(visit(*import))
@@ -322,8 +325,9 @@ Result<void> SemanticAnalyzer::visit(AstAssignExpr& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
-    auto* symbol = m_table->find(ast.name);
+    auto* symbol = m_table->find(ast.name, m_flags.allowRecursiveSymbolLookup);
     if (symbol == nullptr) {
+        // TODO: Generate better error messages when evaluating UDT lookup
         return makeError(Diag::unknownIdentifier, ast, ast.name);
     }
 
@@ -464,46 +468,10 @@ Result<void> SemanticAnalyzer::visit(AstAddressOf& ast) {
 }
 
 //------------------------------------------------------------------
-// Member Access
-//------------------------------------------------------------------
-
-Result<void> SemanticAnalyzer::visit(AstMemberAccess& ast) {
-    RESTORE_ON_EXIT(m_table);
-
-    for (size_t i = 0; i < ast.exprs.size(); i++) {
-        auto* expr = ast.exprs[i].second;
-        TRY(visit(*expr))
-        const auto* type = expr->type;
-
-        if (i == (ast.exprs.size() - 1)) {
-            ast.type = type;
-            ast.flags = expr->flags;
-        } else {
-            const TypeUDT* udt = nullptr;
-            if (type->isUDT()) {
-                udt = static_cast<const TypeUDT*>(type);
-            } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type); ptr != nullptr && ptr->getBase()->isUDT()) {
-                udt = static_cast<const TypeUDT*>(ptr->getBase());
-            } else {
-                auto loc = ast.exprs[i + 1].first;
-                return makeError(Diag::accessingMemberOnNonUDTType, loc, ast.getRange(), type->asString());
-            }
-
-            m_table = &udt->getSymbolTable();
-        }
-    }
-
-    return {};
-}
-
-//------------------------------------------------------------------
 // Binary Expressions
 //------------------------------------------------------------------
 
 Result<void> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
-    TRY(expression(ast.lhs))
-    TRY(expression(ast.rhs))
-
     switch (Token::getOperatorType(ast.token.getKind())) {
     case OperatorType::Arithmetic:
         return arithmetic(ast);
@@ -511,12 +479,41 @@ Result<void> SemanticAnalyzer::visit(AstBinaryExpr& ast) {
         return comparison(ast);
     case OperatorType::Logical:
         return logical(ast);
+    case OperatorType::Memory:
+        return memory(ast);
     default:
         llvm_unreachable("invalid operator");
     }
 }
 
+Result<void> SemanticAnalyzer::memory(AstBinaryExpr& ast) {
+    TRY(visit(*ast.lhs))
+
+    const TypeUDT* udt = nullptr;
+    if (const auto* type = ast.lhs->type; type->isUDT()) {
+        udt = static_cast<const TypeUDT*>(type);
+    } else if (const auto* ptr = llvm::dyn_cast<TypePointer>(type); ptr != nullptr && ptr->getBase()->isUDT()) {
+        udt = static_cast<const TypeUDT*>(ptr->getBase());
+    } else {
+        return makeError(Diag::accessingMemberOnNonUDTType, ast.token.getRange().Start, ast.getRange(), type->asString());
+    }
+
+    auto flags = m_flags;
+    flags.allowRecursiveSymbolLookup = false;
+    TRY(with(&udt->getSymbolTable(), flags, [&] {
+        return visit(*ast.rhs);
+    }))
+
+    ast.type = ast.rhs->type;
+    ast.flags = ast.rhs->flags;
+
+    return {};
+}
+
 Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
+    TRY(expression(ast.lhs))
+    TRY(expression(ast.rhs))
+
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -547,7 +544,9 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
 }
 
 Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
-    (void)this;
+    TRY(expression(ast.lhs))
+    TRY(expression(ast.rhs))
+
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
@@ -559,6 +558,9 @@ Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
 }
 
 Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
+    TRY(expression(ast.lhs))
+    TRY(expression(ast.rhs))
+
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
