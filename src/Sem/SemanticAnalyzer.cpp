@@ -172,7 +172,7 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstForStmt& ast) {
-    Sem::ForStmtPass(*this).visit(ast);
+    TRY(Sem::ForStmtPass(*this).visit(ast));
     return {};
 }
 
@@ -261,7 +261,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
             llvm_unreachable("unresolved typeof expression");
         },
         [&](AstTypeExpr* typeExpr) -> ResTy {
-            ast.type = m_typePass.visit(*typeExpr);
+            TRY_ASSIGN(ast.type, m_typePass.visit(*typeExpr));
             return {};
         },
         [&](AstExpr* expr) -> ResTy {
@@ -626,7 +626,7 @@ bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 //------------------------------------------------------------------
 
 Result<void> SemanticAnalyzer::visit(AstCastExpr& ast) {
-    ast.type = m_typePass.visit(*ast.typeExpr);
+    TRY_ASSIGN(ast.type, m_typePass.visit(*ast.typeExpr));
     TRY(expression(ast.expr))
 
     if (ast.expr->type->compare(ast.type) == TypeComparison::Incompatible) {

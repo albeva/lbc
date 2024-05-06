@@ -23,9 +23,7 @@ Result<void> DeclPass::declare(AstStmtList& ast) {
 }
 
 Result<void> DeclPass::declare(AstDecl& ast) {
-    auto res = createNewSymbol(ast, nullptr);
-    TRY(res)
-    auto* symbol = res.getValue();
+    TRY_DECL(symbol, createNewSymbol(ast, nullptr))
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
         symbol->valueFlags().kind = ValueFlags::Kind::function;
@@ -98,7 +96,8 @@ Result<void> DeclPass::defineAlias(AstTypeAlias& ast) {
     };
 
     auto* symbol = ast.symbol;
-    symbol->setType(m_sem.getTypePass().visit(*ast.typeExpr));
+    TRY_DECL(type, m_sem.getTypePass().visit(*ast.typeExpr))
+    symbol->setType(type);
 
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
         symbol->valueFlags() = parent->valueFlags();
@@ -147,7 +146,8 @@ Result<void> DeclPass::defineFunc(AstFuncDecl& ast) {
     }
 
     // func type
-    symbol->setType(m_sem.getTypePass().visit(ast));
+    TRY_DECL(type, m_sem.getTypePass().visit(ast))
+    symbol->setType(type);
 
     // parameters
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(m_sem.getSymbolTable(), &ast);
@@ -170,9 +170,7 @@ Result<void> DeclPass::defineFuncParam(AstFuncParamDecl& ast) {
         return ResultError{};
     }
 
-    auto res = createNewSymbol(ast, type);
-    TRY(res)
-    ast.symbol = res.getValue();
+    TRY_ASSIGN(ast.symbol, createNewSymbol(ast, type))
     return {};
 }
 
@@ -180,7 +178,7 @@ Result<void> DeclPass::defineVar(AstVarDecl& ast) {
     // m_type expr?
     const TypeRoot* type = nullptr;
     if (ast.typeExpr != nullptr) {
-        type = m_sem.getTypePass().visit(*ast.typeExpr);
+        TRY_ASSIGN(type, m_sem.getTypePass().visit(*ast.typeExpr))
     }
 
     // expression?

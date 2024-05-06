@@ -9,29 +9,32 @@
 using namespace lbc;
 using namespace Sem;
 
-void ForStmtPass::visit(AstForStmt& ast) const {
+Result<void> ForStmtPass::visit(AstForStmt& ast) const {
     auto* current = m_sem.getSymbolTable();
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
-    m_sem.with(ast.symbolTable, [&]() {
-        declare(ast);
-        analyze(ast);
+    TRY(m_sem.with(ast.symbolTable, [&]() -> Result<void> {
+        TRY(declare(ast));
+        TRY(analyze(ast));
         determineForDirection(ast);
-    });
+        return {};
+    }));
+    return {};
 }
 
-void ForStmtPass::declare(AstForStmt& ast) const {
-    MUST(m_sem.getDeclPass().declareAndDefine(ast.decls));
-    MUST(m_sem.getDeclPass().declareAndDefine(*ast.iterator));
+Result<void> ForStmtPass::declare(AstForStmt& ast) const {
+    TRY(m_sem.getDeclPass().declareAndDefine(ast.decls));
+    TRY(m_sem.getDeclPass().declareAndDefine(*ast.iterator));
     auto flags = ast.iterator->symbol->valueFlags();
     flags.assignable = false;
     ast.iterator->symbol->valueFlags() = flags;
+    return {};
 }
 
-void ForStmtPass::analyze(AstForStmt& ast) const {
-    MUST(m_sem.expression(ast.limit));
+Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
+    TRY(m_sem.expression(ast.limit));
 
     if (ast.step != nullptr) {
-        MUST(m_sem.expression(ast.step));
+        TRY(m_sem.expression(ast.step));
     }
 
     const auto* type = ast.iterator->symbol->getType();
@@ -44,15 +47,15 @@ void ForStmtPass::analyze(AstForStmt& ast) const {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
     case TypeComparison::Downcast:
-        MUST(m_sem.convert(ast.limit, type));
+        TRY(m_sem.convert(ast.limit, type));
         break;
     case TypeComparison::Equal:
         break;
     case TypeComparison::Upcast:
         if (ast.iterator->typeExpr != nullptr) {
-            MUST(m_sem.convert(ast.limit, type));
+            TRY(m_sem.convert(ast.limit, type));
         } else {
-            MUST(m_sem.convert(ast.iterator->expr, ast.limit->type));
+            TRY(m_sem.convert(ast.iterator->expr, ast.limit->type));
             ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
@@ -88,7 +91,7 @@ void ForStmtPass::analyze(AstForStmt& ast) const {
                     }
                 }
             }
-            MUST(m_sem.convert(ast.step, dstTy));
+            TRY(m_sem.convert(ast.step, dstTy));
             break;
         }
         case TypeComparison::Equal:
@@ -96,16 +99,19 @@ void ForStmtPass::analyze(AstForStmt& ast) const {
         }
     }
 
-    MUST(m_sem.visit(*ast.stmt));
+    TRY(m_sem.visit(*ast.stmt));
 
     if (!ast.next.empty()) {
         if (ast.next != ast.iterator->name) {
             fatalError("NEXT iterator names must match");
         }
     }
+
+    return {};
 }
 
 void ForStmtPass::determineForDirection(AstForStmt& ast) const {
+    (void)this;
     auto* from = llvm::dyn_cast<AstLiteralExpr>(ast.iterator->expr);
     auto* to = llvm::dyn_cast<AstLiteralExpr>(ast.limit);
     const auto* type = ast.iterator->symbol->getType();

@@ -13,22 +13,22 @@
 using namespace lbc;
 using namespace Sem;
 
-const TypeRoot* TypePass::visit(AstTypeExpr& ast) const {
+Result<const TypeRoot*> TypePass::visit(AstTypeExpr& ast) const {
     const auto visitor = Visitor{
-        [&](AstIdentExpr* ident) -> const TypeRoot* {
+        [&](AstIdentExpr* ident) -> Result<const TypeRoot*> {
             return visit(*ident);
         },
-        [&](AstFuncDecl* decl) -> const TypeRoot* {
+        [&](AstFuncDecl* decl) -> Result<const TypeRoot*> {
             return visit(*decl);
         },
-        [&](AstTypeOf* typeOf) -> const TypeRoot* {
+        [&](AstTypeOf* typeOf) -> Result<const TypeRoot*> {
             return visit(*typeOf);
         },
-        [](TokenKind kind) -> const TypeRoot* {
+        [](TokenKind kind) -> Result<const TypeRoot*> {
             return TypeRoot::fromTokenKind(kind);
         }
     };
-    const auto* type = std::visit(visitor, ast.expr);
+    TRY_DECL(type, std::visit(visitor, ast.expr))
 
     for (int i = 0; i < ast.dereference; i++) {
         type = type->getPointer(m_sem.getContext());
@@ -38,40 +38,44 @@ const TypeRoot* TypePass::visit(AstTypeExpr& ast) const {
     return type;
 }
 
-const TypeRoot* TypePass::visit(AstIdentExpr& ast) const {
+Result<const TypeRoot*> TypePass::visit(AstIdentExpr& ast) const {
     auto* symbol = m_sem.getSymbolTable()->find(ast.name);
     if (symbol == nullptr) {
-        fatalError("Undefined type "_t + ast.name);
+        llvm::errs() << "Undefined type "_t + ast.name << '\n';
+        return ResultError{};
     }
 
     if (symbol->valueFlags().kind != ValueFlags::Kind::type) {
-        fatalError(""_t + symbol->name() + " is not a type");
+        llvm::errs() << symbol->name() << " is not a type" << '\n';
+        return ResultError{};
     }
 
     if (symbol->getType() == nullptr) {
-        MUST(m_sem.getDeclPass().define(symbol));
+        TRY(m_sem.getDeclPass().define(symbol));
     }
 
     ast.type = symbol->getType();
     return ast.type;
 }
 
-const TypeRoot* TypePass::visit(AstFuncDecl& ast) const {
+Result<const TypeRoot*> TypePass::visit(AstFuncDecl& ast) const {
     // parameters
     llvm::SmallVector<const TypeRoot*> paramTypes;
     if (ast.params != nullptr) {
         paramTypes.reserve(ast.params->params.size());
         for (const auto& param : ast.params->params) {
-            paramTypes.emplace_back(visit(*param->typeExpr));
+            TRY_DECL(type, visit(*param->typeExpr))
+            paramTypes.emplace_back(type);
         }
     }
 
     // return type
     const TypeRoot* retType = nullptr;
     if (ast.retTypeExpr != nullptr) {
-        retType = visit(*ast.retTypeExpr);
+        TRY_ASSIGN(retType, visit(*ast.retTypeExpr))
         if (retType->isUDT()) {
-            fatalError("Returning types by value is not implemented");
+            llvm::errs() << "Returning types by value is not implemented" << '\n';
+            return ResultError{};
         }
     } else {
         retType = TypeVoid::get();
@@ -81,10 +85,10 @@ const TypeRoot* TypePass::visit(AstFuncDecl& ast) const {
     return TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
 }
 
-const TypeRoot* TypePass::visit(AstTypeOf& ast) const {
+Result<const TypeRoot*> TypePass::visit(AstTypeOf& ast) const {
     if (ast.type != nullptr) {
         return ast.type;
     }
-    MUST(m_sem.visit(ast));
+    TRY(m_sem.visit(ast));
     return ast.type;
 }

@@ -12,11 +12,11 @@ namespace Sem {
     class ForStmtPass final : public Pass {
     public:
         using Pass::Pass;
-        void visit(AstForStmt& ast) const;
+        Result<void> visit(AstForStmt& ast) const;
 
     private:
-        void declare(AstForStmt& ast) const;
-        void analyze(AstForStmt& ast) const;
+        Result<void> declare(AstForStmt& ast) const;
+        Result<void> analyze(AstForStmt& ast) const;
         void determineForDirection(AstForStmt& ast) const;
     };
 } // namespace Sem

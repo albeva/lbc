@@ -164,6 +164,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
 
 AstExpr* ConstantFoldingPass::visitBinaryExpr(AstBinaryExpr& /*ast*/) {
     // TODO
+    (void)this;
     return nullptr;
 }
 
