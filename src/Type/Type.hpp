@@ -105,7 +105,7 @@ private:
 };
 
 /**
- * Void, lack of typeExpr. Cannot be used for C style `void*`
+ * Void, lack typeExpr. Cannot be used for C style `void*`
  * Use `Any Ptr` for this
  */
 class TypeVoid final : public TypeRoot {
@@ -259,7 +259,7 @@ protected:
  */
 class TypeFunction final : public TypeRoot {
 public:
-    TypeFunction(const TypeRoot* retType, std::vector<const TypeRoot*>&& paramTypes, bool variadic)
+    TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, bool variadic)
     : TypeRoot{ TypeFamily::Function },
       m_retType{ retType },
       m_paramTypes{ std::move(paramTypes) },
@@ -268,7 +268,7 @@ public:
     [[nodiscard]] static const TypeFunction* get(
         Context& context,
         const TypeRoot* retType,
-        std::vector<const TypeRoot*> paramTypes,
+        llvm::SmallVector<const TypeRoot*> paramTypes,
         bool variadic
     );
 
@@ -279,7 +279,7 @@ public:
     [[nodiscard]] std::string asString() const final;
 
     [[nodiscard]] const TypeRoot* getReturn() const { return m_retType; }
-    [[nodiscard]] const std::vector<const TypeRoot*>& getParams() const { return m_paramTypes; }
+    [[nodiscard]] const llvm::SmallVector<const TypeRoot*>& getParams() const { return m_paramTypes; }
     [[nodiscard]] bool isVariadic() const { return m_variadic; }
 
     llvm::FunctionType* getLlvmFunctionType(Context& context) const {
@@ -292,7 +292,7 @@ protected:
 private:
     friend class Context;
     const TypeRoot* m_retType;
-    const std::vector<const TypeRoot*> m_paramTypes;
+    const llvm::SmallVector<const TypeRoot*> m_paramTypes;
     const bool m_variadic;
 };
 

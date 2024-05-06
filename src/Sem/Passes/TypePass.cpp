@@ -58,7 +58,7 @@ const TypeRoot* TypePass::visit(AstIdentExpr& ast) const {
 
 const TypeRoot* TypePass::visit(AstFuncDecl& ast) const {
     // parameters
-    std::vector<const TypeRoot*> paramTypes;
+    llvm::SmallVector<const TypeRoot*> paramTypes;
     if (ast.params != nullptr) {
         paramTypes.reserve(ast.params->params.size());
         for (const auto& param : ast.params->params) {

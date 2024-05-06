@@ -36,11 +36,11 @@ void MemberExprBuilder::base(AstExpr& ast) {
         m_idxs.push_back(m_builder.getInt32(symbol->getIndex()));
     }
 
-    if (symbol->getType()->isPointer()) {
+    if (const auto* ptr = llvm::dyn_cast<TypePointer>(symbol->getType())) {
         gep();
-        m_type = llvm::cast<TypePointer>(symbol->getType())->getBase()->getLlvmType(m_gen.getContext());
+        m_type = ptr->getBase()->getLlvmType(m_gen.getContext());
         m_addr = m_builder.CreateLoad(
-            symbol->getType()->getLlvmType(m_gen.getContext()),
+            ptr->getLlvmType(m_gen.getContext()),
             m_addr
         );
     }
@@ -49,7 +49,7 @@ void MemberExprBuilder::base(AstExpr& ast) {
 Symbol* MemberExprBuilder::member(AstExpr& ast) {
     auto* symbol = m_gen.visit(ast).dyn_cast<Symbol*>();
     if (symbol == nullptr) {
-        fatalError("MemberAccess expressions shoudl be symbols!");
+        fatalError("MemberAccess expressions should be symbols!");
     }
     return symbol;
 }
