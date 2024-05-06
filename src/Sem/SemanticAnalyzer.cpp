@@ -38,7 +38,7 @@ Result<void> SemanticAnalyzer::visit(AstModule& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstStmtList& ast) {
-    m_declPass.declare(ast);
+    TRY(m_declPass.declare(ast));
     for (auto& func : ast.funcs) {
         // cppcheck-suppress useStlAlgorithm
         TRY(visit(*func))
@@ -70,7 +70,7 @@ Result<void> SemanticAnalyzer::visit(AstExprStmt& ast) {
 
 Result<void> SemanticAnalyzer::visit(AstVarDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
-        m_declPass.define(ast.symbol);
+        TRY(m_declPass.define(ast.symbol));
     }
     ast.symbol->stateFlags().declared = true;
     return {};
@@ -85,7 +85,7 @@ Result<void> SemanticAnalyzer::visit(AstVarDecl& ast) {
  */
 Result<void> SemanticAnalyzer::visit(AstFuncDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
-        m_declPass.define(ast.symbol);
+        TRY(m_declPass.define(ast.symbol));
     }
     return {};
 }
@@ -96,7 +96,7 @@ Result<void> SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
 
 Result<void> SemanticAnalyzer::visit(AstFuncStmt& ast) {
     if (ast.decl->symbol->getType() == nullptr) {
-        m_declPass.define(ast.decl->symbol);
+        TRY(m_declPass.define(ast.decl->symbol));
     }
 
     return with(ast.decl->symbolTable, ast.decl, [&]() {
@@ -149,7 +149,7 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
         auto& block = ast.blocks[idx];
 
         m_table = block->symbolTable;
-        m_declPass.declareAndDefine(block->decls);
+        TRY(m_declPass.declareAndDefine(block->decls));
         for (auto& var : block->decls) {
             for (size_t next = idx + 1; next < ast.blocks.size(); next++) {
                 ast.blocks[next]->symbolTable->insert(var->symbol);
@@ -180,7 +180,7 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     RESTORE_ON_EXIT(m_table);
     ast.symbolTable = m_context.create<SymbolTable>(m_table);
     m_table = ast.symbolTable;
-    m_declPass.declareAndDefine(ast.decls);
+    TRY(m_declPass.declareAndDefine(ast.decls));
 
     if (ast.expr != nullptr) {
         TRY(expression(ast.expr))
@@ -209,7 +209,7 @@ Result<void> SemanticAnalyzer::visit(AstContinuationStmt& /* ast */) {
 
 Result<void> SemanticAnalyzer::visit(AstUdtDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
-        m_declPass.define(ast.symbol);
+        TRY(m_declPass.define(ast.symbol));
     }
     return {};
 }
@@ -220,7 +220,7 @@ Result<void> SemanticAnalyzer::visit(AstUdtDecl& ast) {
 
 Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
     if (ast.symbol->getType() == nullptr) {
-        m_declPass.define(ast.symbol);
+        TRY(m_declPass.define(ast.symbol));
     }
     return {};
 }
@@ -332,7 +332,7 @@ Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
     }
 
     if (symbol->getType() == nullptr) {
-        m_declPass.define(symbol);
+        TRY(m_declPass.define(symbol));
     }
 
     if (not isVariableAccessible(symbol)) {

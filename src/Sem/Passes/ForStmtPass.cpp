@@ -20,8 +20,8 @@ void ForStmtPass::visit(AstForStmt& ast) const {
 }
 
 void ForStmtPass::declare(AstForStmt& ast) const {
-    m_sem.getDeclPass().declareAndDefine(ast.decls);
-    m_sem.getDeclPass().declareAndDefine(*ast.iterator);
+    MUST(m_sem.getDeclPass().declareAndDefine(ast.decls));
+    MUST(m_sem.getDeclPass().declareAndDefine(*ast.iterator));
     auto flags = ast.iterator->symbol->valueFlags();
     flags.assignable = false;
     ast.iterator->symbol->valueFlags() = flags;

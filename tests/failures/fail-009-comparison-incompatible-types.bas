@@ -1,9 +1,9 @@
 ''------------------------------------------------------------------------------
 '' Check error message when comparing incompatible types
 ''
-'' CHECK: __FILE__:10:3: error: Binary operator 'AND' cannot be applied to operands of type 'ZSTRING' and 'DOUBLE'
-'' CHECK: s and d
-'' CHECK: ~~^~~~~
+'' CHECK: __FILE__:10:11: error: Binary operator '=' cannot be applied to operands of type 'BOOL' and 'INTEGER'
+'' CHECK: dim r = b = i
+'' CHECK:         ~~^~~
 ''------------------------------------------------------------------------------
 dim b = true
 dim i = 1

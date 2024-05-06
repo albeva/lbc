@@ -49,7 +49,7 @@ const TypeRoot* TypePass::visit(AstIdentExpr& ast) const {
     }
 
     if (symbol->getType() == nullptr) {
-        m_sem.getDeclPass().define(symbol);
+        MUST(m_sem.getDeclPass().define(symbol));
     }
 
     ast.type = symbol->getType();
