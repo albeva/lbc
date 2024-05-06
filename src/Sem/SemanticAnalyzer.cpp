@@ -519,8 +519,16 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     const auto* left = ast.lhs->type;
     const auto* right = ast.rhs->type;
 
+    // error: invalid operands to binary expression 'Foo' and 'BAR'
     if (!left->isNumeric() || !right->isNumeric()) {
-        fatalError("Applying artithmetic operation to non numeric type");
+        return makeError(
+            Diag::invalidBinaryExprOperands,
+            ast.token.getRange().Start,
+            ast.getRange(),
+            ast.token.asString(),
+            left->asString(),
+            right->asString()
+        );
     }
 
     const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
@@ -531,8 +539,6 @@ Result<void> SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) {
     };
 
     switch (left->compare(right)) {
-    case TypeComparison::Incompatible:
-        fatalError("Operator on incompatible types");
     case TypeComparison::Downcast:
         return castTo(ast.rhs, left);
     case TypeComparison::Equal:
@@ -551,8 +557,16 @@ Result<void> SemanticAnalyzer::logical(AstBinaryExpr& ast) {
     const auto* right = ast.rhs->type;
 
     if (!left->isBoolean() || !right->isBoolean()) {
-        fatalError("Applying logical operator to non boolean type");
+        return makeError(
+            Diag::invalidBinaryExprOperands,
+            ast.token.getRange().Start,
+            ast.getRange(),
+            ast.token.asString(),
+            left->asString(),
+            right->asString()
+        );
     }
+
     ast.type = left;
     return {};
 }
@@ -562,7 +576,14 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
     const auto* right = ast.rhs->type;
 
     if (!canPerformBinary(ast.token.getKind(), left, right)) {
-        fatalError("Cannot apply operationg to types");
+        return makeError(
+            Diag::invalidBinaryExprOperands,
+            ast.token.getRange().Start,
+            ast.getRange(),
+            ast.token.asString(),
+            left->asString(),
+            right->asString()
+        );
     }
 
     const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {

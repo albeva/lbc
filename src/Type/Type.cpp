@@ -48,10 +48,7 @@ const TypeRoot* TypeRoot::fromTokenKind(TokenKind kind) {
     default:
         fatalError("Unknown typeExpr "_t + Token::description(kind), false);
     }
-
-    #undef TO_PRIMITIVE_TYPE
-    #undef CASE_INTEGER
-    #undef CASE_INTEGER
+    #undef CASE_TYPE
 }
 
 // clang-format on
