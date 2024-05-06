@@ -1,7 +1,7 @@
 ''------------------------------------------------------------------------------
 '' Check error message when comparing incompatible types
 ''
-'' CHECK: __FILE__:10:11: error: Binary operator '=' cannot be applied to operands of type 'BOOL' and 'INTEGER'
+'' CHECK: __FILE__:10:11: error: Comparison operator '=' cannot be applied to operands of type 'BOOL' and 'INTEGER'
 '' CHECK: dim r = b = i
 '' CHECK:         ~~^~~
 ''------------------------------------------------------------------------------

@@ -81,8 +81,16 @@ ERROR(accessingMemberOnNonUDTType,
     "Accessing a member on '{0}' which is not a user defined type")
 ERROR(invalidBinaryExprOperands,
     "Binary operator '{0}' cannot be applied to operands of type '{1}' and '{2}'")
+ERROR(invalidCompareExprOperands,
+    "Comparison operator '{0}' cannot be applied to operands of type '{1}' and '{2}'")
 ERROR(cannotConvertOperandToType,
     "Cannot convert operand of type '{0}' to {1}")
+ERROR(invalidCast,
+    "Invalid cast from '{0}' to '{1}'")
+ERROR(invalidImplicitConversion,
+    "Invalid implicit conversion '{0}' to '{1}'")
+ERROR(mismatchingIfExprBranchTypes,
+    "Mismatching types in IF expression branches '{0}' and '{1}'")
 
 #undef DIAG
 #undef ERROR

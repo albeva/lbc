@@ -38,7 +38,7 @@ Result<void> SemanticAnalyzer::visit(AstModule& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstStmtList& ast) {
-    TRY(m_declPass.declare(ast));
+    TRY(m_declPass.declare(ast))
     for (auto& func : ast.funcs) {
         // cppcheck-suppress useStlAlgorithm
         TRY(visit(*func))
@@ -70,7 +70,7 @@ Result<void> SemanticAnalyzer::visit(AstExprStmt& ast) {
 
 Result<void> SemanticAnalyzer::visit(AstVarDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
-        TRY(m_declPass.define(ast.symbol));
+        TRY(m_declPass.define(ast.symbol))
     }
     ast.symbol->stateFlags().declared = true;
     return {};
@@ -85,7 +85,7 @@ Result<void> SemanticAnalyzer::visit(AstVarDecl& ast) {
  */
 Result<void> SemanticAnalyzer::visit(AstFuncDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
-        TRY(m_declPass.define(ast.symbol));
+        TRY(m_declPass.define(ast.symbol))
     }
     return {};
 }
@@ -96,7 +96,7 @@ Result<void> SemanticAnalyzer::visit(AstFuncParamDecl& /*ast*/) {
 
 Result<void> SemanticAnalyzer::visit(AstFuncStmt& ast) {
     if (ast.decl->symbol->getType() == nullptr) {
-        TRY(m_declPass.define(ast.decl->symbol));
+        TRY(m_declPass.define(ast.decl->symbol))
     }
 
     return with(ast.decl->symbolTable, ast.decl, [&]() {
@@ -149,7 +149,7 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
         auto& block = ast.blocks[idx];
 
         m_table = block->symbolTable;
-        TRY(m_declPass.declareAndDefine(block->decls));
+        TRY(m_declPass.declareAndDefine(block->decls))
         for (auto& var : block->decls) {
             for (size_t next = idx + 1; next < ast.blocks.size(); next++) {
                 ast.blocks[next]->symbolTable->insert(var->symbol);
@@ -172,7 +172,7 @@ Result<void> SemanticAnalyzer::visit(AstIfStmt& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstForStmt& ast) {
-    TRY(Sem::ForStmtPass(*this).visit(ast));
+    TRY(Sem::ForStmtPass(*this).visit(ast))
     return {};
 }
 
@@ -180,7 +180,7 @@ Result<void> SemanticAnalyzer::visit(AstDoLoopStmt& ast) {
     RESTORE_ON_EXIT(m_table);
     ast.symbolTable = m_context.create<SymbolTable>(m_table);
     m_table = ast.symbolTable;
-    TRY(m_declPass.declareAndDefine(ast.decls));
+    TRY(m_declPass.declareAndDefine(ast.decls))
 
     if (ast.expr != nullptr) {
         TRY(expression(ast.expr))
@@ -209,7 +209,7 @@ Result<void> SemanticAnalyzer::visit(AstContinuationStmt& /* ast */) {
 
 Result<void> SemanticAnalyzer::visit(AstUdtDecl& ast) {
     if (ast.symbol->getType() == nullptr) {
-        TRY(m_declPass.define(ast.symbol));
+        TRY(m_declPass.define(ast.symbol))
     }
     return {};
 }
@@ -220,7 +220,7 @@ Result<void> SemanticAnalyzer::visit(AstUdtDecl& ast) {
 
 Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
     if (ast.symbol->getType() == nullptr) {
-        TRY(m_declPass.define(ast.symbol));
+        TRY(m_declPass.define(ast.symbol))
     }
     return {};
 }
@@ -261,7 +261,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
             llvm_unreachable("unresolved typeof expression");
         },
         [&](AstTypeExpr* typeExpr) -> ResTy {
-            TRY_ASSIGN(ast.type, m_typePass.visit(*typeExpr));
+            TRY_ASSIGN(ast.type, m_typePass.visit(*typeExpr))
             return {};
         },
         [&](AstExpr* expr) -> ResTy {
@@ -332,7 +332,7 @@ Result<void> SemanticAnalyzer::visit(AstIdentExpr& ast) {
     }
 
     if (symbol->getType() == nullptr) {
-        TRY(m_declPass.define(symbol));
+        TRY(m_declPass.define(symbol))
     }
 
     if (not isVariableAccessible(symbol)) {
@@ -577,7 +577,7 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
 
     if (!canPerformBinary(ast.token.getKind(), left, right)) {
         return makeError(
-            Diag::invalidBinaryExprOperands,
+            Diag::invalidCompareExprOperands,
             ast.token.getRange().Start,
             ast.getRange(),
             ast.token.asString(),
@@ -595,7 +595,14 @@ Result<void> SemanticAnalyzer::comparison(AstBinaryExpr& ast) {
 
     switch (left->compare(right)) {
     case TypeComparison::Incompatible:
-        fatalError("Operator on incompatible types");
+        return makeError(
+            Diag::invalidCompareExprOperands,
+            ast.token.getRange().Start,
+            ast.getRange(),
+            ast.token.asString(),
+            left->asString(),
+            right->asString()
+        );
     case TypeComparison::Downcast:
         return castTo(ast.rhs, left);
     case TypeComparison::Equal:
@@ -626,11 +633,11 @@ bool SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 //------------------------------------------------------------------
 
 Result<void> SemanticAnalyzer::visit(AstCastExpr& ast) {
-    TRY_ASSIGN(ast.type, m_typePass.visit(*ast.typeExpr));
+    TRY_ASSIGN(ast.type, m_typePass.visit(*ast.typeExpr))
     TRY(expression(ast.expr))
 
     if (ast.expr->type->compare(ast.type) == TypeComparison::Incompatible) {
-        fatalError("Incompatible cast");
+        return makeError(Diag::invalidCast, ast, ast.expr->type->asString(), ast.type->asString());
     }
 
     ast.flags = ast.expr->flags;
@@ -647,16 +654,10 @@ Result<void> SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) {
     if (ast->type == type) {
         return {};
     }
-    const auto* src = type;
-    const auto* dst = ast->type;
 
-    switch (src->compare(dst)) {
+    switch (ast->type->compare(type)) {
     case TypeComparison::Incompatible:
-        fatalError(
-            "Type mismatch."_t
-            + " Expected '" + type->asString() + "'"
-            + " got '" + ast->type->asString() + "'"
-        );
+        return makeError(Diag::invalidImplicitConversion, ast, ast->type->asString(), type->asString());
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);
@@ -686,30 +687,29 @@ Result<void> SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) {
 //------------------------------------------------------------------
 
 Result<void> SemanticAnalyzer::visit(AstIfExpr& ast) {
-    TRY(expression(ast.expr, TypeBoolean::get()))
+    TRY(expression(ast.expr))
+    if (!ast.expr->type->isBoolean()) {
+        return makeError(
+            Diag::noViableConversionToType,
+            ast.expr,
+            ast.expr->type->asString(),
+            TypeBoolean::get()->asString()
+        );
+    }
+
     TRY(expression(ast.trueExpr))
     TRY(expression(ast.falseExpr))
 
-    const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
-        TRY(cast(expr, ty))
-        m_constantFolder.fold(expr);
-        ast.type = ty;
-        return {};
-    };
-
     const auto* left = ast.trueExpr->type;
     const auto* right = ast.falseExpr->type;
-    switch (left->compare(right)) {
-    case TypeComparison::Incompatible:
-        fatalError("Incompatible types");
-    case TypeComparison::Downcast:
-        return castTo(ast.falseExpr, left);
-    case TypeComparison::Equal:
-        ast.type = left;
-        return {};
-    case TypeComparison::Upcast:
-        return castTo(ast.trueExpr, right);
-    default:
-        llvm_unreachable("unknown comparison result");
+    if (left->compare(right) != TypeComparison::Equal) {
+        return makeError(
+            Diag::mismatchingIfExprBranchTypes,
+            ast,
+            left->asString(),
+            right->asString()
+        );
     }
+    ast.type = left;
+    return {};
 }
