@@ -91,6 +91,8 @@ ERROR(invalidImplicitConversion,
     "Invalid implicit conversion '{0}' to '{1}'")
 ERROR(mismatchingIfExprBranchTypes,
     "Mismatching types in IF expression branches '{0}' and '{1}'")
+ERROR(circularTypeDependency,
+    "Circular type dependency detected")
 
 #undef DIAG
 #undef ERROR

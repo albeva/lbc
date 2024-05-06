@@ -46,7 +46,7 @@ Result<void> DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) {
 
 Result<void> DeclPass::declareAndDefine(AstVarDecl& var) {
     TRY(declare(var));
-    TRY(define(var.symbol));
+    TRY(define(var));
     var.symbol->stateFlags().declared = true;
     return {};
 }
@@ -55,10 +55,15 @@ Result<void> DeclPass::declareAndDefine(AstVarDecl& var) {
 // Define symbol
 //----------------------------------------
 
-Result<void> DeclPass::define(Symbol* symbol) {
-    auto& state = symbol->stateFlags();
+Result<void> DeclPass::define(AstDecl& ast) {
+    auto& state = ast.symbol->stateFlags();
     if (state.beingDefined) {
-        fatalError("Circular dependency detected on "_t + symbol->name());
+        return m_sem.makeError(
+            Diag::circularTypeDependency,
+            ast.token.getRange().Start,
+            ast.getRange(),
+            ast.symbol->name()
+        );
     }
     state.beingDefined = true;
 
@@ -66,17 +71,16 @@ Result<void> DeclPass::define(Symbol* symbol) {
         state.beingDefined = false;
     };
 
-    auto* ast = symbol->getDecl();
-    if (auto* alias = llvm::dyn_cast<AstTypeAlias>(ast)) {
+    if (auto* alias = llvm::dyn_cast<AstTypeAlias>(&ast)) {
         return defineAlias(*alias);
     }
-    if (auto* udt = llvm::dyn_cast<AstUdtDecl>(ast)) {
+    if (auto* udt = llvm::dyn_cast<AstUdtDecl>(&ast)) {
         return defineUdt(*udt);
     }
-    if (auto* func = llvm::dyn_cast<AstFuncDecl>(ast)) {
+    if (auto* func = llvm::dyn_cast<AstFuncDecl>(&ast)) {
         return defineFunc(*func);
     }
-    if (auto* var = llvm::dyn_cast<AstVarDecl>(ast)) {
+    if (auto* var = llvm::dyn_cast<AstVarDecl>(&ast)) {
         return defineVar(*var);
     }
     llvm_unreachable("Unknown decl type");
@@ -123,7 +127,7 @@ Result<void> DeclPass::defineUdt(AstUdtDecl& ast) {
         }
         unsigned index = 0;
         for (auto* decl : ast.decls->decls) {
-            TRY(define(decl->symbol));
+            TRY(define(*decl));
             decl->symbol->setIndex(index++);
             decl->symbol->stateFlags().declared = true;
         }

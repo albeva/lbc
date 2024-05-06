@@ -25,7 +25,7 @@ namespace Sem {
         Result<void> declare(AstDecl& ast);
         Result<void> declareAndDefine(const std::vector<AstVarDecl*>& vars);
         Result<void> declareAndDefine(AstVarDecl& var);
-        Result<void> define(Symbol* symbol);
+        Result<void> define(AstDecl& ast);
 
     private:
         Result<void> defineFunc(AstFuncDecl& ast);

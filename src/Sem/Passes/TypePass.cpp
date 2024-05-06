@@ -51,7 +51,7 @@ Result<const TypeRoot*> TypePass::visit(AstIdentExpr& ast) const {
     }
 
     if (symbol->getType() == nullptr) {
-        TRY(m_sem.getDeclPass().define(symbol));
+        TRY(m_sem.getDeclPass().define(*symbol->getDecl()));
     }
 
     ast.type = symbol->getType();
