@@ -17,7 +17,7 @@ using namespace Sem;
 
 Result<void> DeclPass::declare(AstStmtList& ast) {
     for (auto* decl : ast.decl) {
-        TRY(declare(*decl));
+        TRY(declare(*decl))
     }
     return {};
 }
@@ -39,14 +39,14 @@ Result<void> DeclPass::declare(AstDecl& ast) {
 
 Result<void> DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) {
     for (auto* var : vars) {
-        TRY(declareAndDefine(*var));
+        TRY(declareAndDefine(*var))
     }
     return {};
 }
 
 Result<void> DeclPass::declareAndDefine(AstVarDecl& var) {
-    TRY(declare(var));
-    TRY(define(var));
+    TRY(declare(var))
+    TRY(define(var))
     var.symbol->stateFlags().declared = true;
     return {};
 }
@@ -133,7 +133,7 @@ Result<void> DeclPass::defineUdt(AstUdtDecl& ast) {
         }
 
         return {};
-    }));
+    }))
 
     return {};
 }
@@ -161,7 +161,7 @@ Result<void> DeclPass::defineFunc(AstFuncDecl& ast) {
                 TRY(defineFuncParam(*param));
             }
             return {};
-        }));
+        }))
     }
 
     return {};
@@ -187,7 +187,7 @@ Result<void> DeclPass::defineVar(AstVarDecl& ast) {
 
     // expression?
     if (ast.expr != nullptr) {
-        TRY(m_sem.expression(ast.expr, type));
+        TRY(m_sem.expression(ast.expr, type))
         if (type == nullptr) {
             type = ast.expr->type;
         }
@@ -214,8 +214,7 @@ Result<void> DeclPass::defineVar(AstVarDecl& ast) {
 
 Result<Symbol*> DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) {
     if (m_sem.getSymbolTable()->find(ast.name, false) != nullptr) {
-        llvm::errs() << "Redefinition of " << ast.name << '\n';
-        return ResultError{};
+        return m_sem.makeError(Diag::symbolAlreadyDefined, ast.token, ast.name);
     }
 
     auto* symbol = m_sem.getContext().create<Symbol>(

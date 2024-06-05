@@ -60,6 +60,7 @@ ERROR(mismatchingIfExprBranchTypes, "Mismatching types in IF expression branches
 ERROR(circularTypeDependency,       "Circular type dependency detected")
 ERROR(undefinedType,                "Undefined type '{0}'")
 ERROR(notAType,                     "'{0}' is not a type")
+ERROR(symbolAlreadyDefined,         "Symbol '{0}' is already defined")
 
 #undef DIAG
 #undef ERROR
