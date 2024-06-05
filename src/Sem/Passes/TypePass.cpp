@@ -41,13 +41,11 @@ Result<const TypeRoot*> TypePass::visit(AstTypeExpr& ast) const {
 Result<const TypeRoot*> TypePass::visit(AstIdentExpr& ast) const {
     auto* symbol = m_sem.getSymbolTable()->find(ast.name);
     if (symbol == nullptr) {
-        llvm::errs() << "Undefined type "_t + ast.name << '\n';
-        return ResultError{};
+        return m_sem.makeError(Diag::undefinedType, ast, ast.name);
     }
 
     if (symbol->valueFlags().kind != ValueFlags::Kind::type) {
-        llvm::errs() << symbol->name() << " is not a type" << '\n';
-        return ResultError{};
+        return m_sem.makeError(Diag::notAType, ast, ast.name);
     }
 
     if (symbol->getType() == nullptr) {
@@ -74,6 +72,7 @@ Result<const TypeRoot*> TypePass::visit(AstFuncDecl& ast) const {
     if (ast.retTypeExpr != nullptr) {
         TRY_ASSIGN(retType, visit(*ast.retTypeExpr))
         if (retType->isUDT()) {
+            // TODO: Implement returning types by value
             llvm::errs() << "Returning types by value is not implemented" << '\n';
             return ResultError{};
         }
