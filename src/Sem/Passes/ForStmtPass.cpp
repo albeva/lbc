@@ -13,17 +13,17 @@ Result<void> ForStmtPass::visit(AstForStmt& ast) const {
     auto* current = m_sem.getSymbolTable();
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
     TRY(m_sem.with(ast.symbolTable, [&]() -> Result<void> {
-        TRY(declare(ast));
-        TRY(analyze(ast));
+        TRY(declare(ast))
+        TRY(analyze(ast))
         determineForDirection(ast);
         return {};
-    }));
+    }))
     return {};
 }
 
 Result<void> ForStmtPass::declare(AstForStmt& ast) const {
-    TRY(m_sem.getDeclPass().declareAndDefine(ast.decls));
-    TRY(m_sem.getDeclPass().declareAndDefine(*ast.iterator));
+    TRY(m_sem.getDeclPass().declareAndDefine(ast.decls))
+    TRY(m_sem.getDeclPass().declareAndDefine(*ast.iterator))
     auto flags = ast.iterator->symbol->valueFlags();
     flags.assignable = false;
     ast.iterator->symbol->valueFlags() = flags;
@@ -31,15 +31,16 @@ Result<void> ForStmtPass::declare(AstForStmt& ast) const {
 }
 
 Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
-    TRY(m_sem.expression(ast.limit));
+    TRY(m_sem.expression(ast.limit))
 
     if (ast.step != nullptr) {
-        TRY(m_sem.expression(ast.step));
+        TRY(m_sem.expression(ast.step))
     }
 
     const auto* type = ast.iterator->symbol->getType();
     if (!type->isNumeric()) {
-        fatalError("NEXT iterator must be of numeric type");
+        // fatalError("NEXT iterator must be of numeric type");
+        return m_sem.makeError(Diag::forIteratorMustBeNumeric, ast.iterator, type->asString());
     }
 
     // type TO type check
@@ -47,15 +48,15 @@ Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
     case TypeComparison::Downcast:
-        TRY(m_sem.convert(ast.limit, type));
+        TRY(m_sem.convert(ast.limit, type))
         break;
     case TypeComparison::Equal:
         break;
     case TypeComparison::Upcast:
         if (ast.iterator->typeExpr != nullptr) {
-            TRY(m_sem.convert(ast.limit, type));
+            TRY(m_sem.convert(ast.limit, type))
         } else {
-            TRY(m_sem.convert(ast.iterator->expr, ast.limit->type));
+            TRY(m_sem.convert(ast.iterator->expr, ast.limit->type))
             ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
@@ -91,7 +92,7 @@ Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
                     }
                 }
             }
-            TRY(m_sem.convert(ast.step, dstTy));
+            TRY(m_sem.convert(ast.step, dstTy))
             break;
         }
         case TypeComparison::Equal:
@@ -99,7 +100,7 @@ Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
         }
     }
 
-    TRY(m_sem.visit(*ast.stmt));
+    TRY(m_sem.visit(*ast.stmt))
 
     if (!ast.next.empty()) {
         if (ast.next != ast.iterator->name) {

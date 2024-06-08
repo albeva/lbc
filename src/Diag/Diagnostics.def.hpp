@@ -61,6 +61,7 @@ ERROR(circularTypeDependency,       "Circular type dependency detected")
 ERROR(undefinedType,                "Undefined type '{0}'")
 ERROR(notAType,                     "'{0}' is not a type")
 ERROR(symbolAlreadyDefined,         "Symbol '{0}' is already defined")
+ERROR(forIteratorMustBeNumeric,     "FOR iterator type must be numeric, got {0}")
 
 #undef DIAG
 #undef ERROR

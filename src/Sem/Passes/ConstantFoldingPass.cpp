@@ -62,6 +62,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
 }
 
 AstLiteralExpr::Value ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) {
+    (void)this;
     switch (op) {
     case TokenKind::Negate: {
         static constexpr auto visitor = Visitor{
@@ -181,6 +182,7 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
 }
 
 AstLiteralExpr::Value ConstantFoldingPass::cast(const TypeRoot* type, const AstLiteralExpr& ast) {
+    (void)this;
     // clang-format off
     if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
         #define INTEGRAL(ID, STR, KIND, BITS, SIGNED, TYPE)                          \
