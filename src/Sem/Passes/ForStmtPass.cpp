@@ -39,7 +39,6 @@ Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
 
     const auto* type = ast.iterator->symbol->getType();
     if (!type->isNumeric()) {
-        // fatalError("NEXT iterator must be of numeric type");
         return m_sem.makeError(Diag::forIteratorMustBeNumeric, ast.iterator, type->asString());
     }
 
