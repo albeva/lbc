@@ -1,6 +1,6 @@
 @echo off
 
-set VERSION=llvm-project-17.0.3
+set VERSION=llvm-project-18.1.7
 
 set SRC=%cd%\%VERSION%.src\llvm
 set BUILD=%cd%\%VERSION%.build
@@ -13,7 +13,7 @@ cmake -G "Ninja" -S "%SRC%" -B "%BUILD%" ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCMAKE_CXX_STANDARD=20 ^
     -DLLVM_ENABLE_ASSERTIONS=ON ^
-    -DLLVM_TARGETS_TO_BUILD=X86 ^
+    -DLLVM_TARGETS_TO_BUILD=host ^
     -DLLVM_OPTIMIZED_TABLEGEN=ON ^
     -DLLVM_INSTALL_UTILS=ON ^
     -DLLVM_INCLUDE_BENCHMARKS=OFF ^

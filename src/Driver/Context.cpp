@@ -81,6 +81,8 @@ JIT& Context::getJIT() noexcept {
                 return llvm::CodeGenOptLevel::Default;
             case CompileOptions::OptimizationLevel::O3:
                 return llvm::CodeGenOptLevel::Aggressive;
+            default:
+                llvm_unreachable("invalid optimization level");
             }
         }();
 

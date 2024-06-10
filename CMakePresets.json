@@ -38,6 +38,7 @@
         {
             "name": "conf-windows-x86-base",
             "description": "Settings for X86 version of Windows",
+            "inherits": "conf-common",
             "hidden": true,
             "condition": {
                 "type": "equals",
@@ -60,7 +61,7 @@
             "name": "conf-windows-common",
             "description": "Windows settings for MSBuild toolchain that apply to msvc and clang",
             "hidden": true,
-            "inherits": ["conf-windows-arm-base", "conf-windows-x86-base"],
+            "inherits": ["conf-windows-x86-base"],
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
