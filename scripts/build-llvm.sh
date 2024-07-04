@@ -1,4 +1,4 @@
-VERSION="llvm-project-18.1.7"
+VERSION="llvm-project-18.1.8"
 SRC_DIR="$VERSION.src/llvm"
 BUILD_DIR="$VERSION.build"
 
