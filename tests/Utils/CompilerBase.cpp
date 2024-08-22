@@ -15,7 +15,7 @@ thread_local std::stringstream stdoutput = {};
 // proxy printf
 int capturePrintF(const char* format, ...) {
     va_list args;
-    //va_start(args, format);
+    va_start(args, format);
 
     // figure out the length
     int length = std::vsnprintf(nullptr, 0, format, args);
@@ -30,7 +30,7 @@ int capturePrintF(const char* format, ...) {
     delete[] buf;
 
     // done
-    //va_end(args);
+    va_end(args);
     return length;
 }
 
