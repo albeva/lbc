@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "pch.hpp"
-// do not include pch.h!
 
 #define LOG_VAR(VAR) llvm::outs() << #VAR << " = " << VAR << '\n';
 
@@ -25,8 +24,8 @@ struct Visitor : Base... {
     using Base::operator()...;
 };
 
-template<typename... Base>
-Visitor(Base...) -> Visitor<Base...>;
+//template<typename... Base>
+//Visitor(Base...) -> Visitor<Base...>;
 
 // Helper to get the last type from a parameter pack
 template<typename... Ts>
