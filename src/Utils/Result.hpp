@@ -73,11 +73,11 @@ public:
     template<typename U>
     friend class Result;
 
-    template<PointersDerivedFrom<T> U>
+    template<PointerSubclassOf<T> U>
     constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError{ other.m_hasError }, m_value{ other.m_value } {}
 
-    template<PointersDerivedFrom<T> U>
+    template<PointerSubclassOf<T> U>
     constexpr inline Result& operator=(const Result<U>& other) {
         m_hasError = other.m_hasError;
         m_value = other.m_value;

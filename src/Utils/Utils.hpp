@@ -24,9 +24,6 @@ struct Visitor : Base... {
     using Base::operator()...;
 };
 
-//template<typename... Base>
-//Visitor(Base...) -> Visitor<Base...>;
-
 // Helper to get the last type from a parameter pack
 template<typename... Ts>
 using LastType = typename decltype((std::type_identity<Ts>{}, ...))::type;
@@ -37,7 +34,7 @@ concept IsPointer = std::is_pointer_v<T>;
 
 // clang-format off
 template<typename Derived, typename Base>
-concept PointersDerivedFrom =
+concept PointerSubclassOf =
     std::is_pointer_v<Derived> &&
     std::is_pointer_v<Base> &&
     std::is_base_of_v<std::remove_pointer_t<Base>, std::remove_pointer_t<Derived>>;
