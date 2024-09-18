@@ -24,6 +24,9 @@ struct Visitor : Base... {
     using Base::operator()...;
 };
 
+template<typename... Base>
+Visitor(Base...) -> Visitor<Base...>;
+
 // Helper to get the last type from a parameter pack
 template<typename... Ts>
 using LastType = typename decltype((std::type_identity<Ts>{}, ...))::type;
