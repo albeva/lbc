@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 namespace lbc {
-class CompileOptions;
+struct CompileOptions;
 class Context;
 class Driver;
 } // namespace lbc

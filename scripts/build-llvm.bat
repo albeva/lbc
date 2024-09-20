@@ -1,6 +1,6 @@
 @echo off
 
-set VERSION=llvm-project-18.1.7
+set VERSION=llvm-project-19.1.0
 
 set SRC=%cd%\%VERSION%.src\llvm
 set BUILD=%cd%\%VERSION%.build
@@ -24,5 +24,4 @@ cmake -G "Ninja" -S "%SRC%" -B "%BUILD%" ^
 if defined LBC_DIR if %errorlevel% == 0 (
     xcopy /y "%BUILD%\bin\llc.exe" "%LBC_DIR%\bin\toolchain\win64\bin"
     xcopy /y "%BUILD%\bin\opt.exe" "%LBC_DIR%\bin\toolchain\win64\bin"
-    xcopy /y "%BUILD%\bin\FileCheck.exe" "%LBC_DIR%\bin\toolchain\win64\bin"
 )

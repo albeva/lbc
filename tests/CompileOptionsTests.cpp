@@ -37,7 +37,7 @@ TEST_F(CompileOptionsTests, SetMainFile) {
 TEST_F(CompileOptionsTests, SetOutputPath) {
     fs::path outputPath = "/path/to/output";
     options.setOutputPath(outputPath);
-    ASSERT_EQ(options.getOutputPath(), outputPath);
+    ASSERT_EQ(options.getOutputPath(), absolute(outputPath));
 }
 
 TEST_F(CompileOptionsTests, SetCompilerPath) {

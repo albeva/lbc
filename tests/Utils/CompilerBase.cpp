@@ -7,6 +7,7 @@
 #include "Driver/Driver.hpp"
 #include "Driver/JIT.hpp"
 #include <fstream>
+#include <cstdarg>
 
 namespace {
 // capture stdout into stream
