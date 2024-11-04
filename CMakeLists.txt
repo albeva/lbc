@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.29)
 
 # Cmake complains about policy if this is not set
 if(POLICY CMP0135)
@@ -28,9 +28,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Fail on warnings
 set(WARNINGS_AS_ERRORS ON)
 
-# Add project_options v0.36.1 https://github.com/cpp-best-practices/project_options
+# Add project_options v0.40.0 https://github.com/cpp-best-practices/project_options
 include(FetchContent)
-FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.36.4.zip)
+FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.40.0.zip)
 FetchContent_MakeAvailable(_project_options)
 include(${_project_options_SOURCE_DIR}/Index.cmake)
 
@@ -42,7 +42,7 @@ project(
     HOMEPAGE_URL "https://github.com/albeva/lbc"
     LANGUAGES CXX C)
 
-# set the startup project for the "play" button in MSVC
+# Set the startup project for the "play" button in MSVC
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT lbc)
 
 # Initialize project_options variable related to this project This overwrites `project_options` and sets
