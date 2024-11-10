@@ -94,7 +94,7 @@
     _( Until,    "UNTIL"    ) \
     _( While,    "WHILE"    )
 
-#define TOKEN_OPERAOTR_KEYWORD_MAP(_) \
+#define TOKEN_OPERATOR_KEYWORD_MAP(_) \
     _( LogicalNot ) \
     _( Modulus    ) \
     _( LogicalAnd ) \
