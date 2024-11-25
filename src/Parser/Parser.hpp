@@ -63,7 +63,6 @@ private:
     [[nodiscard]] Result<AstExpr*> expression(AstExpr* lhs, int precedence);
     [[nodiscard]] Result<AstIdentExpr*> identifier();
     [[nodiscard]] Result<AstLiteralExpr*> literal();
-    [[nodiscard]] Result<AstCallExpr*> callExpr();
     [[nodiscard]] Result<AstIfExpr*> ifExpr();
     [[nodiscard]] Result<AstExprList*> expressionList();
     [[nodiscard]] Result<AstVarDecl*> kwDim(AstAttributeList* attribs);

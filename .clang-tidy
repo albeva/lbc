@@ -29,13 +29,7 @@ Checks: '*,
         -cppcoreguidelines-avoid-const-or-ref-data-members,
         -readability-duplicate-include,
         -cert-env33-c,
-        -misc-no-recursion
+        -readability-identifier-length,
 '
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
-FormatStyle: webkit
-Standard: C++20
-CheckOptions:
-  readability-identifier-length:
-    MinimumVariableNameLength: 2
-    MinimumParameterNameLength: 2

@@ -296,7 +296,7 @@ Result<AstExtern*> Parser::kwExtern() {
  *   .
  */
 Result<AstStmt*> Parser::declaration() {
-    TRY_DECL(attribs, attributeList());
+    TRY_DECL(attribs, attributeList())
 
     switch (m_token.getKind()) {
     case TokenKind::Dim:
@@ -1034,7 +1034,7 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
     if (accept(TokenKind::EndOfStmt)) {
         TRY_ASSIGN(stmt, m_controlStack.with(ControlFlowStatement::Do, [&] {
             return stmtList();
-        }));
+        }))
 
         TRY(consume(TokenKind::Loop))
 
@@ -1060,7 +1060,7 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
         if (accept(TokenKind::EndOfStmt)) {
             TRY_ASSIGN(stmt, m_controlStack.with(ControlFlowStatement::Do, [&] {
                 return stmtList();
-            }));
+            }))
             TRY(consume(TokenKind::Loop))
         }
         // "=>" Statement
@@ -1068,7 +1068,7 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
             TRY(consume(TokenKind::LambdaBody))
             TRY_ASSIGN(stmt, m_controlStack.with(ControlFlowStatement::Do, [&] {
                 return statement();
-            }));
+            }))
         }
     }
 
@@ -1457,25 +1457,6 @@ Result<AstIdentExpr*> Parser::identifier() {
     return m_context.create<AstIdentExpr>(
         llvm::SMRange{ start, m_endLoc },
         name
-    );
-}
-
-/**
- * callExpr = identifier "(" argList ")" .
- */
-Result<AstCallExpr*> Parser::callExpr() {
-    auto start = m_token.getRange().Start;
-    TRY_DECL(id, identifier())
-
-    TRY(consume(TokenKind::ParenOpen))
-    TRY_DECL(args, expressionList())
-
-    TRY(consume(TokenKind::ParenClose))
-
-    return m_context.create<AstCallExpr>(
-        llvm::SMRange{ start, m_endLoc },
-        id,
-        args
     );
 }
 

@@ -7,7 +7,6 @@
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
 #include "Parser/Parser.hpp"
-#include "Passes/DeclPass.hpp"
 #include "Passes/ForStmtPass.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Symbol/SymbolTable.hpp"
@@ -226,7 +225,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
-    if (auto range = std::get_if<llvm::SMRange>(&ast.typeExpr)) {
+    if (auto* range = std::get_if<llvm::SMRange>(&ast.typeExpr)) {
         Lexer lexer{ m_context, m_module->fileId, *range };
         Parser parser{ m_context, lexer, false, m_table };
 
