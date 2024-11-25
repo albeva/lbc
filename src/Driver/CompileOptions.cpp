@@ -15,6 +15,24 @@ constexpr std::array fileTypeExtMap = {
 };
 } // namespace
 
+void CompileOptions::reset() {
+    m_logLevel = LogLevel::Silent;
+    m_outputType = OutputType::Native;
+    m_compilationTarget = CompilationTarget::Executable;
+    m_compilationMode = CompilationMode::Bit64;
+    m_optimizationLevel = OptimizationLevel::O2;
+    m_implicitMain = true;
+    m_isDebug = false;
+    m_astDump = false;
+    m_codeDump = false;
+    m_mainPath.reset();
+    m_inputFiles.clear();
+    m_outputPath.clear();
+    m_toolchainDir.clear();
+    m_compilerPath.clear();
+    m_workingDir.clear();
+}
+
 std::string_view CompileOptions::getFileExt(FileType type) {
     auto it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
     if (it != fileTypeExtMap.end()) {

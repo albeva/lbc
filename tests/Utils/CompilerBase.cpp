@@ -10,8 +10,19 @@
 #include <cstdarg>
 
 namespace {
-// capture stdout into stream
-std::stringstream stdoutput = {};
+auto addTestEnvironment(auto* ptr) {
+    testing::AddGlobalTestEnvironment(ptr);
+    return ptr;
+}
+
+struct CompileEnvironment : ::testing::Environment {
+    CompileEnvironment() = default;
+    std::stringstream stdoutput{};
+    lbc::CompileOptions options{};
+    lbc::Context context{ options };
+};
+
+CompileEnvironment* env = addTestEnvironment(new CompileEnvironment{});
 
 // proxy printf
 int capturePrintF(const char* format, ...) {
@@ -32,7 +43,7 @@ int capturePrintF(const char* format, ...) {
     // printf to a buffer
     char* buf = new char[size];
     std::vsnprintf(buf, size, format, args);
-    stdoutput << buf;
+    env->stdoutput << buf;
     delete[] buf;
 
     // done
@@ -44,7 +55,7 @@ int capturePrintF(const char* format, ...) {
 
 // proxy puts
 int capturePuts(const char* str) {
-    stdoutput << str;
+    env->stdoutput << str;
     return static_cast<int>(strlen(str));
 }
 } // namespace
@@ -65,48 +76,44 @@ CompilerBase::CompilerBase() = default;
 CompilerBase::~CompilerBase() = default;
 
 void CompilerBase::SetUp() {
-    std::cout << "Running test: " << GetParam() << std::endl;
     auto workingPath = getBasePath();
 
-    // Options
-    m_options = std::make_unique<lbc::CompileOptions>();
-    m_options->addInputFile(GetParam());
-    m_options->setOptimizationLevel(lbc::CompileOptions::OptimizationLevel::O0);
-    m_options->setCompilationTarget(lbc::CompileOptions::CompilationTarget::JIT);
-    m_options->setWorkingDir(workingPath);
+    // reset the shared context
+    env->context.reset();
 
-    // The context
-    m_ctx = std::make_unique<lbc::Context>(*m_options);
+    // Options
+    env->options.addInputFile(GetParam());
+    env->options.setOptimizationLevel(lbc::CompileOptions::OptimizationLevel::O0);
+    env->options.setCompilationTarget(lbc::CompileOptions::CompilationTarget::JIT);
+    env->options.setWorkingDir(workingPath);
 
     // when targeting windows, compiler executable has .exe file extension
     std::string binary = "lbc";
-    if (m_ctx->getTriple().isOSWindows()) {
+    if (env->context.getTriple().isOSWindows()) {
         binary += ".exe";
     }
     auto compilerPath = canonical(workingPath / ("../bin/" + binary));
-    m_options->setCompilerPath(compilerPath);
+    env->options.setCompilerPath(compilerPath);
 
-    // redirect printf
-    exitOnErr(m_ctx->getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags::Callable));
-    exitOnErr(m_ctx->getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags::Callable));
+    // redirect printf and puts
+    exitOnErr(env->context.getJIT().define("printf", &capturePrintF, llvm::JITSymbolFlags::Callable));
+    exitOnErr(env->context.getJIT().define("puts", &capturePuts, llvm::JITSymbolFlags::Callable));
 
     // The driver
-    m_driver = std::make_unique<lbc::Driver>(*m_ctx);
+    m_driver = std::make_unique<lbc::Driver>(env->context);
 }
 
 void CompilerBase::TearDown() {
     std::cout << "Finished test: " << GetParam() << std::endl;
 
-    stdoutput = std::stringstream{};
+    env->stdoutput = std::stringstream{};
 
     m_driver.reset();
-    m_ctx.reset();
-    m_options.reset();
 }
 
 std::string CompilerBase::run() {
     m_driver->drive();
-    return llvm::StringRef{ stdoutput.str() }.trim().str();
+    return llvm::StringRef{ env->stdoutput.str() }.trim().str();
 }
 
 std::string CompilerBase::expected(bool lookForFile) {

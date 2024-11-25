@@ -6,6 +6,7 @@
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "JIT.hpp"
+#include "Type/Type.hpp"
 #include <llvm-c/Target.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/MC/TargetRegistry.h>
@@ -24,7 +25,7 @@ struct Context::Pimpl {
     std::optional<llvm::DataLayout> dataLayout{};
 };
 
-Context::Context(const CompileOptions& options)
+Context::Context(CompileOptions& options)
 : m_pimpl{ std::make_unique<Pimpl>(*this) },
   m_options{ options },
   m_diag{ m_pimpl->diag },
@@ -44,20 +45,33 @@ Context::Context(const CompileOptions& options)
 
 Context::~Context() = default;
 
-namespace {
-    bool hasInitializedLLVM = false;
+void Context::reset() {
+    m_jit.reset();
+
+    for (auto& func : funcTypes) {
+        func->reset();
+    }
+
+    for (auto& ptr : ptrTypes) {
+        ptr->reset();
+    }
+
+    funcTypes.clear();
+    ptrTypes.clear();
+
+    m_options.reset();
+    m_sourceMgr = llvm::SourceMgr{};
+    m_retainedStrings.clear();
+    m_imports.clear();
+    m_allocator.Reset();
 }
 
 JIT& Context::getJIT() noexcept {
     if (!m_jit) {
-        if (!hasInitializedLLVM) {
-            LLVMInitializeNativeTarget();
-            LLVMInitializeNativeAsmPrinter();
-            LLVMInitializeNativeAsmParser();
-            hasInitializedLLVM = true;
-        }
+        LLVMInitializeNativeTarget();
+        LLVMInitializeNativeAsmPrinter();
+        LLVMInitializeNativeAsmParser();
         m_jit = llvm::ExitOnError()(JIT::create());
-    } else {
     }
     return *m_jit;
 }

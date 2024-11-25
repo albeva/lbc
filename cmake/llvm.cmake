@@ -14,6 +14,6 @@ function(configure_llvm project_name)
         TargetParser
     )
     target_include_directories(${project_name} SYSTEM PUBLIC ${LLVM_INCLUDE_DIRS})
-    add_definitions(${LLVM_DEFINITIONS})
+    target_compile_definitions(${project_name} PUBLIC ${LLVM_DEFINITIONS})
     target_link_libraries(${project_name} PRIVATE ${llvm_libs})
 endfunction()

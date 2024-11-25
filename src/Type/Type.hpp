@@ -56,6 +56,7 @@ public:
         }
         return m_llvmType;
     }
+
     virtual constexpr ~TypeRoot() = default;
 
     [[nodiscard]] static const TypeRoot* fromTokenKind(TokenKind kind);
@@ -100,8 +101,13 @@ protected:
     [[nodiscard]] virtual llvm::Type* genLlvmType(Context& context) const = 0;
 
 private:
+    void reset() {
+        m_llvmType = nullptr;
+    }
+
     mutable llvm::Type* m_llvmType = nullptr;
     const TypeFamily m_kind;
+    friend class Context;
 };
 
 /**

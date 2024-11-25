@@ -30,7 +30,5 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     llvm::ExitOnError exitOnErr{};
 
 private:
-    std::unique_ptr<lbc::CompileOptions> m_options;
-    std::unique_ptr<lbc::Context> m_ctx;
     std::unique_ptr<lbc::Driver> m_driver;
 };

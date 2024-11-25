@@ -26,8 +26,10 @@ class Context final {
 public:
     NO_COPY_AND_MOVE(Context)
 
-    explicit Context(const CompileOptions& options);
+    explicit Context(CompileOptions& options);
     ~Context();
+
+    void reset();
 
     [[nodiscard]] const CompileOptions& getOptions() const { return m_options; }
     [[nodiscard]] DiagnosticEngine& getDiag() { return m_diag; }
@@ -76,7 +78,7 @@ public:
 private:
     struct Pimpl;
     std::unique_ptr<Pimpl> m_pimpl;
-    const CompileOptions& m_options;
+    CompileOptions& m_options;
 
     DiagnosticEngine& m_diag;
     Toolchain& m_toolchain;

@@ -94,6 +94,11 @@ struct CompileOptions final {
     using FilesMap = std::unordered_map<FileType, FilesVector>;
 
     /**
+     * Reset the options to their default values.
+     */
+    void reset();
+
+    /**
      * @brief Get the file extension for a given file type.
      * @param type The file type.
      * @return The file extension as a string view.
