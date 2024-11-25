@@ -57,10 +57,10 @@ private:
     lbc::Context m_context{ m_options };
 };
 
-#define EXPECT_TOKEN(KIND, ...)      \
-    {                                \
-        SCOPED_TRACE(#KIND);         \
-        expect(KIND, ##__VA_ARGS__); \
+#define EXPECT_TOKEN(KIND, ...)                 \
+    {                                           \
+        SCOPED_TRACE(#KIND);                    \
+        expect(KIND __VA_OPT__(,) __VA_ARGS__); \
     }
 
 TEST_F(LexerTests, NoInput) {

@@ -15,6 +15,9 @@ std::stringstream stdoutput = {};
 
 // proxy printf
 int capturePrintF(const char* format, ...) {
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wformat-nonliteral"
+
     va_list args;
     va_start(args, format);
 
@@ -24,15 +27,19 @@ int capturePrintF(const char* format, ...) {
         return length;
     }
 
+    auto size = static_cast<std::size_t>(length + 1); // NOLINT(*-misplaced-widening-cast)
+
     // printf to a buffer
-    char* buf = new char[length + 1];
-    std::vsnprintf(buf, length + 1, format, args);
+    char* buf = new char[size];
+    std::vsnprintf(buf, size, format, args);
     stdoutput << buf;
     delete[] buf;
 
     // done
     va_end(args);
     return length;
+
+    #pragma clang diagnostic pop
 }
 
 // proxy puts

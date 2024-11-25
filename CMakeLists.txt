@@ -61,7 +61,8 @@ project_options(
     --inconclusive
     ENABLE_VS_ANALYSIS
     ENABLE_PCH
-    WARNINGS_AS_ERRORS)
+    WARNINGS_AS_ERRORS
+)
 
 # MSVC specific
 if(MSVC)
