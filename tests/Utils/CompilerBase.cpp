@@ -11,7 +11,7 @@
 
 namespace {
 // capture stdout into stream
-thread_local std::stringstream stdoutput = {};
+std::stringstream stdoutput = {};
 
 // proxy printf
 int capturePrintF(const char* format, ...) {
@@ -58,6 +58,7 @@ CompilerBase::CompilerBase() = default;
 CompilerBase::~CompilerBase() = default;
 
 void CompilerBase::SetUp() {
+    std::cout << "Running test: " << GetParam() << std::endl;
     auto workingPath = getBasePath();
 
     // Options
@@ -86,8 +87,17 @@ void CompilerBase::SetUp() {
     m_driver = std::make_unique<lbc::Driver>(*m_ctx);
 }
 
+void CompilerBase::TearDown() {
+    std::cout << "Finished test: " << GetParam() << std::endl;
+
+    stdoutput = std::stringstream{};
+
+    m_driver.reset();
+    m_ctx.reset();
+    m_options.reset();
+}
+
 std::string CompilerBase::run() {
-    stdoutput.clear();
     m_driver->drive();
     return llvm::StringRef{ stdoutput.str() }.trim().str();
 }

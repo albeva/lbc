@@ -15,6 +15,7 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     ~CompilerBase() override;
 
     void SetUp() override;
+    void TearDown() override;
 
     std::string expected(bool lookForFile = false);
 

@@ -29,7 +29,8 @@ Checks: '*,
         -cppcoreguidelines-avoid-const-or-ref-data-members,
         -readability-duplicate-include,
         -cert-env33-c,
-        -misc-no-recursion'
+        -misc-no-recursion
+'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: webkit

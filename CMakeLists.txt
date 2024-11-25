@@ -1,19 +1,13 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.31)
+
+# C++ language version
+set(CMAKE_CXX_STANDARD 20)
 
 # Cmake complains about policy if this is not set
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
     set(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
 endif()
-
-# git commit FIXME get the sha automatically
-set(GIT_SHA
-    "Unknown"
-    CACHE STRING "SHA this build was generated from")
-
-# C++ language version to use
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_C_STANDARD 99)
 
 # Note: by default ENABLE_DEVELOPER_MODE is True This means that all analysis (sanitizers, static analysis) is enabled
 # and all warnings are treated as errors if you want to switch this behavior, change TRUE to FALSE
@@ -23,14 +17,14 @@ set(ENABLE_DEVELOPER_MODE
 
 # strongly encouraged to enable this globally to avoid conflicts between -Wpedantic being enabled and -std=c++20 and
 # -std=gnu++20 for example when compiling with PCH enabled
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 
 # Fail on warnings
 set(WARNINGS_AS_ERRORS ON)
 
-# Add project_options v0.40.0 https://github.com/cpp-best-practices/project_options
+# Add project_options v0.41.0 https://github.com/cpp-best-practices/project_options
 include(FetchContent)
-FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.40.0.zip)
+FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.41.0.zip)
 FetchContent_MakeAvailable(_project_options)
 include(${_project_options_SOURCE_DIR}/Index.cmake)
 

@@ -7,14 +7,13 @@
 
 namespace @PROJECT_NAME@::cmake {
     struct Project final {
-        std::string_view name, description, version, commit;
+        std::string_view name, description, version;
         int major, minor, patch;
     };
     static constexpr Project project {
         .name        = "@PROJECT_NAME@",
         .description = "@PROJECT_DESCRIPTION@",
         .version     = "@PROJECT_VERSION@",
-        .commit      = "@GIT_SHA@",
         .major       = @PROJECT_VERSION_MAJOR@,
         .minor       = @PROJECT_VERSION_MINOR@,
         .patch       = @PROJECT_VERSION_PATCH@

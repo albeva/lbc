@@ -44,12 +44,20 @@ Context::Context(const CompileOptions& options)
 
 Context::~Context() = default;
 
+namespace {
+    bool hasInitializedLLVM = false;
+}
+
 JIT& Context::getJIT() noexcept {
     if (!m_jit) {
-        LLVMInitializeNativeTarget();
-        LLVMInitializeNativeAsmPrinter();
-        LLVMInitializeNativeAsmParser();
+        if (!hasInitializedLLVM) {
+            LLVMInitializeNativeTarget();
+            LLVMInitializeNativeAsmPrinter();
+            LLVMInitializeNativeAsmParser();
+            hasInitializedLLVM = true;
+        }
         m_jit = llvm::ExitOnError()(JIT::create());
+    } else {
     }
     return *m_jit;
 }
