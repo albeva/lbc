@@ -3,11 +3,9 @@
 //
 #include "ForStmtBuilder.hpp"
 #include "Ast/Ast.hpp"
-#include "Driver/Context.hpp"
 #include "Gen/CodeGen.hpp"
 #include "Gen/Helpers.hpp"
 #include "Gen/ValueHandler.hpp"
-#include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
 using namespace Gen;
@@ -173,7 +171,8 @@ void ForStmtBuilder::build() {
 
     // Body
     m_gen.switchBlock(m_bodyBlock);
-    m_gen.getControlStack().with({ ControlFlowStatement::For, { m_iterBlock, m_exitBlock } }, [&] {
+
+    m_gen.getControlStack().with({ ControlFlowStatement::For, { .continueBlock = m_iterBlock, .exitBlock = m_exitBlock } }, [&] {
         m_gen.visit(*m_ast.stmt);
     });
 

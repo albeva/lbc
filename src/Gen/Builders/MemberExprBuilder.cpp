@@ -7,7 +7,7 @@
 using namespace lbc;
 using namespace Gen;
 
-llvm::Value* MemberExprBuilder::build() {
+auto MemberExprBuilder::build() -> llvm::Value* {
     m_idxs.push_back(m_builder.getInt32(0));
     base(*m_ast.base);
     auto* symbol = member(*m_ast.member);
@@ -46,7 +46,7 @@ void MemberExprBuilder::base(AstExpr& ast) {
     }
 }
 
-Symbol* MemberExprBuilder::member(AstExpr& ast) {
+auto MemberExprBuilder::member(AstExpr& ast) -> Symbol* {
     auto* symbol = m_gen.visit(ast).dyn_cast<Symbol*>();
     if (symbol == nullptr) {
         fatalError("MemberAccess expressions should be symbols!");

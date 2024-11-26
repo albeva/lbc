@@ -2,7 +2,6 @@
 // Created by Albert Varaksin on 28/05/2021.
 //
 #include "DoLoopBuilder.hpp"
-#include "Driver/Context.hpp"
 using namespace lbc;
 using namespace Gen;
 
@@ -40,7 +39,7 @@ void DoLoopBuilder::build() {
     // body
     m_gen.switchBlock(m_bodyBlock);
 
-    m_gen.getControlStack().with({ ControlFlowStatement::Do, { m_continueBlock, m_exitBlock } }, [&] {
+    m_gen.getControlStack().with({ ControlFlowStatement::Do, { .continueBlock = m_continueBlock, .exitBlock = m_exitBlock } }, [&] {
         m_gen.visit(*m_ast.stmt);
     });
 
@@ -63,7 +62,7 @@ void DoLoopBuilder::build() {
 
 void DoLoopBuilder::makeCondition(bool isUntil) {
     m_gen.switchBlock(m_condBlock);
-    auto value = m_gen.visit(*m_ast.expr).load();
+    auto* value = m_gen.visit(*m_ast.expr).load();
     if (isUntil) {
         m_builder.CreateCondBr(value, m_exitBlock, m_bodyBlock);
     } else {

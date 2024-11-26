@@ -24,7 +24,7 @@ void IfStmtBuilder::build() {
             m_gen.visit(*decl);
         }
 
-        if (block->expr) {
+        if (block->expr != nullptr) {
             auto* condition = m_gen.visit(*block->expr).load();
 
             auto* thenBlock = llvm::BasicBlock::Create(m_llvmContext, "if.then", func);

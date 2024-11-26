@@ -2,13 +2,12 @@
 // Created by Albert on 28/05/2021.
 //
 #include "BinaryExprBuilder.hpp"
-#include "Driver/Context.hpp"
 #include "Gen/Helpers.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
 using namespace Gen;
 
-ValueHandler BinaryExprBuilder::build() {
+auto BinaryExprBuilder::build() -> ValueHandler {
     switch (Token::getOperatorType(m_ast.token.getKind())) {
     case OperatorType::Arithmetic:
         return arithmetic();
@@ -21,7 +20,7 @@ ValueHandler BinaryExprBuilder::build() {
     }
 }
 
-ValueHandler BinaryExprBuilder::comparison() {
+auto BinaryExprBuilder::comparison() -> ValueHandler {
     auto* lhsValue = m_gen.visit(*m_ast.lhs).load();
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
@@ -30,7 +29,7 @@ ValueHandler BinaryExprBuilder::comparison() {
     return { &m_gen, m_ast.type, m_builder.CreateCmp(pred, lhsValue, rhsValue) };
 }
 
-ValueHandler BinaryExprBuilder::arithmetic() {
+auto BinaryExprBuilder::arithmetic() -> ValueHandler {
     auto* lhsValue = m_gen.visit(*m_ast.lhs).load();
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
@@ -38,7 +37,7 @@ ValueHandler BinaryExprBuilder::arithmetic() {
     return { &m_gen, m_ast.type, m_builder.CreateBinOp(op, lhsValue, rhsValue) };
 }
 
-ValueHandler BinaryExprBuilder::logical() {
+auto BinaryExprBuilder::logical() -> ValueHandler {
     // lhs
     auto* lhsValue = m_gen.visit(*m_ast.lhs).load();
     auto* lhsBlock = m_builder.GetInsertBlock();

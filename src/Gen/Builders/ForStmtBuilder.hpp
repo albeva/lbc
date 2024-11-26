@@ -35,9 +35,9 @@ private:
     llvm::BasicBlock* m_iterBlock{};
     llvm::BasicBlock* m_exitBlock{};
 
-    ValueHandler m_iterator{};
-    ValueHandler m_limit{};
-    ValueHandler m_step{};
+    ValueHandler m_iterator;
+    ValueHandler m_limit;
+    ValueHandler m_step;
 };
 
 } // namespace lbc::Gen

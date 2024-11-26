@@ -13,16 +13,16 @@ namespace lbc::Gen {
 class MemberExprBuilder final : Builder<AstMemberExpr> {
 public:
     using Builder::Builder;
-    [[nodiscard]] llvm::Value* build();
+    [[nodiscard]] auto build() -> llvm::Value*;
 
 private:
     void gep();
     void base(AstExpr& ast);
-    [[nodiscard]] Symbol* member(AstExpr& ast);
+    [[nodiscard]] auto member(AstExpr& ast) -> Symbol*;
 
     llvm::Type* m_type = nullptr;
     llvm::Value* m_addr = nullptr;
-    llvm::SmallVector<llvm::Value*> m_idxs{};
+    llvm::SmallVector<llvm::Value*> m_idxs;
 };
 
 } // namespace lbc::Gen
