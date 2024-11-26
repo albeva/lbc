@@ -20,25 +20,23 @@
 using namespace lbc;
 
 namespace {
-llvm::ExitOnError exitOnErr;
+const llvm::ExitOnError exitOnErr;
 
-std::string exec(const char* cmd) {
+auto getMacOSSdkPath() -> std::string {
 #ifdef __APPLE__
     constexpr auto bufferSize = 128;
     std::array<char, bufferSize> buffer{};
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> const pipe(popen(cmd, "r"), pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> const pipe(popen("xcrun --show-sdk-path", "r"), pclose); // NOLINT(cert-env33-c)
     if (!pipe) {
         fatalError("popen() failed!");
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
-    auto ref = llvm::StringRef(result);
-    return ref.trim().str();
+    return llvm::StringRef(result).trim().str();
 #else
-    (void)cmd;
-    fatalError("exec unsupported");
+    return "";
 #endif
 }
 } // namespace
@@ -158,7 +156,7 @@ void Driver::processInputs() {
     }
 }
 
-std::unique_ptr<Source> Driver::deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const {
+auto Driver::deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const -> std::unique_ptr<Source> {
     const auto& original = source.origin.path;
     const auto ext = CompileOptions::getFileExt(type);
     const auto path = temporary
@@ -248,7 +246,7 @@ void Driver::optimize() {
     if (level == CompileOptions::OptimizationLevel::O0) {
         return;
     }
-    bool llvmIr = m_options.isOutputLLVMIr();
+    const bool llvmIr = m_options.isOutputLLVMIr();
     const auto& files = getSources(llvmIr ? CompileOptions::FileType::LLVMIr : CompileOptions::FileType::BitCode);
 
     auto optimizer = m_context.getToolchain().createTask(ToolKind::Optimizer);
@@ -340,7 +338,7 @@ void Driver::emitExecutable() {
                        "-)" })
             .addPath(sysLibPath / "crtend.o");
     } else if (triple.isMacOSX()) {
-        auto macosSdk = exec("xcrun --show-sdk-path");
+        auto macosSdk = getMacOSSdkPath();
         linker
             .addPath("-L", "/usr/local/lib")
             .addPath("-syslibroot", macosSdk)
@@ -404,7 +402,7 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
         llvm::outs() << path.string() << '\n';
     }
 
-    bool isMain = m_options.isMainFile(path);
+    const bool isMain = m_options.isMainFile(path);
     Lexer lexer{ m_context, ID };
     Parser parser{ m_context, lexer, isMain };
 

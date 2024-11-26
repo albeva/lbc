@@ -29,8 +29,8 @@ private:
     using SourceVector = std::vector<std::unique_ptr<Source>>;
 
     void processInputs();
-    [[nodiscard]] std::unique_ptr<Source> deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const;
-    [[nodiscard]] SourceVector& getSources(CompileOptions::FileType type) {
+    [[nodiscard]] auto deriveSource(const Source& source, CompileOptions::FileType type, bool temporary) const -> std::unique_ptr<Source>;
+    [[nodiscard]] auto getSources(CompileOptions::FileType type) -> SourceVector& {
         return m_sources[type];
     }
 
@@ -51,8 +51,8 @@ private:
     Context& m_context;
     const CompileOptions& m_options;
 
-    std::unordered_map<CompileOptions::FileType, SourceVector> m_sources{};
-    std::vector<std::unique_ptr<TranslationUnit>> m_modules{};
+    std::unordered_map<CompileOptions::FileType, SourceVector> m_sources;
+    std::vector<std::unique_ptr<TranslationUnit>> m_modules;
     void dumpCode();
 };
 
