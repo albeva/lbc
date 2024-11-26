@@ -30,7 +30,8 @@ Context::Context(CompileOptions& options)
   m_options{ options },
   m_diag{ m_pimpl->diag },
   m_toolchain{ m_pimpl->toolchain },
-  m_triple{ llvm::sys::getDefaultTargetTriple() } {
+  m_triple{ llvm::sys::getDefaultTargetTriple() }
+{
     switch (m_options.getCompilationMode()) {
     case CompileOptions::CompilationMode::Bit32:
         m_triple = m_triple.get32BitArchVariant();
@@ -66,7 +67,7 @@ void Context::reset() {
     m_allocator.Reset();
 }
 
-JIT& Context::getJIT() noexcept {
+auto Context::getJIT() noexcept -> JIT& {
     if (!m_jit) {
         LLVMInitializeNativeTarget();
         LLVMInitializeNativeAsmPrinter();
@@ -76,7 +77,7 @@ JIT& Context::getJIT() noexcept {
     return *m_jit;
 }
 
-[[nodiscard]] const llvm::DataLayout& Context::getDataLayout() noexcept {
+[[nodiscard]] auto Context::getDataLayout() noexcept -> const llvm::DataLayout& {
     if (m_jit) {
         return m_jit->getDataLayout();
     }
@@ -128,10 +129,10 @@ JIT& Context::getJIT() noexcept {
     return m_pimpl->dataLayout.value();
 }
 
-llvm::StringRef Context::retainCopy(llvm::StringRef str) {
+auto Context::retainCopy(llvm::StringRef str) -> llvm::StringRef {
     return m_retainedStrings.insert(str).first->first();
 }
 
-bool Context::import(llvm::StringRef module) {
+auto Context::import(llvm::StringRef module) -> bool {
     return m_imports.insert(module).second;
 }

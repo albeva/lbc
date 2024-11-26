@@ -181,7 +181,7 @@ const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) {
         return &anyPtrTy;
     }
 
-    for (const auto& ptr : context.ptrTypes) {
+    for (const auto& ptr : context.getPtrTypes()) {
         // cppcheck-suppress useStlAlgorithm
         if (ptr->m_base == base) {
             return ptr;
@@ -189,7 +189,7 @@ const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) {
     }
 
     auto* ty = context.create<TypePointer>(base);
-    context.ptrTypes.push_back(ty);
+    context.getPtrTypes().push_back(ty);
     return ty;
 }
 
@@ -292,7 +292,7 @@ const TypeFunction* TypeFunction::get(
     llvm::SmallVector<const TypeRoot*> paramTypes,
     bool variadic
 ) {
-    for (const auto& ptr : context.funcTypes) {
+    for (const auto& ptr : context.getFuncTypes()) {
         // cppcheck-suppress useStlAlgorithm
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {
             return ptr;
@@ -300,7 +300,7 @@ const TypeFunction* TypeFunction::get(
     }
 
     auto* ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
-    context.funcTypes.push_back(ty);
+    context.getFuncTypes().push_back(ty);
     return ty;
 }
 
