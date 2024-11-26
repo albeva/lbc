@@ -7,9 +7,9 @@
 using namespace lbc;
 using namespace Gen;
 
-llvm::CmpInst::Predicate lbc::Gen::getCmpPred(const TypeRoot* type, TokenKind op) {
+auto lbc::Gen::getCmpPred(const TypeRoot* type, TokenKind op) -> llvm::CmpInst::Predicate {
     if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
-        bool isSigned = integral->isSigned();
+        const bool isSigned = integral->isSigned();
         switch (op) {
         case TokenKind::Equal:
             return llvm::CmpInst::Predicate::ICMP_EQ;
@@ -61,9 +61,9 @@ llvm::CmpInst::Predicate lbc::Gen::getCmpPred(const TypeRoot* type, TokenKind op
     llvm_unreachable("Unsupported type");
 }
 
-llvm::Instruction::BinaryOps lbc::Gen::getBinOpPred(const TypeRoot* type, TokenKind op) {
+auto lbc::Gen::getBinOpPred(const TypeRoot* type, TokenKind op) -> llvm::Instruction::BinaryOps {
     if (type->isIntegral()) {
-        auto sign = type->isSignedIntegral();
+        const auto sign = type->isSignedIntegral();
         switch (op) {
         case TokenKind::Multiply:
             return llvm::Instruction::Mul;

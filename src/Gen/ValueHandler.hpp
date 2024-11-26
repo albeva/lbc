@@ -19,13 +19,13 @@ namespace Gen {
     class ValueHandler final : public llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
     public:
         /// Create temporary allocated variable - it is not inserted into symbol table
-        static ValueHandler createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "");
+        static auto createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") -> ValueHandler;
 
         /// Create temporary variable if expression is not a constant
-        static ValueHandler createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "");
+        static auto createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") -> ValueHandler;
 
         /// Create temporary from given llvm value
-        static ValueHandler createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name);
+        static auto createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) -> ValueHandler;
 
         constexpr ValueHandler() = default;
         ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value);
@@ -35,13 +35,13 @@ namespace Gen {
         ValueHandler(CodeGen* gen, AstDereference& ast);
         ValueHandler(CodeGen* gen, AstAddressOf& ast);
 
-        [[nodiscard]] llvm::Value* getAddress() const;
-        [[nodiscard]] llvm::Value* load() const;
-        [[nodiscard]] llvm::Type* getLlvmType() const;
+        [[nodiscard]] auto getAddress() const -> llvm::Value*;
+        [[nodiscard]] auto load() const -> llvm::Value*;
+        [[nodiscard]] auto getLlvmType() const -> llvm::Type*;
         void store(llvm::Value* val) const;
         void store(ValueHandler& val) const;
 
-        [[nodiscard]] constexpr inline bool isValid() const {
+        [[nodiscard]] constexpr auto isValid() const -> bool {
             return m_gen != nullptr;
         }
 

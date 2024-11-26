@@ -10,7 +10,7 @@ class TypeRoot;
 enum class TokenKind;
 
 namespace Gen {
-    [[nodiscard]] llvm::CmpInst::Predicate getCmpPred(const TypeRoot* type, TokenKind op);
-    [[nodiscard]] llvm::Instruction::BinaryOps getBinOpPred(const TypeRoot* type, TokenKind op);
+    [[nodiscard]] auto getCmpPred(const TypeRoot* type, TokenKind op) -> llvm::CmpInst::Predicate;
+    [[nodiscard]] auto getBinOpPred(const TypeRoot* type, TokenKind op) -> llvm::Instruction::BinaryOps;
 } // namespace Gen
 } // namespace lbc

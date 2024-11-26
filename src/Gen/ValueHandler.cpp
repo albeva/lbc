@@ -8,11 +8,10 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeUdt.hpp"
 using namespace lbc;
 using namespace Gen;
 
-ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) {
+auto ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name) -> ValueHandler {
     auto* value = gen.visit(expr).load();
     auto* var = gen.getBuilder().CreateAlloca(
         expr.type->getLlvmType(gen.getContext()),
@@ -20,11 +19,10 @@ ValueHandler ValueHandler::createTemp(CodeGen& gen, AstExpr& expr, llvm::StringR
         name
     );
     gen.getBuilder().CreateStore(value, var);
-
     return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) {
+auto ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llvm::StringRef name) -> ValueHandler {
     auto* value = gen.visit(expr).load();
     if (llvm::isa<llvm::Constant>(value)) {
         return { &gen, expr.type, value };
@@ -36,11 +34,10 @@ ValueHandler ValueHandler::createTempOrConstant(CodeGen& gen, AstExpr& expr, llv
         name
     );
     gen.getBuilder().CreateStore(value, var);
-
     return createOpaqueValue(gen, expr.type, var, name);
 }
 
-ValueHandler ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) {
+auto ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::Value* value, llvm::StringRef name) -> ValueHandler {
     auto* symbol = gen.getContext().create<Symbol>(name, /* symbol table */ nullptr, type, /* declaring ast node */ nullptr);
     symbol->setLlvmValue(value);
     return { &gen, symbol };
@@ -64,7 +61,7 @@ ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast)
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast)
 : PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
 
-llvm::Value* ValueHandler::getAddress() const {
+auto ValueHandler::getAddress() const -> llvm::Value* {
     if (auto* value = dyn_cast<llvm::Value*>()) {
         return value;
     }
@@ -90,7 +87,7 @@ llvm::Value* ValueHandler::getAddress() const {
     llvm_unreachable("Unknown ValueHandler type");
 }
 
-llvm::Value* ValueHandler::load() const {
+auto ValueHandler::load() const -> llvm::Value* {
     auto* addr = getAddress();
     if (is<llvm::Value*>()) {
         return addr;
@@ -105,7 +102,7 @@ llvm::Value* ValueHandler::load() const {
     return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
 }
 
-llvm::Type* ValueHandler::getLlvmType() const {
+auto ValueHandler::getLlvmType() const -> llvm::Type* {
     if (auto* value = dyn_cast<llvm::Value*>()) {
         return value->getType();
     }
