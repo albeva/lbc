@@ -229,7 +229,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
         Lexer lexer{ m_context, m_module->fileId, *range };
         Parser parser{ m_context, lexer, false, m_table };
 
-        auto parsedExpression = m_diag.ignoringErrors([&]() -> bool {
+        auto parsedExpression = getDiag().ignoringErrors([&]() -> bool {
             if (auto* type = parser.typeExpr().getValueOrNull()) {
                 ast.typeExpr = type;
                 return true;

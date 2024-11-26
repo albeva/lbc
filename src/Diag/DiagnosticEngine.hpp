@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Diagnostics.def.hpp"
 
 namespace lbc {
 class Context;
@@ -11,9 +12,10 @@ class Context;
  * @enum Diag
  * @brief Enum class Diag that defines all the diagnostic messages.
  */
-enum class Diag {
-#define DIAG(LEVEL, ID, ...) ID,
-#include "Diagnostics.def.hpp"
+enum class Diag : std::uint8_t {
+    #define DIAG(ID, ...) ID,
+    ALL_ERRORS(DIAG)
+    #undef DIAG
 };
 
 /**
@@ -21,8 +23,8 @@ enum class Diag {
  * @brief The DiagnosticEngine class is responsible for managing and reporting diagnostic messages.
  */
 class DiagnosticEngine final {
-public:
     NO_COPY_AND_MOVE(DiagnosticEngine)
+public:
 
     /**
      * @brief Constructor that takes a reference to a Context object.
@@ -39,16 +41,14 @@ public:
      * @brief Method to check if there are any errors.
      * @return True if there are errors, false otherwise.
      */
-    [[nodiscard]] bool hasErrors() const { return m_errorCounter > 0; }
+    [[nodiscard]] auto hasErrors() const -> bool { return m_errorCounter > 0; }
 
     /**
      * @brief Method to ignore errors while executing a function.
-     * @tparam Func Function to be executed.
      * @param func Function to be executed.
      * @return Result of the function execution.
      */
-    template<std::invocable Func>
-    inline auto ignoringErrors(Func&& func) {
+    auto ignoringErrors(std::invocable auto&& func) {
         RESTORE_ON_EXIT(m_ignoreErrors);
         m_ignoreErrors = true;
         return func();
@@ -78,14 +78,14 @@ private:
      * @param diag Diagnostic message.
      * @return Text of the diagnostic message.
      */
-    static const char* getText(Diag diag);
+    static auto getText(Diag diag) -> const char*;
 
     /**
      * @brief Method to get the kind of a diagnostic message.
      * @param diag Diagnostic message.
      * @return Kind of the diagnostic message.
      */
-    static llvm::SourceMgr::DiagKind getKind(Diag diag);
+    static auto getKind(Diag diag) -> llvm::SourceMgr::DiagKind;
 
     /**
      * @brief Method to format a diagnostic message.
@@ -95,7 +95,7 @@ private:
      * @return Formatted diagnostic message.
      */
     template<typename... Args>
-    static std::string format(Diag diag, Args&&... args) {
+    static auto format(Diag diag, Args&&... args) -> std::string {
         return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
     }
 
@@ -127,11 +127,18 @@ concept RangeAware = requires(T base) {
  * @brief Struct to log errors.
  */
 struct ErrorLogger {
+    NO_COPY_AND_MOVE(ErrorLogger)
+
     /**
      * @brief Constructor that takes a reference to a DiagnosticEngine object.
      * @param diag Reference to a DiagnosticEngine object.
      */
     explicit ErrorLogger(DiagnosticEngine& diag) : m_diag{ diag } {}
+
+    /**
+     * @brief Default destructor.
+     */
+    virtual ~ErrorLogger() = default;
 
     /**
      * @brief Method to log an error with a range.
@@ -143,7 +150,7 @@ struct ErrorLogger {
      * @return ResultError object.
      */
     template<RangeAware T, typename... Args>
-    ResultError makeError(Diag diag, const T& range, Args&&... args) const {
+    auto makeError(Diag diag, const T& range, Args&&... args) const -> ResultError {
         m_diag.log(diag, range.getRange().Start, range.getRange(), std::forward<Args>(args)...);
         return {};
     }
@@ -158,7 +165,7 @@ struct ErrorLogger {
      * @return ResultError object.
      */
     template<RangeAware T, typename... Args>
-    ResultError makeError(Diag diag, T* range, Args&&... args) const {
+    auto makeError(Diag diag, T* range, Args&&... args) const -> ResultError {
         return makeError(diag, *range, std::forward<Args>(args)...);
     }
 
@@ -172,7 +179,7 @@ struct ErrorLogger {
      * @return ResultError object.
      */
     template<typename... Args>
-    ResultError makeError(Diag diag, const llvm::SMLoc& loc, const llvm::SMRange& range, Args&&... args) const {
+    auto makeError(Diag diag, const llvm::SMLoc& loc, const llvm::SMRange& range, Args&&... args) const -> ResultError {
         m_diag.log(diag, loc, range, std::forward<Args>(args)...);
         return {};
     }
@@ -181,9 +188,9 @@ struct ErrorLogger {
      * @brief Method to get the DiagnosticEngine object.
      * @return Reference to the DiagnosticEngine object.
      */
-    [[nodiscard]] DiagnosticEngine& getDiag() const { return m_diag; }
+    [[nodiscard]] auto getDiag() const -> DiagnosticEngine& { return m_diag; }
 
-protected:
+private:
     DiagnosticEngine& m_diag; ///< Reference to a DiagnosticEngine object.
 };
 

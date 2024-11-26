@@ -206,7 +206,7 @@ Result<AstImport*> Parser::kwImport() {
         return m_context.create<AstImport>(llvm::SMRange{ range.Start, m_endLoc }, import);
     }
     if (!fs::exists(source)) {
-        m_diag.log(Diag::moduleNotFound, range.Start, range, import);
+        getDiag().log(Diag::moduleNotFound, range.Start, range, import);
         return ResultError{};
     }
 
@@ -218,7 +218,7 @@ Result<AstImport*> Parser::kwImport() {
         included
     );
     if (ID == ~0U) {
-        m_diag.log(Diag::failedToLoadModule, range.Start, range, source.string());
+        getDiag().log(Diag::failedToLoadModule, range.Start, range, source.string());
         return ResultError{};
     }
 
