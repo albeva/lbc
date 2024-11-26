@@ -7,7 +7,7 @@
 
 namespace lbc {
 class TypeRoot;
-enum class TokenKind;
+enum class TokenKind : std::uint8_t;
 
 namespace Gen {
     [[nodiscard]] auto getCmpPred(const TypeRoot* type, TokenKind op) -> llvm::CmpInst::Predicate;

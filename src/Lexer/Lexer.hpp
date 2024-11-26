@@ -7,7 +7,7 @@
 namespace lbc {
 class Token;
 class Context;
-enum class TokenKind;
+enum class TokenKind : std::uint8_t;
 
 class Lexer final {
 public:

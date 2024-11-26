@@ -30,7 +30,7 @@ class TypeFloatingPoint;
 class TypeFunction;
 class TypeZString;
 class Context;
-enum class TokenKind;
+enum class TokenKind : std::uint8_t;
 
 enum class TypeComparison {
     Incompatible,

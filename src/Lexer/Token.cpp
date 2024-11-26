@@ -2,7 +2,6 @@
 // Created by Albert Varaksin on 03/07/2020.
 //
 #include "Token.hpp"
-
 using namespace lbc;
 
 namespace {
@@ -21,20 +20,68 @@ const llvm::StringMap<TokenKind> keywordsToKind {
 #undef IMPL_LITERAL
 };
 
-constexpr std::array kindToDescription {
-#define IMPL_LITERAL(id, kw, ...) literals::Str##id,
-    ALL_TOKENS(IMPL_LITERAL)
-#undef IMPL_LITERAL
+enum class Category : std::uint8_t {
+    General,
+    Literal,
+    Symbol,
+    Operator,
+    Keyword,
+    Type
 };
+
+enum class OpType : std::uint8_t {
+    Unary,
+    Binary
+};
+
+enum class OpAssociativity : std::uint8_t {
+    Left,
+    Right
+};
+
+struct TokenDef final {
+    Category category{};
+    llvm::StringLiteral str;
+    int precedence{};
+    OpType type{};
+    OpAssociativity assoc{};
+    OperatorType kind{};
+};
+
+constexpr const std::array tokenDefs {
+#define GENERAL(ID, STR, ...) TokenDef{ Category::General, literals::Str##ID },
+#define LITERAL(ID, STR, ...) TokenDef{ Category::Literal, literals::Str##ID },
+#define SYMBOL(ID, STR, ...) TokenDef{ Category::Symbol, literals::Str##ID },
+#define KEYWORD(ID, STR, ...) TokenDef{ Category::Keyword, literals::Str##ID },
+#define TYPE(ID, STR, ...) TokenDef{ Category::Type, literals::Str##ID },
+#define OPERATOR(ID, STR, PREC, TYPE, ASSOC, CAT) TokenDef{ Category::Operator, literals::Str##ID, PREC, OpType::TYPE, OpAssociativity::ASSOC, OperatorType::CAT },
+    TOKEN_GENERAL(GENERAL)
+    TOKEN_LITERALS(LITERAL)
+    TOKEN_SYMBOLS(SYMBOL)
+    TOKEN_OPERATORS(OPERATOR)
+    TOKEN_KEYWORDS(KEYWORD)
+    ALL_TYPES(TYPE)
+#undef GENERAL
+#undef LITERAL
+#undef SYMBOL
+#undef KEYWORD
+#undef TYPE
+#undef OPERATOR
+};
+
+constexpr auto getDef(TokenKind kind) -> const TokenDef& {
+    auto index = static_cast<size_t>(kind);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+    return tokenDefs[index];
+}
 
 } // namespace
 
-llvm::StringRef Token::description(TokenKind kind) {
-    auto index = static_cast<size_t>(kind);
-    return kindToDescription.at(index);
+auto Token::description(TokenKind kind) -> llvm::StringRef {
+    return getDef(kind).str;
 }
 
-TokenKind Token::findKind(llvm::StringRef str) {
+auto Token::findKind(llvm::StringRef str) -> TokenKind {
     auto iter = keywordsToKind.find(str);
     if (iter != keywordsToKind.end()) {
         return iter->second;
@@ -42,16 +89,16 @@ TokenKind Token::findKind(llvm::StringRef str) {
     return TokenKind::Identifier;
 }
 
-llvm::StringRef Token::lexeme() const {
+auto Token::lexeme() const -> llvm::StringRef {
     const auto* start = m_range.Start.getPointer();
     const auto* end = m_range.End.getPointer();
     return { start, static_cast<size_t>(std::distance(start, end)) };
 }
 
-std::string Token::asString() const {
+auto Token::asString() const -> std::string {
     static constexpr auto visitor = lbc::Visitor{
         [](std::monostate /*value*/) {
-            return "NULL"s;
+            return literals::StrNull.str();
         },
         [](llvm::StringRef value) {
             return value.str();
@@ -63,7 +110,7 @@ std::string Token::asString() const {
             return std::to_string(value);
         },
         [](bool value) {
-            return value ? "TRUE"s : "FALSE"s;
+            return (value ? literals::StrTrue : literals::StrFalse).str();
         }
     };
 
@@ -73,153 +120,51 @@ std::string Token::asString() const {
     return description().str();
 }
 
-// Generated from .def tables
-
-// clang-format off
-
-bool Token::isGeneral() const {
-    #define CASE_GENERAL(id, ...) case TokenKind::id:
-    switch (m_kind) {
-    TOKEN_GENERAL(CASE_GENERAL)
-        return true;
-    default:
-        return false;
-    }
-    #undef CASE_LITERAL
+auto Token::isGeneral() const -> bool {
+    return getDef(m_kind).category == Category::General;
 }
 
-bool Token::isLiteral() const {
-    #define CASE_LITERAL(id, ...) case TokenKind::id:
-    switch (m_kind) {
-    TOKEN_LITERALS(CASE_LITERAL)
-        return true;
-    default:
-        return false;
-    }
-    #undef CASE_LITERAL
+auto Token::isLiteral() const -> bool {
+    return getDef(m_kind).category == Category::Literal;
 }
 
-bool Token::isSymbol() const {
-    #define CASE_SYMBOL(id, ...) case TokenKind::id:
-    switch (m_kind) {
-    TOKEN_SYMBOLS(CASE_SYMBOL)
-        return true;
-    default:
-        return false;
-    }
-    #undef CASE_SYMBOL
+auto Token::isSymbol() const -> bool {
+    return getDef(m_kind).category == Category::Symbol;
 }
 
-bool Token::isOperator() const {
-    #define CASE_OPERATOR(id, ...) case TokenKind::id:
-    switch (m_kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR)
-        return true;
-    default:
-        return false;
-    }
-    #undef CASE_OPERATOR
+auto Token::isOperator() const -> bool {
+    return getDef(m_kind).category == Category::Operator;
 }
 
-bool Token::isKeyword() const {
-    #define CASE_KEYWORD(id, ...) case TokenKind::id:
-    switch (m_kind) {
-    TOKEN_KEYWORDS(CASE_KEYWORD)
-        return true;
-    default:
-        return false;
-    }
-    #undef CASE_KEYWORD
+auto Token::isKeyword() const -> bool {
+    const auto cat = getDef(m_kind).category;
+    return cat == Category::Keyword || cat == Category::Type;
 }
 
-int Token::getPrecedence() const {
-    #define CASE_OPERATOR(id, ch, prec, ...) \
-        case TokenKind::id:                  \
-            return prec;
-    switch (m_kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR) // NOLINT
-    default:
-        return 0;
-    }
-    #undef CASE_OPERATOR
+auto Token::getPrecedence() const -> int {
+    return getDef(m_kind).precedence;
 }
 
-bool Token::isBinary() const {
-    static constexpr bool Binary = true; // NOLINT
-    static constexpr bool Unary = false; // NOLINT
-    #define CASE_OPERATOR(id, ch, prec, binary, ...) \
-        case TokenKind::id:                          \
-            return binary;
-    switch (m_kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR) // NOLINT
-    default:
-        return false;
-    }
-    #undef CASE_OPERATOR
+auto Token::isBinary() const -> bool {
+    return getDef(m_kind).type == OpType::Binary;
 }
 
-bool Token::isUnary() const {
-    static constexpr bool Binary = false; // NOLINT
-    static constexpr bool Unary = true;   // NOLINT
-    #define CASE_OPERATOR(id, ch, prec, binary, ...) \
-        case TokenKind::id:                          \
-            return binary;
-    switch (m_kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR) // NOLINT
-    default:
-        return false;
-    }
-    #undef CASE_OPERATOR
+auto Token::isUnary() const -> bool {
+    return getDef(m_kind).type == OpType::Unary;
 }
 
-bool Token::isLeftToRight() const {
-    static constexpr bool Left = true; // NOLINT
-    // constexpr bool Right = true; // NOLINT
-    #define CASE_OPERATOR(id, ch, prec, binary, dir, ...) \
-        case TokenKind::id:                               \
-            return dir;
-    switch (m_kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR) // NOLINT
-    default:
-        return false;
-    }
-    #undef CASE_OPERATOR
+auto Token::isLeftToRight() const -> bool {
+    return getDef(m_kind).assoc == OpAssociativity::Left;
 }
 
-bool Token::isRightToLeft() const {
-    static constexpr bool Left = false; // NOLINT
-    // constexpr bool Right = true; // NOLINT
-    #define CASE_OPERATOR(id, ch, prec, binary, dir, ...) \
-        case TokenKind::id:                               \
-            return dir;
-    switch (m_kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR) // NOLINT
-    default:
-        return false;
-    }
-    #undef CASE_OPERATOR
+auto Token::isRightToLeft() const -> bool {
+    return getDef(m_kind).assoc == OpAssociativity::Right;
 }
 
-OperatorType Token::getOperatorType(TokenKind kind) {
-    #define CASE_OPERATOR(ID, CH, PREC, BINARY, DIR, KIND, ...) \
-        case TokenKind::ID:                                     \
-            return OperatorType::KIND;
-    switch (kind) {
-    TOKEN_OPERATORS(CASE_OPERATOR) // NOLINT
-    default:
-        llvm_unreachable("Unknown operator type");
-    }
-    #undef CASE_OPERATOR
+auto Token::getOperatorType(TokenKind kind) -> OperatorType {
+    return getDef(kind).kind;
 }
 
-bool Token::isTypeKeyword() const {
-    #define TYPE_KEYWORD(id, ...) case TokenKind::id:
-    switch (m_kind) {
-    ALL_TYPES(TYPE_KEYWORD)
-        return true;
-    default:
-        return false;
-    }
-    #undef TYPE_KEYWORD
+auto Token::isTypeKeyword() const -> bool {
+    return getDef(m_kind).category == Category::Type;
 }
-
