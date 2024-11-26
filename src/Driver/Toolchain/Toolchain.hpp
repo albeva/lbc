@@ -1,18 +1,15 @@
-#include <utility>
-
 //
 // Created by Albert Varaksin on 07/02/2021.
 //
 #pragma once
 #include "pch.hpp"
 
-
 namespace lbc {
 
 class ToolTask;
 class Context;
 
-enum class ToolKind {
+enum class ToolKind : std::uint8_t {
     Optimizer,
     Assembler,
     Linker
@@ -31,11 +28,11 @@ public:
     explicit Toolchain(Context& context) : m_context{ context } {}
     ~Toolchain() = default;
 
-    [[nodiscard]] const fs::path& getBasePath() const;
+    [[nodiscard]] auto getBasePath() const -> const fs::path&;
 
-    [[nodiscard]] fs::path getPath(ToolKind tool) const;
+    [[nodiscard]] auto getPath(const ToolKind tool) const -> fs::path;
 
-    [[nodiscard]] ToolTask createTask(ToolKind kind) const;
+    [[nodiscard]] auto createTask(const ToolKind kind) const -> ToolTask;
 
 private:
     Context& m_context;

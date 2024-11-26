@@ -5,54 +5,54 @@
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "Toolchain.hpp"
-
-#include <utility>
-
+#include <llvm/ADT/StringRef.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/Program.h>
 using namespace lbc;
 
-ToolTask& ToolTask::reset() {
+auto ToolTask::reset() -> ToolTask& {
     m_args.clear();
     return *this;
 }
 
-ToolTask& ToolTask::addArg(const std::string& arg) {
+auto ToolTask::addArg(const std::string& arg) -> ToolTask& {
     m_args.push_back(arg);
     return *this;
 }
 
-ToolTask& ToolTask::addArg(const std::string& name, const std::string& value) {
+auto ToolTask::addArg(const std::string& name, const std::string& value) -> ToolTask& {
     m_args.push_back(name);
     m_args.push_back(value);
     return *this;
 }
 
-ToolTask& ToolTask::addPath(const fs::path& path) {
+auto ToolTask::addPath(const fs::path& path) -> ToolTask& {
     addArg(path.string());
     return *this;
 }
 
-ToolTask& ToolTask::addPath(const std::string& name, const fs::path& value) {
+auto ToolTask::addPath(const std::string& name, const fs::path& value) -> ToolTask& {
     m_args.push_back(name);
     addPath(value);
     return *this;
 }
 
-ToolTask& ToolTask::addArgs(std::initializer_list<std::string> args) {
+auto ToolTask::addArgs(std::initializer_list<std::string> args) -> ToolTask& {
     if (m_args.capacity() < m_args.size() + args.size()) {
         m_args.reserve(m_args.size() + args.size());
     }
-    std::move(args.begin(), args.end(), std::back_inserter(m_args));
+    std::ranges::move(args, std::back_inserter(m_args));
     return *this;
 }
 
-int ToolTask::execute() const {
+auto ToolTask::execute() const -> int {
     std::vector<llvm::StringRef> args;
     args.reserve(m_args.size() + 1);
 
     auto program = m_path.string();
     args.emplace_back(program);
 
-    std::copy(m_args.begin(), m_args.end(), std::back_inserter(args));
+    std::ranges::copy(m_args, std::back_inserter(args));
 
     if (m_context.getOptions().logVerbose()) {
         switch (m_kind) {

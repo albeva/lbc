@@ -5,18 +5,14 @@
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "ToolTask.hpp"
-
 using namespace lbc;
 
-ToolTask Toolchain::createTask(ToolKind kind) const {
-    return ToolTask{ m_context, getPath(kind), kind };
-}
-
-
-static fs::path getToolPath(const fs::path& base, ToolKind tool) {
-    std::string ext{};
+namespace {
+auto getToolPath(const fs::path& base, const ToolKind tool) -> fs::path {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-    ext = ".exe";
+    const std::string ext = "exe";
+#else
+    const std::string ext{};
 #endif
 
     switch (tool) {
@@ -30,12 +26,16 @@ static fs::path getToolPath(const fs::path& base, ToolKind tool) {
         llvm_unreachable("Invalid ToolKind ID");
     }
 }
+} // ~namespace
 
-fs::path Toolchain::getPath(ToolKind tool) const {
+auto Toolchain::createTask(const ToolKind kind) const -> ToolTask {
+    return ToolTask{ m_context, getPath(kind), kind };
+}
+
+auto Toolchain::getPath(const ToolKind tool) const -> fs::path {
     fs::path path{};
 
-    const auto& basePath = getBasePath();
-    if (basePath.empty()) {
+    if (const auto& basePath = getBasePath(); basePath.empty()) {
         path = getToolPath("/usr/local", tool);
         if (!fs::exists(path)) {
             path = getToolPath("/usr", tool);
@@ -51,6 +51,6 @@ fs::path Toolchain::getPath(ToolKind tool) const {
     return path;
 }
 
-const fs::path& Toolchain::getBasePath() const {
+auto Toolchain::getBasePath() const -> const fs::path& {
     return m_context.getOptions().getToolchainDir();
 }
