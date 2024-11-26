@@ -21,7 +21,7 @@ struct CompileOptions final {
      *
      * This enum is used to determine the final output of the compilation process.
      */
-    enum class CompilationTarget {
+    enum class CompilationTarget : std::uint8_t {
         Executable, ///< The target is an executable file.
         Object,     ///< The target is an object file.
         Assembly,   ///< The target is an assembly file.
@@ -34,7 +34,7 @@ struct CompileOptions final {
      *
      * This enum is used to determine the type of the output file.
      */
-    enum class OutputType {
+    enum class OutputType : std::uint8_t {
         Native, ///< The output file is a native file.
         LLVM    ///< The output file is an LLVM file.
     };
@@ -45,7 +45,7 @@ struct CompileOptions final {
      *
      * This enum is used to determine the level of optimization to apply during the compilation process.
      */
-    enum class OptimizationLevel {
+    enum class OptimizationLevel : std::uint8_t {
         O0, ///< No optimization.
         OS, ///< Size optimization.
         O1, ///< Level 1 optimization.
@@ -59,7 +59,7 @@ struct CompileOptions final {
      *
      * This enum is used to determine the mode of the compilation process.
      */
-    enum class CompilationMode {
+    enum class CompilationMode : std::uint8_t {
         Bit32, ///< The compilation process is in 32-bit mode.
         Bit64  ///< The compilation process is in 64-bit mode.
     };
@@ -70,7 +70,7 @@ struct CompileOptions final {
      *
      * This enum is used to determine the level of logging during the compilation process.
      */
-    enum class LogLevel {
+    enum class LogLevel : std::uint8_t {
         Silent,  ///< No logging.
         Verbose, ///< Verbose logging.
         Debug    ///< Debug logging.
@@ -82,7 +82,7 @@ struct CompileOptions final {
      *
      * This enum is used to determine the type of the input or output file.
      */
-    enum class FileType {
+    enum class FileType : std::uint8_t {
         Source,   ///< File is a source file.
         Assembly, ///< File is an assembly file.
         Object,   ///< File is an object file.
@@ -103,7 +103,7 @@ struct CompileOptions final {
      * @param type The file type.
      * @return The file extension as a string view.
      */
-    [[nodiscard]] static std::string_view getFileExt(FileType type);
+    [[nodiscard]] static auto getFileExt(FileType type) -> std::string_view;
 
     /**
      * @brief Get the file type for a given file path.
@@ -113,7 +113,7 @@ struct CompileOptions final {
      * @param path The file path.
      * @return The file type.
      */
-    [[nodiscard]] static FileType getFileType(const fs::path& path);
+    [[nodiscard]] static auto getFileType(const fs::path& path) -> FileType;
 
     /**
      * @brief Validate the current compilation options.
@@ -130,7 +130,7 @@ struct CompileOptions final {
      *
      * @return The current compilation target.
      */
-    [[nodiscard]] CompilationTarget getCompilationTarget() const { return m_compilationTarget; }
+    [[nodiscard]] auto getCompilationTarget() const -> CompilationTarget { return m_compilationTarget; }
 
     /**
      * @brief Set the compilation target.
@@ -144,7 +144,7 @@ struct CompileOptions final {
      *
      * @return The current compilation mode.
      */
-    [[nodiscard]] CompilationMode getCompilationMode() const {
+    [[nodiscard]] auto getCompilationMode() const -> CompilationMode {
         return m_compilationMode;
     }
 
@@ -162,7 +162,7 @@ struct CompileOptions final {
      *
      * @return The current output type.
      */
-    [[nodiscard]] OutputType getOutputType() const { return m_outputType; }
+    [[nodiscard]] auto getOutputType() const -> OutputType { return m_outputType; }
 
     /**
      * @brief Set the output type.
@@ -176,7 +176,7 @@ struct CompileOptions final {
      *
      * @return True if the AST dump is enabled, false otherwise.
      */
-    [[nodiscard]] bool getDumpAst() const { return m_astDump; }
+    [[nodiscard]] auto getDumpAst() const -> bool { return m_astDump; }
 
     /**
      * @brief Enable or disable the AST dump.
@@ -190,7 +190,7 @@ struct CompileOptions final {
      *
      * @return True if the code dump is enabled, false otherwise.
      */
-    [[nodiscard]] bool getDumpCode() const { return m_codeDump; }
+    [[nodiscard]] auto getDumpCode() const -> bool { return m_codeDump; }
 
     /**
      * @brief Enable or disable the code dump.
@@ -204,7 +204,7 @@ struct CompileOptions final {
      *
      * @return The current optimization level.
      */
-    [[nodiscard]] OptimizationLevel getOptimizationLevel() const { return m_optimizationLevel; }
+    [[nodiscard]] auto getOptimizationLevel() const -> OptimizationLevel { return m_optimizationLevel; }
 
     /**
      * @brief Set the optimization level.
@@ -218,7 +218,7 @@ struct CompileOptions final {
      *
      * @return True if the build is a debug build, false otherwise.
      */
-    [[nodiscard]] bool isDebugBuild() const { return m_isDebug; }
+    [[nodiscard]] auto isDebugBuild() const -> bool { return m_isDebug; }
 
     /**
      * @brief Set whether the build is a debug build.
@@ -232,21 +232,21 @@ struct CompileOptions final {
      *
      * @return True if the log level is verbose, false otherwise.
      */
-    [[nodiscard]] bool logVerbose() const { return m_logLevel == LogLevel::Verbose; }
+    [[nodiscard]] auto logVerbose() const -> bool { return m_logLevel == LogLevel::Verbose; }
 
     /**
      * @brief Check if the log level is debug or verbose.
      *
      * @return True if the log level is debug or verbose, false otherwise.
      */
-    [[nodiscard]] bool logDebug() const { return m_logLevel == LogLevel::Verbose || m_logLevel == LogLevel::Debug; }
+    [[nodiscard]] auto logDebug() const -> bool { return m_logLevel == LogLevel::Verbose || m_logLevel == LogLevel::Debug; }
 
     /**
      * @brief Get the current log level.
      *
      * @return The current log level.
      */
-    [[nodiscard]] LogLevel getLogLevel() const { return m_logLevel; }
+    [[nodiscard]] auto getLogLevel() const -> LogLevel { return m_logLevel; }
 
     /**
      * @brief Set the log level.
@@ -260,7 +260,7 @@ struct CompileOptions final {
      *
      * @return True if the main function is implicit, false otherwise.
      */
-    [[nodiscard]] bool getImplicitMain() const { return m_implicitMain; }
+    [[nodiscard]] auto getImplicitMain() const -> bool { return m_implicitMain; }
 
     /**
      * @brief Set whether the main function is implicit.
@@ -274,7 +274,7 @@ struct CompileOptions final {
      *
      * @return The main file path.
      */
-    [[nodiscard]] const std::optional<fs::path>& getMainFile() const { return m_mainPath; }
+    [[nodiscard]] auto getMainFile() const -> const std::optional<fs::path>& { return m_mainPath; }
 
     /**
      * @brief Set the main file path.
@@ -288,7 +288,7 @@ struct CompileOptions final {
      *
      * @return The input files mapped by their type.
      */
-    [[nodiscard]] const FilesMap& getInputFiles() const { return m_inputFiles; }
+    [[nodiscard]] auto getInputFiles() const -> const FilesMap& { return m_inputFiles; }
 
     /**
      * @brief Get the input files of a specific type.
@@ -296,7 +296,7 @@ struct CompileOptions final {
      * @param type The type of the input files to get.
      * @return The input files of the specified type.
      */
-    [[nodiscard]] const FilesVector& getInputFiles(FileType type) const { return m_inputFiles[type]; }
+    [[nodiscard]] auto getInputFiles(FileType type) const -> const FilesVector& { return m_inputFiles[type]; }
 
     /**
      * @brief Add an input file.
@@ -310,7 +310,7 @@ struct CompileOptions final {
      *
      * @return The output path.
      */
-    [[nodiscard]] const fs::path& getOutputPath() const { return m_outputPath; }
+    [[nodiscard]] auto getOutputPath() const -> const fs::path& { return m_outputPath; }
 
     /**
      * @brief Set the output path.
@@ -324,7 +324,7 @@ struct CompileOptions final {
      *
      * @return The toolchain directory.
      */
-    [[nodiscard]] const fs::path& getToolchainDir() const { return m_toolchainDir; }
+    [[nodiscard]] auto getToolchainDir() const -> const fs::path& { return m_toolchainDir; }
 
     /**
      * @brief Set the toolchain directory.
@@ -338,14 +338,14 @@ struct CompileOptions final {
      *
      * @return The compiler path.
      */
-    [[nodiscard]] const fs::path& getCompilerPath() const { return m_compilerPath; }
+    [[nodiscard]] auto getCompilerPath() const -> const fs::path& { return m_compilerPath; }
 
     /**
      * @brief Get the compiler directory.
      *
      * @return The compiler directory.
      */
-    [[nodiscard]] fs::path getCompilerDir() const { return m_compilerPath.parent_path(); }
+    [[nodiscard]] auto getCompilerDir() const -> fs::path { return m_compilerPath.parent_path(); }
 
     /**
      * @brief Set the compiler path.
@@ -359,7 +359,7 @@ struct CompileOptions final {
      *
      * @return The working directory.
      */
-    [[nodiscard]] const fs::path& getWorkingDir() const { return m_workingDir; }
+    [[nodiscard]] auto getWorkingDir() const -> const fs::path& { return m_workingDir; }
 
     /**
      * @brief Set the working directory.
@@ -373,7 +373,7 @@ struct CompileOptions final {
      *
      * @return true if the target is linkable, false otherwise.
      */
-    [[nodiscard]] bool isTargetLinkable() const {
+    [[nodiscard]] auto isTargetLinkable() const -> bool {
         return m_compilationTarget == CompilationTarget::Executable;
     }
 
@@ -382,7 +382,7 @@ struct CompileOptions final {
      *
      * @return true if the target is native, false otherwise.
      */
-    [[nodiscard]] bool isTargetNative() const {
+    [[nodiscard]] auto isTargetNative() const -> bool {
         return m_compilationTarget == CompilationTarget::Executable;
     }
 
@@ -391,7 +391,7 @@ struct CompileOptions final {
      *
      * @return true if the output is LLVM IR, false otherwise.
      */
-    [[nodiscard]] bool isOutputLLVMIr() const {
+    [[nodiscard]] auto isOutputLLVMIr() const -> bool {
         return m_outputType == OutputType::LLVM && m_compilationTarget == CompilationTarget::Assembly;
     }
 
@@ -403,7 +403,7 @@ struct CompileOptions final {
      * @param file The file to check.
      * @return True if the file is the main file, false otherwise.
      */
-    [[nodiscard]] bool isMainFile(const fs::path& file) const;
+    [[nodiscard]] auto isMainFile(const fs::path& file) const -> bool;
 
     /**
      * @brief Resolve the output path for a given file.
@@ -415,7 +415,7 @@ struct CompileOptions final {
      * @param ext The extension of the output file.
      * @return The resolved output path.
      */
-    [[nodiscard]] fs::path resolveOutputPath(const fs::path& path, std::string_view ext) const;
+    [[nodiscard]] auto resolveOutputPath(const fs::path& path, std::string_view ext) const -> fs::path;
 
     /**
      * @brief Resolve the file path.
@@ -426,7 +426,7 @@ struct CompileOptions final {
      * @param path The path of the file.
      * @return The resolved file path.
      */
-    [[nodiscard]] fs::path resolveFilePath(const fs::path& path) const;
+    [[nodiscard]] auto resolveFilePath(const fs::path& path) const -> fs::path;
 
 private:
     /**
@@ -434,7 +434,7 @@ private:
      *
      * @return The count of input files.
      */
-    [[nodiscard]] size_t getInputCount() const;
+    [[nodiscard]] auto getInputCount() const -> size_t;
 
     /**
      * @brief Validate the given file path.
@@ -444,7 +444,7 @@ private:
      * @param path The path of the file to validate.
      * @return True if the file exists and is a regular file, false otherwise.
      */
-    [[nodiscard]] static bool validateFile(const fs::path& path);
+    [[nodiscard]] static auto validateFile(const fs::path& path) -> bool;
 
     LogLevel m_logLevel = LogLevel::Silent;
     OutputType m_outputType = OutputType::Native;
@@ -455,12 +455,12 @@ private:
     bool m_isDebug = false;
     bool m_astDump = false;
     bool m_codeDump = false;
-    std::optional<fs::path> m_mainPath{};
-    mutable FilesMap m_inputFiles{};
-    fs::path m_outputPath{};
-    fs::path m_toolchainDir{};
-    fs::path m_compilerPath{};
-    fs::path m_workingDir{};
+    std::optional<fs::path> m_mainPath;
+    mutable FilesMap m_inputFiles;
+    fs::path m_outputPath;
+    fs::path m_toolchainDir;
+    fs::path m_compilerPath;
+    fs::path m_workingDir;
 };
 
 } // namespace lbc

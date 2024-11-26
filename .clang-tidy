@@ -11,6 +11,7 @@ Checks: '
   readability-*,
   -bugprone-easily-swappable-parameters,
   -misc-no-recursion,
+  -readability-function-cognitive-complexity,
 '
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''

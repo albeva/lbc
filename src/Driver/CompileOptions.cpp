@@ -33,16 +33,16 @@ void CompileOptions::reset() {
     m_workingDir.clear();
 }
 
-std::string_view CompileOptions::getFileExt(FileType type) {
-    auto it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
+auto CompileOptions::getFileExt(FileType type) -> std::string_view {
+    const auto *it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
     if (it != fileTypeExtMap.end()) {
         return it->first;
     }
     fatalError("unknown file type");
 }
 
-CompileOptions::FileType CompileOptions::getFileType(const fs::path& path) {
-    auto it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
+auto CompileOptions::getFileType(const fs::path& path) -> CompileOptions::FileType {
+    const auto *it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
     if (it != fileTypeExtMap.end()) {
         return it->second;
     }
@@ -133,7 +133,7 @@ void CompileOptions::addInputFile(const fs::path& path) {
     m_inputFiles[type].emplace_back(path);
 }
 
-size_t CompileOptions::getInputCount() const {
+auto CompileOptions::getInputCount() const -> size_t {
     return std::accumulate(m_inputFiles.begin(), m_inputFiles.end(), size_t{}, [](auto cnt, const auto& vec) {
         return cnt + vec.second.size();
     });
@@ -198,7 +198,7 @@ bool CompileOptions::isMainFile(const fs::path& file) const { // NOLINT
     return resolveFilePath(sources.front()) == file;
 }
 
-fs::path CompileOptions::resolveOutputPath(const fs::path& path, std::string_view ext) const {
+auto CompileOptions::resolveOutputPath(const fs::path& path, std::string_view ext) const -> fs::path {
     if (!fs::exists(path)) {
         fatalError("File '"_t + path.string() + "' not found");
     }
@@ -218,7 +218,7 @@ fs::path CompileOptions::resolveOutputPath(const fs::path& path, std::string_vie
     fatalError("output path handling is not implemented");
 }
 
-fs::path CompileOptions::resolveFilePath(const fs::path& path) const {
+auto CompileOptions::resolveFilePath(const fs::path& path) const -> fs::path {
     if (path.is_absolute()) {
         if (validateFile(path)) {
             return path;
@@ -232,7 +232,7 @@ fs::path CompileOptions::resolveFilePath(const fs::path& path) const {
     fatalError("File '"_t + path.string() + "' not found");
 }
 
-[[nodiscard]] bool CompileOptions::validateFile(const fs::path& path) {
+[[nodiscard]] auto CompileOptions::validateFile(const fs::path& path) -> bool {
     if (!fs::exists(path)) {
         return false;
     }
