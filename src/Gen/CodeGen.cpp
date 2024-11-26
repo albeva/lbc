@@ -9,7 +9,6 @@
 #include "Driver/CompileOptions.hpp"
 #include "Driver/Context.hpp"
 #include "Driver/JIT.hpp"
-#include "Helpers.hpp"
 #include "Type/Type.hpp"
 #include "ValueHandler.hpp"
 #include <llvm/IR/DerivedTypes.h>
@@ -26,7 +25,7 @@ CodeGen::CodeGen(Context& context)
   m_constantFalse{ m_builder.getFalse() } {
 }
 
-bool CodeGen::validate() const {
+auto CodeGen::validate() const -> bool {
     assert(m_module != nullptr); // NOLINT
     return !llvm::verifyModule(*m_module, &llvm::outs());
 }
@@ -54,7 +53,6 @@ void CodeGen::switchBlock(llvm::BasicBlock* block) {
 }
 
 void CodeGen::visit(AstModule& ast) {
-    m_astRootModule = &ast;
     m_fileId = ast.fileId;
     m_scope = Scope::Root;
     auto file = m_context.getSourceMrg().getMemoryBuffer(m_fileId)->getBufferIdentifier();
@@ -123,7 +121,7 @@ void CodeGen::visit(AstModule& ast) {
     }
 }
 
-llvm::BasicBlock* CodeGen::getGlobalCtorBlock() {
+auto CodeGen::getGlobalCtorBlock() -> llvm::BasicBlock* {
     if (m_globalCtorFunc == nullptr) {
         m_globalCtorFunc = llvm::Function::Create(
             llvm::FunctionType::get(llvm::Type::getVoidTy(m_llvmContext), false),
@@ -161,7 +159,7 @@ void CodeGen::visit(AstExprList& /*ast*/) {
     llvm_unreachable("Unhandled AstExprList&");
 }
 
-ValueHandler CodeGen::visit(AstAssignExpr& ast) {
+auto CodeGen::visit(AstAssignExpr& ast) -> ValueHandler {
     auto ptr = visit(*ast.lhs);
     auto value = visit(*ast.rhs);
     ptr.store(value);
@@ -415,19 +413,19 @@ void CodeGen::visit(AstTypeAlias& /* ast */) {
 // Expressions
 //------------------------------------------------------------------
 
-ValueHandler CodeGen::visit(AstIdentExpr& ast) {
+auto CodeGen::visit(AstIdentExpr& ast) -> ValueHandler {
     return { this, ast };
 }
 
-ValueHandler CodeGen::visit(AstDereference& ast) {
+auto CodeGen::visit(AstDereference& ast) -> ValueHandler {
     return { this, ast };
 }
 
-ValueHandler CodeGen::visit(AstAddressOf& ast) {
+auto CodeGen::visit(AstAddressOf& ast) -> ValueHandler {
     return { this, ast };
 }
 
-ValueHandler CodeGen::visit(AstCallExpr& ast) {
+auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
     auto* callable = visit(*ast.callable).getAddress();
     const auto* funcType = ast.callable->type->getUnderlyingFunctionType();
     auto* llvmFunc = funcType->getLlvmFunctionType(m_context);
@@ -445,7 +443,7 @@ ValueHandler CodeGen::visit(AstCallExpr& ast) {
     return { this, ast.type, call };
 }
 
-ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
+auto CodeGen::visit(AstLiteralExpr& ast) -> ValueHandler {
     const auto visitor = Visitor{
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
@@ -475,7 +473,7 @@ ValueHandler CodeGen::visit(AstLiteralExpr& ast) {
     return { this, ast.type, std::visit(visitor, ast.value) };
 }
 
-llvm::Constant* CodeGen::getStringConstant(llvm::StringRef str) {
+auto CodeGen::getStringConstant(llvm::StringRef str) -> llvm::Constant* {
     auto [iter, inserted] = m_stringLiterals.try_emplace(str, nullptr);
     if (inserted) {
         iter->second = m_builder.CreateGlobalStringPtr(str);
@@ -483,7 +481,7 @@ llvm::Constant* CodeGen::getStringConstant(llvm::StringRef str) {
     return iter->second;
 }
 
-ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
+auto CodeGen::visit(AstUnaryExpr& ast) -> ValueHandler {
     switch (ast.token.getKind()) {
     case TokenKind::Negate: {
         auto* value = visit(*ast.expr).load();
@@ -507,11 +505,11 @@ ValueHandler CodeGen::visit(AstUnaryExpr& ast) {
     }
 }
 
-ValueHandler CodeGen::visit(AstMemberExpr& ast) {
+auto CodeGen::visit(AstMemberExpr& ast) -> ValueHandler {
     return { this, ast };
 }
 
-ValueHandler CodeGen::visit(AstBinaryExpr& ast) {
+auto CodeGen::visit(AstBinaryExpr& ast) -> ValueHandler {
     return Gen::BinaryExprBuilder(*this, ast).build();
 }
 
@@ -519,13 +517,13 @@ ValueHandler CodeGen::visit(AstBinaryExpr& ast) {
 // Casting
 //------------------------------------------------------------------
 
-ValueHandler CodeGen::visit(AstCastExpr& ast) {
+auto CodeGen::visit(AstCastExpr& ast) -> ValueHandler {
     auto* value = visit(*ast.expr).load();
 
-    bool srcIsSigned = ast.expr->type->isSignedIntegral();
-    bool dstIsSigned = ast.type->isSignedIntegral();
+    const bool srcIsSigned = ast.expr->type->isSignedIntegral();
+    const bool dstIsSigned = ast.type->isSignedIntegral();
 
-    auto opcode = llvm::CastInst::getCastOpcode(
+    const auto opcode = llvm::CastInst::getCastOpcode(
         value,
         srcIsSigned,
         ast.type->getLlvmType(m_context),
@@ -536,7 +534,7 @@ ValueHandler CodeGen::visit(AstCastExpr& ast) {
     return { this, ast.type, casted };
 }
 
-ValueHandler CodeGen::visit(AstIfExpr& ast) {
+auto CodeGen::visit(AstIfExpr& ast) -> ValueHandler {
     auto condValue = visit(*ast.expr);
     auto trueValue = visit(*ast.trueExpr);
     auto falseValue = visit(*ast.falseExpr);
@@ -545,6 +543,6 @@ ValueHandler CodeGen::visit(AstIfExpr& ast) {
     return { this, ast.type, value };
 }
 
-std::unique_ptr<llvm::Module> CodeGen::getModule() {
+auto CodeGen::getModule() -> std::unique_ptr<llvm::Module> {
     return std::move(m_module);
 }

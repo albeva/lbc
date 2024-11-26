@@ -14,15 +14,15 @@ class CodeGen final : public AstVisitor<CodeGen, void, void, Gen::ValueHandler> 
 public:
     explicit CodeGen(Context& context);
 
-    [[nodiscard]] std::unique_ptr<llvm::Module> getModule();
+    [[nodiscard]] auto getModule() -> std::unique_ptr<llvm::Module>;
 
-    [[nodiscard]] bool validate() const;
+    [[nodiscard]] auto validate() const -> bool;
 
-    [[nodiscard]] Context& getContext() { return m_context; }
-    [[nodiscard]] llvm::IRBuilder<>& getBuilder() { return m_builder; }
-    [[nodiscard]] llvm::ConstantInt* getTrue() { return m_constantTrue; }
-    [[nodiscard]] llvm::ConstantInt* getFalse() { return m_constantFalse; }
-    [[nodiscard]] auto& getControlStack() { return m_controlStack; }
+    [[nodiscard]] auto getContext() const -> Context& { return m_context; }
+    [[nodiscard]] auto getBuilder() -> llvm::IRBuilder<>& { return m_builder; }
+    [[nodiscard]] auto getTrue() const -> llvm::ConstantInt* { return m_constantTrue; }
+    [[nodiscard]] auto getFalse() const -> llvm::ConstantInt* { return m_constantFalse; }
+    [[nodiscard]] auto getControlStack() -> auto& { return m_controlStack; }
 
     void addBlock();
     void terminateBlock(llvm::BasicBlock* dest);
@@ -30,22 +30,21 @@ public:
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 private:
-    enum class Scope {
+    enum class Scope : std::uint8_t {
         Root,
         Function
     };
 
-    llvm::BasicBlock* getGlobalCtorBlock();
+    auto getGlobalCtorBlock() -> llvm::BasicBlock*;
 
     void declareFuncs(AstStmtList& ast);
     void declareFunc(AstFuncDecl& ast);
     void declareGlobalVar(AstVarDecl& ast);
     void declareLocalVar(AstVarDecl& ast);
-    llvm::Constant* getStringConstant(llvm::StringRef str);
+    auto getStringConstant(llvm::StringRef str) -> llvm::Constant*;
 
     Context& m_context;
     llvm::LLVMContext& m_llvmContext;
-    AstModule* m_astRootModule = nullptr;
     unsigned int m_fileId = ~0U;
     Scope m_scope = Scope::Root;
     std::unique_ptr<llvm::Module> m_module;
