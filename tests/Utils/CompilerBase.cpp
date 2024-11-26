@@ -92,7 +92,7 @@ void CompilerBase::SetUp() {
     if (env->context.getTriple().isOSWindows()) {
         binary += ".exe";
     }
-    auto compilerPath = canonical(workingPath / "../bin" / binary);
+    auto compilerPath = canonical(workingPath / ("../bin/" + binary));
     env->options.setCompilerPath(compilerPath);
 
     // redirect printf and puts

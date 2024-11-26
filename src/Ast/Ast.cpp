@@ -2,8 +2,8 @@
 // Created by Albert Varaksin on 05/07/2020.
 //
 #include "Ast.hpp"
-#include "AstVisitor.hpp"
 #include "Type/Type.hpp"
+#include <algorithm>
 using namespace lbc;
 
 namespace literals {
@@ -14,32 +14,32 @@ constexpr std::array nodes {
 };
 } // namespace literals
 
-llvm::StringRef AstRoot::getClassName() const {
+auto AstRoot::getClassName() const -> llvm::StringRef {
     auto index = static_cast<size_t>(kind);
     assert(index < literals::nodes.size()); // NOLINT
     return literals::nodes.at(index);
 }
 
-std::optional<llvm::StringRef> AstAttributeList::getStringLiteral(llvm::StringRef key) const {
+auto AstAttributeList::getStringLiteral(llvm::StringRef key) const -> std::optional<llvm::StringRef> {
     for (const auto& attr : attribs) {
-        if (attr->identExpr->name == key) {
-            if (attr->args->exprs.size() != 1) {
-                fatalError("Attribute "_t + key + " must have 1 value", false);
+        if (attr->identExpr->name != key) {
+            continue;
+        }
+        if (attr->args->exprs.size() != 1) {
+            fatalError("Attribute "_t + key + " must have 1 value", false);
+        }
+        if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(attr->args->exprs[0])) {
+            if (const auto* str = std::get_if<llvm::StringRef>(&literal->value)) {
+                return *str;
             }
-            if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(attr->args->exprs[0])) {
-                if (const auto* str = std::get_if<llvm::StringRef>(&literal->value)) {
-                    return *str;
-                }
-                fatalError("Attribute "_t + key + " must be a string literal", false);
-            }
+            fatalError("Attribute "_t + key + " must be a string literal", false);
         }
     }
-    return "";
+    return std::nullopt;
 }
 
-bool AstAttributeList::exists(llvm::StringRef name) const {
-    auto iter = std::find_if(attribs.begin(), attribs.end(), [&](const auto& attr) {
+auto AstAttributeList::exists(llvm::StringRef name) const -> bool {
+    return std::ranges::any_of(attribs, [&](const auto& attr) {
         return attr->identExpr->name == name;
     });
-    return iter != attribs.end();
 }

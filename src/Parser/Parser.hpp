@@ -13,8 +13,8 @@ class Context;
 class SymbolTable;
 class Lexer;
 struct AstIfStmtBlock;
-enum class CallingConv;
-enum class AstContinuationAction;
+enum class CallingConv: std::uint8_t;
+enum class AstContinuationAction: std::uint8_t;
 AST_FORWARD_DECLARE()
 struct AstExtern;
 

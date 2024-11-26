@@ -17,7 +17,6 @@ class Result;
 template<>
 class [[nodiscard]] Result<void> final {
 public:
-    using value_type = void;
 
     constexpr Result() = default;
 
@@ -42,7 +41,6 @@ private:
 template<IsPointer T>
 class [[nodiscard]] Result<T> final {
 public:
-    using value_type = T;
     using base_type = std::remove_pointer_t<T>;
 
     constexpr Result() = default;

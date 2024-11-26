@@ -13,12 +13,12 @@ namespace lbc {
 class TypeRoot;
 AST_FORWARD_DECLARE()
 
-enum class CallingConv {
+enum class CallingConv : std::uint8_t {
     Default,
     C
 };
 
-enum class AstKind {
+enum class AstKind : std::uint8_t {
 #define KIND_ENUM(id, ...) id,
     AST_CONTENT_NODES(KIND_ENUM)
 #undef KIND_ENUM
@@ -37,21 +37,11 @@ struct AstRoot {
 
     virtual ~AstRoot() = default;
 
-    [[nodiscard]] llvm::StringRef getClassName() const;
-    [[nodiscard]] inline llvm::SMRange getRange() const { return range; }
+    [[nodiscard]] auto getClassName() const -> llvm::StringRef;
+    [[nodiscard]] constexpr auto getRange() const { return range; }
 
     const AstKind kind;
-    llvm::SMRange range;
-
-    // Make vanilla new/delete illegal.
-    void* operator new(size_t) = delete;
-    void operator delete(void* /* ptr */) {} // NOLINT(cert-dcl54-cpp,hicpp-new-delete-operators,misc-new-delete-overloads)
-
-    // Allow placement new
-    void* operator new(size_t /*size*/, void* ptr) {
-        assert(ptr); // NOLINT
-        return ptr;
-    }
+    const llvm::SMRange range;
 };
 
 #define IS_AST_CLASSOF(FIRST, LAST) ast->kind >= AstKind::FIRST && ast->kind <= AstKind::LAST;
@@ -74,7 +64,7 @@ struct AstModule final : AstRoot {
       imports{ std::move(imports_) },
       stmtList{ stms } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::Module;
     }
 
@@ -92,7 +82,7 @@ struct AstModule final : AstRoot {
 struct AstStmt : AstRoot {
     using AstRoot::AstRoot;
 
-    static constexpr bool classof(const AstRoot* ast) {
+    static constexpr auto classof(const AstRoot* ast) -> bool {
         return AST_STMT_RANGE(IS_AST_CLASSOF)
     }
 };
@@ -109,7 +99,7 @@ struct AstStmtList final : AstStmt {
       funcs{ std::move(funcs_) },
       stmts{ std::move(stmts_) } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::StmtList;
     }
 
@@ -128,7 +118,7 @@ struct AstImport final : AstStmt {
       import{ import_ },
       module{ module_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::Import;
     }
 
@@ -146,11 +136,11 @@ struct AstExtern final : AstStmt {
       langauge{ language_ },
       stmts{ std::move(stmts_) } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::Extern;
     }
 
-    CallingConv langauge;
+    const CallingConv langauge;
     std::vector<AstStmt*> stmts;
 };
 
@@ -162,7 +152,7 @@ struct AstExprStmt final : AstStmt {
     : AstStmt{ AstKind::ExprStmt, range_ },
       expr{ expr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::ExprStmt;
     }
 
@@ -179,7 +169,7 @@ struct AstFuncStmt final : AstStmt {
       decl{ decl_ },
       stmtList{ stmtList_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::FuncStmt;
     }
 
@@ -195,7 +185,7 @@ struct AstReturnStmt final : AstStmt {
     : AstStmt{ AstKind::ReturnStmt, range_ },
       expr{ expr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::ReturnStmt;
     }
 
@@ -228,7 +218,7 @@ struct AstIfStmt final : AstStmt {
     : AstStmt{ AstKind::IfStmt, range_ },
       blocks{ std::move(blocks_) } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::IfStmt;
     }
 
@@ -236,7 +226,7 @@ struct AstIfStmt final : AstStmt {
 };
 
 struct AstForStmt final : AstStmt {
-    enum class Direction {
+    enum class Direction: std::uint8_t {
         Unknown,
         Skip,
         Increment,
@@ -260,7 +250,7 @@ struct AstForStmt final : AstStmt {
       stmt{ stmt_ },
       next{ next_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::ForStmt;
     }
 
@@ -276,7 +266,7 @@ struct AstForStmt final : AstStmt {
 };
 
 struct AstDoLoopStmt final : AstStmt {
-    enum class Condition {
+    enum class Condition: std::uint8_t {
         None,
         PreWhile,
         PreUntil,
@@ -297,7 +287,7 @@ struct AstDoLoopStmt final : AstStmt {
       expr{ expr_ },
       stmt{ stmt_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::DoLoopStmt;
     }
 
@@ -308,7 +298,7 @@ struct AstDoLoopStmt final : AstStmt {
     SymbolTable* symbolTable = nullptr;
 };
 
-enum class AstContinuationAction {
+enum class AstContinuationAction : std::uint8_t {
     Continue,
     Exit
 };
@@ -323,12 +313,12 @@ struct AstContinuationStmt final : AstStmt {
       action{ action_ },
       destination{ destination_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::ContinuationStmt;
     }
 
-    AstContinuationAction action;
-    std::size_t destination;
+    const AstContinuationAction action;
+    const std::size_t destination;
 };
 
 //----------------------------------------
@@ -343,12 +333,12 @@ struct AstAttributeList final : AstRoot {
     : AstRoot{ AstKind::AttributeList, range_ },
       attribs{ std::move(attribs_) } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::AttributeList;
     }
 
-    [[nodiscard]] bool exists(llvm::StringRef name) const;
-    [[nodiscard]] std::optional<llvm::StringRef> getStringLiteral(llvm::StringRef key) const;
+    [[nodiscard]] auto exists(llvm::StringRef name) const -> bool;
+    [[nodiscard]] auto getStringLiteral(llvm::StringRef key) const -> std::optional<llvm::StringRef>;
 
     std::vector<AstAttribute*> attribs;
 };
@@ -363,7 +353,7 @@ struct AstAttribute final : AstRoot {
       identExpr{ ident },
       args{ args_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::Attribute;
     }
 
@@ -390,13 +380,13 @@ struct AstDecl : AstStmt {
       callingConv{ callingConv_ },
       attributes{ attribs } {}
 
-    static constexpr bool classof(const AstRoot* ast) {
+    static constexpr auto classof(const AstRoot* ast) -> bool {
         return AST_DECL_RANGE(IS_AST_CLASSOF)
     }
 
     const llvm::StringRef name;
-    Token token;
-    CallingConv callingConv;
+    const Token token;
+    const CallingConv callingConv;
     AstAttributeList* attributes;
     bool local = true;
     Symbol* symbol = nullptr;
@@ -424,7 +414,7 @@ struct AstVarDecl final : AstDecl {
       typeExpr{ type_ },
       expr{ expr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::VarDecl;
     }
 
@@ -450,7 +440,7 @@ struct AstFuncDecl final : AstDecl {
       retTypeExpr{ retType_ },
       hasImpl{ hasImpl_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::FuncDecl;
     }
 
@@ -473,7 +463,7 @@ struct AstFuncParamDecl final : AstDecl {
     : AstDecl{ AstKind::FuncParamDecl, range_, name_, token_, callingConv_, attrs },
       typeExpr{ type_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::FuncParamDecl;
     }
 
@@ -503,7 +493,7 @@ struct AstUdtDecl final : AstDecl {
     : AstDecl{ AstKind::UdtDecl, range_, name_, token_, callingConv_, attrs },
       decls{ decls_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::UdtDecl;
     }
 
@@ -523,7 +513,7 @@ struct AstTypeAlias final : AstDecl {
     : AstDecl{ AstKind::TypeAlias, range_, name_, token_, callingConv_, attrs },
       typeExpr{ typeExpr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::TypeAlias;
     }
 
@@ -538,11 +528,11 @@ struct AstTypeOf final : AstRoot {
 
     constexpr explicit AstTypeOf(
         llvm::SMRange range_,
-        TypeExpr&& typeExpr_
+        TypeExpr typeExpr_
     )
     : AstRoot{ AstKind::TypeOf, range_ }, typeExpr{ typeExpr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::TypeOf;
     }
 
@@ -562,7 +552,7 @@ struct AstTypeExpr final : AstRoot {
       expr{ expr_ },
       dereference{ deref } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::TypeExpr;
     }
 
@@ -577,7 +567,7 @@ struct AstTypeExpr final : AstRoot {
 struct AstExpr : AstRoot {
     using AstRoot::AstRoot;
 
-    static constexpr bool classof(const AstRoot* ast) {
+    static constexpr auto classof(const AstRoot* ast) -> bool {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
     }
 
@@ -606,7 +596,7 @@ struct AstAssignExpr final : AstExpr {
       lhs{ lhs_ },
       rhs{ rhs_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::AssignExpr;
     }
 
@@ -622,11 +612,11 @@ struct AstIdentExpr final : AstExpr {
     : AstExpr{ AstKind::IdentExpr, range_ },
       name{ name_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::IdentExpr;
     }
 
-    llvm::StringRef name;
+    const llvm::StringRef name;
     Symbol* symbol = nullptr;
 };
 
@@ -640,7 +630,7 @@ struct AstCallExpr final : AstExpr {
       callable{ callable_ },
       args{ args_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::CallExpr;
     }
 
@@ -658,7 +648,7 @@ struct AstLiteralExpr final : AstExpr {
     : AstExpr{ AstKind::LiteralExpr, range_ },
       value{ value_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::LiteralExpr;
     }
 
@@ -675,11 +665,11 @@ struct AstUnaryExpr final : AstExpr {
       token{ token_ },
       expr{ expr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::UnaryExpr;
     }
 
-    Token token;
+    const Token token;
     AstExpr* expr;
 };
 
@@ -691,7 +681,7 @@ struct AstDereference final : AstExpr {
     : AstExpr{ AstKind::Dereference, range_ },
       expr{ expr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::Dereference;
     }
 
@@ -706,7 +696,7 @@ struct AstAddressOf final : AstExpr {
     : AstExpr{ AstKind::AddressOf, range_ },
       expr{ expr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::AddressOf;
     }
 
@@ -725,11 +715,11 @@ struct AstBinaryExpr final : AstExpr {
       lhs{ lhs_ },
       rhs{ rhs_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::BinaryExpr;
     }
 
-    Token token;
+    const Token token;
     AstExpr* lhs;
     AstExpr* rhs;
 };
@@ -746,17 +736,12 @@ struct AstMemberExpr final : AstExpr {
       base{ base_ },
       member{ member_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::MemberExpr;
     }
 
-    /// The location of the member access operator '.'
-    Token token;
-
-    /// In member expression F.X, this is F
+    const Token token;
     AstExpr* base;
-
-    /// In member expression F.X, this is X
     AstExpr* member;
 };
 
@@ -772,7 +757,7 @@ struct AstCastExpr final : AstExpr {
       typeExpr{ typeExpr_ },
       implicit{ implicit_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::CastExpr;
     }
 
@@ -793,7 +778,7 @@ struct AstIfExpr final : AstExpr {
       trueExpr{ trueExpr_ },
       falseExpr{ falseExpr_ } {}
 
-    constexpr static bool classof(const AstRoot* ast) {
+    constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::IfExpr;
     }
 
