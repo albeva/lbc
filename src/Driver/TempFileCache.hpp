@@ -7,9 +7,12 @@
 #pragma once
 #include "pch.hpp"
 
+namespace lbc {
 
-namespace lbc::TempFileCache {
-[[nodiscard]] fs::path createUniquePath(llvm::StringRef suffix);
-[[nodiscard]] fs::path createUniquePath(const fs::path& file, llvm::StringRef suffix);
-void removeTemporaryFiles();
-} // namespace lbc::TempFileCache
+struct TempFileCache final {
+    [[nodiscard]] static auto createUniquePath(llvm::StringRef suffix) -> fs::path;
+    [[nodiscard]] static auto createUniquePath(const fs::path& file, llvm::StringRef suffix) -> fs::path;
+    static void removeTemporaryFiles();
+};
+
+} // namespace lbc

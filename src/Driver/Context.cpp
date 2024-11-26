@@ -13,6 +13,7 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/TargetParser/Host.h>
+#include "TempFileCache.hpp"
 using namespace lbc;
 
 struct Context::Pimpl {
@@ -65,6 +66,8 @@ void Context::reset() {
     m_retainedStrings.clear();
     m_imports.clear();
     m_allocator.Reset();
+
+    TempFileCache::removeTemporaryFiles();
 }
 
 auto Context::getJIT() noexcept -> JIT& {
