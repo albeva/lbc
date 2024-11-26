@@ -44,7 +44,6 @@ add_library(
     Gen/Builders/IfStmtBuilder.hpp
     Gen/Builders/MemberExprBuilder.cpp
     Gen/Builders/MemberExprBuilder.hpp
-    Gen/CallingConv/CallingConvention.hpp
     Gen/CodeGen.cpp
     Gen/CodeGen.hpp
     Gen/Helpers.cpp
