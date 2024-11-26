@@ -10,8 +10,10 @@ namespace lbc {
 class Context;
 
 class AstPrinter final : public AstVisitor<AstPrinter> {
+    NO_COPY_AND_MOVE(AstPrinter)
 public:
-    explicit AstPrinter(Context& context, llvm::raw_ostream& os);
+    AstPrinter(Context& context, llvm::raw_ostream& os);
+    ~AstPrinter() = default;
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 

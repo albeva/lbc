@@ -6,18 +6,17 @@
 #include <algorithm>
 using namespace lbc;
 
-namespace literals {
+namespace {
 constexpr std::array nodes {
 #define KIND_ENUM(id, ...) llvm::StringLiteral{ "Ast" #id },
     AST_CONTENT_NODES(KIND_ENUM)
 #undef KIND_ENUM
 };
-} // namespace literals
+} // namespace
 
 auto AstRoot::getClassName() const -> llvm::StringRef {
     auto index = static_cast<size_t>(kind);
-    assert(index < literals::nodes.size()); // NOLINT
-    return literals::nodes.at(index);
+    return nodes.at(index);
 }
 
 auto AstAttributeList::getStringLiteral(llvm::StringRef key) const -> std::optional<llvm::StringRef> {

@@ -7,6 +7,7 @@
 
 namespace lbc {
 
+// NOLINTBEGIN(cppcoreguidelines-pro-type-static-cast-downcast)
 template<class This, typename RetTy = void, typename StmtTy = RetTy, typename ExprTy = RetTy, typename TypeTy = RetTy>
 class AstVisitor {
 public:
@@ -19,7 +20,7 @@ public:
     case AstKind::KIND:  \
         return static_cast<This*>(this)->visit(static_cast<Ast##KIND&>(ast));
 
-    StmtRetTy visit(AstStmt& ast) {
+    auto visit(AstStmt& ast) -> StmtRetTy {
         switch (ast.kind) {
             AST_STMT_NODES(VISIT_CASE)
             AST_DECL_NODES(VISIT_CASE)
@@ -28,7 +29,7 @@ public:
         }
     }
 
-    ExprRetTy visit(AstExpr& ast) {
+    auto visit(AstExpr& ast) -> ExprRetTy {
         switch (ast.kind) {
             AST_EXPR_NODES(VISIT_CASE)
         default:
@@ -37,11 +38,12 @@ public:
     }
 #undef VISIT_CASE
 };
+// NOLINTEND(cppcoreguidelines-pro-type-static-cast-downcast)
 
-#define VISIT_METHOD_GEN(KIND) GenRetTy visit(Ast##KIND&);
-#define VISIT_METHOD_EXPR(KIND) ExprRetTy visit(Ast##KIND&);
-#define VISIT_METHOD_STMT(KIND) StmtRetTy visit(Ast##KIND&);
-#define VISIT_METHOD_TYPE(KIND) TypeRetTy visit(Ast##KIND&);
+#define VISIT_METHOD_GEN(KIND)  auto visit(Ast##KIND&) -> GenRetTy;
+#define VISIT_METHOD_EXPR(KIND) auto visit(Ast##KIND&) -> ExprRetTy;
+#define VISIT_METHOD_STMT(KIND) auto visit(Ast##KIND&) -> StmtRetTy;
+#define VISIT_METHOD_TYPE(KIND) auto visit(Ast##KIND&) -> TypeRetTy;
 
 #define AST_VISITOR_DECLARE_CONTENT_FUNCS() \
     using AstVisitor::visit;                \

@@ -300,7 +300,7 @@ void CodePrinter::visit(AstIfStmt& ast) {
         if (!isFirst) {
             m_os << "ELSE";
         }
-        if (block->expr) {
+        if (block->expr != nullptr) {
             RESTORE_ON_EXIT(m_indent);
             m_indent = 0;
             if (!isFirst) {
@@ -336,7 +336,7 @@ void CodePrinter::visit(AstForStmt& ast) {
     }
 
     m_os << ast.iterator->name;
-    if (ast.iterator->typeExpr) {
+    if (ast.iterator->typeExpr != nullptr) {
         m_os << " AS ";
         visit(*ast.iterator->typeExpr);
     }
@@ -345,7 +345,7 @@ void CodePrinter::visit(AstForStmt& ast) {
     visit(*ast.iterator->expr);
     m_os << " TO ";
     visit(*ast.limit);
-    if (ast.step) {
+    if (ast.step != nullptr) {
         m_os << " STEP ";
         visit(*ast.step);
     }
@@ -555,6 +555,6 @@ void CodePrinter::visit(AstIfExpr& ast) {
     m_os << ")";
 }
 
-std::string CodePrinter::indent() const {
-    return std::string(m_indent * SPACES, ' ');
+auto CodePrinter::indent() const -> std::string {
+    return std::string(m_indent * SPACES, ' '); // NOLINT(modernize-return-braced-init-list)
 }
