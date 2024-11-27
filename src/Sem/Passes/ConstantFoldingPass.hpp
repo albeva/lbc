@@ -16,13 +16,13 @@ namespace Sem {
         void fold(AstExpr*& ast);
 
     private:
-        AstExpr* visitUnaryExpr(const AstUnaryExpr& ast);
-        AstLiteralExpr::Value unary(TokenKind op, const AstLiteralExpr& ast);
-        AstExpr* visitIfExpr(AstIfExpr& ast);
-        AstExpr* optimizeIifToCast(AstIfExpr& ast);
-        AstExpr* visitBinaryExpr(AstBinaryExpr& ast);
-        AstExpr* visitCastExpr(const AstCastExpr& ast);
-        AstLiteralExpr::Value cast(const TypeRoot* type, const AstLiteralExpr& ast);
+        auto visitUnaryExpr(const AstUnaryExpr& ast) -> AstExpr*;
+        auto unary(TokenKind op, const AstLiteralExpr& ast) -> AstLiteralExpr::Value;
+        auto visitIfExpr(AstIfExpr& ast) -> AstExpr*;
+        auto optimizeIifToCast(AstIfExpr& ast) -> AstExpr*;
+        auto visitBinaryExpr(AstBinaryExpr& ast) -> AstExpr*;
+        auto visitCastExpr(const AstCastExpr& ast) -> AstExpr*;
+        auto cast(const TypeRoot* type, const AstLiteralExpr& ast) -> AstLiteralExpr::Value;
     };
 } // namespace Sem
 } // namespace lbc

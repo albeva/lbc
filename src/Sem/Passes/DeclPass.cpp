@@ -15,14 +15,14 @@ using namespace Sem;
 // Declare symbols
 //----------------------------------------
 
-Result<void> DeclPass::declare(AstStmtList& ast) {
+auto DeclPass::declare(AstStmtList& ast) -> Result<void> {
     for (auto* decl : ast.decl) {
         TRY(declare(*decl))
     }
     return {};
 }
 
-Result<void> DeclPass::declare(AstDecl& ast) {
+auto DeclPass::declare(AstDecl& ast) -> Result<void> {
     TRY_DECL(symbol, createNewSymbol(ast, nullptr))
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
@@ -37,14 +37,14 @@ Result<void> DeclPass::declare(AstDecl& ast) {
     return {};
 }
 
-Result<void> DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) {
+auto DeclPass::declareAndDefine(const std::vector<AstVarDecl*>& vars) -> Result<void> {
     for (auto* var : vars) {
         TRY(declareAndDefine(*var))
     }
     return {};
 }
 
-Result<void> DeclPass::declareAndDefine(AstVarDecl& var) {
+auto DeclPass::declareAndDefine(AstVarDecl& var) -> Result<void> {
     TRY(declare(var))
     TRY(define(var))
     var.symbol->stateFlags().declared = true;
@@ -55,7 +55,7 @@ Result<void> DeclPass::declareAndDefine(AstVarDecl& var) {
 // Define symbol
 //----------------------------------------
 
-Result<void> DeclPass::define(AstDecl& ast) {
+auto DeclPass::define(AstDecl& ast) -> Result<void> {
     auto& state = ast.symbol->stateFlags();
     if (state.beingDefined) {
         return m_sem.makeError(
@@ -86,7 +86,7 @@ Result<void> DeclPass::define(AstDecl& ast) {
     llvm_unreachable("Unknown decl type");
 }
 
-Result<void> DeclPass::defineAlias(AstTypeAlias& ast) {
+auto DeclPass::defineAlias(AstTypeAlias& ast) -> Result<void> {
     static constexpr auto getSymbol = Visitor{
         [](AstIdentExpr* ident) -> Symbol* {
             return ident->symbol;
@@ -112,7 +112,7 @@ Result<void> DeclPass::defineAlias(AstTypeAlias& ast) {
     return {};
 }
 
-Result<void> DeclPass::defineUdt(AstUdtDecl& ast) {
+auto DeclPass::defineUdt(AstUdtDecl& ast) -> Result<void> {
     auto* symbol = ast.symbol;
     bool packed = false;
     if (ast.attributes != nullptr) {
@@ -138,7 +138,7 @@ Result<void> DeclPass::defineUdt(AstUdtDecl& ast) {
     return {};
 }
 
-Result<void> DeclPass::defineFunc(AstFuncDecl& ast) {
+auto DeclPass::defineFunc(AstFuncDecl& ast) -> Result<void> {
     auto* symbol = ast.symbol;
 
     // main or external?
@@ -167,7 +167,7 @@ Result<void> DeclPass::defineFunc(AstFuncDecl& ast) {
     return {};
 }
 
-Result<void> DeclPass::defineFuncParam(AstFuncParamDecl& ast) {
+auto DeclPass::defineFuncParam(AstFuncParamDecl& ast) -> Result<void> {
     const auto* type = ast.typeExpr->type;
     if (type->isUDT()) {
         llvm::errs() << "Passing types by values is not implemented\n";
@@ -178,7 +178,7 @@ Result<void> DeclPass::defineFuncParam(AstFuncParamDecl& ast) {
     return {};
 }
 
-Result<void> DeclPass::defineVar(AstVarDecl& ast) {
+auto DeclPass::defineVar(AstVarDecl& ast) -> Result<void> {
     // m_type expr?
     const TypeRoot* type = nullptr;
     if (ast.typeExpr != nullptr) {
@@ -212,7 +212,7 @@ Result<void> DeclPass::defineVar(AstVarDecl& ast) {
 // Utils
 //----------------------------------------
 
-Result<Symbol*> DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) {
+auto DeclPass::createNewSymbol(AstDecl& ast, const TypeRoot* type) -> Result<Symbol*> {
     if (m_sem.getSymbolTable()->find(ast.name, false) != nullptr) {
         return m_sem.makeError(Diag::symbolAlreadyDefined, ast.token, ast.name);
     }

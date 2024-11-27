@@ -16,12 +16,12 @@ namespace Sem {
     class TypePass final : public Pass {
     public:
         using Pass::Pass;
-        [[nodiscard]] Result<const TypeRoot*> visit(AstTypeExpr& ast) const;
-        [[nodiscard]] Result<const TypeRoot*> visit(AstFuncDecl& ast) const;
-        [[nodiscard]] Result<const TypeRoot*> visit(AstTypeOf& ast) const;
+        [[nodiscard]] auto visit(AstTypeExpr& ast) const -> Result<const TypeRoot*>;
+        [[nodiscard]] auto visit(AstFuncDecl& ast) const -> Result<const TypeRoot*>;
+        [[nodiscard]] auto visit(AstTypeOf& ast) const -> Result<const TypeRoot*>;
 
     private:
-        [[nodiscard]] Result<const TypeRoot*> visit(AstIdentExpr& ast) const;
+        [[nodiscard]] auto visit(AstIdentExpr& ast) const -> Result<const TypeRoot*>;
     };
 } // namespace Sem
 } // namespace lbc

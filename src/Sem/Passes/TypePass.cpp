@@ -6,14 +6,12 @@
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/Symbol.hpp"
-#include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
-#include "Type/TypeUdt.hpp"
 
 using namespace lbc;
 using namespace Sem;
 
-Result<const TypeRoot*> TypePass::visit(AstTypeExpr& ast) const {
+auto TypePass::visit(AstTypeExpr& ast) const -> Result<const TypeRoot*> {
     const auto visitor = Visitor{
         [&](AstIdentExpr* ident) -> Result<const TypeRoot*> {
             return visit(*ident);
@@ -38,7 +36,7 @@ Result<const TypeRoot*> TypePass::visit(AstTypeExpr& ast) const {
     return type;
 }
 
-Result<const TypeRoot*> TypePass::visit(AstIdentExpr& ast) const {
+auto TypePass::visit(AstIdentExpr& ast) const -> Result<const TypeRoot*> {
     auto* symbol = m_sem.getSymbolTable()->find(ast.name);
     if (symbol == nullptr) {
         return m_sem.makeError(Diag::undefinedType, ast, ast.name);
@@ -49,14 +47,14 @@ Result<const TypeRoot*> TypePass::visit(AstIdentExpr& ast) const {
     }
 
     if (symbol->getType() == nullptr) {
-        TRY(m_sem.getDeclPass().define(*symbol->getDecl()));
+        TRY(m_sem.getDeclPass().define(*symbol->getDecl()))
     }
 
     ast.type = symbol->getType();
     return ast.type;
 }
 
-Result<const TypeRoot*> TypePass::visit(AstFuncDecl& ast) const {
+auto TypePass::visit(AstFuncDecl& ast) const -> Result<const TypeRoot*> {
     // parameters
     llvm::SmallVector<const TypeRoot*> paramTypes;
     if (ast.params != nullptr) {
@@ -84,10 +82,10 @@ Result<const TypeRoot*> TypePass::visit(AstFuncDecl& ast) const {
     return TypeFunction::get(m_sem.getContext(), retType, std::move(paramTypes), ast.variadic);
 }
 
-Result<const TypeRoot*> TypePass::visit(AstTypeOf& ast) const {
+auto TypePass::visit(AstTypeOf& ast) const -> Result<const TypeRoot*> {
     if (ast.type != nullptr) {
         return ast.type;
     }
-    TRY(m_sem.visit(ast));
+    TRY(m_sem.visit(ast))
     return ast.type;
 }

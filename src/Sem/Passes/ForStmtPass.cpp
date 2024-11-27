@@ -9,7 +9,7 @@
 using namespace lbc;
 using namespace Sem;
 
-Result<void> ForStmtPass::visit(AstForStmt& ast) const {
+auto ForStmtPass::visit(AstForStmt& ast) const -> Result<void> {
     auto* current = m_sem.getSymbolTable();
     ast.symbolTable = m_sem.getContext().create<SymbolTable>(current);
     TRY(m_sem.with(ast.symbolTable, [&]() -> Result<void> {
@@ -21,7 +21,7 @@ Result<void> ForStmtPass::visit(AstForStmt& ast) const {
     return {};
 }
 
-Result<void> ForStmtPass::declare(AstForStmt& ast) const {
+auto ForStmtPass::declare(AstForStmt& ast) const -> Result<void> {
     TRY(m_sem.getDeclPass().declareAndDefine(ast.decls))
     TRY(m_sem.getDeclPass().declareAndDefine(*ast.iterator))
     auto flags = ast.iterator->symbol->valueFlags();
@@ -30,7 +30,7 @@ Result<void> ForStmtPass::declare(AstForStmt& ast) const {
     return {};
 }
 
-Result<void> ForStmtPass::analyze(AstForStmt& ast) const {
+auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
     TRY(m_sem.expression(ast.limit))
 
     if (ast.step != nullptr) {

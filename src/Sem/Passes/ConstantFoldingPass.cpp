@@ -10,7 +10,7 @@ using namespace Sem;
 
 namespace {
 template<typename BASE, typename T>
-constexpr inline BASE castLiteral(const AstLiteralExpr& ast) {
+constexpr auto castLiteral(const AstLiteralExpr& ast) -> BASE {
     constexpr auto visitor = [](const auto& val) -> T {
         using R = std::decay_t<decltype(val)>;
         if constexpr (std::is_convertible_v<R, T>) {
@@ -30,16 +30,16 @@ void ConstantFoldingPass::fold(AstExpr*& ast) {
     AstExpr* replace = nullptr;
     switch (ast->kind) {
     case AstKind::UnaryExpr:
-        replace = visitUnaryExpr(static_cast<AstUnaryExpr&>(*ast));
+        replace = visitUnaryExpr(llvm::cast<AstUnaryExpr>(*ast));
         break;
     case AstKind::BinaryExpr:
-        replace = visitBinaryExpr(static_cast<AstBinaryExpr&>(*ast));
+        replace = visitBinaryExpr(llvm::cast<AstBinaryExpr>(*ast));
         break;
     case AstKind::CastExpr:
-        replace = visitCastExpr(static_cast<AstCastExpr&>(*ast));
+        replace = visitCastExpr(llvm::cast<AstCastExpr>(*ast));
         break;
     case AstKind::IfExpr:
-        replace = visitIfExpr(static_cast<AstIfExpr&>(*ast));
+        replace = visitIfExpr(llvm::cast<AstIfExpr>(*ast));
         break;
     default:
         return;
@@ -49,7 +49,7 @@ void ConstantFoldingPass::fold(AstExpr*& ast) {
     }
 }
 
-AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
+auto ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) -> AstExpr* {
     auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.expr);
     if (literal == nullptr) {
         return nullptr;
@@ -61,7 +61,7 @@ AstExpr* ConstantFoldingPass::visitUnaryExpr(const AstUnaryExpr& ast) {
     return repl;
 }
 
-AstLiteralExpr::Value ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) {
+auto ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) -> AstLiteralExpr::Value {
     (void)this;
     switch (op) {
     case TokenKind::Negate: {
@@ -95,7 +95,7 @@ AstLiteralExpr::Value ConstantFoldingPass::unary(TokenKind op, const AstLiteralE
 }
 
 
-AstExpr* ConstantFoldingPass::visitIfExpr(AstIfExpr& ast) {
+auto ConstantFoldingPass::visitIfExpr(AstIfExpr& ast) -> AstExpr* {
     if (auto* expr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
         if (std::get<bool>(expr->value)) {
             return ast.trueExpr;
@@ -110,7 +110,7 @@ AstExpr* ConstantFoldingPass::visitIfExpr(AstIfExpr& ast) {
     return nullptr;
 }
 
-AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
+auto ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) -> AstExpr* {
     auto* lhs = llvm::dyn_cast<AstLiteralExpr>(ast.trueExpr);
     if (lhs == nullptr) {
         return nullptr;
@@ -142,7 +142,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
 
     if (*lval == 0 && *rval == 1) {
         // TODO: Set correct token range
-        Token tkn{ TokenKind::LogicalNot, ast.range };
+        const Token tkn{ TokenKind::LogicalNot, ast.range };
         auto* unary = m_sem.getContext().create<AstUnaryExpr>(
             ast.range,
             tkn,
@@ -162,13 +162,13 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
     return nullptr;
 }
 
-AstExpr* ConstantFoldingPass::visitBinaryExpr(AstBinaryExpr& /*ast*/) {
+auto ConstantFoldingPass::visitBinaryExpr(AstBinaryExpr& /*ast*/) -> AstExpr* {
     // TODO
     (void)this;
     return nullptr;
 }
 
-AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
+auto ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) -> AstExpr* {
     auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.expr);
     if (literal == nullptr) {
         return nullptr;
@@ -180,7 +180,7 @@ AstExpr* ConstantFoldingPass::visitCastExpr(const AstCastExpr& ast) {
     return repl;
 }
 
-AstLiteralExpr::Value ConstantFoldingPass::cast(const TypeRoot* type, const AstLiteralExpr& ast) {
+auto ConstantFoldingPass::cast(const TypeRoot* type, const AstLiteralExpr& ast) -> AstLiteralExpr::Value {
     (void)this;
     // clang-format off
     if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
