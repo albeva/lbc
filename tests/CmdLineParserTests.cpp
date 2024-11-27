@@ -3,7 +3,7 @@
 //
 #include "Driver/CmdLineParser.hpp"
 #include "Driver/CompileOptions.hpp"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 class CmdLineParserTest : public ::testing::Test {
 protected:

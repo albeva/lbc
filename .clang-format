@@ -13,6 +13,6 @@ IncludeCategories:
   - Priority: 4
     Regex: ^<|"llvm/
   - Priority: 3
-    Regex: ^(<|"(gtest|gmock|isl|json)/)
+    Regex: ^(<|"gtest/)
   - Priority: 2
     Regex: .*
