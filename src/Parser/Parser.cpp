@@ -1316,8 +1316,6 @@ void Parser::resolveBinaryOperators() {
     case TokenKind::CommaOrConditionAnd:
         if (flags::has(m_exprFlags, ExprFlags::commaAsAnd)) {
             m_token.setKind(TokenKind::ConditionAnd);
-        } else {
-            m_token.setKind(TokenKind::Comma);
         }
         break;
     case TokenKind::MinusOrNegate:
@@ -1332,7 +1330,7 @@ void Parser::resolveBinaryOperators() {
 }
 
 /**
- * factor = primary { "(" expressionList ")" | "AS" TypeExpr | } .
+ * factor = primary { "(" expressionList ")" | "AS" TypeExpr | <right unary op> } .
  */
 auto Parser::factor() -> Result<AstExpr*> {
     auto start = m_token.getRange().Start;
@@ -1372,19 +1370,14 @@ auto Parser::factor() -> Result<AstExpr*> {
 }
 
 /**
- * primary = literal
- *         | identifier
+ * primary = identifier
  *         | "(" expression ")"
  *         | IfExpr
+ *         | literal
  *         | <Left Unary Op> [ factor { <Binary Op> expression } ]
- *         | IfExpr
- *        .
+ *         .
  */
 auto Parser::primary() -> Result<AstExpr*> {
-    if (m_token.isLiteral()) {
-        return literal();
-    }
-
     switch (m_token.getKind()) {
     case TokenKind::Identifier:
         return identifier();
@@ -1403,6 +1396,9 @@ auto Parser::primary() -> Result<AstExpr*> {
         m_token.setKind(TokenKind::Negate);
         break;
     default:
+        if (m_token.isLiteral()) {
+            return literal();
+        }
         break;
     }
 
@@ -1541,7 +1537,7 @@ auto Parser::accept(TokenKind kind) -> bool {
 }
 
 auto Parser::acceptAssign() -> bool {
-    if (m_token.isOneOf(TokenKind::AssignOrEqual, TokenKind::Assign)) {
+    if (m_token.is(TokenKind::AssignOrEqual)) {
         advance();
         return true;
     }
@@ -1549,7 +1545,7 @@ auto Parser::acceptAssign() -> bool {
 }
 
 auto Parser::acceptComma() -> bool {
-    if (m_token.isOneOf(TokenKind::CommaOrConditionAnd, TokenKind::Comma)) {
+    if (m_token.is(TokenKind::CommaOrConditionAnd)) {
         advance();
         return true;
     }
