@@ -257,7 +257,6 @@ auto Lexer::endOfFile() -> Token {
         m_eolPos = m_input;
         return endOfStatement();
     }
-    // { TokenKind::EndOfFile, makeRange(m_input, m_input) };
     return { TokenKind::EndOfFile, makeRange(m_input, m_input) };
 }
 
