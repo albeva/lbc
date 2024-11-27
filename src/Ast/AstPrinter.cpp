@@ -9,7 +9,8 @@
 using namespace lbc;
 
 AstPrinter::AstPrinter(Context& context, llvm::raw_ostream& os)
-: m_context{ context }, m_json{ os, 4 } {
+: m_context { context }
+, m_json { os, 4 } {
 }
 
 void AstPrinter::visit(AstModule& ast) {
@@ -337,7 +338,7 @@ void AstPrinter::visit(AstTypeExpr& ast) {
         if (const auto* type = ast.type) {
             name = type->asString();
         } else {
-            static constexpr auto visitor = Visitor{
+            static constexpr auto visitor = Visitor {
                 [](AstIdentExpr* ident) -> llvm::StringRef {
                     return ident->name;
                 },
@@ -364,7 +365,7 @@ void AstPrinter::visit(AstTypeExpr& ast) {
 void AstPrinter::visit(AstTypeOf& ast) {
     m_json.object([&] {
         writeHeader(ast);
-        const auto visitor = Visitor{
+        const auto visitor = Visitor {
             [&](llvm::SMLoc&) {
                 // TODO: Implement printing out TYPEOF(SMRange)
                 // m_json.attributeArray("tokens", [&]() {
@@ -404,7 +405,7 @@ void AstPrinter::visit(AstCallExpr& ast) {
 
 void AstPrinter::visit(AstLiteralExpr& ast) {
     using Ret = std::pair<TokenKind, std::string>;
-    const auto visitor = Visitor{
+    const auto visitor = Visitor {
         [](std::monostate /*value*/) -> Ret {
             return { TokenKind::NullLiteral, "null" };
         },

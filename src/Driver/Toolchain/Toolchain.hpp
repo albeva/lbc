@@ -25,7 +25,9 @@ class Toolchain final {
 public:
     NO_COPY_AND_MOVE(Toolchain)
 
-    explicit Toolchain(Context& context) : m_context{ context } {}
+    explicit Toolchain(Context& context)
+    : m_context { context } {
+    }
     ~Toolchain() = default;
 
     [[nodiscard]] auto getBasePath() const -> const fs::path&;

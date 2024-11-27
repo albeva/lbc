@@ -25,6 +25,7 @@ add_library(
     Driver/Driver.hpp
     Driver/JIT.cpp
     Driver/JIT.hpp
+    Driver/Source.cpp
     Driver/Source.hpp
     Driver/TempFileCache.cpp
     Driver/TempFileCache.hpp

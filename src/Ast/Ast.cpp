@@ -7,11 +7,13 @@
 using namespace lbc;
 
 namespace {
+// clang-format off
 constexpr std::array nodes {
-#define KIND_ENUM(id, ...) llvm::StringLiteral{ "Ast" #id },
+    #define KIND_ENUM(id, ...) llvm::StringLiteral { "Ast" #id },
     AST_CONTENT_NODES(KIND_ENUM)
-#undef KIND_ENUM
+    #undef KIND_ENUM
 };
+// clang-format on
 } // namespace
 
 auto AstRoot::getClassName() const -> llvm::StringRef {
@@ -24,9 +26,11 @@ auto AstAttributeList::getStringLiteral(llvm::StringRef key) const -> std::optio
         if (attr->identExpr->name != key) {
             continue;
         }
+
         if (attr->args->exprs.size() != 1) {
             fatalError("Attribute "_t + key + " must have 1 value", false);
         }
+
         if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(attr->args->exprs[0])) {
             if (const auto* str = std::get_if<llvm::StringRef>(&literal->value)) {
                 return *str;

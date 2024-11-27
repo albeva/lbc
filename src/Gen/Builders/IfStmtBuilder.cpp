@@ -7,7 +7,7 @@ using namespace lbc;
 using namespace Gen;
 
 IfStmtBuilder::IfStmtBuilder(CodeGen& gen, AstIfStmt& ast)
-: Builder{ gen, ast } {
+: Builder { gen, ast } {
     build();
 }
 

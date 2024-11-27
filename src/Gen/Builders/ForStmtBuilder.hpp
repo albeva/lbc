@@ -30,10 +30,10 @@ private:
     llvm::Type* m_llvmType = nullptr;
     llvm::Value* m_isDecr = nullptr;
 
-    llvm::BasicBlock* m_condBlock{};
-    llvm::BasicBlock* m_bodyBlock{};
-    llvm::BasicBlock* m_iterBlock{};
-    llvm::BasicBlock* m_exitBlock{};
+    llvm::BasicBlock* m_condBlock {};
+    llvm::BasicBlock* m_bodyBlock {};
+    llvm::BasicBlock* m_iterBlock {};
+    llvm::BasicBlock* m_exitBlock {};
 
     ValueHandler m_iterator;
     ValueHandler m_limit;

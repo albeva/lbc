@@ -24,13 +24,13 @@ inline auto getStart(const AstAttributeList* attribs, const Token& token) -> llv
 } // namespace
 
 Parser::Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable)
-: ErrorLogger(context.getDiag()),
-  m_context{ context },
-  m_lexer{ lexer },
-  m_isMain{ isMain },
-  m_symbolTable{ symbolTable },
-  m_language{ CallingConv::Default },
-  m_scope{ Scope::Root } {
+: ErrorLogger(context.getDiag())
+, m_context { context }
+, m_lexer { lexer }
+, m_isMain { isMain }
+, m_symbolTable { symbolTable }
+, m_language { CallingConv::Default }
+, m_scope { Scope::Root } {
     advance();
 }
 
@@ -126,7 +126,7 @@ auto Parser::stmtList() -> Result<AstStmtList*> {
     }
 
     return m_context.create<AstStmtList>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(decls),
         std::move(funcs),
         std::move(stms)
@@ -205,11 +205,11 @@ auto Parser::kwImport() -> Result<AstImport*> {
     // Imported file
     auto source = m_context.getOptions().getCompilerDir() / "lib" / (import + ".bas").str();
     if (!m_context.import(source.string())) {
-        return m_context.create<AstImport>(llvm::SMRange{ range.Start, m_endLoc }, import);
+        return m_context.create<AstImport>(llvm::SMRange { range.Start, m_endLoc }, import);
     }
     if (!fs::exists(source)) {
         getDiag().log(Diag::moduleNotFound, range.Start, range, import);
-        return ResultError{};
+        return ResultError {};
     }
 
     // Load import into Source Mgr
@@ -221,15 +221,15 @@ auto Parser::kwImport() -> Result<AstImport*> {
     );
     if (ID == ~0U) {
         getDiag().log(Diag::failedToLoadModule, range.Start, range, source.string());
-        return ResultError{};
+        return ResultError {};
     }
 
     // parse the module
-    Lexer lexer{ m_context, ID };
+    Lexer lexer { m_context, ID };
     TRY_DECL(module, Parser(m_context, lexer, false).parse())
 
     return m_context.create<AstImport>(
-        llvm::SMRange{ range.Start, m_endLoc },
+        llvm::SMRange { range.Start, m_endLoc },
         import,
         module
     );
@@ -260,7 +260,7 @@ auto Parser::kwExtern() -> Result<AstExtern*> {
         advance();
     }
 
-    std::vector<AstStmt*> stmts{};
+    std::vector<AstStmt*> stmts {};
 
     if (accept(TokenKind::EndOfStmt)) {
         while (m_token.isNot(TokenKind::End)) {
@@ -279,7 +279,7 @@ auto Parser::kwExtern() -> Result<AstExtern*> {
     }
 
     return m_context.create<AstExtern>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         m_language,
         std::move(stmts)
     );
@@ -337,7 +337,7 @@ auto Parser::attributeList() -> Result<AstAttributeList*> {
 
     std::vector<AstAttribute*> attribs;
 
-    while(true) {
+    while (true) {
         TRY_DECL(attrib, attribute())
         attribs.emplace_back(attrib);
         if (!acceptComma()) {
@@ -348,7 +348,7 @@ auto Parser::attributeList() -> Result<AstAttributeList*> {
     TRY(consume(TokenKind::BracketClose))
 
     return m_context.create<AstAttributeList>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(attribs)
     );
 }
@@ -369,7 +369,7 @@ auto Parser::attribute() -> Result<AstAttribute*> {
     }
 
     return m_context.create<AstAttribute>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         args
     );
@@ -400,7 +400,7 @@ auto Parser::attributeArgList() -> Result<AstExprList*> {
     }
 
     return m_context.create<AstExprList>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(args)
     );
 }
@@ -442,7 +442,7 @@ auto Parser::kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*> {
     }
 
     return m_context.create<AstVarDecl>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         token,
         m_language,
@@ -509,7 +509,7 @@ auto Parser::funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFla
     }
 
     return m_context.create<AstFuncDecl>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         token,
         m_language,
@@ -547,7 +547,7 @@ auto Parser::funcParamList(bool& isVariadic, bool isAnonymous) -> Result<AstFunc
     }
 
     return m_context.create<AstFuncParamList>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(params)
     );
 }
@@ -582,7 +582,7 @@ auto Parser::funcParam(bool isAnonymous) -> Result<AstFuncParamDecl*> {
     TRY_DECL(type, typeExpr())
 
     return m_context.create<AstFuncParamDecl>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         token,
         m_language,
@@ -633,7 +633,7 @@ auto Parser::alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttrib
     TRY_DECL(type, typeExpr())
 
     return m_context.create<AstTypeAlias>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         token,
         m_language,
@@ -657,7 +657,7 @@ auto Parser::udt(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttribut
     TRY(consume(TokenKind::Type))
 
     return m_context.create<AstUdtDecl>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         token,
         m_language,
@@ -691,7 +691,7 @@ auto Parser::udtDeclList() -> Result<AstDeclList*> {
     }
 
     return m_context.create<AstDeclList>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(decls)
     );
 }
@@ -712,7 +712,7 @@ auto Parser::udtMember(AstAttributeList* attribs) -> Result<AstDecl*> {
     TRY_DECL(type, typeExpr())
 
     return m_context.create<AstVarDecl>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         id,
         token,
         m_language,
@@ -749,17 +749,17 @@ auto Parser::kwFunction(AstAttributeList* attribs) -> Result<AstFuncStmt*> {
         if (isFunction) {
             TRY_DECL(expr, expression())
             stmt = m_context.create<AstReturnStmt>(
-                llvm::SMRange{ start, m_endLoc },
+                llvm::SMRange { start, m_endLoc },
                 expr
             );
         } else {
             TRY_ASSIGN(stmt, statement())
         }
         stmts = m_context.create<AstStmtList>(
-            llvm::SMRange{ start, m_endLoc },
-            std::vector<AstDecl*>{}, // TODO: Fix. stmt could be a declaration!
-            std::vector<AstFuncStmt*>{},
-            std::vector<AstStmt*>{ stmt }
+            llvm::SMRange { start, m_endLoc },
+            std::vector<AstDecl*> {}, // TODO: Fix. stmt could be a declaration!
+            std::vector<AstFuncStmt*> {},
+            std::vector<AstStmt*> { stmt }
         );
     } else {
         TRY(consume(TokenKind::EndOfStmt))
@@ -774,7 +774,7 @@ auto Parser::kwFunction(AstAttributeList* attribs) -> Result<AstFuncStmt*> {
     }
 
     return m_context.create<AstFuncStmt>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         decl,
         stmts
     );
@@ -797,7 +797,7 @@ auto Parser::kwReturn() -> Result<AstStmt*> {
     }
 
     return m_context.create<AstReturnStmt>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         expr
     );
 }
@@ -848,7 +848,7 @@ auto Parser::kwIf() -> Result<AstIfStmt*> {
     }
 
     return m_context.create<AstIfStmt>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(blocks)
     );
 }
@@ -940,7 +940,7 @@ auto Parser::kwFor() -> Result<AstForStmt*> {
     TRY_DECL(expr, expression())
 
     auto* iterator = m_context.create<AstVarDecl>(
-        llvm::SMRange{ idStart, m_endLoc },
+        llvm::SMRange { idStart, m_endLoc },
         id,
         token,
         m_language,
@@ -980,7 +980,7 @@ auto Parser::kwFor() -> Result<AstForStmt*> {
     }
 
     return m_context.create<AstForStmt>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(decls),
         iterator,
         limit,
@@ -1065,7 +1065,7 @@ auto Parser::kwDo() -> Result<AstDoLoopStmt*> {
     }
 
     return m_context.create<AstDoLoopStmt>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(decls),
         condition,
         expr,
@@ -1134,7 +1134,7 @@ auto Parser::continuation(AstContinuationAction action) -> Result<AstContinuatio
     }
 
     return m_context.create<AstContinuationStmt>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         action,
         index
     );
@@ -1172,7 +1172,7 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
         if (m_symbolTable != nullptr) {
             auto* symbol = m_symbolTable->find(ident->name);
             if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
-                return ResultError{};
+                return ResultError {};
             }
         }
         expr = ident;
@@ -1188,11 +1188,11 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
     }
 
     if (mustBePtr && deref == 0) {
-        return ResultError{};
+        return ResultError {};
     }
 
     return m_context.create<AstTypeExpr>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         expr,
         deref
     );
@@ -1228,7 +1228,7 @@ auto Parser::kwTypeOf() -> Result<AstTypeOf*> {
         }
         advance();
     }
-    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, exprLoc);
+    return m_context.create<AstTypeOf>(llvm::SMRange { start, m_endLoc }, exprLoc);
 }
 
 //----------------------------------------
@@ -1267,7 +1267,7 @@ auto Parser::expression(ExprFlags flags) -> Result<AstExpr*> {
         TRY_DECL(args, expressionList())
 
         expr = m_context.create<AstCallExpr>(
-            llvm::SMRange{ start, m_endLoc },
+            llvm::SMRange { start, m_endLoc },
             expr,
             args
         );
@@ -1344,7 +1344,7 @@ auto Parser::factor() -> Result<AstExpr*> {
 
             TRY(consume(TokenKind::ParenClose))
             expr = m_context.create<AstCallExpr>(
-                llvm::SMRange{ start, m_endLoc },
+                llvm::SMRange { start, m_endLoc },
                 expr,
                 args
             );
@@ -1356,7 +1356,7 @@ auto Parser::factor() -> Result<AstExpr*> {
             TRY_DECL(type, typeExpr())
 
             auto* cast = m_context.create<AstCastExpr>(
-                llvm::SMRange{ start, m_endLoc },
+                llvm::SMRange { start, m_endLoc },
                 expr,
                 type,
                 false
@@ -1454,7 +1454,7 @@ auto Parser::identifier() -> Result<AstIdentExpr*> {
     advance();
 
     return m_context.create<AstIdentExpr>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         name
     );
 }
@@ -1476,7 +1476,7 @@ auto Parser::ifExpr() -> Result<AstIfExpr*> {
     TRY_DECL(falseExpr, expression())
 
     return m_context.create<AstIfExpr>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         expr,
         trueExpr,
         falseExpr
@@ -1519,7 +1519,7 @@ auto Parser::expressionList() -> Result<AstExprList*> {
     }
 
     return m_context.create<AstExprList>(
-        llvm::SMRange{ start, m_endLoc },
+        llvm::SMRange { start, m_endLoc },
         std::move(exprs)
     );
 }
@@ -1553,7 +1553,7 @@ auto Parser::acceptComma() -> bool {
 }
 
 auto Parser::acceptNext(TokenKind kind) -> bool {
-    Lexer peek{ m_lexer };
+    Lexer peek { m_lexer };
 
     if (const Token token = peek.next(); token.is(kind)) {
         m_token = token;

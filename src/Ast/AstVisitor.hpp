@@ -8,7 +8,7 @@
 namespace lbc {
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-static-cast-downcast)
-template<class This, typename RetTy = void, typename StmtTy = RetTy, typename ExprTy = RetTy, typename TypeTy = RetTy>
+template <class This, typename RetTy = void, typename StmtTy = RetTy, typename ExprTy = RetTy, typename TypeTy = RetTy>
 class AstVisitor {
 public:
     using GenRetTy = RetTy;
@@ -40,7 +40,7 @@ public:
 };
 // NOLINTEND(cppcoreguidelines-pro-type-static-cast-downcast)
 
-#define VISIT_METHOD_GEN(KIND)  auto visit(Ast##KIND&) -> GenRetTy;
+#define VISIT_METHOD_GEN(KIND) auto visit(Ast##KIND&) -> GenRetTy;
 #define VISIT_METHOD_EXPR(KIND) auto visit(Ast##KIND&) -> ExprRetTy;
 #define VISIT_METHOD_STMT(KIND) auto visit(Ast##KIND&) -> StmtRetTy;
 #define VISIT_METHOD_TYPE(KIND) auto visit(Ast##KIND&) -> TypeRetTy;

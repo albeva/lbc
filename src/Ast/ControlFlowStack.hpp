@@ -17,7 +17,7 @@ namespace lbc {
  */
 enum class ControlFlowStatement : uint8_t {
     For, ///< For loop control flow statement
-    Do   ///< Do loop control flow statement
+    Do ///< Do loop control flow statement
 };
 
 /**
@@ -29,7 +29,7 @@ enum class ControlFlowStatement : uint8_t {
  *
  * @tparam Data The type of data to be stored in the control flow stack. Default is std::monostate.
  */
-template<typename Data = std::monostate>
+template <typename Data = std::monostate>
     requires(std::is_trivial_v<Data>)
 class ControlFlowStack final {
     /**
@@ -41,8 +41,8 @@ class ControlFlowStack final {
      * @brief Type alias for the container used to store the entries.
      */
     using Container = std::vector<Entry>;
-public:
 
+public:
     /**
      * @brief Type alias for the const reverse iterator.
      */
@@ -181,7 +181,7 @@ private:
     /***
      * The container used to store the entries in the stack.
      */
-    Container m_container{};
+    Container m_container {};
 };
 
 } // namespace lbc

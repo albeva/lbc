@@ -3,7 +3,7 @@
 //
 #include "Utils/CompilerBase.hpp"
 
-struct Fail : CompilerBase {};
+struct Fail : CompilerBase { };
 
 TEST_P(Fail, error) {
     auto msg = expected(true);

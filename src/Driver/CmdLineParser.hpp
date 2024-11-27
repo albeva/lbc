@@ -26,7 +26,9 @@ public:
      * @brief Construct a new CmdLineParser object.
      * @param options Reference to a CompileOptions object where the parsed options will be stored.
      */
-    explicit CmdLineParser(CompileOptions& options) : m_options{ options } {}
+    explicit CmdLineParser(CompileOptions& options)
+    : m_options { options } {
+    }
 
     /**
      * @brief Destroy the CmdLineParser object.

@@ -4,7 +4,6 @@
 #pragma once
 #include "pch.hpp"
 
-
 namespace lbc {
 class TypeRoot;
 enum class TokenKind : std::uint8_t;

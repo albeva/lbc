@@ -6,15 +6,18 @@
 using namespace lbc;
 
 namespace {
-constexpr std::array messages{
+// clang-format off
+constexpr std::array messages {
     #define DIAG(ID, STR, ...) STR,
     ALL_ERRORS(DIAG)
     #undef DIAG
 };
+// clang-format on
 } // namespace
 
 DiagnosticEngine::DiagnosticEngine(Context& context)
-: m_context{ context } {}
+: m_context { context } {
+}
 
 auto DiagnosticEngine::getText(Diag diag) -> const char* {
     return messages.at(static_cast<size_t>(diag));

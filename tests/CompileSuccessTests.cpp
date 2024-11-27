@@ -3,7 +3,7 @@
 //
 #include "Utils/CompilerBase.hpp"
 
-struct Success : CompilerBase {};
+struct Success : CompilerBase { };
 
 TEST_P(Success, run) {
     EXPECT_EQ(expected(), run());

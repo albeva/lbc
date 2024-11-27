@@ -26,10 +26,9 @@ public:
     }
 
     auto define(llvm::StringRef name, auto* addr, llvm::JITSymbolFlags flags) -> llvm::Error {
-        llvm::orc::MangleAndInterner mangler{ m_llJit->getExecutionSession(), m_llJit->getDataLayout() };
+        llvm::orc::MangleAndInterner mangler { m_llJit->getExecutionSession(), m_llJit->getDataLayout() };
 
-        return m_llJit->getMainJITDylib().define(llvm::orc::absoluteSymbols(llvm::orc::SymbolMap{
-            { mangler(name), llvm::orc::ExecutorSymbolDef(llvm::orc::ExecutorAddr::fromPtr(addr), flags) } }));
+        return m_llJit->getMainJITDylib().define(llvm::orc::absoluteSymbols(llvm::orc::SymbolMap { { mangler(name), llvm::orc::ExecutorSymbolDef(llvm::orc::ExecutorAddr::fromPtr(addr), flags) } }));
     }
 
     auto addModule(llvm::orc::ThreadSafeModule module) -> llvm::Error {

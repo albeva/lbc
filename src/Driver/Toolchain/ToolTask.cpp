@@ -6,8 +6,8 @@
 #include "Driver/Context.hpp"
 #include "Toolchain.hpp"
 #include <llvm/ADT/StringRef.h>
-#include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Program.h>
+#include <llvm/Support/raw_ostream.h>
 using namespace lbc;
 
 auto ToolTask::reset() -> ToolTask& {

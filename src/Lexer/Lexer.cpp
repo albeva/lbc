@@ -7,7 +7,7 @@
 #include <charconv>
 using namespace lbc;
 
-// NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic, readability-avoid-return-with-void-value)
+// NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 namespace {
 using llvm::isAlpha;
@@ -58,9 +58,9 @@ inline auto getEscapeChar(char ch) -> std::optional<char> {
 } // namespace
 
 Lexer::Lexer(Context& context, unsigned fileID)
-: m_context{ &context },
-  m_hasStmt{ false },
-  m_fileId{ fileID } {
+: m_context { &context }
+, m_hasStmt { false }
+, m_fileId { fileID } {
     const auto* buffer = getBuffer();
     if (buffer == nullptr) {
         fatalError("Invalid buffer id");
@@ -357,8 +357,8 @@ auto Lexer::numberLiteral() -> Token {
     }
 
     if (isFloatingPoint) {
-        std::string const number{ start, m_input };
-        std::size_t size{};
+        std::string const number { start, m_input };
+        std::size_t size {};
         double value = std::stod(number, &size);
         if (size == 0) {
             return invalid(start);
@@ -366,7 +366,7 @@ auto Lexer::numberLiteral() -> Token {
         return { TokenKind::FloatingPointLiteral, makeRange(start, m_input), value };
     }
 
-    uint64_t value{};
+    uint64_t value {};
     constexpr int base10 = 10;
     if (std::from_chars(start, m_input, value, base10).ec != std::errc()) {
         return invalid(start);
@@ -417,4 +417,4 @@ auto Lexer::identifier() -> Token {
     }
 }
 
-// NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic, readability-avoid-return-with-void-value)
+// NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)

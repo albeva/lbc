@@ -13,8 +13,8 @@ class Context;
 class SymbolTable;
 class Lexer;
 struct AstIfStmtBlock;
-enum class CallingConv: std::uint8_t;
-enum class AstContinuationAction: std::uint8_t;
+enum class CallingConv : std::uint8_t;
+enum class AstContinuationAction : std::uint8_t;
 AST_FORWARD_DECLARE()
 struct AstExtern;
 
@@ -121,8 +121,8 @@ private:
     Scope m_scope;
     llvm::SMLoc m_endLoc;
     std::vector<AstImport*> m_imports;
-    ExprFlags m_exprFlags{};
-    ControlFlowStack<> m_controlStack{};
+    ExprFlags m_exprFlags {};
+    ControlFlowStack<> m_controlStack {};
 };
 MARK_AS_FLAGS_ENUM(Parser::ExprFlags);
 MARK_AS_FLAGS_ENUM(Parser::FuncFlags);

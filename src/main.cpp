@@ -9,15 +9,15 @@
 using namespace lbc;
 
 int main(int argc, const char* argv[]) {
-    llvm::InitLLVM const init{ argc, argv };
+    llvm::InitLLVM const init { argc, argv };
 
-    CompileOptions options{};
-    CmdLineParser cmdLineParser{ options };
+    CompileOptions options {};
+    CmdLineParser cmdLineParser { options };
     cmdLineParser.parse({ argv, static_cast<size_t>(argc) });
     options.validate();
 
-    Context context{ options };
-    Driver{ context }.drive();
+    Context context { options };
+    Driver { context }.drive();
 
     return EXIT_SUCCESS;
 }

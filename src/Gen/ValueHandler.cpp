@@ -44,22 +44,38 @@ auto ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::V
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value)
-: PointerUnion{ value }, m_gen{ gen }, m_type{ type } {}
+: PointerUnion { value }
+, m_gen { gen }
+, m_type { type } {
+}
 
 ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol)
-: PointerUnion{ symbol }, m_gen{ gen }, m_type{ symbol->getType() } {}
+: PointerUnion { symbol }
+, m_gen { gen }
+, m_type { symbol->getType() } {
+}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast)
-: ValueHandler{ gen, ast.symbol } {}
+: ValueHandler { gen, ast.symbol } {
+}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstMemberExpr& ast)
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion { &ast }
+, m_gen { gen }
+, m_type { ast.type } {
+}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast)
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion { &ast }
+, m_gen { gen }
+, m_type { ast.type } {
+}
 
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast)
-: PointerUnion{ &ast }, m_gen{ gen }, m_type{ ast.type } {}
+: PointerUnion { &ast }
+, m_gen { gen }
+, m_type { ast.type } {
+}
 
 auto ValueHandler::getAddress() const -> llvm::Value* {
     if (auto* value = dyn_cast<llvm::Value*>()) {
@@ -81,7 +97,7 @@ auto ValueHandler::getAddress() const -> llvm::Value* {
     }
 
     if (auto* member = llvm::dyn_cast<AstMemberExpr>(ast)) {
-        return MemberExprBuilder{ *m_gen, *member }.build();
+        return MemberExprBuilder { *m_gen, *member }.build();
     }
 
     llvm_unreachable("Unknown ValueHandler type");

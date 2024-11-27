@@ -7,14 +7,17 @@ namespace lbc {
 
 class Toolchain;
 class Context;
-enum class ToolKind: std::uint8_t;
+enum class ToolKind : std::uint8_t;
 
 class ToolTask final {
 public:
     NO_COPY_AND_MOVE(ToolTask)
 
     ToolTask(Context& context, fs::path path, const ToolKind kind)
-    : m_context{ context }, m_path{ std::move(path) }, m_kind{ kind } {}
+    : m_context { context }
+    , m_path { std::move(path) }
+    , m_kind { kind } {
+    }
 
     ~ToolTask() = default;
 

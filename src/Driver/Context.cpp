@@ -6,6 +6,7 @@
 #include "Diag/DiagnosticEngine.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "JIT.hpp"
+#include "TempFileCache.hpp"
 #include "Type/Type.hpp"
 #include <llvm-c/Target.h>
 #include <llvm/IR/DataLayout.h>
@@ -13,26 +14,25 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/TargetParser/Host.h>
-#include "TempFileCache.hpp"
 using namespace lbc;
 
 struct Context::Pimpl {
     explicit Pimpl(Context& context)
-    : diag{ context },
-      toolchain{ context } {}
+    : diag { context }
+    , toolchain { context } {
+    }
 
     DiagnosticEngine diag;
     Toolchain toolchain;
-    std::optional<llvm::DataLayout> dataLayout{};
+    std::optional<llvm::DataLayout> dataLayout {};
 };
 
 Context::Context(CompileOptions& options)
-: m_pimpl{ std::make_unique<Pimpl>(*this) },
-  m_options{ options },
-  m_diag{ m_pimpl->diag },
-  m_toolchain{ m_pimpl->toolchain },
-  m_triple{ llvm::sys::getDefaultTargetTriple() }
-{
+: m_pimpl { std::make_unique<Pimpl>(*this) }
+, m_options { options }
+, m_diag { m_pimpl->diag }
+, m_toolchain { m_pimpl->toolchain }
+, m_triple { llvm::sys::getDefaultTargetTriple() } {
     switch (m_options.getCompilationMode()) {
     case CompileOptions::CompilationMode::Bit32:
         m_triple = m_triple.get32BitArchVariant();
@@ -62,7 +62,7 @@ void Context::reset() {
     ptrTypes.clear();
 
     m_options.reset();
-    m_sourceMgr = llvm::SourceMgr{};
+    m_sourceMgr = llvm::SourceMgr {};
     m_retainedStrings.clear();
     m_imports.clear();
     m_allocator.Reset();
@@ -89,7 +89,7 @@ auto Context::getJIT() noexcept -> JIT& {
         llvm::InitializeAllTargets();
         llvm::InitializeAllTargetMCs();
 
-        std::string error{};
+        std::string error {};
         const llvm::Target* target = llvm::TargetRegistry::lookupTarget(getTriple().str(), error);
         if (target == nullptr) {
             fatalError("Failed to find the target for triple: " + error);
@@ -112,7 +112,7 @@ auto Context::getJIT() noexcept -> JIT& {
             }
         }();
 
-        std::unique_ptr<llvm::TargetMachine> machine{ target->createTargetMachine(
+        std::unique_ptr<llvm::TargetMachine> machine { target->createTargetMachine(
             getTriple().str(),
             /* cpu */ "",
             /* features*/ "",

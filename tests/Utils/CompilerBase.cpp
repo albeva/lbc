@@ -6,8 +6,10 @@
 #include "Driver/Context.hpp"
 #include "Driver/Driver.hpp"
 #include "Driver/JIT.hpp"
-#include <fstream>
 #include <cstdarg>
+#include <fstream>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
 
 namespace {
 auto addTestEnvironment(auto* ptr) {
@@ -18,12 +20,12 @@ auto addTestEnvironment(auto* ptr) {
 struct CompileEnvironment : ::testing::Environment {
     CompileEnvironment() = default;
     std::stringstream stdoutput;
-    lbc::CompileOptions options{};
-    lbc::Context context{ options };
+    lbc::CompileOptions options {};
+    lbc::Context context { options };
 };
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables, cppcoreguidelines-owning-memory)
-CompileEnvironment* env = addTestEnvironment(new CompileEnvironment{});
+CompileEnvironment* env = addTestEnvironment(new CompileEnvironment {});
 
 // proxy printf
 // NOLINTNEXTLINE(cert-dcl50-cpp)
@@ -33,8 +35,6 @@ auto capturePrintF(const char* format, ...) -> int {
     //     cert-err33-c,
     //     hicpp-vararg
     // )
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wformat-nonliteral"
 
     va_list args = nullptr;
     va_start(args, format);
@@ -56,7 +56,6 @@ auto capturePrintF(const char* format, ...) -> int {
     va_end(args);
     return length;
 
-    #pragma clang diagnostic pop
     // NOLINTEND(
     //     cppcoreguidelines-pro-type-vararg,
     //     cert-err33-c,
@@ -115,13 +114,13 @@ void CompilerBase::SetUp() {
 }
 
 void CompilerBase::TearDown() {
-    env->stdoutput = std::stringstream{};
+    env->stdoutput = std::stringstream {};
     m_driver.reset();
 }
 
 auto CompilerBase::run() -> std::string {
     m_driver->drive();
-    return llvm::StringRef{ env->stdoutput.str() }.trim().str();
+    return llvm::StringRef { env->stdoutput.str() }.trim().str();
 }
 
 auto CompilerBase::expected(bool lookForFile) -> std::string {
@@ -129,8 +128,8 @@ auto CompilerBase::expected(bool lookForFile) -> std::string {
     static constexpr std::string_view prefix = "'' CHECK: ";
     static constexpr std::string_view fileKey = "__FILE__";
 
-    std::string checks{};
-    std::ifstream file{ GetParam(), std::ios::in };
+    std::string checks {};
+    std::ifstream file { GetParam(), std::ios::in };
 
     std::string line;
     bool first = true;

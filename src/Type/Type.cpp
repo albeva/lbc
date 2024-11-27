@@ -9,9 +9,9 @@ using namespace lbc;
 namespace {
 
 // Commonly used types
-constexpr TypeVoid voidTy{};              // VOID
-constexpr TypeAny anyTy{};                // Any typeExpr
-constexpr TypePointer anyPtrTy{ &anyTy }; // void*
+constexpr TypeVoid voidTy {}; // VOID
+constexpr TypeAny anyTy {}; // Any typeExpr
+constexpr TypePointer anyPtrTy { &anyTy }; // void*
 
 // clang-format off
 
@@ -217,11 +217,13 @@ auto TypeBoolean::asString() const -> std::string {
 // Integer
 
 auto TypeIntegral::get(unsigned bits, bool isSigned) -> const TypeIntegral* {
-#define USE_TYPE(ID, STR, KIND, BITS, IS_SIGNED, ...) \
-    if (bits == BITS && isSigned == IS_SIGNED)        \
-        return &ID##Ty;
+    // clang-format off
+    #define USE_TYPE(ID, STR, KIND, BITS, IS_SIGNED, ...) \
+        if (bits == BITS && isSigned == IS_SIGNED)        \
+            return &ID##Ty;
     INTEGRAL_TYPES(USE_TYPE)
-#undef USE_TYPE
+    #undef USE_TYPE
+    // clang-format on
 
     fatalError("Invalid integer type size: "_t + llvm::Twine(bits), false);
 }
@@ -239,27 +241,30 @@ auto TypeIntegral::genLlvmType(Context& context) const -> llvm::Type* {
 }
 
 auto TypeIntegral::asString() const -> std::string {
-#define GET_TYPE(ID, STR, KIND, BITS, SIGNED, ...) \
-    if (getBits() == BITS && isSigned() == SIGNED) \
-        return STR;
+    // clang-format off
+    #define GET_TYPE(ID, STR, KIND, BITS, SIGNED, CPP) \
+        if (getBits() == BITS && isSigned() == SIGNED) \
+            return STR;
     INTEGRAL_TYPES(GET_TYPE)
-#undef GET_TYPE
-
+    #undef GET_TYPE
+    // clang-format on
     llvm_unreachable("unknown integer type");
 }
 
 // Floating Point
 
 auto TypeFloatingPoint::get(unsigned bits) -> const TypeFloatingPoint* {
+    // clang-format off
     switch (bits) {
-#define USE_TYPE(ID, STR, KIND, BITS, ...) \
-    case BITS:                             \
-        return &ID##Ty;
+    #define USE_TYPE(ID, STR, KIND, BITS, CPP) \
+        case BITS:                             \
+            return &ID##Ty;
         FLOATINGPOINT_TYPES(USE_TYPE)
-#undef USE_TYPE
+    #undef USE_TYPE
     default:
         fatalError("Invalid floating point type size: "_t + llvm::Twine(bits), false);
     }
+    // clang-format on
 }
 
 auto TypeFloatingPoint::genLlvmType(Context& context) const -> llvm::Type* {
@@ -274,12 +279,13 @@ auto TypeFloatingPoint::genLlvmType(Context& context) const -> llvm::Type* {
 }
 
 auto TypeFloatingPoint::asString() const -> std::string {
-#define GET_TYPE(ID, STR, kind, BITS, ...) \
-    if (getBits() == BITS)                 \
-        return STR;
+    // clang-format off
+    #define GET_TYPE(ID, STR, kind, BITS, CPP) \
+        if (getBits() == BITS)                 \
+            return STR;
     FLOATINGPOINT_TYPES(GET_TYPE)
-#undef GET_TYPE
-
+    #undef GET_TYPE
+    // clang-format on
     llvm_unreachable("unknown floating point type");
 }
 

@@ -5,11 +5,14 @@
 #include "pch.hpp"
 namespace lbc {
 
-template<typename T>
+template <typename T>
     requires std::is_trivial_v<T>
 struct ValueRestorer final {
     NO_COPY_AND_MOVE(ValueRestorer)
-    constexpr explicit ValueRestorer(T& value) : m_target{ value }, m_value{ value } {}
+    constexpr explicit ValueRestorer(T& value)
+    : m_target { value }
+    , m_value { value } {
+    }
 
     ~ValueRestorer() {
         m_target = m_value;

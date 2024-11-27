@@ -7,11 +7,11 @@ using namespace lbc;
 namespace {
 using TypeExpPair = std::pair<std::string_view, CompileOptions::FileType>;
 constexpr std::array fileTypeExtMap = {
-    TypeExpPair{ ".bas", CompileOptions::FileType::Source },
-    TypeExpPair{ ".s", CompileOptions::FileType::Assembly },
-    TypeExpPair{ ".o", CompileOptions::FileType::Object },
-    TypeExpPair{ ".ll", CompileOptions::FileType::LLVMIr },
-    TypeExpPair{ ".bc", CompileOptions::FileType::BitCode }
+    TypeExpPair { ".bas", CompileOptions::FileType::Source },
+    TypeExpPair { ".s", CompileOptions::FileType::Assembly },
+    TypeExpPair { ".o", CompileOptions::FileType::Object },
+    TypeExpPair { ".ll", CompileOptions::FileType::LLVMIr },
+    TypeExpPair { ".bc", CompileOptions::FileType::BitCode }
 };
 } // namespace
 
@@ -34,7 +34,7 @@ void CompileOptions::reset() {
 }
 
 auto CompileOptions::getFileExt(FileType type) -> std::string_view {
-    const auto *it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
+    const auto* it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
     if (it != fileTypeExtMap.end()) {
         return it->first;
     }
@@ -42,7 +42,7 @@ auto CompileOptions::getFileExt(FileType type) -> std::string_view {
 }
 
 auto CompileOptions::getFileType(const fs::path& path) -> CompileOptions::FileType {
-    const auto *it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
+    const auto* it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
     if (it != fileTypeExtMap.end()) {
         return it->second;
     }
@@ -134,7 +134,7 @@ void CompileOptions::addInputFile(const fs::path& path) {
 }
 
 auto CompileOptions::getInputCount() const -> size_t {
-    return std::accumulate(m_inputFiles.begin(), m_inputFiles.end(), size_t{}, [](auto cnt, const auto& vec) {
+    return std::accumulate(m_inputFiles.begin(), m_inputFiles.end(), size_t {}, [](auto cnt, const auto& vec) {
         return cnt + vec.second.size();
     });
 }
@@ -210,7 +210,7 @@ auto CompileOptions::resolveOutputPath(const fs::path& path, std::string_view ex
     }
 
     if (m_outputPath.empty()) {
-        fs::path output{ path };
+        fs::path output { path };
         output.replace_extension(ext);
         return output;
     }

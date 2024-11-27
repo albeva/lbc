@@ -16,11 +16,11 @@ using namespace lbc;
 using namespace Gen;
 
 CodeGen::CodeGen(Context& context)
-: m_context{ context },
-  m_llvmContext{ context.getLlvmContext() },
-  m_builder{ m_llvmContext },
-  m_constantTrue{ m_builder.getTrue() },
-  m_constantFalse{ m_builder.getFalse() } {
+: m_context { context }
+, m_llvmContext { context.getLlvmContext() }
+, m_builder { m_llvmContext }
+, m_constantTrue { m_builder.getTrue() }
+, m_constantFalse { m_builder.getFalse() } {
 }
 
 auto CodeGen::validate() const -> bool {
@@ -442,7 +442,7 @@ auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
 }
 
 auto CodeGen::visit(AstLiteralExpr& ast) -> ValueHandler {
-    const auto visitor = Visitor{
+    const auto visitor = Visitor {
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
                 llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context))

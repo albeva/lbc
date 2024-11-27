@@ -7,11 +7,13 @@
 
 namespace lbc {
 
+// clang-format off
 enum class TokenKind : std::uint8_t {
-#define IMPL_TOKENS(id, ...) id,
+    #define IMPL_TOKENS(id, ...) id,
     ALL_TOKENS(IMPL_TOKENS)
-#undef IMPL_TOKENS
+    #undef IMPL_TOKENS
 };
+// clang-format on
 
 enum class OperatorType : std::uint8_t {
     Arithmetic,
@@ -35,8 +37,10 @@ public:
     constexpr Token() = default;
 
     // set token values
-    constexpr Token(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{})
-    : m_kind(kind), m_value(value), m_range(range) {}
+    constexpr Token(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate {})
+    : m_kind(kind)
+    , m_value(value)
+    , m_range(range) { }
 
     // Getters
     [[nodiscard]] constexpr auto getKind() const -> TokenKind { return m_kind; }
@@ -82,14 +86,14 @@ public:
         return is(k1) || is(k2);
     }
 
-    template<typename... Ts>
+    template <typename... Ts>
     [[nodiscard]] constexpr auto isOneOf(TokenKind k1, TokenKind k2, Ts... ks) const -> bool {
         return is(k1) || isOneOf(k2, ks...);
     }
 
 private:
     TokenKind m_kind = TokenKind::Invalid;
-    Value m_value = std::monostate{};
+    Value m_value = std::monostate {};
     llvm::SMRange m_range;
 };
 

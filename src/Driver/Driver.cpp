@@ -25,7 +25,7 @@ const llvm::ExitOnError exitOnErr;
 auto getMacOSSdkPath() -> std::string {
 #ifdef __APPLE__
     constexpr auto bufferSize = 128;
-    std::array<char, bufferSize> buffer{};
+    std::array<char, bufferSize> buffer {};
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> const pipe(popen("xcrun --show-sdk-path", "r"), pclose); // NOLINT(cert-env33-c)
     if (!pipe) {
@@ -42,8 +42,9 @@ auto getMacOSSdkPath() -> std::string {
 } // namespace
 
 Driver::Driver(Context& context)
-: m_context{ context },
-  m_options{ context.getOptions() } {}
+: m_context { context }
+, m_options { context.getOptions() } {
+}
 
 void Driver::drive() {
     // make sure jit is loaded if targeting it
@@ -126,8 +127,7 @@ void Driver::execute() {
 
     // Add modules
     for (auto& module : m_modules) {
-        exitOnErr(jit.addModule({ std::move(module->llvmModule),
-                                  std::make_unique<llvm::LLVMContext>() }));
+        exitOnErr(jit.addModule({ std::move(module->llvmModule), std::make_unique<llvm::LLVMContext>() }));
     }
 
     // init
@@ -160,8 +160,8 @@ auto Driver::deriveSource(const Source& source, CompileOptions::FileType type, b
     const auto& original = source.origin.path;
     const auto ext = CompileOptions::getFileExt(type);
     const auto path = temporary
-        ? TempFileCache::createUniquePath(original, ext)
-        : m_options.resolveOutputPath(original, ext);
+                        ? TempFileCache::createUniquePath(original, ext)
+                        : m_options.resolveOutputPath(original, ext);
     return source.derive(type, path);
 }
 
@@ -186,8 +186,8 @@ void Driver::emitLlvm(CompileOptions::FileType type, bool temporary, void (*gene
         const auto& source = module->source;
         auto output = deriveSource(*source, type, temporary);
 
-        std::error_code errors{};
-        llvm::raw_fd_ostream stream{
+        std::error_code errors {};
+        llvm::raw_fd_ostream stream {
             output->path.string(),
             errors,
             llvm::sys::fs::OpenFlags::OF_None
@@ -328,14 +328,7 @@ void Driver::emitExecutable() {
         }
 
         linker
-            .addArgs({ "-(",
-                       "-lgcc",
-                       "-lmsvcrt",
-                       "-lkernel32",
-                       "-luser32",
-                       "-lmingw32",
-                       "-lmingwex",
-                       "-)" })
+            .addArgs({ "-(", "-lgcc", "-lmsvcrt", "-lkernel32", "-luser32", "-lmingw32", "-lmingwex", "-)" })
             .addPath(sysLibPath / "crtend.o");
     } else if (triple.isMacOSX()) {
         auto macosSdk = getMacOSSdkPath();
@@ -403,8 +396,8 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     }
 
     const bool isMain = m_options.isMainFile(path);
-    Lexer lexer{ m_context, ID };
-    Parser parser{ m_context, lexer, isMain };
+    Lexer lexer { m_context, ID };
+    Parser parser { m_context, lexer, isMain };
 
     auto astOrErr = parser.parse();
     if (astOrErr.hasError()) {
@@ -413,22 +406,18 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     AstModule* ast = astOrErr.getValue();
 
     // Analyze
-    SemanticAnalyzer sem{ m_context };
+    SemanticAnalyzer sem { m_context };
     if (sem.visit(*ast).hasError()) {
         std::exit(EXIT_FAILURE);
     }
 
     if (m_options.getDumpAst() || m_options.getDumpCode()) {
-        m_modules.emplace_back(std::make_unique<TranslationUnit>(
-            nullptr,
-            source,
-            ast
-        ));
+        m_modules.emplace_back(std::make_unique<TranslationUnit>(nullptr, source, ast));
         return;
     }
 
     // generate IR
-    CodeGen gen{ m_context };
+    CodeGen gen { m_context };
     gen.visit(*ast);
 
     // done
@@ -437,16 +426,12 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
     }
 
     // Happy Days
-    m_modules.emplace_back(std::make_unique<TranslationUnit>(
-        gen.getModule(),
-        source,
-        ast
-    ));
+    m_modules.emplace_back(std::make_unique<TranslationUnit>(gen.getModule(), source, ast));
 }
 
 void Driver::dumpAst() {
     auto print = [&](llvm::raw_ostream& stream) {
-        AstPrinter printer{ m_context, stream };
+        AstPrinter printer { m_context, stream };
         for (const auto& module : m_modules) {
             printer.visit(*module->ast);
         }
@@ -460,8 +445,8 @@ void Driver::dumpAst() {
             output = fs::absolute(m_options.getWorkingDir() / output);
         }
 
-        std::error_code errors{};
-        llvm::raw_fd_ostream stream{
+        std::error_code errors {};
+        llvm::raw_fd_ostream stream {
             output.string(),
             errors,
             llvm::sys::fs::OpenFlags::OF_None
@@ -476,7 +461,7 @@ void Driver::dumpAst() {
 
 void Driver::dumpCode() {
     auto print = [&](llvm::raw_ostream& stream) {
-        CodePrinter printer{ stream };
+        CodePrinter printer { stream };
         for (const auto& module : m_modules) {
             printer.visit(*module->ast);
         }
@@ -490,8 +475,8 @@ void Driver::dumpCode() {
             output = fs::absolute(m_options.getWorkingDir() / output);
         }
 
-        std::error_code errors{};
-        llvm::raw_fd_ostream stream{
+        std::error_code errors {};
+        llvm::raw_fd_ostream stream {
             output.string(),
             errors,
             llvm::sys::fs::OpenFlags::OF_None

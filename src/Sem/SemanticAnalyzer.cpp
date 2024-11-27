@@ -27,15 +27,15 @@ auto resolveUDT(const TypeRoot* type) -> const TypeUDT* {
 } // namespace
 
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
-: ErrorLogger(context.getDiag()),
-  m_context{ context },
-  m_constantFolder{ *this },
-  m_typePass{ *this },
-  m_declPass{ *this } {
+: ErrorLogger(context.getDiag())
+, m_context { context }
+, m_constantFolder { *this }
+, m_typePass { *this }
+, m_declPass { *this } {
 }
 
 auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
-    auto flags = StateFlags{ .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
+    auto flags = StateFlags { .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
 
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), flags, [&]() -> Result<void> {
@@ -237,8 +237,8 @@ auto SemanticAnalyzer::visit(AstTypeAlias& ast) -> Result<void> {
 
 auto SemanticAnalyzer::visit(AstTypeOf& ast) -> Result<void> {
     if (auto* loc = std::get_if<llvm::SMLoc>(&ast.typeExpr)) {
-        Lexer lexer{ m_context, m_module->fileId };
-        Parser parser{ m_context, lexer, false, m_table };
+        Lexer lexer { m_context, m_module->fileId };
+        Parser parser { m_context, lexer, false, m_table };
 
         auto parsedExpression = getDiag().ignoringErrors([&]() -> bool {
             lexer.reset(*loc);
@@ -263,7 +263,7 @@ auto SemanticAnalyzer::visit(AstTypeOf& ast) -> Result<void> {
     }
 
     using ResTy = Result<void>;
-    const auto getType = Visitor{
+    const auto getType = Visitor {
         [](llvm::SMLoc&) -> ResTy {
             llvm_unreachable("unresolved typeof expression");
         },
@@ -392,7 +392,7 @@ auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
 }
 
 auto SemanticAnalyzer::visit(AstLiteralExpr& ast) -> Result<void> {
-    static constexpr auto visitor = Visitor{
+    static constexpr auto visitor = Visitor {
         [](const std::monostate& /*value*/) {
             return TokenKind::Null;
         },

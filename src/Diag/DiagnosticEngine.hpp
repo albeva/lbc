@@ -11,12 +11,15 @@ class Context;
 /**
  * @enum Diag
  * @brief Enum class Diag that defines all the diagnostic messages.
+ *
+ * clang-format off
  */
 enum class Diag : std::uint8_t {
     #define DIAG(ID, ...) ID,
     ALL_ERRORS(DIAG)
     #undef DIAG
 };
+// clang-format on
 
 /**
  * @class DiagnosticEngine
@@ -25,7 +28,6 @@ enum class Diag : std::uint8_t {
 class DiagnosticEngine final {
     NO_COPY_AND_MOVE(DiagnosticEngine)
 public:
-
     /**
      * @brief Constructor that takes a reference to a Context object.
      * @param context Reference to a Context object.
@@ -62,7 +64,7 @@ public:
      * @param range Range in the source code where the diagnostic message should be logged.
      * @param args Arguments to format the diagnostic message.
      */
-    template<typename... Args>
+    template <typename... Args>
     void log(Diag diag, const llvm::SMLoc& loc, const llvm::SMRange& range, Args&&... args) {
         print(
             diag,
@@ -94,7 +96,7 @@ private:
      * @param args Arguments to format the diagnostic message.
      * @return Formatted diagnostic message.
      */
-    template<typename... Args>
+    template <typename... Args>
     static auto format(Diag diag, Args&&... args) -> std::string {
         return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
     }
@@ -108,8 +110,8 @@ private:
      */
     void print(Diag diag, llvm::SMLoc loc, const std::string& str, llvm::ArrayRef<llvm::SMRange> ranges = {});
 
-    Context& m_context;          ///< Reference to a Context object.
-    int m_errorCounter = 0;      ///< Counter for the number of errors.
+    Context& m_context; ///< Reference to a Context object.
+    int m_errorCounter = 0; ///< Counter for the number of errors.
     bool m_ignoreErrors = false; ///< Flag to indicate if errors should be ignored.
 };
 
@@ -117,7 +119,7 @@ private:
  * @brief Concept to check if a class is provides a source range
  * @tparam T Class to be checked.
  */
-template<class T>
+template <class T>
 concept RangeAware = requires(T base) {
     { base.getRange() } -> std::same_as<llvm::SMRange>;
 };
@@ -133,7 +135,9 @@ struct ErrorLogger {
      * @brief Constructor that takes a reference to a DiagnosticEngine object.
      * @param diag Reference to a DiagnosticEngine object.
      */
-    explicit ErrorLogger(DiagnosticEngine& diag) : m_diag{ diag } {}
+    explicit ErrorLogger(DiagnosticEngine& diag)
+    : m_diag { diag } {
+    }
 
     /**
      * @brief Default destructor.
@@ -149,7 +153,7 @@ struct ErrorLogger {
      * @param args Arguments to format the error message.
      * @return ResultError object.
      */
-    template<RangeAware T, typename... Args>
+    template <RangeAware T, typename... Args>
     auto makeError(Diag diag, const T& range, Args&&... args) const -> ResultError {
         m_diag.log(diag, range.getRange().Start, range.getRange(), std::forward<Args>(args)...);
         return {};
@@ -164,7 +168,7 @@ struct ErrorLogger {
      * @param args Arguments to format the error message.
      * @return ResultError object.
      */
-    template<RangeAware T, typename... Args>
+    template <RangeAware T, typename... Args>
     auto makeError(Diag diag, T* range, Args&&... args) const -> ResultError {
         return makeError(diag, *range, std::forward<Args>(args)...);
     }
@@ -178,7 +182,7 @@ struct ErrorLogger {
      * @param args Arguments to format the error message.
      * @return ResultError object.
      */
-    template<typename... Args>
+    template <typename... Args>
     auto makeError(Diag diag, const llvm::SMLoc& loc, const llvm::SMRange& range, Args&&... args) const -> ResultError {
         m_diag.log(diag, loc, range, std::forward<Args>(args)...);
         return {};

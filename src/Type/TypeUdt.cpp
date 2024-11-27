@@ -8,10 +8,10 @@
 using namespace lbc;
 
 TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
-: TypeRoot{ TypeFamily::UDT },
-  m_symbol{ symbol },
-  m_symbolTable{ symbolTable },
-  m_packed(packed) {
+: TypeRoot { TypeFamily::UDT }
+, m_symbol { symbol }
+, m_symbolTable { symbolTable }
+, m_packed(packed) {
     symbol.setType(this);
     symbol.valueFlags().kind = ValueFlags::Kind::type;
 }

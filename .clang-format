@@ -1,119 +1,18 @@
-AccessModifierOffset: -4
+BasedOnStyle: WebKit
+Language: Cpp
+Standard: c++20
 AlignAfterOpenBracket: BlockIndent
-AlignConsecutiveAssignments: None
-AlignConsecutiveDeclarations: None
-AlignConsecutiveMacros: None
-AlignEscapedNewlines: Left
-AlignOperands: DontAlign
-AlignTrailingComments: true
-AllowAllArgumentsOnNextLine: true
-AllowAllParametersOfDeclarationOnNextLine: false
+AlignOperands: AlignAfterOperator
+BreakBeforeBraces: Attach
 AllowShortBlocksOnASingleLine: Empty
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: true
-AlwaysBreakAfterDefinitionReturnType: None
-AlwaysBreakAfterReturnType: None
-AlwaysBreakBeforeMultilineStrings: false
-AlwaysBreakTemplateDeclarations: Yes
-BinPackArguments: false
-BinPackParameters: false
-BreakBeforeConceptDeclarations: Always
-BraceWrapping:
-  AfterClass: false
-  AfterControlStatement: Never
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterObjCDeclaration: false
-  AfterStruct: false
-  AfterUnion: false
-  BeforeCatch: false
-  BeforeElse: false
-  IndentBraces: false
-  SplitEmptyFunction: false
-  SplitEmptyNamespace: true
-  SplitEmptyRecord: true
-BreakAfterJavaFieldAnnotations: true
-BreakBeforeBinaryOperators: NonAssignment
-BreakBeforeBraces: Custom
-BreakBeforeInheritanceComma: true
-BreakBeforeTernaryOperators: true
-BreakConstructorInitializers: BeforeColon
-BreakConstructorInitializersBeforeComma: false
-BreakStringLiterals: true
-ColumnLimit: 0
-CommentPragmas: '^ IWYU pragma:'
-CompactNamespaces: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 0
-ContinuationIndentWidth: 4
-Cpp11BracedListStyle: false
-DerivePointerAlignment: false
-DisableFormat: false
-ExperimentalAutoDetectBinPacking: true
 FixNamespaceComments: true
 IncludeCategories:
-- Priority: 1
-  Regex: ^"pch\.hpp"
-- Priority: 4
-  Regex: ^"(llvm|llvm-c|clang|clang-c)/
-- Priority: 3
-  Regex: ^(<|"(gtest|gmock|isl|json)/)
-- Priority: 2
-  Regex: .*
-IncludeIsMainRegex: (Test)?$
-IndentCaseLabels: false
-IndentWidth: 4
-IndentWrappedFunctionNames: true
-IndentPPDirectives: AfterHash
-JavaScriptQuotes: Leave
-JavaScriptWrapImports: true
-KeepEmptyLinesAtTheStartOfBlocks: false
-Language: Cpp
-MacroBlockBegin: '^DECLARE_AST$'
-MacroBlockEnd: 'DECLARE_END'
-StatementMacros:
-  - AST_ROOT_NODES
-  - AST_STMT_NODES
-  - AST_ATTRIB_NODES
-  - AST_DECL_NODES
-  - AST_TYPE_NODES
-  - AST_EXPR_NODES
-  - AST_CONTENT_NODES
-  - AST_FORWARD_DECLARE
-  - TOKEN_GENERAL
-  - TOKEN_LITERALS
-  - TOKEN_SYMBOLS
-  - TOKEN_OPERATORS
-  - TOKEN_KEYWORDS
-  - ALL_TOKENS
-  - KEYWORD_TOKEN_MAP
-  - PRIMITIVE_TYPES
-  - INTEGER_TYPES
-  - FLOATINGPOINT_TYPES
-  - ALL_TYPES
-MaxEmptyLinesToKeep: 2
-NamespaceIndentation: Inner
-ObjCBlockIndentWidth: 0
-ObjCSpaceAfterProperty: true
-ObjCSpaceBeforeProtocolList: false
-PointerAlignment: Left
-ReflowComments: true
-SortIncludes: CaseInsensitive
-SortUsingDeclarations: true
-SpaceAfterCStyleCast: false
-SpaceAfterTemplateKeyword: false
-SpaceBeforeAssignmentOperators: true
-SpaceBeforeParens: ControlStatements
-SpaceInEmptyParentheses: false
-SpacesBeforeTrailingComments: 1
-SpacesInAngles: false
-SpacesInCStyleCastParentheses: false
-SpacesInContainerLiterals: false
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
-Standard: c++20
-TabWidth: 4
-UseTab: Never
+  - Priority: 1
+    Regex: ^"pch\.hpp"
+  - Priority: 4
+    Regex: ^<|"llvm/
+  - Priority: 3
+    Regex: ^(<|"(gtest|gmock|isl|json)/)
+  - Priority: 2
+    Regex: .*

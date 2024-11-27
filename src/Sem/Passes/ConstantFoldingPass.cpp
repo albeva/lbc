@@ -9,7 +9,7 @@ using namespace lbc;
 using namespace Sem;
 
 namespace {
-template<typename BASE, typename T>
+template <typename BASE, typename T>
 constexpr auto castLiteral(const AstLiteralExpr& ast) -> BASE {
     constexpr auto visitor = [](const auto& val) -> T {
         using R = std::decay_t<decltype(val)>;
@@ -65,7 +65,7 @@ auto ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) -> AstL
     (void)this;
     switch (op) {
     case TokenKind::Negate: {
-        static constexpr auto visitor = Visitor{
+        static constexpr auto visitor = Visitor {
             [](uint64_t value) -> AstLiteralExpr::Value {
                 return static_cast<uint64_t>(-static_cast<int64_t>(value));
             },
@@ -79,7 +79,7 @@ auto ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) -> AstL
         return std::visit(visitor, ast.value);
     }
     case TokenKind::LogicalNot: {
-        static constexpr auto visitor = Visitor{
+        static constexpr auto visitor = Visitor {
             [](bool value) -> AstLiteralExpr::Value {
                 return !value;
             },
@@ -93,7 +93,6 @@ auto ConstantFoldingPass::unary(TokenKind op, const AstLiteralExpr& ast) -> AstL
         llvm_unreachable("Unsupported unary operation");
     }
 }
-
 
 auto ConstantFoldingPass::visitIfExpr(AstIfExpr& ast) -> AstExpr* {
     if (auto* expr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
@@ -142,7 +141,7 @@ auto ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) -> AstExpr* {
 
     if (*lval == 0 && *rval == 1) {
         // TODO: Set correct token range
-        const Token tkn{ TokenKind::LogicalNot, ast.range };
+        const Token tkn { TokenKind::LogicalNot, ast.range };
         auto* unary = m_sem.getContext().create<AstUnaryExpr>(
             ast.range,
             tkn,

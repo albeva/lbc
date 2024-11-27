@@ -15,7 +15,9 @@ class SymbolTable final {
 public:
     NO_COPY_AND_MOVE(SymbolTable)
     explicit SymbolTable(SymbolTable* parent = nullptr, AstFuncDecl* function = nullptr)
-    : m_parent{ parent }, m_function{ function } {}
+    : m_parent { parent }
+    , m_function { function } {
+    }
 
     ~SymbolTable() = default;
 

@@ -18,8 +18,7 @@ class SymbolTable;
 class TypeRoot;
 class Context;
 
-class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer, Result<void>>
-, public ErrorLogger {
+class SemanticAnalyzer final : public AstVisitor<SemanticAnalyzer, Result<void>>, public ErrorLogger {
 public:
     struct StateFlags final {
         bool allowUseBeforDefiniation : 1;
@@ -51,28 +50,28 @@ public:
         return handler();
     }
 
-    template<typename... Args, std::invocable = LastType<Args...>>
+    template <typename... Args, std::invocable = LastType<Args...>>
     auto with(SymbolTable* table, Args&&... rest) {
         RESTORE_ON_EXIT(m_table);
         m_table = table;
         return with(std::forward<Args>(rest)...);
     }
 
-    template<typename... Args, std::invocable = LastType<Args...>>
+    template <typename... Args, std::invocable = LastType<Args...>>
     auto with(AstModule* module, Args&&... rest) {
         RESTORE_ON_EXIT(m_module);
         m_module = module;
         return with(std::forward<Args>(rest)...);
     }
 
-    template<typename... Args, std::invocable = LastType<Args...>>
+    template <typename... Args, std::invocable = LastType<Args...>>
     auto with(AstFuncDecl* function, Args&&... rest) {
         RESTORE_ON_EXIT(m_function);
         m_function = function;
         return with(std::forward<Args>(rest)...);
     }
 
-    template<typename... Args, std::invocable = LastType<Args...>>
+    template <typename... Args, std::invocable = LastType<Args...>>
     auto with(StateFlags flags, Args&&... rest) {
         RESTORE_ON_EXIT(m_flags);
         m_flags = flags;
@@ -93,7 +92,7 @@ private:
     AstModule* m_module = nullptr;
     AstFuncDecl* m_function = nullptr;
     SymbolTable* m_table = nullptr;
-    StateFlags m_flags{};
+    StateFlags m_flags {};
 
     Sem::ConstantFoldingPass m_constantFolder;
     Sem::TypePass m_typePass;

@@ -5,8 +5,8 @@
 #include "pch.hpp"
 
 namespace lbc::detail {
-struct DeferTask {};
-template<typename F>
+struct DeferTask { };
+template <typename F>
 auto operator+(DeferTask /* task */, F&& fn) -> decltype(llvm::make_scope_exit(std::forward<F>(fn))) {
     return llvm::make_scope_exit(std::forward<F>(fn));
 }

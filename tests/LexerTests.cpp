@@ -44,14 +44,14 @@ protected:
 
 private:
     std::unique_ptr<lbc::Lexer> m_lexer;
-    lbc::CompileOptions m_options{};
-    lbc::Context m_context{ m_options };
+    lbc::CompileOptions m_options {};
+    lbc::Context m_context { m_options };
 };
 
-#define EXPECT_TOKEN(KIND, ...)                 \
-    {                                           \
-        SCOPED_TRACE(#KIND);                    \
-        expect(KIND __VA_OPT__(,) __VA_ARGS__); \
+#define EXPECT_TOKEN(KIND, ...)                  \
+    {                                            \
+        SCOPED_TRACE(#KIND);                     \
+        expect(KIND __VA_OPT__(, ) __VA_ARGS__); \
     }
 
 TEST_F(LexerTests, NoInput) {
@@ -64,7 +64,7 @@ TEST_F(LexerTests, NoInput) {
 }
 
 TEST_F(LexerTests, EmptyInputs) {
-    static constexpr std::array inputs{
+    static constexpr std::array inputs {
         "   ",
         "\t\t",
         "\n   \n   ",
@@ -117,7 +117,7 @@ TEST_F(LexerTests, RemComment) {
 }
 
 TEST_F(LexerTests, MultiLineComments) {
-    static constexpr std::array inputs{
+    static constexpr std::array inputs {
         "a/''/b",
         "a/' '/b",
         "a /''/ b",
@@ -140,14 +140,13 @@ TEST_F(LexerTests, MultiLineComments) {
 }
 
 TEST_F(LexerTests, TokenLocation) {
-    static constexpr auto source =
-        "one \"two\" three 42 = <= ...\n"
-        "four \t IF a = b THEN \r\n"
-        "five /'/' nested '/'/ six\n"
-        "seven/' trash\n"
-        "trash /' nested\n"
-        "'/\n"
-        "end?'/eight";
+    static constexpr auto source = "one \"two\" three 42 = <= ...\n"
+                                   "four \t IF a = b THEN \r\n"
+                                   "five /'/' nested '/'/ six\n"
+                                   "seven/' trash\n"
+                                   "trash /' nested\n"
+                                   "'/\n"
+                                   "end?'/eight";
     load(source);
 
     // clang-format off

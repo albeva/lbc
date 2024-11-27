@@ -4,7 +4,6 @@
 #pragma once
 #include "pch.hpp"
 #include "CompileOptions.hpp"
-#include <utility>
 
 namespace lbc {
 
@@ -15,7 +14,11 @@ struct Source final {
     NO_COPY_AND_MOVE(Source)
 
     Source(CompileOptions::FileType ty, fs::path path_, bool gen, const Source* src)
-    : type{ ty }, path{ std::move(path_) }, isGenerated{ gen }, origin{ src == nullptr ? *this : *src } {}
+    : type { ty }
+    , path { std::move(path_) }
+    , isGenerated { gen }
+    , origin { src == nullptr ? *this : *src } {
+    }
 
     ~Source() = default;
 

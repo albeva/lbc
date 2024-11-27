@@ -11,8 +11,8 @@ using namespace lbc;
 using namespace Gen;
 
 ForStmtBuilder::ForStmtBuilder(CodeGen& codeGen, AstForStmt& ast)
-: Builder{ codeGen, ast },
-  m_direction{ ast.direction } {
+: Builder { codeGen, ast }
+, m_direction { ast.direction } {
     if (m_direction == AstForStmt::Direction::Skip) {
         return;
     }
@@ -33,7 +33,7 @@ void ForStmtBuilder::declareVars() {
     m_type = m_ast.iterator->symbol->getType();
     m_llvmType = m_type->getLlvmType(m_gen.getContext());
 
-    m_iterator = ValueHandler{ &m_gen, m_ast.iterator->symbol };
+    m_iterator = ValueHandler { &m_gen, m_ast.iterator->symbol };
     m_limit = ValueHandler::createTempOrConstant(m_gen, *m_ast.limit, "for.limit");
 }
 
@@ -68,7 +68,7 @@ void ForStmtBuilder::configureStep() {
         } else {
             llvm_unreachable("Unknown type");
         }
-        m_step = ValueHandler{ &m_gen, m_type, stepVal };
+        m_step = ValueHandler { &m_gen, m_type, stepVal };
         return;
     }
 
@@ -94,7 +94,7 @@ void ForStmtBuilder::configureStep() {
         } else {
             llvm_unreachable("Unkown type");
         }
-        m_step = ValueHandler{ &m_gen, stepTy, stepVal };
+        m_step = ValueHandler { &m_gen, stepTy, stepVal };
         return;
     }
 
@@ -210,8 +210,8 @@ void ForStmtBuilder::makeCondition(bool incr) {
     auto* iterValue = m_iterator.load();
     auto* limitValue = m_limit.load();
     auto* cmp = incr
-        ? m_builder.CreateCmp(lessOrEqualPred, iterValue, limitValue, "for.incrCond")
-        : m_builder.CreateCmp(lessOrEqualPred, limitValue, iterValue, "for.decrCond");
+                  ? m_builder.CreateCmp(lessOrEqualPred, iterValue, limitValue, "for.incrCond")
+                  : m_builder.CreateCmp(lessOrEqualPred, limitValue, iterValue, "for.decrCond");
 
     m_builder.CreateCondBr(cmp, m_bodyBlock, m_exitBlock);
 }
@@ -220,8 +220,8 @@ void ForStmtBuilder::makeIteration(bool incr, llvm::BasicBlock* branch) {
     auto* stepValue = m_step.load();
     auto* iterValue = m_iterator.load();
     auto* result = incr
-        ? m_builder.CreateAdd(iterValue, stepValue)
-        : m_builder.CreateSub(iterValue, stepValue);
+                     ? m_builder.CreateAdd(iterValue, stepValue)
+                     : m_builder.CreateSub(iterValue, stepValue);
     m_iterator.store(result);
     m_builder.CreateBr(branch);
 }

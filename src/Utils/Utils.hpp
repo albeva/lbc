@@ -19,20 +19,20 @@
 namespace lbc {
 
 // helper type for std::variant visitors
-template<typename... Base>
+template <typename... Base>
 struct Visitor : Base... {
     using Base::operator()...;
 };
 
-template<typename... Base>
+template <typename... Base>
 Visitor(Base...) -> Visitor<Base...>;
 
 // Helper to get the last type from a parameter pack
-template<typename... Ts>
-using LastType = typename decltype((std::type_identity<Ts>{}, ...))::type;
+template <typename... Ts>
+using LastType = typename decltype((std::type_identity<Ts> {}, ...))::type;
 
 // Concept to test if type is a pointer
-template<typename T>
+template <typename T>
 concept IsPointer = std::is_pointer_v<T>;
 
 // clang-format off

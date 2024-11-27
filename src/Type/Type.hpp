@@ -8,16 +8,16 @@
 namespace lbc {
 
 enum class TypeFamily : std::uint8_t {
-    Void,    // Void, lack of typeExpr
-    Any,     // any ptr, null
+    Void, // Void, lack of typeExpr
+    Any, // any ptr, null
     Pointer, // Ptr to another typeExpr
     Boolean, // true / false
 
-    Integral,      // signed / unsigned integer 8, 16, 32, ... bits
+    Integral, // signed / unsigned integer 8, 16, 32, ... bits
     FloatingPoint, // single, double
 
     Function, // function
-    ZString,  // nil terminated string, byte ptr / char*
+    ZString, // nil terminated string, byte ptr / char*
 
     UDT, // User defined Type (C struct)
 };
@@ -86,17 +86,16 @@ public:
     [[nodiscard]] auto compare(const TypeRoot* other) const -> TypeComparison;
 
     // clang-format off
-
     #define CHECK_TYPE_METHOD(ID, ...) [[nodiscard]] auto is##ID() const -> bool;
     INTEGRAL_TYPES(CHECK_TYPE_METHOD)
     FLOATINGPOINT_TYPES(CHECK_TYPE_METHOD)
     #undef CHECK_TYPE_METHOD
-
     // clang-format on
 
 protected:
     constexpr explicit TypeRoot(TypeFamily kind)
-    : m_kind{ kind } {}
+    : m_kind { kind } {
+    }
 
     [[nodiscard]] virtual auto genLlvmType(Context& context) const -> llvm::Type* = 0;
 
@@ -116,7 +115,9 @@ private:
  */
 class TypeVoid final : public TypeRoot {
 public:
-    constexpr TypeVoid() : TypeRoot{ TypeFamily::Void } {}
+    constexpr TypeVoid()
+    : TypeRoot { TypeFamily::Void } {
+    }
     static auto get() -> const TypeVoid*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
@@ -134,7 +135,9 @@ protected:
  */
 class TypeAny final : public TypeRoot {
 public:
-    constexpr TypeAny() : TypeRoot{ TypeFamily::Any } {}
+    constexpr TypeAny()
+    : TypeRoot { TypeFamily::Any } {
+    }
     [[nodiscard]] static auto get() -> const TypeAny*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
@@ -153,7 +156,9 @@ protected:
 class TypePointer final : public TypeRoot {
 public:
     constexpr explicit TypePointer(const TypeRoot* base)
-    : TypeRoot{ TypeFamily::Pointer }, m_base{ base } {}
+    : TypeRoot { TypeFamily::Pointer }
+    , m_base { base } {
+    }
 
     [[nodiscard]] static auto get(Context& context, const TypeRoot* base) -> const TypePointer*;
 
@@ -177,7 +182,9 @@ private:
  */
 class TypeBoolean final : public TypeRoot {
 public:
-    constexpr TypeBoolean() : TypeRoot{ TypeFamily::Boolean } {}
+    constexpr TypeBoolean()
+    : TypeRoot { TypeFamily::Boolean } {
+    }
 
     [[nodiscard]] static auto get() -> const TypeBoolean*;
 
@@ -206,7 +213,9 @@ public:
 
 protected:
     constexpr TypeNumeric(TypeFamily kind, unsigned bits)
-    : TypeRoot{ kind }, m_bits{ bits } {}
+    : TypeRoot { kind }
+    , m_bits { bits } {
+    }
 
 private:
     const unsigned m_bits;
@@ -218,7 +227,9 @@ private:
 class TypeIntegral final : public TypeNumeric {
 public:
     constexpr TypeIntegral(unsigned bits, bool isSigned)
-    : TypeNumeric{ TypeFamily::Integral, bits }, m_signed{ isSigned } {}
+    : TypeNumeric { TypeFamily::Integral, bits }
+    , m_signed { isSigned } {
+    }
 
     [[nodiscard]] static auto get(unsigned bits, bool isSigned) -> const TypeIntegral*;
 
@@ -246,7 +257,8 @@ private:
 class TypeFloatingPoint final : public TypeNumeric {
 public:
     constexpr explicit TypeFloatingPoint(unsigned bits)
-    : TypeNumeric{ TypeFamily::FloatingPoint, bits } {}
+    : TypeNumeric { TypeFamily::FloatingPoint, bits } {
+    }
 
     [[nodiscard]] static auto get(unsigned bits) -> const TypeFloatingPoint*;
 
@@ -266,10 +278,11 @@ protected:
 class TypeFunction final : public TypeRoot {
 public:
     TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, bool variadic)
-    : TypeRoot{ TypeFamily::Function },
-      m_retType{ retType },
-      m_paramTypes{ std::move(paramTypes) },
-      m_variadic{ variadic } {}
+    : TypeRoot { TypeFamily::Function }
+    , m_retType { retType }
+    , m_paramTypes { std::move(paramTypes) }
+    , m_variadic { variadic } {
+    }
 
     [[nodiscard]] static auto get(
         Context& context,
@@ -308,7 +321,9 @@ private:
  */
 class TypeZString final : public TypeRoot {
 public:
-    constexpr TypeZString() : TypeRoot{ TypeFamily::ZString } {}
+    constexpr TypeZString()
+    : TypeRoot { TypeFamily::ZString } {
+    }
 
     [[nodiscard]] static auto get() -> const TypeZString*;
 

@@ -9,8 +9,8 @@
 using namespace lbc;
 
 namespace {
-std::vector<fs::path> tempFiles{}; // NOLINT
-llvm::SmallVector<char, 255> filenameCache{}; // NOLINT
+std::vector<fs::path> tempFiles {}; // NOLINT
+llvm::SmallVector<char, 255> filenameCache {}; // NOLINT
 } // namespace
 
 auto TempFileCache::createUniquePath(llvm::StringRef suffix) -> fs::path {

@@ -106,7 +106,7 @@ void CodePrinter::visit(AstTypeExpr& ast) {
         return;
     }
 
-    const auto visitor = Visitor{
+    const auto visitor = Visitor {
         [&](AstIdentExpr* ident) {
             visit(*ident);
         },
@@ -129,7 +129,7 @@ void CodePrinter::visit(AstTypeExpr& ast) {
 
 void CodePrinter::visit(AstTypeOf& ast) {
     m_os << "TYPEOF(";
-    const auto visitor = Visitor{
+    const auto visitor = Visitor {
         [&](llvm::SMLoc /* loc */) {
             // TODO: re-lex the input and emit it
             m_os << " /' emitting SMRange not implemented '/ ";
@@ -454,13 +454,13 @@ void CodePrinter::visit(AstCallExpr& ast) {
 }
 
 void CodePrinter::visit(AstLiteralExpr& ast) {
-    const auto visitor = Visitor{
+    const auto visitor = Visitor {
         [](std::monostate /*value*/) -> std::string {
             return "NULL";
         },
         [](llvm::StringRef value) -> std::string {
             std::string result;
-            llvm::raw_string_ostream str{ result };
+            llvm::raw_string_ostream str { result };
             llvm::printEscapedString(value, str);
             return '"' + result + '"';
         },

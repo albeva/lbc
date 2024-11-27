@@ -24,12 +24,12 @@ struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
     auto run() -> std::string;
 
     static auto getBasePath() -> std::filesystem::path {
-        return std::filesystem::path{ __FILE__ }.parent_path().parent_path();
+        return std::filesystem::path { __FILE__ }.parent_path().parent_path();
     }
 
     static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path>;
 
 private:
-    llvm::ExitOnError exitOnErr{};
+    llvm::ExitOnError exitOnErr {};
     std::unique_ptr<lbc::Driver> m_driver;
 };

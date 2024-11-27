@@ -10,7 +10,9 @@ namespace Sem {
     class Pass {
     public:
         NO_COPY_AND_MOVE(Pass)
-        explicit Pass(SemanticAnalyzer& sem) : m_sem{ sem } {}
+        explicit Pass(SemanticAnalyzer& sem)
+        : m_sem { sem } {
+        }
         virtual ~Pass() = default;
 
     protected:

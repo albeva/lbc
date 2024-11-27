@@ -34,7 +34,7 @@ void CmdLineParser::parse(const Args& args) {
 }
 
 void CmdLineParser::processOption(const Args& args, size_t& index) {
-    const llvm::StringRef arg{ args[index] };
+    const llvm::StringRef arg { args[index] };
     if (arg == "-v") {
         m_options.setLogLevel(CompileOptions::LogLevel::Verbose);
     } else if (arg == "-o") {
@@ -115,7 +115,6 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
 //
 //     fatalError("Toolchain path not found");
 // }
-
 
 void CmdLineParser::showHelp() {
     // TODO in new *near* future

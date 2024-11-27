@@ -6,7 +6,6 @@
 #include "AstVisitor.hpp"
 
 namespace lbc {
-
 class Context;
 
 class AstPrinter final : public AstVisitor<AstPrinter> {
@@ -16,7 +15,6 @@ public:
     ~AstPrinter() = default;
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
-
 private:
     void writeHeader(AstRoot& ast);
     void writeLocation(AstRoot& ast);
@@ -29,7 +27,7 @@ private:
 
     Context& m_context;
     llvm::json::OStream m_json;
-    ControlFlowStack<> m_controlStack{};
+    ControlFlowStack<> m_controlStack {};
 };
 
 } // namespace lbc

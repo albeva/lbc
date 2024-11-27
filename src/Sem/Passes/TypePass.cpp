@@ -12,7 +12,7 @@ using namespace lbc;
 using namespace Sem;
 
 auto TypePass::visit(AstTypeExpr& ast) const -> Result<const TypeRoot*> {
-    const auto visitor = Visitor{
+    const auto visitor = Visitor {
         [&](AstIdentExpr* ident) -> Result<const TypeRoot*> {
             return visit(*ident);
         },
@@ -72,7 +72,7 @@ auto TypePass::visit(AstFuncDecl& ast) const -> Result<const TypeRoot*> {
         if (retType->isUDT()) {
             // TODO: Implement returning types by value
             llvm::errs() << "Returning types by value is not implemented" << '\n';
-            return ResultError{};
+            return ResultError {};
         }
     } else {
         retType = TypeVoid::get();

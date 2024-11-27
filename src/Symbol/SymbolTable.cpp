@@ -3,9 +3,9 @@
 //
 #include "SymbolTable.hpp"
 
-#include <algorithm>
 #include "Driver/Context.hpp"
 #include "Symbol.hpp"
+#include <algorithm>
 using namespace lbc;
 
 void SymbolTable::insert(Symbol* symbol) {

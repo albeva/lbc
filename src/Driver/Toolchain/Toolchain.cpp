@@ -12,7 +12,7 @@ auto getToolPath(const fs::path& base, const ToolKind tool) -> fs::path {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
     const std::string ext = "exe";
 #else
-    const std::string ext{};
+    const std::string ext {};
 #endif
 
     switch (tool) {
@@ -29,11 +29,11 @@ auto getToolPath(const fs::path& base, const ToolKind tool) -> fs::path {
 } // ~namespace
 
 auto Toolchain::createTask(const ToolKind kind) const -> ToolTask {
-    return ToolTask{ m_context, getPath(kind), kind };
+    return ToolTask { m_context, getPath(kind), kind };
 }
 
 auto Toolchain::getPath(const ToolKind tool) const -> fs::path {
-    fs::path path{};
+    fs::path path {};
 
     if (const auto& basePath = getBasePath(); basePath.empty()) {
         path = getToolPath("/usr/local", tool);

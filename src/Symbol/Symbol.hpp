@@ -27,7 +27,12 @@ public:
         const TypeRoot* type,
         AstDecl* decl
     )
-    : m_name{ name }, m_table{ table }, m_type{ type }, m_decl{ decl }, m_alias{ "" } {}
+    : m_name { name }
+    , m_table { table }
+    , m_type { type }
+    , m_decl { decl }
+    , m_alias { "" } {
+    }
 
     ~Symbol() = default;
 
@@ -87,8 +92,8 @@ private:
     llvm::StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
     unsigned m_index = 0;
-    ValueFlags m_flags{};
-    StateFlags m_state{};
+    ValueFlags m_flags {};
+    StateFlags m_state {};
 };
 
 } // namespace lbc

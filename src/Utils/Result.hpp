@@ -7,22 +7,22 @@
 namespace lbc {
 
 // Tag type to indicate error
-struct ResultError final {};
+struct ResultError final { };
 
 /// Parse result wrapping pointer to type T
-template<typename T>
+template <typename T>
 class Result;
 
 /// Specialise for no type
-template<>
+template <>
 class [[nodiscard]] Result<void> final {
 public:
-
     constexpr Result() = default;
 
     // cppcheck-suppress noExplicitConstructor
     /* explicit */ constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_hasError{ true } {}
+    : m_hasError { true } {
+    }
 
     constexpr auto operator=(ResultError /* _ */) -> Result& {
         m_hasError = true;
@@ -38,7 +38,7 @@ private:
 };
 
 // Specialize for pointers
-template<IsPointer T>
+template <IsPointer T>
 class [[nodiscard]] Result<T> final {
 public:
     using base_type = std::remove_pointer_t<T>;
@@ -48,7 +48,8 @@ public:
     /// Null value with defined error
     // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_hasError{ true } {}
+    : m_hasError { true } {
+    }
 
     constexpr auto operator=(ResultError /* _ */) -> Result& {
         m_hasError = true;
@@ -59,7 +60,8 @@ public:
     /// given pointer value without error
     // cppcheck-suppress noExplicitConstructor
     constexpr Result(T pointer) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_value{ pointer } {}
+    : m_value { pointer } {
+    }
 
     constexpr auto operator=(T pointer) -> Result& {
         m_hasError = false;
@@ -68,14 +70,16 @@ public:
     }
 
     /// Downcast from derived type to base type
-    template<typename U>
+    template <typename U>
     friend class Result;
 
-    template<PointerSubclassOf<T> U>
+    template <PointerSubclassOf<T> U>
     constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_hasError{ other.m_hasError }, m_value{ other.m_value } {}
+    : m_hasError { other.m_hasError }
+    , m_value { other.m_value } {
+    }
 
-    template<PointerSubclassOf<T> U>
+    template <PointerSubclassOf<T> U>
     constexpr auto operator=(const Result<U>& other) -> Result& {
         m_hasError = other.m_hasError;
         m_value = other.m_value;
@@ -125,8 +129,8 @@ public:
     operator bool() const = delete;
 
 private:
-    T m_value{};
-    bool m_hasError{};
+    T m_value {};
+    bool m_hasError {};
 };
 
 } // namespace lbc

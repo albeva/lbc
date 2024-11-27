@@ -1,9 +1,7 @@
 //
 // Created by Albert Varaksin on 01/05/2024.
 //
-#include "Driver/CmdLineParser.hpp"
 #include "Driver/CompileOptions.hpp"
-#include "Driver/Driver.hpp"
 #include "Driver/TempFileCache.hpp"
 #include <filesystem>
 #include <fstream>
@@ -13,7 +11,7 @@ namespace fs = std::filesystem;
 
 class CompileOptionsTests : public ::testing::Test {
 protected:
-    lbc::CompileOptions options{}; // NOLINT
+    lbc::CompileOptions options {}; // NOLINT
 
     void TearDown() override {
         Test::TearDown();

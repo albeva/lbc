@@ -7,20 +7,21 @@
 
 class CmdLineParserTest : public ::testing::Test {
 protected:
-    lbc::CompileOptions options{}; // NOLINT
-    lbc::CmdLineParser parser{ options }; // NOLINT
+    lbc::CompileOptions options {}; // NOLINT
+    lbc::CmdLineParser parser { options }; // NOLINT
 
     void parse(std::initializer_list<const char*> args) {
         parser.parse(lbc::CmdLineParser::Args(args.begin(), args.size()));
     }
 };
 
+// NOLINTNEXTLINE
 #define TEST_FAILURE(Msg, ...) \
     EXPECT_EXIT(parse({ __VA_ARGS__ }), ::testing::ExitedWithCode(EXIT_FAILURE), ::testing::Eq(Msg))
 
+// NOLINTNEXTLINE
 #define TEST_SUCCESS(Msg, ...) \
     EXPECT_EXIT(parse({ __VA_ARGS__ }), ::testing::ExitedWithCode(EXIT_SUCCESS), ::testing::Eq(Msg))
-
 
 TEST_F(CmdLineParserTest, ParseValidArguments) {
     parse({ "lbc", "-v", "-o", "output.o", "input.bas" });

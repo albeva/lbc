@@ -65,7 +65,7 @@ public:
      * @tparam T object to create
      * @tparam Args arguments to pass to T constructor
      */
-    template<typename T, typename... Args>
+    template <typename T, typename... Args>
     auto create(Args&&... args) -> T* {
         T* res = static_cast<T*>(allocate(sizeof(T), alignof(T)));
         new (res) T(std::forward<Args>(args)...);

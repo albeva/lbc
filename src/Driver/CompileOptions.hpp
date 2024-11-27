@@ -23,9 +23,9 @@ struct CompileOptions final {
      */
     enum class CompilationTarget : std::uint8_t {
         Executable, ///< The target is an executable file.
-        Object,     ///< The target is an object file.
-        Assembly,   ///< The target is an assembly file.
-        JIT         ///< The target is a Just-In-Time compilation.
+        Object, ///< The target is an object file.
+        Assembly, ///< The target is an assembly file.
+        JIT ///< The target is a Just-In-Time compilation.
     };
 
     /**
@@ -36,7 +36,7 @@ struct CompileOptions final {
      */
     enum class OutputType : std::uint8_t {
         Native, ///< The output file is a native file.
-        LLVM    ///< The output file is an LLVM file.
+        LLVM ///< The output file is an LLVM file.
     };
 
     /**
@@ -50,7 +50,7 @@ struct CompileOptions final {
         OS, ///< Size optimization.
         O1, ///< Level 1 optimization.
         O2, ///< Level 2 optimization.
-        O3  ///< Level 3 optimization.
+        O3 ///< Level 3 optimization.
     };
 
     /**
@@ -61,7 +61,7 @@ struct CompileOptions final {
      */
     enum class CompilationMode : std::uint8_t {
         Bit32, ///< The compilation process is in 32-bit mode.
-        Bit64  ///< The compilation process is in 64-bit mode.
+        Bit64 ///< The compilation process is in 64-bit mode.
     };
 
     /**
@@ -71,9 +71,9 @@ struct CompileOptions final {
      * This enum is used to determine the level of logging during the compilation process.
      */
     enum class LogLevel : std::uint8_t {
-        Silent,  ///< No logging.
+        Silent, ///< No logging.
         Verbose, ///< Verbose logging.
-        Debug    ///< Debug logging.
+        Debug ///< Debug logging.
     };
 
     /**
@@ -83,11 +83,11 @@ struct CompileOptions final {
      * This enum is used to determine the type of the input or output file.
      */
     enum class FileType : std::uint8_t {
-        Source,   ///< File is a source file.
+        Source, ///< File is a source file.
         Assembly, ///< File is an assembly file.
-        Object,   ///< File is an object file.
-        LLVMIr,   ///< File is an LLVM IR file.
-        BitCode   ///< File is a bitcode file.
+        Object, ///< File is an object file.
+        LLVMIr, ///< File is an LLVM IR file.
+        BitCode ///< File is a bitcode file.
     };
 
     using FilesVector = std::vector<fs::path>;

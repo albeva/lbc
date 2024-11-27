@@ -87,7 +87,7 @@ auto DeclPass::define(AstDecl& ast) -> Result<void> {
 }
 
 auto DeclPass::defineAlias(AstTypeAlias& ast) -> Result<void> {
-    static constexpr auto getSymbol = Visitor{
+    static constexpr auto getSymbol = Visitor {
         [](AstIdentExpr* ident) -> Symbol* {
             return ident->symbol;
         },
@@ -171,7 +171,7 @@ auto DeclPass::defineFuncParam(AstFuncParamDecl& ast) -> Result<void> {
     const auto* type = ast.typeExpr->type;
     if (type->isUDT()) {
         llvm::errs() << "Passing types by values is not implemented\n";
-        return ResultError{};
+        return ResultError {};
     }
 
     TRY_ASSIGN(ast.symbol, createNewSymbol(ast, type))
@@ -195,7 +195,7 @@ auto DeclPass::defineVar(AstVarDecl& ast) -> Result<void> {
 
     if (type == nullptr) [[unlikely]] {
         llvm::errs() << "Variable declaration is missing a type\n";
-        return ResultError{};
+        return ResultError {};
     }
 
     // The Symbol
