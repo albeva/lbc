@@ -95,13 +95,16 @@ private:
     void fixExprOperators();
 
     // If token matches then advance and return true
-    [[nodiscard]] bool accept(TokenKind kind) {
+    bool accept(TokenKind kind) {
         if (m_token.is(kind)) {
             advance();
             return true;
         }
         return false;
     }
+
+    // Perform lookahead in the lexer, and if next token matches then advance and return true
+    inline bool acceptNext(TokenKind kind);
 
     // expects given token and advances.
     [[nodiscard]] Result<void> consume(TokenKind kind) {

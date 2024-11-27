@@ -18,7 +18,6 @@ public:
     void reset(llvm::SMLoc loc);
 
     void next(Token& result);
-    void peek(Token& result) const { Lexer(*this).next(result); }
 
 private:
     void skipUntilLineEnd();

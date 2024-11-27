@@ -560,21 +560,16 @@ Result<AstFuncParamDecl*> Parser::funcParam(bool isAnonymous) {
     Token token;
     if (isAnonymous) {
         if (m_token.is(TokenKind::Identifier)) {
-            Token next;
-            m_lexer.peek(next);
-            if (next.is(TokenKind::As)) {
-                id = m_token.getStringValue();
-                token = m_token;
-                advance();
-                advance();
-            }
+            token = m_token;
+            id = token.getStringValue();
+            TRY(consume(TokenKind::As))
         } else {
             id = "";
         }
     } else {
-        TRY(expect(TokenKind::Identifier))
-        id = m_token.getStringValue();
+        TRY(expect(TokenKind::Identifier));
         token = m_token;
+        id = token.getStringValue();
         advance();
         TRY(consume(TokenKind::As))
     }
@@ -825,11 +820,7 @@ Result<AstIfStmt*> Parser::kwIf() {
     blocks.emplace_back(block);
 
     if (m_token.is(TokenKind::EndOfStmt)) {
-        Token next;
-        m_lexer.peek(next);
-        if (next.getKind() == TokenKind::Else) {
-            advance();
-        }
+        acceptNext(TokenKind::Else);
     }
 
     while (accept(TokenKind::Else)) {
@@ -842,11 +833,7 @@ Result<AstIfStmt*> Parser::kwIf() {
         }
 
         if (m_token.is(TokenKind::EndOfStmt)) {
-            Token next;
-            m_lexer.peek(next);
-            if (next.getKind() == TokenKind::Else) {
-                advance();
-            }
+            acceptNext(TokenKind::Else);
         }
     }
 
@@ -1537,6 +1524,21 @@ void Parser::replace(TokenKind what, TokenKind with) {
     }
 
     return makeError(Diag::unexpectedToken, m_token, Token::description(kind), m_token.description());
+}
+
+bool Parser::acceptNext(TokenKind kind) {
+    Lexer copy{ m_lexer };
+
+    Token next{};
+    copy.next(next);
+
+    if (next.is(kind)) {
+        m_token = next;
+        m_lexer = copy;
+        return true;
+    }
+
+    return false;
 }
 
 void Parser::advance() {
