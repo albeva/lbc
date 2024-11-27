@@ -22,134 +22,96 @@ class Parser final : private ErrorLogger {
 public:
     NO_COPY_AND_MOVE(Parser)
 
-    enum class ExprFlags : unsigned {
+    enum class ExprFlags : std::uint8_t {
         commaAsAnd = 1U << 0U,
         useAssign = 1U << 1U,
         callWithoutParens = 1U << 2U
     };
 
     Parser(Context& context, Lexer& source, bool isMain, SymbolTable* symbolTable = nullptr);
-    ~Parser() = default;
+    ~Parser() override = default;
 
-    [[nodiscard]] Result<AstModule*> parse();
-    [[nodiscard]] Result<AstExpr*> expression(ExprFlags flags = {});
-    [[nodiscard]] Result<AstTypeExpr*> typeExpr();
+    [[nodiscard]] auto parse() -> Result<AstModule*>;
+    [[nodiscard]] auto expression(ExprFlags flags = {}) -> Result<AstExpr*>;
+    [[nodiscard]] auto typeExpr() -> Result<AstTypeExpr*>;
 
     void reset();
-    [[nodiscard]] inline const Token& getToken() const { return m_token; }
 
 private:
-    enum class Scope : unsigned {
+    enum class Scope : std::uint8_t {
         Root,
         Function
     };
 
-    enum class FuncFlags : unsigned {
+    enum class FuncFlags : std::uint8_t {
         // Nameless declaration. For example in type definitions
         isAnonymous = 1U << 0U,
         // Is following DECLARE keyword
         isDeclaration = 1U << 1U,
     };
 
-    [[nodiscard]] Result<AstStmtList*> stmtList();
-    [[nodiscard]] Result<AstStmt*> statement();
-    [[nodiscard]] Result<AstImport*> kwImport();
-    [[nodiscard]] Result<AstExtern*> kwExtern();
-    [[nodiscard]] Result<AstStmt*> declaration();
-    [[nodiscard]] Result<AstExpr*> factor();
-    [[nodiscard]] Result<AstExpr*> primary();
-    [[nodiscard]] Result<AstExpr*> unary(llvm::SMRange range, const Token& tkn, AstExpr* expr);
-    [[nodiscard]] Result<AstExpr*> binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs);
-    [[nodiscard]] Result<AstExpr*> expression(AstExpr* lhs, int precedence);
-    [[nodiscard]] Result<AstIdentExpr*> identifier();
-    [[nodiscard]] Result<AstLiteralExpr*> literal();
-    [[nodiscard]] Result<AstIfExpr*> ifExpr();
-    [[nodiscard]] Result<AstExprList*> expressionList();
-    [[nodiscard]] Result<AstVarDecl*> kwDim(AstAttributeList* attribs);
-    [[nodiscard]] Result<AstIfStmt*> kwIf();
-    [[nodiscard]] Result<AstIfStmtBlock*> ifBlock();
-    [[nodiscard]] Result<AstIfStmtBlock*> thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr);
-    [[nodiscard]] Result<AstForStmt*> kwFor();
-    [[nodiscard]] Result<AstDoLoopStmt*> kwDo();
-    [[nodiscard]] Result<AstContinuationStmt*> kwContinue();
-    [[nodiscard]] Result<AstContinuationStmt*> kwExit();
-    [[nodiscard]] Result<AstContinuationStmt*> continuation(AstContinuationAction action);
-    [[nodiscard]] Result<AstAttributeList*> attributeList();
-    [[nodiscard]] Result<AstAttribute*> attribute();
-    [[nodiscard]] Result<AstExprList*> attributeArgList();
-    [[nodiscard]] Result<AstTypeOf*> kwTypeOf();
-    [[nodiscard]] Result<AstFuncDecl*> kwDeclare(AstAttributeList* attribs);
-    [[nodiscard]] Result<AstFuncDecl*> funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags);
-    [[nodiscard]] Result<AstFuncParamList*> funcParamList(bool& isVariadic, bool isAnonymous);
-    [[nodiscard]] Result<AstFuncParamDecl*> funcParam(bool isAnonymous);
-    [[nodiscard]] Result<AstFuncStmt*> kwFunction(AstAttributeList* attribs);
-    [[nodiscard]] Result<AstStmt*> kwReturn();
-    [[nodiscard]] Result<AstDecl*> kwType(AstAttributeList* attribs);
-    [[nodiscard]] Result<AstTypeAlias*> alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs);
-    [[nodiscard]] Result<AstUdtDecl*> udt(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs);
-    [[nodiscard]] Result<AstDeclList*> udtDeclList();
-    [[nodiscard]] Result<AstDecl*> udtMember(AstAttributeList* attribs);
+    [[nodiscard]] auto stmtList() -> Result<AstStmtList*>;
+    [[nodiscard]] auto statement() -> Result<AstStmt*>;
+    [[nodiscard]] auto kwImport() -> Result<AstImport*>;
+    [[nodiscard]] auto kwExtern() -> Result<AstExtern*>;
+    [[nodiscard]] auto declaration() -> Result<AstStmt*>;
+    [[nodiscard]] auto factor() -> Result<AstExpr*>;
+    [[nodiscard]] auto primary() -> Result<AstExpr*>;
+    [[nodiscard]] auto unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;
+    [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) -> Result<AstExpr*>;
+    [[nodiscard]] auto expression(AstExpr* lhs, int precedence) -> Result<AstExpr*>;
+    [[nodiscard]] auto identifier() -> Result<AstIdentExpr*>;
+    [[nodiscard]] auto literal() -> Result<AstLiteralExpr*>;
+    [[nodiscard]] auto ifExpr() -> Result<AstIfExpr*>;
+    [[nodiscard]] auto expressionList() -> Result<AstExprList*>;
+    [[nodiscard]] auto kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*>;
+    [[nodiscard]] auto kwIf() -> Result<AstIfStmt*>;
+    [[nodiscard]] auto ifBlock() -> Result<AstIfStmtBlock*>;
+    [[nodiscard]] auto thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr) -> Result<AstIfStmtBlock*>;
+    [[nodiscard]] auto kwFor() -> Result<AstForStmt*>;
+    [[nodiscard]] auto kwDo() -> Result<AstDoLoopStmt*>;
+    [[nodiscard]] auto kwContinue() -> Result<AstContinuationStmt*>;
+    [[nodiscard]] auto kwExit() -> Result<AstContinuationStmt*>;
+    [[nodiscard]] auto continuation(AstContinuationAction action) -> Result<AstContinuationStmt*>;
+    [[nodiscard]] auto attributeList() -> Result<AstAttributeList*>;
+    [[nodiscard]] auto attribute() -> Result<AstAttribute*>;
+    [[nodiscard]] auto attributeArgList() -> Result<AstExprList*>;
+    [[nodiscard]] auto kwTypeOf() -> Result<AstTypeOf*>;
+    [[nodiscard]] auto kwDeclare(AstAttributeList* attribs) -> Result<AstFuncDecl*>;
+    [[nodiscard]] auto funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags) -> Result<AstFuncDecl*>;
+    [[nodiscard]] auto funcParamList(bool& isVariadic, bool isAnonymous) -> Result<AstFuncParamList*>;
+    [[nodiscard]] auto funcParam(bool isAnonymous) -> Result<AstFuncParamDecl*>;
+    [[nodiscard]] auto kwFunction(AstAttributeList* attribs) -> Result<AstFuncStmt*>;
+    [[nodiscard]] auto kwReturn() -> Result<AstStmt*>;
+    [[nodiscard]] auto kwType(AstAttributeList* attribs) -> Result<AstDecl*>;
+    [[nodiscard]] auto alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstTypeAlias*>;
+    [[nodiscard]] auto udt(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstUdtDecl*>;
+    [[nodiscard]] auto udtDeclList() -> Result<AstDeclList*>;
+    [[nodiscard]] auto udtMember(AstAttributeList* attribs) -> Result<AstDecl*>;
 
     // replace token kind with another (e.g. Minus to Negate)
-    void replace(TokenKind what, TokenKind with);
     void resolveBinaryOperators();
 
     // If token matches then advance and return true
-    bool accept(TokenKind kind) {
-        if (m_token.is(kind)) {
-            advance();
-            return true;
-        }
-        return false;
-    }
-
-    // Accept assign token
-    bool acceptAssign() {
-        if (m_token.isOneOf(TokenKind::AssignOrEqual, TokenKind::Assign)) {
-            advance();
-            return true;
-        }
-        return false;
-    }
-
-    bool acceptComma() {
-        if (m_token.isOneOf(TokenKind::CommaOrConditionAnd, TokenKind::Comma)) {
-            advance();
-            return true;
-        }
-        return false;
-    }
+    auto accept(TokenKind kind) -> bool;
+    auto acceptAssign() -> bool;
+    auto acceptComma() -> bool;
 
     // Perform lookahead in the lexer, and if next token matches then advance and return true
-    inline bool acceptNext(TokenKind kind);
-
-    // expects given token and advances.
-    [[nodiscard]] Result<void> consume(TokenKind kind) {
-        TRY(expect(kind))
-        advance();
-        return {};
-    }
-
-    [[nodiscard]] Result<void> consumeAssign() {
-        if (!acceptAssign()) {
-            return makeError(Diag::unexpectedToken, m_token, Token::description(TokenKind::Assign), m_token.description());
-        }
-        return {};
-    }
-
-    [[nodiscard]] Result<void> consumeComma() {
-        if (!acceptComma()) {
-            return makeError(Diag::unexpectedToken, m_token, Token::description(TokenKind::Comma), m_token.description());
-        }
-        return {};
-    }
+    inline auto acceptNext(TokenKind kind) -> bool;
 
     // Expects a match, raises error when fails
-    [[nodiscard]] Result<void> expect(TokenKind kind) const;
+    [[nodiscard]] auto expect(TokenKind kind) const -> Result<void>;
+
+    // expects given token and advances.
+    [[nodiscard]] auto consume(TokenKind kind) -> Result<void>;
+    [[nodiscard]] auto consumeAssign() -> Result<void>;
+    [[nodiscard]] auto consumeComma() -> Result<void>;
 
     // advance to the next token from the stream
     void advance();
 
+    Token m_token;
     Context& m_context;
     Lexer& m_lexer;
     const bool m_isMain;
@@ -157,9 +119,8 @@ private:
     CallingConv m_language;
 
     Scope m_scope;
-    Token m_token{};
-    llvm::SMLoc m_endLoc{};
-    std::vector<AstImport*> m_imports{};
+    llvm::SMLoc m_endLoc;
+    std::vector<AstImport*> m_imports;
     ExprFlags m_exprFlags{};
     ControlFlowStack<> m_controlStack{};
 };
