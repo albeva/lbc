@@ -1527,14 +1527,14 @@ void Parser::replace(TokenKind what, TokenKind with) {
 }
 
 bool Parser::acceptNext(TokenKind kind) {
-    Lexer copy{ m_lexer };
+    Lexer peek{ m_lexer };
 
-    Token next{};
-    copy.next(next);
+    Token token;
+    peek.next(token);
 
-    if (next.is(kind)) {
-        m_token = next;
-        m_lexer = copy;
+    if (token.is(kind)) {
+        m_token = token;
+        m_lexer = peek;
         return true;
     }
 
