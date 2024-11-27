@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 
 class CompileOptionsTests : public ::testing::Test {
 protected:
-    lbc::CompileOptions options{};
+    lbc::CompileOptions options{}; // NOLINT
 
     void TearDown() override {
         Test::TearDown();
@@ -28,20 +28,20 @@ protected:
 };
 
 TEST_F(CompileOptionsTests, SetMainFile) {
-    fs::path mainFile = "/path/to/main/file.bas";
+    const fs::path mainFile = "/path/to/main/file.bas";
     options.setMainFile(mainFile);
     ASSERT_EQ(options.getMainFile().value(), mainFile);
     ASSERT_TRUE(options.getImplicitMain());
 }
 
 TEST_F(CompileOptionsTests, SetOutputPath) {
-    fs::path outputPath = "/path/to/output";
+    const fs::path outputPath = "/path/to/output";
     options.setOutputPath(outputPath);
     ASSERT_EQ(options.getOutputPath(), absolute(outputPath));
 }
 
 TEST_F(CompileOptionsTests, SetCompilerPath) {
-    fs::path compilerPath = "/path/to/compiler";
+    const fs::path compilerPath = "/path/to/compiler";
     options.setCompilerPath(compilerPath);
     ASSERT_EQ(options.getCompilerPath(), compilerPath);
 }
@@ -85,30 +85,30 @@ TEST_F(CompileOptionsTests, AddInputFile) {
 TEST_F(CompileOptionsTests, ResolveOutputPathExists) {
     fs::path existingPath = TempFileCache::createUniquePath("test.bas");
     ;
-    std::string_view ext = ".txt";
+    const std::string_view ext = ".txt";
 
     touch(existingPath);
 
-    fs::path result = options.resolveOutputPath(existingPath, ext);
+    const fs::path result = options.resolveOutputPath(existingPath, ext);
     ASSERT_EQ(existingPath.replace_extension(ext), result);
 }
 
 TEST_F(CompileOptionsTests, ResolveOutputPathIsDirectory) {
-    fs::path dirPath = fs::current_path();
-    std::string_view ext = ".txt";
+    const fs::path dirPath = fs::current_path();
+    const std::string_view ext = ".txt";
     EXPECT_EXIT((void)options.resolveOutputPath(dirPath, ext), ::testing::ExitedWithCode(EXIT_FAILURE), ::testing::Eq("lbc: error: Path '" + dirPath.string() + "' is not a file\n"));
 }
 
 TEST_F(CompileOptionsTests, ResolveOutputPathIsNotDirectory) {
-    fs::path filePath = "/path/to/nonexistent/file";
-    std::string_view ext = ".txt";
+    const fs::path filePath = "/path/to/nonexistent/file";
+    const std::string_view ext = ".txt";
 
     EXPECT_EXIT((void)options.resolveOutputPath(filePath, ext), ::testing::ExitedWithCode(EXIT_FAILURE), ::testing::Eq("lbc: error: File '" + filePath.string() + "' not found\n"));
 }
 
 TEST_F(CompileOptionsTests, ResolveFilePathAbsolute) {
-    fs::path absolutePath = TempFileCache::createUniquePath("test.bas");
+    const fs::path absolutePath = TempFileCache::createUniquePath("test.bas");
     touch(absolutePath);
-    fs::path result = options.resolveFilePath(absolutePath);
+    const fs::path result = options.resolveFilePath(absolutePath);
     ASSERT_EQ(absolutePath, result);
 }

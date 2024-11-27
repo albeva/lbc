@@ -11,24 +11,25 @@ class Driver;
 } // namespace lbc
 
 struct CompilerBase : testing::TestWithParam<std::filesystem::path> {
+    NO_COPY_AND_MOVE(CompilerBase)
+
     CompilerBase();
     ~CompilerBase() override;
 
     void SetUp() override;
     void TearDown() override;
 
-    std::string expected(bool lookForFile = false);
+    auto expected(bool lookForFile = false) -> std::string;
 
-    std::string run();
+    auto run() -> std::string;
 
-    static inline std::filesystem::path getBasePath() {
+    static auto getBasePath() -> std::filesystem::path {
         return std::filesystem::path{ __FILE__ }.parent_path().parent_path();
     }
 
-    static std::vector<std::filesystem::path> enumerate(const std::filesystem::path& base);
-
-    llvm::ExitOnError exitOnErr{};
+    static auto enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path>;
 
 private:
+    llvm::ExitOnError exitOnErr{};
     std::unique_ptr<lbc::Driver> m_driver;
 };

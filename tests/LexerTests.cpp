@@ -11,7 +11,7 @@ namespace {
 
 class LexerTests : public testing::Test {
 protected:
-    lbc::Lexer& load(llvm::StringRef source) {
+    auto load(llvm::StringRef source) -> lbc::Lexer& {
         auto& srcMgr = m_context.getSourceMrg();
         auto buffer = llvm::MemoryBuffer::getMemBuffer(source);
         auto fileId = srcMgr.AddNewSourceBuffer(std::move(buffer), {});

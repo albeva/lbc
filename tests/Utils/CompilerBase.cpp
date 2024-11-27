@@ -17,23 +17,30 @@ auto addTestEnvironment(auto* ptr) {
 
 struct CompileEnvironment : ::testing::Environment {
     CompileEnvironment() = default;
-    std::stringstream stdoutput{};
+    std::stringstream stdoutput;
     lbc::CompileOptions options{};
     lbc::Context context{ options };
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables, cppcoreguidelines-owning-memory)
 CompileEnvironment* env = addTestEnvironment(new CompileEnvironment{});
 
 // proxy printf
-int capturePrintF(const char* format, ...) {
+// NOLINTNEXTLINE(cert-dcl50-cpp)
+auto capturePrintF(const char* format, ...) -> int {
+    // NOLINTBEGIN(
+    //     cppcoreguidelines-pro-type-vararg,
+    //     cert-err33-c,
+    //     hicpp-vararg
+    // )
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wformat-nonliteral"
 
-    va_list args;
+    va_list args = nullptr;
     va_start(args, format);
 
     // figure out the length
-    int length = std::vsnprintf(nullptr, 0, format, args);
+    const int length = std::vsnprintf(nullptr, 0, format, args);
     if (length <= 0) {
         return length;
     }
@@ -41,26 +48,30 @@ int capturePrintF(const char* format, ...) {
     auto size = static_cast<std::size_t>(length + 1); // NOLINT(*-misplaced-widening-cast)
 
     // printf to a buffer
-    char* buf = new char[size];
-    std::vsnprintf(buf, size, format, args);
-    env->stdoutput << buf;
-    delete[] buf;
+    std::vector<char> buf(size);
+    std::vsnprintf(buf.data(), size, format, args);
+    env->stdoutput << buf.data();
 
     // done
     va_end(args);
     return length;
 
     #pragma clang diagnostic pop
+    // NOLINTEND(
+    //     cppcoreguidelines-pro-type-vararg,
+    //     cert-err33-c,
+    //     hicpp-vararg
+    // )
 }
 
 // proxy puts
-int capturePuts(const char* str) {
+auto capturePuts(const char* str) -> int {
     env->stdoutput << str;
     return static_cast<int>(strlen(str));
 }
 } // namespace
 
-std::vector<std::filesystem::path> CompilerBase::enumerate(const std::filesystem::path& base) {
+auto CompilerBase::enumerate(const std::filesystem::path& base) -> std::vector<std::filesystem::path> {
     std::vector<std::filesystem::path> paths;
     std::ranges::copy_if(
         std::filesystem::recursive_directory_iterator(getBasePath() / base),
@@ -108,12 +119,12 @@ void CompilerBase::TearDown() {
     m_driver.reset();
 }
 
-std::string CompilerBase::run() {
+auto CompilerBase::run() -> std::string {
     m_driver->drive();
     return llvm::StringRef{ env->stdoutput.str() }.trim().str();
 }
 
-std::string CompilerBase::expected(bool lookForFile) {
+auto CompilerBase::expected(bool lookForFile) -> std::string {
     (void)this;
     static constexpr std::string_view prefix = "'' CHECK: ";
     static constexpr std::string_view fileKey = "__FILE__";
@@ -124,17 +135,19 @@ std::string CompilerBase::expected(bool lookForFile) {
     std::string line;
     bool first = true;
     while (std::getline(file, line)) {
-        if (!line.starts_with(prefix))
+        if (!line.starts_with(prefix)) {
             continue;
+        }
 
-        if (first)
+        if (first) {
             first = false;
-        else
+        } else {
             checks += '\n';
+        }
 
         auto match = line.substr(prefix.length());
         if (lookForFile) {
-            if (size_t pos = match.find(fileKey); pos != std::string::npos) {
+            if (const size_t pos = match.find(fileKey); pos != std::string::npos) {
                 match.replace(pos, fileKey.length(), GetParam().string());
             }
         }

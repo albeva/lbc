@@ -7,8 +7,8 @@
 
 class CmdLineParserTest : public ::testing::Test {
 protected:
-    lbc::CompileOptions options{};
-    lbc::CmdLineParser parser{ options };
+    lbc::CompileOptions options{}; // NOLINT
+    lbc::CmdLineParser parser{ options }; // NOLINT
 
     void parse(std::initializer_list<const char*> args) {
         parser.parse(lbc::CmdLineParser::Args(args.begin(), args.size()));
