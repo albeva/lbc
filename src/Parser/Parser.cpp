@@ -1249,7 +1249,7 @@ Result<AstExpr*> Parser::expression(ExprFlags flags) {
     m_exprFlags = flags;
     TRY_DECL(expr, factor())
 
-    fixExprOperators();
+    resolveBinaryOperators();
 
     // expr op
     if (m_token.isOperator()) {
@@ -1286,7 +1286,7 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
 
         TRY_DECL(rhs, factor())
 
-        fixExprOperators();
+        resolveBinaryOperators();
 
         while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
             TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
@@ -1298,33 +1298,37 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
     return lhs;
 }
 
-void Parser::fixExprOperators() {
-    if (m_token.is(TokenKind::Assign)) {
+void Parser::resolveBinaryOperators() {
+    switch (m_token.getKind()) {
+    case TokenKind::Assign:
         if (flags::has(m_exprFlags, ExprFlags::useAssign)) {
             flags::unset(m_exprFlags, ExprFlags::useAssign);
         } else {
             m_token.setKind(TokenKind::Equal);
         }
-    } else if (m_token.is(TokenKind::Comma) && flags::has(m_exprFlags, ExprFlags::commaAsAnd)) {
-        m_token.setKind(TokenKind::CommaAnd);
+        break;
+    case TokenKind::Comma:
+        if (flags::has(m_exprFlags, ExprFlags::commaAsAnd)) {
+            m_token.setKind(TokenKind::CommaAnd);
+        }
+        break;
+    case TokenKind::MinusOrNegate:
+        m_token.setKind(TokenKind::Minus);
+        break;
+    default:
+        break;
     }
 }
 
 /**
- * factor = primary { <Right Unary Op> | "AS" TypeExpr } .
+ * factor = primary { "(" expressionList ")" | "AS" TypeExpr | } .
  */
 Result<AstExpr*> Parser::factor() {
     auto start = m_token.getRange().Start;
     TRY_DECL(expr, primary())
 
     while (true) {
-        // <Right Unary Op>
-        if (m_token.isUnary() && m_token.isRightToLeft()) {
-            auto tkn = m_token;
-            advance();
-            TRY_ASSIGN(expr, unary({ start, m_endLoc }, tkn, expr))
-            continue;
-        }
+        // Note: Currently have no Right-To-Left unary operators, otherwise handle them here.
 
         if (accept(TokenKind::ParenOpen)) {
             TRY_DECL(args, expressionList())
@@ -1358,9 +1362,9 @@ Result<AstExpr*> Parser::factor() {
 
 /**
  * primary = literal
- *         | CallExpr
- *         | identifier [ "(" params ") ]
+ *         | identifier
  *         | "(" expression ")"
+ *         | IfExpr
  *         | <Left Unary Op> [ factor { <Binary Op> expression } ]
  *         | IfExpr
  *        .
@@ -1370,22 +1374,27 @@ Result<AstExpr*> Parser::primary() {
         return literal();
     }
 
-    if (m_token.is(TokenKind::Identifier)) {
+    switch (m_token.getKind()) {
+    case TokenKind::Identifier:
         return identifier();
-    }
-
-    if (accept(TokenKind::ParenOpen)) {
+    case TokenKind::ParenOpen: {
+        advance();
         TRY_DECL(expr, expression())
         TRY(consume(TokenKind::ParenClose))
         return expr;
     }
-
-    if (m_token.is(TokenKind::If)) {
+    case TokenKind::If:
         return ifExpr();
+    case TokenKind::Multiply:
+        m_token.setKind(TokenKind::Dereference);
+        break;
+    case TokenKind::MinusOrNegate:
+        m_token.setKind(TokenKind::Negate);
+        break;
+    default:
+        break;
     }
 
-    replace(TokenKind::Minus, TokenKind::Negate);
-    replace(TokenKind::Multiply, TokenKind::Dereference);
     if (m_token.isUnary() && m_token.isLeftToRight()) {
         auto tkn = m_token;
         advance();

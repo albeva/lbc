@@ -63,6 +63,12 @@
                                                                       \
     _( CommaAnd,        ",",    1,      Binary, Left,   Logical     )
 
+#define TOKEN_VARIABLES(_) \
+    _( MinusOrNegate,           "-" )  \
+    _( MultiplyOrDereference,   "*" )  \
+    _( AssignOrEqual,           "=" )  \
+    _( CommaOrLogicalAnd,       "," )
+
 #define TOKEN_KEYWORDS(_) \
     _( Any,      "ANY"      ) \
     _( As,       "AS"       ) \
@@ -107,5 +113,6 @@
     TOKEN_LITERALS(_)  \
     TOKEN_SYMBOLS(_)   \
     TOKEN_OPERATORS(_) \
+    TOKEN_VARIABLES(_)  \
     TOKEN_KEYWORDS(_)  \
     ALL_TYPES(_)

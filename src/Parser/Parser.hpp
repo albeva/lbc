@@ -92,7 +92,7 @@ private:
 
     // replace token kind with another (e.g. Minus to Negate)
     void replace(TokenKind what, TokenKind with);
-    void fixExprOperators();
+    void resolveBinaryOperators();
 
     // If token matches then advance and return true
     bool accept(TokenKind kind) {

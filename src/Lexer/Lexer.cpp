@@ -154,7 +154,7 @@ auto Lexer::next() -> Token {
         case '+':
             return token(TokenKind::Plus);
         case '-':
-            return token(TokenKind::Minus);
+            return token(TokenKind::MinusOrNegate);
         case '*':
             return token(TokenKind::Multiply);
         case '<': {

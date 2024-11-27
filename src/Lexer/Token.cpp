@@ -6,14 +6,14 @@ using namespace lbc;
 
 namespace {
 namespace literals {
-#define IMPL_LITERAL(id, kw, ...) constexpr llvm::StringLiteral Str##id{ kw };
+#define IMPL_LITERAL(ID, kw, ...) constexpr llvm::StringLiteral ID{ kw };
     ALL_TOKENS(IMPL_LITERAL)
 #undef IMPL_LITERAL
 } // namespace literals
 
 // Map string literal to TokenKind
 const llvm::StringMap<TokenKind> keywordsToKind {
-#define IMPL_LITERAL(id, ...) { literals::Str##id, TokenKind::id },
+#define IMPL_LITERAL(ID, ...) { literals::ID, TokenKind::ID },
     TOKEN_KEYWORDS(IMPL_LITERAL)
     ALL_TYPES(IMPL_LITERAL)
     TOKEN_OPERATOR_KEYWORD_MAP(IMPL_LITERAL)
@@ -25,6 +25,7 @@ enum class Category : std::uint8_t {
     Literal,
     Symbol,
     Operator,
+    Variable,
     Keyword,
     Type
 };
@@ -49,16 +50,18 @@ struct TokenDef final {
 };
 
 constexpr const std::array tokenDefs {
-#define GENERAL(ID, STR, ...) TokenDef{ Category::General, literals::Str##ID },
-#define LITERAL(ID, STR, ...) TokenDef{ Category::Literal, literals::Str##ID },
-#define SYMBOL(ID, STR, ...) TokenDef{ Category::Symbol, literals::Str##ID },
-#define KEYWORD(ID, STR, ...) TokenDef{ Category::Keyword, literals::Str##ID },
-#define TYPE(ID, STR, ...) TokenDef{ Category::Type, literals::Str##ID },
-#define OPERATOR(ID, STR, PREC, TYPE, ASSOC, CAT) TokenDef{ Category::Operator, literals::Str##ID, PREC, OpType::TYPE, OpAssociativity::ASSOC, OperatorType::CAT },
+#define GENERAL(ID, STR, ...) TokenDef{ Category::General, literals::ID },
+#define LITERAL(ID, STR, ...) TokenDef{ Category::Literal, literals::ID },
+#define SYMBOL(ID, STR, ...) TokenDef{ Category::Symbol, literals::ID },
+#define KEYWORD(ID, STR, ...) TokenDef{ Category::Keyword, literals::ID },
+#define TYPE(ID, STR, ...) TokenDef{ Category::Type, literals::ID },
+#define OPERATOR(ID, STR, PREC, TYPE, ASSOC, CAT) TokenDef{ Category::Operator, literals::ID, PREC, OpType::TYPE, OpAssociativity::ASSOC, OperatorType::CAT },
+#define VARIABLE(ID, STR, ...) TokenDef{ Category::Variable, literals::ID },
     TOKEN_GENERAL(GENERAL)
     TOKEN_LITERALS(LITERAL)
     TOKEN_SYMBOLS(SYMBOL)
     TOKEN_OPERATORS(OPERATOR)
+    TOKEN_VARIABLES(VARIABLE)
     TOKEN_KEYWORDS(KEYWORD)
     ALL_TYPES(TYPE)
 #undef GENERAL
@@ -98,7 +101,7 @@ auto Token::lexeme() const -> llvm::StringRef {
 auto Token::asString() const -> std::string {
     static constexpr auto visitor = lbc::Visitor{
         [](std::monostate /*value*/) {
-            return literals::StrNull.str();
+            return literals::Null.str();
         },
         [](llvm::StringRef value) {
             return value.str();
@@ -110,7 +113,7 @@ auto Token::asString() const -> std::string {
             return std::to_string(value);
         },
         [](bool value) {
-            return (value ? literals::StrTrue : literals::StrFalse).str();
+            return (value ? literals::True : literals::False).str();
         }
     };
 
