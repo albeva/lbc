@@ -19,10 +19,10 @@ public:
 
     ~SymbolTable() = default;
 
-    [[nodiscard]] SymbolTable* getParent() const { return m_parent; }
+    [[nodiscard]] auto getParent() const -> SymbolTable* { return m_parent; }
     void setParent(SymbolTable* parent) { m_parent = parent; }
 
-    [[nodiscard]] AstFuncDecl* getFunction() const {
+    [[nodiscard]] auto getFunction() const -> AstFuncDecl* {
         if (m_function == nullptr && m_parent != nullptr) {
             return m_parent->getFunction();
         }
@@ -32,20 +32,21 @@ public:
     void insert(Symbol* symbol);
     void import(SymbolTable* table);
 
-    [[nodiscard]] bool exists(llvm::StringRef name, bool recursive = false) const {
+    [[nodiscard]] auto exists(llvm::StringRef name, bool recursive = false) const -> bool {
         return find(name, recursive) != nullptr;
     }
-    [[nodiscard]] Symbol* find(llvm::StringRef name, bool recursive = true) const;
-    [[nodiscard]] std::vector<Symbol*> getSymbols() const;
+    [[nodiscard]] auto find(llvm::StringRef name, bool recursive = true) const -> Symbol*;
+    [[nodiscard]] auto getSymbols() const -> std::vector<Symbol*>;
 
     [[nodiscard]] auto size() const { return m_symbols.size(); }
 
     // Make vanilla new/delete illegal.
-    void* operator new(size_t) = delete;
+    auto operator new(size_t) -> void* = delete;
     void operator delete(void*) = delete;
 
     // Allow placement new
-    void* operator new(size_t /*size*/, void* ptr) {
+    auto operator new(size_t size, void* ptr) -> void* {
+        assert(size >= sizeof(SymbolTable));
         assert(ptr);
         return ptr;
     }
@@ -53,8 +54,8 @@ public:
 private:
     SymbolTable* m_parent;
     AstFuncDecl* m_function;
-    Container m_symbols{};
-    std::vector<SymbolTable*> m_imports{};
+    Container m_symbols;
+    std::vector<SymbolTable*> m_imports;
 };
 
 } // namespace lbc

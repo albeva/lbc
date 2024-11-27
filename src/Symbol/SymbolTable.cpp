@@ -2,6 +2,8 @@
 // Created by Albert Varaksin on 06/07/2020.
 //
 #include "SymbolTable.hpp"
+
+#include <algorithm>
 #include "Driver/Context.hpp"
 #include "Symbol.hpp"
 using namespace lbc;
@@ -14,7 +16,7 @@ void SymbolTable::import(SymbolTable* table) {
     m_imports.push_back(table);
 }
 
-Symbol* SymbolTable::find(llvm::StringRef name, bool recursive) const {
+auto SymbolTable::find(llvm::StringRef name, bool recursive) const -> Symbol* {
     if (auto iter = m_symbols.find(name); iter != m_symbols.end()) {
         return iter->second;
     }
@@ -39,15 +41,15 @@ Symbol* SymbolTable::find(llvm::StringRef name, bool recursive) const {
     return nullptr;
 }
 
-std::vector<Symbol*> SymbolTable::getSymbols() const {
+auto SymbolTable::getSymbols() const -> std::vector<Symbol*> {
     std::vector<Symbol*> symbols;
     symbols.reserve(size());
 
-    std::transform(m_symbols.begin(), m_symbols.end(), std::back_inserter(symbols), [](const auto& item) {
+    std::ranges::transform(m_symbols, std::back_inserter(symbols), [](const auto& item) {
         return item.second;
     });
 
-    std::sort(symbols.begin(), symbols.end(), [](auto lhs, auto rhs) {
+    std::ranges::sort(symbols, [](auto lhs, auto rhs) {
         return lhs->getIndex() < rhs->getIndex();
     });
 

@@ -21,7 +21,7 @@ public:
         uint8_t declared : 1;
     };
 
-    explicit Symbol(
+    Symbol(
         llvm::StringRef name,
         SymbolTable* table,
         const TypeRoot* type,
@@ -31,36 +31,36 @@ public:
 
     ~Symbol() = default;
 
-    [[nodiscard]] inline ValueFlags& valueFlags() { return m_flags; }
-    [[nodiscard]] inline StateFlags& stateFlags() { return m_state; }
+    [[nodiscard]] auto valueFlags() -> ValueFlags& { return m_flags; }
+    [[nodiscard]] auto stateFlags() -> StateFlags& { return m_state; }
 
-    [[nodiscard]] unsigned int getIndex() const { return m_index; }
-    inline void setIndex(unsigned index) { m_index = index; }
+    [[nodiscard]] auto getIndex() const -> unsigned int { return m_index; }
+    void setIndex(unsigned index) { m_index = index; }
 
-    [[nodiscard]] inline const TypeRoot* getType() const { return m_type; }
-    inline void setType(const TypeRoot* type) { m_type = type; }
+    [[nodiscard]] auto getType() const -> const TypeRoot* { return m_type; }
+    void setType(const TypeRoot* type) { m_type = type; }
 
-    [[nodiscard]] llvm::StringRef name() const { return m_name; }
+    [[nodiscard]] auto name() const -> llvm::StringRef { return m_name; }
 
-    [[nodiscard]] llvm::Value* getLlvmValue() const { return m_llvmValue; }
+    [[nodiscard]] auto getLlvmValue() const -> llvm::Value* { return m_llvmValue; }
     void setLlvmValue(llvm::Value* value) { m_llvmValue = value; }
 
-    [[nodiscard]] llvm::StringRef alias() const { return m_alias; }
+    [[nodiscard]] auto alias() const -> llvm::StringRef { return m_alias; }
     void setAlias(llvm::StringRef alias) { m_alias = alias; }
 
-    [[nodiscard]] AstDecl* getDecl() const { return m_decl; }
+    [[nodiscard]] auto getDecl() const -> AstDecl* { return m_decl; }
     void setDecl(AstDecl* decl) { m_decl = decl; }
 
-    [[nodiscard]] SymbolTable* getSymbolTable() const { return m_table; }
+    [[nodiscard]] auto getSymbolTable() const -> SymbolTable* { return m_table; }
 
-    [[nodiscard]] llvm::StringRef identifier() const {
+    [[nodiscard]] auto identifier() const -> llvm::StringRef {
         if (m_alias.empty()) {
             return m_name;
         }
         return m_alias;
     }
 
-    [[nodiscard]] llvm::GlobalValue::LinkageTypes getLlvmLinkage() const {
+    [[nodiscard]] auto getLlvmLinkage() const -> llvm::GlobalValue::LinkageTypes {
         if (m_flags.external) {
             return llvm::GlobalValue::LinkageTypes::ExternalLinkage;
         }
@@ -68,12 +68,13 @@ public:
     }
 
     // Make vanilla new/delete illegal.
-    void* operator new(size_t) = delete;
+    auto operator new(size_t) -> void* = delete;
     void operator delete(void*) = delete;
 
     // Allow placement new
-    void* operator new(size_t /*size*/, void* ptr) {
-        assert(ptr); // NOLINT
+    auto operator new(size_t size, void* ptr) -> void* {
+        assert(size >= sizeof(Symbol));
+        assert(ptr);
         return ptr;
     }
 
