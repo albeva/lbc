@@ -8,7 +8,7 @@
 #include <llvm/Support/InitLLVM.h>
 using namespace lbc;
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {
     llvm::InitLLVM const init { argc, argv };
 
     CompileOptions options {};

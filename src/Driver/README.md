@@ -10,7 +10,7 @@ Options:
     -S         emit assembly/llvm-ir
     -emit-llvm emit llvm. Must be combined with `-S` or `-c` flags
 
-1. Input files and options can me mingled: \
+1. Input files and options can be mingled: \
    `lbc foo.bas -o foo other.bas`
 2. `-o` can only be used with a single generated target \
    cannot specify -o when generating multiple output files

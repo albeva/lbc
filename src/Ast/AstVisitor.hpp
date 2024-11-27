@@ -10,6 +10,8 @@ namespace lbc {
 // NOLINTBEGIN(cppcoreguidelines-pro-type-static-cast-downcast)
 template <class This, typename RetTy = void, typename StmtTy = RetTy, typename ExprTy = RetTy, typename TypeTy = RetTy>
 class AstVisitor {
+protected:
+    AstVisitor() = default;
 public:
     using GenRetTy = RetTy;
     using StmtRetTy = StmtTy;

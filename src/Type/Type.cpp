@@ -243,7 +243,7 @@ auto TypeIntegral::genLlvmType(Context& context) const -> llvm::Type* {
 auto TypeIntegral::asString() const -> std::string {
     // clang-format off
     #define GET_TYPE(ID, STR, KIND, BITS, SIGNED, CPP) \
-        if (getBits() == BITS && isSigned() == SIGNED) \
+        if (getBits() == (BITS) && isSigned() == (SIGNED)) \
             return STR;
     INTEGRAL_TYPES(GET_TYPE)
     #undef GET_TYPE
@@ -281,7 +281,7 @@ auto TypeFloatingPoint::genLlvmType(Context& context) const -> llvm::Type* {
 auto TypeFloatingPoint::asString() const -> std::string {
     // clang-format off
     #define GET_TYPE(ID, STR, kind, BITS, CPP) \
-        if (getBits() == BITS)                 \
+        if (getBits() == (BITS))                 \
             return STR;
     FLOATINGPOINT_TYPES(GET_TYPE)
     #undef GET_TYPE

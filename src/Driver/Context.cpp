@@ -24,7 +24,7 @@ struct Context::Pimpl {
 
     DiagnosticEngine diag;
     Toolchain toolchain;
-    std::optional<llvm::DataLayout> dataLayout {};
+    std::optional<llvm::DataLayout> dataLayout;
 };
 
 Context::Context(CompileOptions& options)

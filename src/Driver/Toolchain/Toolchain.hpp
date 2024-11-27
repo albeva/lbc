@@ -32,9 +32,9 @@ public:
 
     [[nodiscard]] auto getBasePath() const -> const fs::path&;
 
-    [[nodiscard]] auto getPath(const ToolKind tool) const -> fs::path;
+    [[nodiscard]] auto getPath(ToolKind tool) const -> fs::path;
 
-    [[nodiscard]] auto createTask(const ToolKind kind) const -> ToolTask;
+    [[nodiscard]] auto createTask(ToolKind kind) const -> ToolTask;
 
 private:
     Context& m_context;
