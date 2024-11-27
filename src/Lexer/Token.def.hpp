@@ -61,13 +61,13 @@
                                                                       \
     _( Assign,          "=",    2,      Binary, Left,   Assignment  ) \
                                                                       \
-    _( CommaAnd,        ",",    1,      Binary, Left,   Logical     )
+    _( ConditionAnd,    ",",    1,      Binary, Left,   Logical     )
 
 #define TOKEN_VARIABLES(_) \
-    _( MinusOrNegate,           "-" )  \
-    _( MultiplyOrDereference,   "*" )  \
-    _( AssignOrEqual,           "=" )  \
-    _( CommaOrLogicalAnd,       "," )
+    _( MinusOrNegate,           "minus or negate"                   )  \
+    _( MultiplyOrDereference,   "multiply or dereference"           )  \
+    _( AssignOrEqual,           "assign or equal"                   )  \
+    _( CommaOrConditionAnd,     "command or if condition separator" )
 
 #define TOKEN_KEYWORDS(_) \
     _( Any,      "ANY"      ) \

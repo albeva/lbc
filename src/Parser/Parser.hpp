@@ -103,6 +103,23 @@ private:
         return false;
     }
 
+    // Accept assign token
+    bool acceptAssign() {
+        if (m_token.isOneOf(TokenKind::AssignOrEqual, TokenKind::Assign)) {
+            advance();
+            return true;
+        }
+        return false;
+    }
+
+    bool acceptComma() {
+        if (m_token.isOneOf(TokenKind::CommaOrConditionAnd, TokenKind::Comma)) {
+            advance();
+            return true;
+        }
+        return false;
+    }
+
     // Perform lookahead in the lexer, and if next token matches then advance and return true
     inline bool acceptNext(TokenKind kind);
 
@@ -110,6 +127,20 @@ private:
     [[nodiscard]] Result<void> consume(TokenKind kind) {
         TRY(expect(kind))
         advance();
+        return {};
+    }
+
+    [[nodiscard]] Result<void> consumeAssign() {
+        if (!acceptAssign()) {
+            return makeError(Diag::unexpectedToken, m_token, Token::description(TokenKind::Assign), m_token.description());
+        }
+        return {};
+    }
+
+    [[nodiscard]] Result<void> consumeComma() {
+        if (!acceptComma()) {
+            return makeError(Diag::unexpectedToken, m_token, Token::description(TokenKind::Comma), m_token.description());
+        }
         return {};
     }
 

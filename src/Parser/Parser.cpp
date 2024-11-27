@@ -338,7 +338,7 @@ Result<AstAttributeList*> Parser::attributeList() {
     do {
         TRY_DECL(attrib, attribute())
         attribs.emplace_back(attrib);
-    } while (accept(TokenKind::Comma));
+    } while (acceptComma());
 
     TRY(consume(TokenKind::BracketClose))
 
@@ -359,7 +359,7 @@ Result<AstAttribute*> Parser::attribute() {
     TRY_DECL(id, identifier())
 
     AstExprList* args = nullptr;
-    if (m_token.isOneOf(TokenKind::Assign, TokenKind::ParenOpen)) {
+    if (m_token.isOneOf(TokenKind::AssignOrEqual, TokenKind::ParenOpen)) {
         TRY_ASSIGN(args, attributeArgList())
     }
 
@@ -380,14 +380,14 @@ Result<AstExprList*> Parser::attributeArgList() {
     auto start = m_token.getRange().Start;
     std::vector<AstExpr*> args;
 
-    if (accept(TokenKind::Assign)) {
+    if (acceptAssign()) {
         TRY_DECL(lit, literal())
         args.emplace_back(lit);
     } else if (accept(TokenKind::ParenOpen)) {
         while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
             TRY_DECL(lit, literal())
             args.emplace_back(lit);
-            if (!accept(TokenKind::Comma)) {
+            if (!acceptComma()) {
                 break;
             }
         }
@@ -428,11 +428,11 @@ Result<AstVarDecl*> Parser::kwDim(AstAttributeList* attribs) {
     if (accept(TokenKind::As)) {
         TRY_ASSIGN(type, typeExpr())
 
-        if (accept(TokenKind::Assign)) {
+        if (acceptAssign()) {
             TRY_ASSIGN(expr, expression())
         }
     } else {
-        TRY(consume(TokenKind::Assign))
+        TRY(consumeAssign())
         TRY_ASSIGN(expr, expression())
     }
 
@@ -528,7 +528,7 @@ Result<AstFuncParamList*> Parser::funcParamList(bool& isVariadic, bool isAnonymo
     while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
         if (accept(TokenKind::Ellipsis)) {
             isVariadic = true;
-            if (m_token.is(TokenKind::Comma)) {
+            if (m_token.is(TokenKind::CommaOrConditionAnd)) {
                 return makeError(Diag::variadicArgumentNotLast, m_token);
             }
             break;
@@ -536,7 +536,7 @@ Result<AstFuncParamList*> Parser::funcParamList(bool& isVariadic, bool isAnonymo
         TRY_DECL(param, funcParam(isAnonymous))
 
         params.push_back(param);
-        if (!accept(TokenKind::Comma)) {
+        if (!acceptComma()) {
             break;
         }
     }
@@ -859,7 +859,7 @@ Result<AstIfStmtBlock*> Parser::ifBlock() {
         TRY_DECL(var, kwDim(nullptr))
 
         decls.emplace_back(var);
-        TRY(consume(TokenKind::Comma))
+        TRY(consumeComma())
     }
     TRY_DECL(expr, expression(ExprFlags::commaAsAnd))
     TRY(consume(TokenKind::Then))
@@ -916,7 +916,7 @@ Result<AstForStmt*> Parser::kwFor() {
         TRY_DECL(var, kwDim(nullptr))
 
         decls.emplace_back(var);
-        TRY(consume(TokenKind::Comma))
+        TRY(consumeComma())
     }
 
     // id [ "AS" TypeExpr ] "=" Expression
@@ -931,7 +931,7 @@ Result<AstForStmt*> Parser::kwFor() {
         TRY_ASSIGN(type, typeExpr())
     }
 
-    TRY(consume(TokenKind::Assign))
+    TRY(consumeAssign())
     TRY_DECL(expr, expression())
 
     auto* iterator = m_context.create<AstVarDecl>(
@@ -1010,9 +1010,9 @@ Result<AstDoLoopStmt*> Parser::kwDo() {
     std::vector<AstVarDecl*> decls;
 
     // [ VAR { "," VAR } ]
-    auto acceptComma = false;
-    while (m_token.is(TokenKind::Dim) || (acceptComma && accept(TokenKind::Comma))) {
-        acceptComma = true;
+    auto canHaveComma = false;
+    while (m_token.is(TokenKind::Dim) || (canHaveComma && acceptComma())) {
+        canHaveComma = true;
         TRY_DECL(var, kwDim(nullptr))
         decls.emplace_back(var);
     }
@@ -1300,20 +1300,26 @@ Result<AstExpr*> Parser::expression(AstExpr* lhs, int precedence) {
 
 void Parser::resolveBinaryOperators() {
     switch (m_token.getKind()) {
-    case TokenKind::Assign:
+    case TokenKind::AssignOrEqual:
         if (flags::has(m_exprFlags, ExprFlags::useAssign)) {
             flags::unset(m_exprFlags, ExprFlags::useAssign);
+            m_token.setKind(TokenKind::Assign);
         } else {
             m_token.setKind(TokenKind::Equal);
         }
         break;
-    case TokenKind::Comma:
+    case TokenKind::CommaOrConditionAnd:
         if (flags::has(m_exprFlags, ExprFlags::commaAsAnd)) {
-            m_token.setKind(TokenKind::CommaAnd);
+            m_token.setKind(TokenKind::ConditionAnd);
+        } else {
+            m_token.setKind(TokenKind::Comma);
         }
         break;
     case TokenKind::MinusOrNegate:
         m_token.setKind(TokenKind::Minus);
+        break;
+    case TokenKind::MultiplyOrDereference:
+        m_token.setKind(TokenKind::Multiply);
         break;
     default:
         break;
@@ -1385,7 +1391,7 @@ Result<AstExpr*> Parser::primary() {
     }
     case TokenKind::If:
         return ifExpr();
-    case TokenKind::Multiply:
+    case TokenKind::MultiplyOrDereference:
         m_token.setKind(TokenKind::Dereference);
         break;
     case TokenKind::MinusOrNegate:
@@ -1421,7 +1427,7 @@ Result<AstExpr*> Parser::unary(llvm::SMRange range, const Token& tkn, AstExpr* e
 
 Result<AstExpr*> Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) {
     switch (tkn.getKind()) {
-    case TokenKind::CommaAnd: {
+    case TokenKind::ConditionAnd: {
         auto copy = tkn;
         copy.setKind(TokenKind::LogicalAnd);
         return m_context.create<AstBinaryExpr>(range, copy, lhs, rhs);
@@ -1506,7 +1512,7 @@ Result<AstExprList*> Parser::expressionList() {
         TRY_DECL(expr, expression())
 
         exprs.emplace_back(expr);
-        if (!accept(TokenKind::Comma)) {
+        if (!acceptComma()) {
             break;
         }
     }
@@ -1520,12 +1526,6 @@ Result<AstExprList*> Parser::expressionList() {
 //----------------------------------------
 // Helpers
 //----------------------------------------
-
-void Parser::replace(TokenKind what, TokenKind with) {
-    if (m_token.is(what)) {
-        m_token.setKind(with);
-    }
-}
 
 [[nodiscard]] Result<void> Parser::expect(TokenKind kind) const {
     if (m_token.is(kind)) {
