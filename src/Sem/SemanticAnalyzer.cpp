@@ -226,10 +226,11 @@ Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
 
 Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
     if (auto* loc = std::get_if<llvm::SMLoc>(&ast.typeExpr)) {
-        Lexer lexer{ m_context, m_module->fileId, *loc };
+        Lexer lexer{ m_context, m_module->fileId };
         Parser parser{ m_context, lexer, false, m_table };
 
         auto parsedExpression = getDiag().ignoringErrors([&]() -> bool {
+            lexer.reset(*loc);
             if (auto* type = parser.typeExpr().getValueOrNull()) {
                 ast.typeExpr = type;
                 return true;

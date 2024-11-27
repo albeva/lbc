@@ -59,28 +59,23 @@ inline auto getEscapeChar(char ch) -> std::optional<char> {
 
 Lexer::Lexer(Context& context, unsigned fileID)
 : m_context{ &context },
-  m_fileId{ fileID },
-  m_hasStmt{ false } {
-    const auto* buffer = m_context->getSourceMrg().getMemoryBuffer(m_fileId);
+  m_hasStmt{ false },
+  m_fileId{ fileID } {
+    const auto* buffer = getBuffer();
     if (buffer == nullptr) {
         fatalError("Invalid buffer id");
     }
     m_input = buffer->getBufferStart();
-    m_end = buffer->getBufferEnd();
     m_eolPos = m_input;
 }
 
-Lexer::Lexer(Context& context, unsigned fileID, llvm::SMLoc loc)
-: m_context{ &context },
-  m_fileId{ fileID },
-  m_input{ loc.getPointer() },
-  m_end{ m_context->getSourceMrg().getMemoryBuffer(m_fileId)->getBufferEnd() },
-  m_eolPos{ m_input },
-  m_hasStmt{ false } {
+auto Lexer::getBuffer() const -> const llvm::MemoryBuffer* {
+    return m_context->getSourceMrg().getMemoryBuffer(m_fileId);
 }
 
 void Lexer::reset(llvm::SMLoc loc) {
     m_input = loc.getPointer();
+    assert(m_input >= getBuffer()->getBufferStart() && m_input < getBuffer()->getBufferEnd() && "Invalid source location");
     m_eolPos = m_input;
     m_hasStmt = false;
 }
@@ -115,13 +110,13 @@ void Lexer::next(Token& result) {
             skipUntilLineEnd();
             continue;
         case '/':
-            if (peekChar() == '\'') {
+            if (m_input[1] == '\'') {
                 skipMultilineComment();
                 continue;
             }
             return token(result, TokenKind::Divide);
         case '_':
-            if (isIdentifierChar(peekChar())) {
+            if (isIdentifierChar(m_input[1])) {
                 return identifier(result);
             }
             skipToNextLine();
@@ -129,16 +124,16 @@ void Lexer::next(Token& result) {
         case '"':
             return stringLiteral(result);
         case '=':
-            if (peekChar() == '>') {
+            if (m_input[1] == '>') {
                 return token(result, TokenKind::LambdaBody, 2);
             }
             return token(result, TokenKind::Assign);
         case ',':
             return token(result, TokenKind::Comma);
         case '.': {
-            auto nextCh = peekChar();
+            auto nextCh = m_input[1];
             if (nextCh == '.') {
-                if (peekChar(2) == '.') {
+                if (m_input[2] == '.') {
                     return token(result, TokenKind::Ellipsis, 3);
                 }
                 break;
@@ -163,7 +158,7 @@ void Lexer::next(Token& result) {
         case '*':
             return token(result, TokenKind::Multiply);
         case '<': {
-            auto la = peekChar();
+            auto la = m_input[1];
             if (la == '>') {
                 return token(result, TokenKind::NotEqual, 2);
             }
@@ -173,7 +168,7 @@ void Lexer::next(Token& result) {
             return token(result, TokenKind::LessThan);
         }
         case '>':
-            if (peekChar() == '=') {
+            if (m_input[1] == '=') {
                 return token(result, TokenKind::GreaterOrEqual, 2);
             }
             return token(result, TokenKind::GreaterThan);
@@ -236,7 +231,7 @@ void Lexer::skipMultilineComment() {
         case '\0':
             return;
         case '\'':
-            if (peekChar() == '/') {
+            if (m_input[1] == '/') {
                 m_input++;
                 level--;
                 if (level == 0) {
@@ -246,7 +241,7 @@ void Lexer::skipMultilineComment() {
             }
             break;
         case '/':
-            if (peekChar() == '\'') {
+            if (m_input[1] == '\'') {
                 m_input++;
                 level++;
             }
@@ -318,7 +313,7 @@ void Lexer::stringLiteral(Token& result) {
 }
 
 auto Lexer::escape() -> char {
-    if (auto ch = getEscapeChar(peekChar())) {
+    if (auto ch = getEscapeChar(m_input[1])) {
         m_input++;
         return *ch;
     }
@@ -421,14 +416,6 @@ void Lexer::identifier(Token& result) {
     default:
         return result.set(kind, range);
     }
-}
-
-auto Lexer::peekChar(std::size_t offset) const -> char {
-    const char* peek = m_input + offset;
-    if (peek < m_end) {
-        return *peek;
-    }
-    return '\0';
 }
 
 // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic, readability-avoid-return-with-void-value)
