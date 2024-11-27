@@ -18,19 +18,19 @@ class TypeUDT final : public TypeRoot {
     friend class Context;
 
 public:
-    static const TypeUDT* get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed);
+    static auto get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) -> const TypeUDT*;
 
-    constexpr static bool classof(const TypeRoot* type) {
+    constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getKind() == TypeFamily::UDT;
     }
 
-    [[nodiscard]] std::string asString() const final;
+    [[nodiscard]] auto asString() const -> std::string final;
 
-    [[nodiscard]] Symbol& getSymbol() const { return m_symbol; }
-    [[nodiscard]] SymbolTable& getSymbolTable() const { return m_symbolTable; }
+    [[nodiscard]] auto getSymbol() const -> Symbol& { return m_symbol; }
+    [[nodiscard]] auto getSymbolTable() const -> SymbolTable& { return m_symbolTable; }
 
 protected:
-    llvm::Type* genLlvmType(Context& context) const final;
+    auto genLlvmType(Context& context) const -> llvm::Type* final;
 
 private:
     Symbol& m_symbol;

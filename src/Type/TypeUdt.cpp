@@ -16,7 +16,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
     symbol.valueFlags().kind = ValueFlags::Kind::type;
 }
 
-const TypeUDT* TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) {
+auto TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) -> const TypeUDT* {
     if (const auto* type = symbol.getType()) {
         if (const auto* udt = llvm::dyn_cast<TypeUDT>(type)) {
             return udt;
@@ -27,11 +27,11 @@ const TypeUDT* TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbo
     return context.create<TypeUDT>(symbol, symbolTable, packed);
 }
 
-std::string TypeUDT::asString() const {
+auto TypeUDT::asString() const -> std::string {
     return m_symbol.name().str();
 }
 
-llvm::Type* TypeUDT::genLlvmType(Context& context) const {
+auto TypeUDT::genLlvmType(Context& context) const -> llvm::Type* {
     llvm::SmallVector<llvm::Type*> elems;
     elems.reserve(m_symbolTable.size());
     for (const auto* symbol : m_symbolTable.getSymbols()) {

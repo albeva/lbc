@@ -35,7 +35,7 @@ constexpr TypePointer anyPtrTy{ &anyTy }; // void*
 
 } // namespace
 
-const TypeRoot* TypeRoot::fromTokenKind(TokenKind kind) {
+auto TypeRoot::fromTokenKind(TokenKind kind) -> const TypeRoot* {
     #define CASE_TYPE(ID, ...) case TokenKind::ID: return &ID##Ty;
     switch (kind) {
     PRIMITIVE_TYPES(CASE_TYPE)
@@ -53,27 +53,27 @@ const TypeRoot* TypeRoot::fromTokenKind(TokenKind kind) {
 
 // clang-format on
 
-bool TypeRoot::isAnyPointer() const {
+auto TypeRoot::isAnyPointer() const -> bool {
     return this == &anyPtrTy;
 }
 
-bool TypeRoot::isSignedIntegral() const {
+auto TypeRoot::isSignedIntegral() const -> bool {
     if (!isIntegral()) {
         return false;
     }
-    return static_cast<const TypeIntegral*>(this)->isSigned();
+    return llvm::cast<TypeIntegral>(this)->isSigned();
 }
 
-bool TypeRoot::isUnsignedIntegral() const {
+auto TypeRoot::isUnsignedIntegral() const -> bool {
     if (!isIntegral()) {
         return false;
     }
-    return !static_cast<const TypeIntegral*>(this)->isSigned();
+    return !llvm::cast<TypeIntegral>(this)->isSigned();
 }
 
 // clang-format off
 #define CHECK_TYPE_IMPL(ID, ...)             \
-    bool TypeRoot::is##ID() const { \
+    auto TypeRoot::is##ID() const -> bool {  \
         return this == &ID##Ty;              \
     }
     INTEGRAL_TYPES(CHECK_TYPE_IMPL)
@@ -81,7 +81,7 @@ bool TypeRoot::isUnsignedIntegral() const {
 #undef CHECK_TYPE_IMPL
 // clang-format on
 
-TypeComparison TypeRoot::compare(const TypeRoot* other) const {
+auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
     if (this == other) {
         return TypeComparison::Equal;
     }
@@ -133,56 +133,55 @@ TypeComparison TypeRoot::compare(const TypeRoot* other) const {
     return TypeComparison::Incompatible;
 }
 
-const TypePointer* TypeRoot::getPointer(Context& context) const {
+auto TypeRoot::getPointer(Context& context) const -> const TypePointer* {
     return TypePointer::get(context, this);
 }
 
-const TypeFunction* TypeRoot::getUnderlyingFunctionType() const {
+auto TypeRoot::getUnderlyingFunctionType() const -> const TypeFunction* {
     if (isFunction()) {
-        return static_cast<const TypeFunction*>(this);
+        return llvm::cast<TypeFunction>(this);
     }
     if (isPointer()) {
-        return static_cast<const TypePointer*>(this)->getUnderlyingFunctionType();
+        return llvm::cast<TypePointer>(this)->getUnderlyingFunctionType();
     }
     return nullptr;
 }
 
 // Void
 
-const TypeVoid* TypeVoid::get() {
+auto TypeVoid::get() -> const TypeVoid* {
     return &voidTy;
 }
 
-llvm::Type* TypeVoid::genLlvmType(Context& context) const {
+auto TypeVoid::genLlvmType(Context& context) const -> llvm::Type* {
     return llvm::Type::getVoidTy(context.getLlvmContext());
 }
 
-std::string TypeVoid::asString() const {
+auto TypeVoid::asString() const -> std::string {
     return "VOID";
 }
 
 // Any
-const TypeAny* TypeAny::get() {
+auto TypeAny::get() -> const TypeAny* {
     return &anyTy;
 }
 
-llvm::Type* TypeAny::genLlvmType(Context& context) const {
+auto TypeAny::genLlvmType(Context& context) const -> llvm::Type* {
     return llvm::Type::getInt8Ty(context.getLlvmContext());
 }
 
-std::string TypeAny::asString() const {
+auto TypeAny::asString() const -> std::string {
     return "ANY";
 }
 
 // Pointer
 
-const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) {
+auto TypePointer::get(Context& context, const TypeRoot* base) -> const TypePointer* {
     if (base == &anyTy) {
         return &anyPtrTy;
     }
 
     for (const auto& ptr : context.getPtrTypes()) {
-        // cppcheck-suppress useStlAlgorithm
         if (ptr->m_base == base) {
             return ptr;
         }
@@ -193,31 +192,31 @@ const TypePointer* TypePointer::get(Context& context, const TypeRoot* base) {
     return ty;
 }
 
-llvm::Type* TypePointer::genLlvmType(Context& context) const {
-    return llvm::PointerType::get(m_base->getLlvmType(context), 0);
+auto TypePointer::genLlvmType(Context& context) const -> llvm::Type* {
+    return llvm::PointerType::get(context.getLlvmContext(), 0);
 }
 
-std::string TypePointer::asString() const {
+auto TypePointer::asString() const -> std::string {
     return m_base->asString() + " PTR";
 }
 
 // Bool
 
-const TypeBoolean* TypeBoolean::get() {
+auto TypeBoolean::get() -> const TypeBoolean* {
     return &BoolTy;
 }
 
-llvm::Type* TypeBoolean::genLlvmType(Context& context) const {
+auto TypeBoolean::genLlvmType(Context& context) const -> llvm::Type* {
     return llvm::Type::getInt1Ty(context.getLlvmContext());
 }
 
-std::string TypeBoolean::asString() const {
+auto TypeBoolean::asString() const -> std::string {
     return "BOOL";
 }
 
 // Integer
 
-const TypeIntegral* TypeIntegral::get(unsigned bits, bool isSigned) {
+auto TypeIntegral::get(unsigned bits, bool isSigned) -> const TypeIntegral* {
 #define USE_TYPE(ID, STR, KIND, BITS, IS_SIGNED, ...) \
     if (bits == BITS && isSigned == IS_SIGNED)        \
         return &ID##Ty;
@@ -227,19 +226,19 @@ const TypeIntegral* TypeIntegral::get(unsigned bits, bool isSigned) {
     fatalError("Invalid integer type size: "_t + llvm::Twine(bits), false);
 }
 
-const TypeIntegral* TypeIntegral::getSigned() const {
+auto TypeIntegral::getSigned() const -> const TypeIntegral* {
     return TypeIntegral::get(getBits(), true);
 }
 
-const TypeIntegral* TypeIntegral::getUnsigned() const {
+auto TypeIntegral::getUnsigned() const -> const TypeIntegral* {
     return TypeIntegral::get(getBits(), false);
 }
 
-llvm::Type* TypeIntegral::genLlvmType(Context& context) const {
+auto TypeIntegral::genLlvmType(Context& context) const -> llvm::Type* {
     return llvm::IntegerType::get(context.getLlvmContext(), getBits());
 }
 
-std::string TypeIntegral::asString() const {
+auto TypeIntegral::asString() const -> std::string {
 #define GET_TYPE(ID, STR, KIND, BITS, SIGNED, ...) \
     if (getBits() == BITS && isSigned() == SIGNED) \
         return STR;
@@ -251,7 +250,7 @@ std::string TypeIntegral::asString() const {
 
 // Floating Point
 
-const TypeFloatingPoint* TypeFloatingPoint::get(unsigned bits) {
+auto TypeFloatingPoint::get(unsigned bits) -> const TypeFloatingPoint* {
     switch (bits) {
 #define USE_TYPE(ID, STR, KIND, BITS, ...) \
     case BITS:                             \
@@ -263,7 +262,7 @@ const TypeFloatingPoint* TypeFloatingPoint::get(unsigned bits) {
     }
 }
 
-llvm::Type* TypeFloatingPoint::genLlvmType(Context& context) const {
+auto TypeFloatingPoint::genLlvmType(Context& context) const -> llvm::Type* {
     switch (getBits()) {
     case 32: // NOLINT
         return llvm::Type::getFloatTy(context.getLlvmContext());
@@ -274,7 +273,7 @@ llvm::Type* TypeFloatingPoint::genLlvmType(Context& context) const {
     }
 }
 
-std::string TypeFloatingPoint::asString() const {
+auto TypeFloatingPoint::asString() const -> std::string {
 #define GET_TYPE(ID, STR, kind, BITS, ...) \
     if (getBits() == BITS)                 \
         return STR;
@@ -286,12 +285,12 @@ std::string TypeFloatingPoint::asString() const {
 
 // Function
 
-const TypeFunction* TypeFunction::get(
+auto TypeFunction::get(
     Context& context,
     const TypeRoot* retType,
     llvm::SmallVector<const TypeRoot*> paramTypes,
     bool variadic
-) {
+) -> const TypeFunction* {
     for (const auto& ptr : context.getFuncTypes()) {
         // cppcheck-suppress useStlAlgorithm
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {
@@ -304,7 +303,7 @@ const TypeFunction* TypeFunction::get(
     return ty;
 }
 
-llvm::Type* TypeFunction::genLlvmType(Context& context) const {
+auto TypeFunction::genLlvmType(Context& context) const -> llvm::Type* {
     auto* retTy = m_retType->getLlvmType(context);
 
     llvm::SmallVector<llvm::Type*> params;
@@ -317,7 +316,7 @@ llvm::Type* TypeFunction::genLlvmType(Context& context) const {
     return llvm::FunctionType::get(retTy, params, m_variadic);
 }
 
-std::string TypeFunction::asString() const {
+auto TypeFunction::asString() const -> std::string {
     std::string out = m_retType != nullptr ? "FUNCTION(" : "SUB(";
     for (size_t i = 0; i < m_paramTypes.size(); i++) {
         if (i > 0) {
@@ -333,14 +332,14 @@ std::string TypeFunction::asString() const {
 }
 
 // ZString
-const TypeZString* TypeZString::get() {
+auto TypeZString::get() -> const TypeZString* {
     return &ZStringTy;
 }
 
-llvm::Type* TypeZString::genLlvmType(Context& context) const {
+auto TypeZString::genLlvmType(Context& context) const -> llvm::Type* {
     return llvm::PointerType::get(context.getLlvmContext(), 0);
 }
 
-std::string TypeZString::asString() const {
+auto TypeZString::asString() const -> std::string {
     return "ZSTRING";
 }
