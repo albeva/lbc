@@ -524,7 +524,7 @@ struct AstTypeAlias final : AstDecl {
 // Types
 //----------------------------------------
 struct AstTypeOf final : AstRoot {
-    using TypeExpr = std::variant<llvm::SMRange, AstTypeExpr*, AstExpr*>;
+    using TypeExpr = std::variant<llvm::SMLoc, AstTypeExpr*, AstExpr*>;
 
     constexpr explicit AstTypeOf(
         llvm::SMRange range_,

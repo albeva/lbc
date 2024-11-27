@@ -1216,7 +1216,7 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
     advance();
 
     TRY(consume(TokenKind::ParenOpen))
-    llvm::SMRange exprRange = m_token.getRange();
+    llvm::SMLoc exprLoc = m_token.getRange().Start;
     int parens = 1;
     while (true) {
         if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile, TokenKind::Invalid)) {
@@ -1225,9 +1225,6 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
         if (m_token.is(TokenKind::ParenClose)) {
             parens--;
             if (parens == 0) {
-                if (exprRange.End == m_token.getRange().End) {
-                    return makeError(Diag::unexpectedToken, m_token, "type expression", m_token.description());
-                }
                 advance();
                 break;
             }
@@ -1237,10 +1234,9 @@ Result<AstTypeOf*> Parser::kwTypeOf() {
         } else if (m_token.is(TokenKind::ParenOpen)) {
             parens++;
         }
-        exprRange.End = m_token.getRange().End;
         advance();
     }
-    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, exprRange);
+    return m_context.create<AstTypeOf>(llvm::SMRange{ start, m_endLoc }, exprLoc);
 }
 
 //----------------------------------------

@@ -70,24 +70,24 @@ Lexer::Lexer(Context& context, unsigned fileID)
     m_eolPos = m_input;
 }
 
-Lexer::Lexer(Context& context, unsigned fileID, llvm::SMRange range)
+Lexer::Lexer(Context& context, unsigned fileID, llvm::SMLoc loc)
 : m_context{ &context },
   m_fileId{ fileID },
-  m_input{ range.Start.getPointer() },
-  m_end{ range.End.getPointer() },
+  m_input{ loc.getPointer() },
+  m_end{ m_context->getSourceMrg().getMemoryBuffer(m_fileId)->getBufferEnd() },
   m_eolPos{ m_input },
-  m_hasStmt{ false } {}
+  m_hasStmt{ false } {
+}
 
-void Lexer::reset(llvm::SMRange range) {
-    m_input = range.Start.getPointer();
-    m_end = range.End.getPointer();
+void Lexer::reset(llvm::SMLoc loc) {
+    m_input = loc.getPointer();
     m_eolPos = m_input;
     m_hasStmt = false;
 }
 
 void Lexer::next(Token& result) {
     // clang-format off
-    while (m_input != m_end) {
+    while (true) {
         switch (*m_input) {
         case 0:
             return endOfFile(result);
@@ -95,9 +95,7 @@ void Lexer::next(Token& result) {
             m_eolPos = m_input;
             m_input++;
             if (*m_input == '\n') { // CR+LF
-                if (m_input < m_end) {
-                    m_input++;
-                }
+                m_input++;
             }
             if (m_hasStmt) {
                 return endOfStatement(result);
@@ -194,36 +192,28 @@ void Lexer::next(Token& result) {
         case 'v': case 'w': case 'x': case 'y': case 'z':
             return identifier(result);
         default:
-            break;
+            return invalid(result, m_input);
         }
-
-        return invalid(result, m_input);
     }
     // clang-format on
-
-    return endOfFile(result);
 }
 
 void Lexer::skipUntilLineEnd() {
-    // assume m_input[0] != \r || \n
-    while (++m_input != m_end) {
-        if (isLineOrFileEnd(*m_input)) {
-            return;
-        }
+    while (!isLineOrFileEnd(*m_input)) {
+        m_input++;
     }
 }
 
 void Lexer::skipToNextLine() {
     // assume m_input != \r || \n
     skipUntilLineEnd();
-    if (m_input == m_end) {
-        return;
-    }
 
     switch (*m_input) {
+    case '\0':
+        return;
     case '\r':
         m_input++;
-        if (m_input != m_end && *m_input == '\n') { // CR+LF
+        if (*m_input == '\n') { // CR+LF
             m_input++;
         }
         return;
@@ -240,7 +230,8 @@ void Lexer::skipMultilineComment() {
 
     m_input++;
     int level = 1;
-    while (++m_input != m_end) {
+    while (true) {
+        m_input++;
         switch (*m_input) {
         case '\0':
             return;
@@ -253,7 +244,7 @@ void Lexer::skipMultilineComment() {
                     return;
                 }
             }
-            continue;
+            break;
         case '/':
             if (peekChar() == '\'') {
                 m_input++;
@@ -261,7 +252,7 @@ void Lexer::skipMultilineComment() {
             }
             break;
         default:
-            continue;
+            break;
         }
     }
 }
@@ -290,7 +281,8 @@ void Lexer::stringLiteral(Token& result) {
 
     std::string literal;
     const auto* begin = m_input + 1;
-    while (++m_input != m_end) {
+    while (true) {
+        m_input++;
         auto ch = *m_input;
         switch (ch) {
         case '\t':
@@ -352,7 +344,7 @@ void Lexer::numberLiteral(Token& result) {
     }
     m_input++;
 
-    while (m_input != m_end) {
+    while (true) {
         auto ch = *m_input;
         if (ch == '.') {
             if (isFloatingPoint) {
@@ -393,25 +385,30 @@ void Lexer::identifier(Token& result) {
     const auto* start = m_input;
     m_input++;
 
-    while (m_input != m_end && isIdentifierChar(*m_input)) { m_input++; }
-
-    std::string uppercased;
-    auto length = std::distance(start, m_input);
-    uppercased.reserve(static_cast<size_t>(length));
-    std::transform(start, m_input, std::back_inserter(uppercased), llvm::toUpper);
-
-    if (uppercased == "REM") {
-        if (m_input != m_end && !isLineOrFileEnd(*m_input)) {
-            skipUntilLineEnd();
-        }
-        next(result);
-        return;
+    // lex identifier body
+    while (isIdentifierChar(*m_input)) {
+        m_input++;
     }
 
+    // get uppercased string
+    auto length = static_cast<size_t>(std::distance(start, m_input));
+    std::string uppercased;
+    uppercased.reserve(length);
+    std::transform(start, m_input, std::back_inserter(uppercased), llvm::toUpper);
+
+    // determine token kind
+    auto kind = Token::findKind(uppercased);
+
+    // is it a REM single line comment?
+    if (kind == TokenKind::Rem) {
+        skipUntilLineEnd();
+        return next(result);
+    }
+
+    // either a keyword or an identifier
+    auto range = makeRange(start, m_input);
     m_hasStmt = true;
 
-    auto range = makeRange(start, m_input);
-    auto kind = Token::findKind(uppercased);
     switch (kind) {
     case TokenKind::True:
         return result.set(TokenKind::BooleanLiteral, range, true);

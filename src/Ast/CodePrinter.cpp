@@ -130,7 +130,7 @@ void CodePrinter::visit(AstTypeExpr& ast) {
 void CodePrinter::visit(AstTypeOf& ast) {
     m_os << "TYPEOF(";
     const auto visitor = Visitor{
-        [&](llvm::SMRange /* range */) {
+        [&](llvm::SMLoc /* loc */) {
             // TODO: re-lex the input and emit it
             m_os << " /' emitting SMRange not implemented '/ ";
         },

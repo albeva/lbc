@@ -225,8 +225,8 @@ Result<void> SemanticAnalyzer::visit(AstTypeAlias& ast) {
 }
 
 Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
-    if (auto* range = std::get_if<llvm::SMRange>(&ast.typeExpr)) {
-        Lexer lexer{ m_context, m_module->fileId, *range };
+    if (auto* loc = std::get_if<llvm::SMLoc>(&ast.typeExpr)) {
+        Lexer lexer{ m_context, m_module->fileId, *loc };
         Parser parser{ m_context, lexer, false, m_table };
 
         auto parsedExpression = getDiag().ignoringErrors([&]() -> bool {
@@ -235,7 +235,7 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
                 return true;
             }
 
-            lexer.reset(*range);
+            lexer.reset(*loc);
             parser.reset();
             if (auto* expr = parser.expression().getValueOrNull()) {
                 ast.typeExpr = expr;
@@ -246,17 +246,13 @@ Result<void> SemanticAnalyzer::visit(AstTypeOf& ast) {
         });
 
         if (not parsedExpression) {
-            return makeError(Diag::invalidTypeOfExpression, range->Start, *range);
-        }
-
-        if (not parser.getToken().is(TokenKind::EndOfStmt)) {
-            return makeError(Diag::unexpectedTokenInTypeOf, parser.getToken());
+            return makeError(Diag::invalidTypeOfExpression, *loc, ast.getRange());
         }
     }
 
     using ResTy = Result<void>;
     const auto getType = Visitor{
-        [](llvm::SMRange&) -> ResTy {
+        [](llvm::SMLoc&) -> ResTy {
             llvm_unreachable("unresolved typeof expression");
         },
         [&](AstTypeExpr* typeExpr) -> ResTy {

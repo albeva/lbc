@@ -83,6 +83,7 @@
     _( Next,     "NEXT"     ) \
     _( Null,     "NULL"     ) \
     _( Ptr,      "PTR"      ) \
+    _( Rem,      "REM"      ) \
     _( Return,   "RETURN"   ) \
     _( Step,     "STEP"     ) \
     _( Sub,      "SUB"      ) \

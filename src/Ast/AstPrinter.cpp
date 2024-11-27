@@ -365,7 +365,7 @@ void AstPrinter::visit(AstTypeOf& ast) {
     m_json.object([&] {
         writeHeader(ast);
         const auto visitor = Visitor{
-            [&](llvm::SMRange&) {
+            [&](llvm::SMLoc&) {
                 // TODO: Implement printing out TYPEOF(SMRange)
                 // m_json.attributeArray("tokens", [&]() {
                 //     for (auto& tkn : tokens) {
