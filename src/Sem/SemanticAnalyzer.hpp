@@ -7,7 +7,6 @@
 #include "Ast/ControlFlowStack.hpp"
 #include "Ast/ValueFlags.hpp"
 #include "Diag/DiagnosticEngine.hpp"
-#include "Passes/ConstantFoldingPass.hpp"
 #include "Passes/DeclPass.hpp"
 #include "Passes/TypePass.hpp"
 
@@ -42,7 +41,6 @@ public:
     [[nodiscard]] auto getContext() -> Context& { return m_context; }
     [[nodiscard]] auto getSymbolTable() -> SymbolTable* { return m_table; }
     [[nodiscard]] auto getTypePass() -> Sem::TypePass& { return m_typePass; }
-    [[nodiscard]] auto getConstantFoldingPass() -> Sem::ConstantFoldingPass& { return m_constantFolder; }
     [[nodiscard]] auto getDeclPass() -> Sem::DeclPass& { return m_declPass; }
     [[nodiscard]] auto hasImplicitMain() const -> bool { return m_module->hasImplicitMain; }
 
@@ -94,7 +92,6 @@ private:
     SymbolTable* m_table = nullptr;
     StateFlags m_flags {};
 
-    Sem::ConstantFoldingPass m_constantFolder;
     Sem::TypePass m_typePass;
     Sem::DeclPass m_declPass;
 };

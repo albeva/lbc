@@ -94,8 +94,6 @@ private:
 
     // If token matches then advance and return true
     auto accept(TokenKind kind) -> bool;
-    auto acceptAssign() -> bool;
-    auto acceptComma() -> bool;
 
     // Perform lookahead in the lexer, and if next token matches then advance and return true
     inline auto acceptNext(TokenKind kind) -> bool;
@@ -105,8 +103,6 @@ private:
 
     // expects given token and advances.
     [[nodiscard]] auto consume(TokenKind kind) -> Result<void>;
-    [[nodiscard]] auto consumeAssign() -> Result<void>;
-    [[nodiscard]] auto consumeComma() -> Result<void>;
 
     // advance to the next token from the stream
     void advance();

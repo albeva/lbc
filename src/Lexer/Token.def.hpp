@@ -63,15 +63,10 @@
                                                                       \
     _( ConditionAnd,    ",",    1,      Binary, Left,   Logical     )
 
-#define TOKEN_VARIABLES(_) \
-    _( MinusOrNegate,           "minus or negate"                   )  \
-    _( MultiplyOrDereference,   "multiply or dereference"           )  \
-    _( AssignOrEqual,           "assign or equal"                   )  \
-    _( CommaOrConditionAnd,     "command or if condition separator" )
-
 #define TOKEN_KEYWORDS(_) \
     _( Any,      "ANY"      ) \
     _( As,       "AS"       ) \
+    _( Const,    "CONST"    ) \
     _( Continue, "CONTINUE" ) \
     _( Declare,  "DECLARE"  ) \
     _( Dim,      "DIM"      ) \
@@ -113,6 +108,5 @@
     TOKEN_LITERALS(_)  \
     TOKEN_SYMBOLS(_)   \
     TOKEN_OPERATORS(_) \
-    TOKEN_VARIABLES(_)  \
     TOKEN_KEYWORDS(_)  \
     ALL_TYPES(_)

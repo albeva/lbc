@@ -29,10 +29,8 @@ auto resolveUDT(const TypeRoot* type) -> const TypeUDT* {
 SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : ErrorLogger(context.getDiag())
 , m_context { context }
-, m_constantFolder { *this }
 , m_typePass { *this }
-, m_declPass { *this } {
-}
+, m_declPass { *this } { }
 
 auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
     auto flags = StateFlags { .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
@@ -311,10 +309,8 @@ auto SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) -> Result<void> {
 
 auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(visit(*ast))
-    m_constantFolder.fold(ast);
     if (type != nullptr) {
         TRY(coerce(ast, type))
-        m_constantFolder.fold(ast);
     }
     return {};
 }
@@ -536,7 +532,6 @@ auto SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) -> Result<void> {
 
     const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty))
-        m_constantFolder.fold(expr);
         ast.type = ty;
         return {};
     };
@@ -591,7 +586,6 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
 
     const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty))
-        m_constantFolder.fold(expr);
         ast.type = TypeBoolean::get();
         return {};
     };
@@ -649,7 +643,6 @@ auto SemanticAnalyzer::visit(AstCastExpr& ast) -> Result<void> {
 
 auto SemanticAnalyzer::convert(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(cast(ast, type))
-    m_constantFolder.fold(ast);
     return {};
 }
 

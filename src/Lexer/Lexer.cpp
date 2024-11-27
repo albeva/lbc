@@ -127,9 +127,9 @@ auto Lexer::next() -> Token {
             if (m_input[1] == '>') {
                 return token(TokenKind::LambdaBody, 2);
             }
-            return token(TokenKind::AssignOrEqual);
+            return token(TokenKind::Assign);
         case ',':
-            return token(TokenKind::CommaOrConditionAnd);
+            return token(TokenKind::Comma);
         case '.': {
             auto nextCh = m_input[1];
             if (nextCh == '.') {
@@ -154,9 +154,9 @@ auto Lexer::next() -> Token {
         case '+':
             return token(TokenKind::Plus);
         case '-':
-            return token(TokenKind::MinusOrNegate);
+            return token(TokenKind::Minus);
         case '*':
-            return token(TokenKind::MultiplyOrDereference);
+            return token(TokenKind::Multiply);
         case '<': {
             auto la = m_input[1];
             if (la == '>') {

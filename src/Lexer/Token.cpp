@@ -59,12 +59,10 @@ constexpr const std::array tokenDefs {
     #define KEYWORD(ID, STR, ...) TokenDef { Category::Keyword, literals::ID },
     #define TYPE(ID, STR, ...) TokenDef { Category::Type, literals::ID },
     #define OPERATOR(ID, STR, PREC, TYPE, ASSOC, CAT) TokenDef { Category::Operator, literals::ID, PREC, OpType::TYPE, OpAssociativity::ASSOC, OperatorType::CAT },
-    #define VARIABLE(ID, STR, ...) TokenDef { Category::Variable, literals::ID },
     TOKEN_GENERAL(GENERAL)
     TOKEN_LITERALS(LITERAL)
     TOKEN_SYMBOLS(SYMBOL)
     TOKEN_OPERATORS(OPERATOR)
-    TOKEN_VARIABLES(VARIABLE)
     TOKEN_KEYWORDS(KEYWORD)
     ALL_TYPES(TYPE)
     #undef GENERAL

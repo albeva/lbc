@@ -58,8 +58,6 @@ add_library(
     Lexer/Token.hpp
     Parser/Parser.cpp
     Parser/Parser.hpp
-    Sem/Passes/ConstantFoldingPass.cpp
-    Sem/Passes/ConstantFoldingPass.hpp
     Sem/Passes/DeclPass.cpp
     Sem/Passes/DeclPass.hpp
     Sem/Passes/ForStmtPass.cpp
