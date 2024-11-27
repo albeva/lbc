@@ -29,52 +29,51 @@ public:
     explicit SemanticAnalyzer(Context& context);
 
     /// declareMembers the expression, optionally coerce result to given type
-    Result<void> expression(AstExpr*& ast, const TypeRoot* type = nullptr);
+    auto expression(AstExpr*& ast, const TypeRoot* type = nullptr) -> Result<void>;
 
     /// Checks types and if they are convertible, create CAST expression
-    Result<void> coerce(AstExpr*& ast, const TypeRoot* type);
+    auto coerce(AstExpr*& ast, const TypeRoot* type) -> Result<void>;
 
     /// Cast expression and fold the value
-    Result<void> convert(AstExpr*& ast, const TypeRoot* type);
+    auto convert(AstExpr*& ast, const TypeRoot* type) -> Result<void>;
 
     /// Creates a CAST expression, without folding
-    Result<void> cast(AstExpr*& ast, const TypeRoot* type);
+    auto cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>;
 
-    [[nodiscard]] inline Context& getContext() { return m_context; }
-    [[nodiscard]] inline SymbolTable* getSymbolTable() { return m_table; }
-    [[nodiscard]] inline Sem::TypePass& getTypePass() { return m_typePass; }
-    [[nodiscard]] inline Sem::ConstantFoldingPass& getConstantFoldingPass() { return m_constantFolder; }
-    [[nodiscard]] inline Sem::DeclPass& getDeclPass() { return m_declPass; }
-    [[nodiscard]] inline bool hasImplicitMain() const { return m_module->hasImplicitMain; }
+    [[nodiscard]] auto getContext() -> Context& { return m_context; }
+    [[nodiscard]] auto getSymbolTable() -> SymbolTable* { return m_table; }
+    [[nodiscard]] auto getTypePass() -> Sem::TypePass& { return m_typePass; }
+    [[nodiscard]] auto getConstantFoldingPass() -> Sem::ConstantFoldingPass& { return m_constantFolder; }
+    [[nodiscard]] auto getDeclPass() -> Sem::DeclPass& { return m_declPass; }
+    [[nodiscard]] auto hasImplicitMain() const -> bool { return m_module->hasImplicitMain; }
 
-    template<std::invocable Func>
-    inline auto with(Func&& handler) -> std::invoke_result_t<Func> {
+    auto with(std::invocable auto&& handler) {
         return handler();
     }
 
-    template<typename... Args, std::invocable Func = LastType<Args...>>
-    inline auto with(SymbolTable* table, Args&&... rest) -> std::invoke_result_t<Func> {
+    template<typename... Args, std::invocable = LastType<Args...>>
+    auto with(SymbolTable* table, Args&&... rest) {
         RESTORE_ON_EXIT(m_table);
         m_table = table;
         return with(std::forward<Args>(rest)...);
     }
 
-    template<typename... Args, std::invocable Func = LastType<Args...>>
-    inline auto with(AstModule* module, Args&&... rest) -> std::invoke_result_t<Func> {
+    template<typename... Args, std::invocable = LastType<Args...>>
+    auto with(AstModule* module, Args&&... rest) {
         RESTORE_ON_EXIT(m_module);
         m_module = module;
         return with(std::forward<Args>(rest)...);
     }
 
-    template<typename... Args, std::invocable Func = LastType<Args...>>
-    inline auto with(AstFuncDecl* function, Args&&... rest) -> std::invoke_result_t<Func> {
+    template<typename... Args, std::invocable = LastType<Args...>>
+    auto with(AstFuncDecl* function, Args&&... rest) {
         RESTORE_ON_EXIT(m_function);
         m_function = function;
         return with(std::forward<Args>(rest)...);
     }
 
-    template<typename... Args, std::invocable Func = LastType<Args...>>
-    inline auto with(StateFlags flags, Args&&... rest) -> std::invoke_result_t<Func> {
+    template<typename... Args, std::invocable = LastType<Args...>>
+    auto with(StateFlags flags, Args&&... rest) {
         RESTORE_ON_EXIT(m_flags);
         m_flags = flags;
         return with(std::forward<Args>(rest)...);
@@ -82,12 +81,12 @@ public:
 
     AST_VISITOR_DECLARE_CONTENT_FUNCS()
 private:
-    Result<void> arithmetic(AstBinaryExpr& ast);
-    Result<void> logical(AstBinaryExpr& ast);
-    Result<void> comparison(AstBinaryExpr& ast);
+    auto arithmetic(AstBinaryExpr& ast) -> Result<void>;
+    auto logical(AstBinaryExpr& ast) -> Result<void>;
+    auto comparison(AstBinaryExpr& ast) -> Result<void>;
 
-    [[nodiscard]] bool canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const;
-    [[nodiscard]] bool isVariableAccessible(Symbol* symbol) const;
+    [[nodiscard]] auto canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const -> bool;
+    [[nodiscard]] auto isVariableAccessible(Symbol* symbol) const -> bool;
 
     Context& m_context;
 
