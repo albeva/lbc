@@ -20,8 +20,7 @@ protected:
     }
 
     void expect(lbc::TokenKind kind, const std::string& lexeme = "", unsigned line = 0, unsigned col = 0, unsigned len = 0) {
-        lbc::Token token;
-        m_lexer->next(token);
+        const lbc::Token token = m_lexer->next();
         EXPECT_EQ(token.getKind(), kind);
 
         if (!lexeme.empty()) {
@@ -57,12 +56,10 @@ private:
 
 TEST_F(LexerTests, NoInput) {
     auto& lexer = load("");
-    lbc::Token token;
-
-    lexer.next(token);
+    lbc::Token token = lexer.next();
     EXPECT_TRUE(token.is(lbc::TokenKind::EndOfFile));
 
-    lexer.next(token);
+    token = lexer.next();
     EXPECT_TRUE(token.is(lbc::TokenKind::EndOfFile));
 }
 

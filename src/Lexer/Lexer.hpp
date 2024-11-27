@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Token.hpp"
 
 namespace lbc {
 class Token;
@@ -17,20 +18,20 @@ public:
     [[nodiscard]] inline auto getBuffer() const -> const llvm::MemoryBuffer*;
     void reset(llvm::SMLoc loc);
 
-    void next(Token& result);
+    auto next() -> Token;
 
 private:
     void skipUntilLineEnd();
     void skipToNextLine();
     void skipMultilineComment();
 
-    void endOfFile(Token& result);
-    void endOfStatement(Token& result);
-    void invalid(Token& result, const char* loc) const;
-    void stringLiteral(Token& result);
-    void token(Token& result, TokenKind kind, int len = 1);
-    void numberLiteral(Token& result);
-    void identifier(Token& result);
+    auto endOfFile() -> Token;
+    auto endOfStatement() -> Token;
+    auto invalid(const char* loc) const -> Token;
+    auto stringLiteral() -> Token;
+    auto token(TokenKind kind, int len = 1) -> Token;
+    auto numberLiteral() -> Token;
+    auto identifier() -> Token;
 
     [[nodiscard]] auto escape() -> char;
 

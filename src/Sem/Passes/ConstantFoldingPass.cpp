@@ -142,8 +142,7 @@ AstExpr* ConstantFoldingPass::optimizeIifToCast(AstIfExpr& ast) {
 
     if (*lval == 0 && *rval == 1) {
         // TODO: Set correct token range
-        Token tkn{};
-        tkn.set(TokenKind::LogicalNot, ast.range);
+        Token tkn{ TokenKind::LogicalNot, ast.range };
         auto* unary = m_sem.getContext().create<AstUnaryExpr>(
             ast.range,
             tkn,

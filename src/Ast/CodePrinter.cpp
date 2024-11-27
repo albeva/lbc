@@ -485,13 +485,11 @@ void CodePrinter::visit(AstLiteralExpr& ast) {
 
 void CodePrinter::visit(AstUnaryExpr& ast) {
     m_os << "(";
-    Token token;
-    token.set(ast.token.getKind(), ast.range);
-    if (token.isRightToLeft()) {
+    if (ast.token.isRightToLeft()) {
         visit(*ast.expr);
-        m_os << " " << token.description();
+        m_os << " " << ast.token.description();
     } else {
-        m_os << token.description() << " ";
+        m_os << ast.token.description() << " ";
         visit(*ast.expr);
     }
     m_os << ")";
@@ -513,9 +511,7 @@ void CodePrinter::visit(AstBinaryExpr& ast) {
     m_os << "(";
     visit(*ast.lhs);
 
-    Token token;
-    token.set(ast.token.getKind(), ast.range);
-    m_os << " " << token.description() << " ";
+    m_os << " " << ast.token.description() << " ";
 
     visit(*ast.rhs);
     m_os << ")";

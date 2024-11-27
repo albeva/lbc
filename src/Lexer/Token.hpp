@@ -31,23 +31,23 @@ public:
     // find matching token for string or return TokenKind::Identifier
     static auto findKind(llvm::StringRef str) -> TokenKind;
 
+    // Default
+    constexpr Token() = default;
+
     // set token values
-    void set(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{}) {
-        m_kind = kind;
-        m_range = range;
-        m_value = value;
-    }
+    constexpr Token(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate{})
+    : m_kind(kind), m_value(value), m_range(range) {}
 
     // Getters
-    [[nodiscard]] auto getKind() const -> TokenKind { return m_kind; }
-    void setKind(TokenKind kind) { m_kind = kind; }
+    [[nodiscard]] constexpr auto getKind() const -> TokenKind { return m_kind; }
+    constexpr void setKind(TokenKind kind) { m_kind = kind; }
 
     [[nodiscard]] auto lexeme() const -> llvm::StringRef;
     [[nodiscard]] auto asString() const -> std::string;
-    [[nodiscard]] auto getValue() const -> const Value& { return m_value; }
-    [[nodiscard]] auto getStringValue() const -> llvm::StringRef { return std::get<llvm::StringRef>(m_value); }
-    [[nodiscard]] auto getRange() const -> llvm::SMRange { return m_range; }
-    [[nodiscard]] auto description() const -> llvm::StringRef { return description(m_kind); }
+    [[nodiscard]] constexpr auto getValue() const -> const Value& { return m_value; }
+    [[nodiscard]] constexpr auto getStringValue() const -> llvm::StringRef { return std::get<llvm::StringRef>(m_value); }
+    [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange { return m_range; }
+    [[nodiscard]] constexpr auto description() const -> llvm::StringRef { return description(m_kind); }
 
     // Info about operators
     [[nodiscard]] auto isGeneral() const -> bool;
@@ -70,20 +70,20 @@ public:
 
     // comparisons
 
-    [[nodiscard]] auto is(TokenKind kind) const -> bool {
+    [[nodiscard]] constexpr auto is(TokenKind kind) const -> bool {
         return m_kind == kind;
     }
 
-    [[nodiscard]] auto isNot(TokenKind kind) const -> bool {
+    [[nodiscard]] constexpr auto isNot(TokenKind kind) const -> bool {
         return m_kind != kind;
     }
 
-    [[nodiscard]] auto isOneOf(TokenKind k1, TokenKind k2) const -> bool {
+    [[nodiscard]] constexpr auto isOneOf(TokenKind k1, TokenKind k2) const -> bool {
         return is(k1) || is(k2);
     }
 
     template<typename... Ts>
-    [[nodiscard]] auto isOneOf(TokenKind k1, TokenKind k2, Ts... ks) const -> bool {
+    [[nodiscard]] constexpr auto isOneOf(TokenKind k1, TokenKind k2, Ts... ks) const -> bool {
         return is(k1) || isOneOf(k2, ks...);
     }
 

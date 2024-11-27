@@ -1529,10 +1529,7 @@ void Parser::replace(TokenKind what, TokenKind with) {
 bool Parser::acceptNext(TokenKind kind) {
     Lexer peek{ m_lexer };
 
-    Token token;
-    peek.next(token);
-
-    if (token.is(kind)) {
+    if (const Token token = peek.next(); token.is(kind)) {
         m_token = token;
         m_lexer = peek;
         return true;
@@ -1543,5 +1540,5 @@ bool Parser::acceptNext(TokenKind kind) {
 
 void Parser::advance() {
     m_endLoc = m_token.getRange().End;
-    m_lexer.next(m_token);
+    m_token = m_lexer.next();
 }
