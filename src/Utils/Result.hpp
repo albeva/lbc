@@ -24,12 +24,12 @@ public:
     /* explicit */ constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError{ true } {}
 
-    constexpr Result& operator=(ResultError /* _ */) {
+    constexpr auto operator=(ResultError /* _ */) -> Result& {
         m_hasError = true;
         return *this;
     }
 
-    [[nodiscard]] constexpr inline bool hasError() const {
+    [[nodiscard]] constexpr auto hasError() const -> bool {
         return m_hasError;
     }
 
@@ -50,7 +50,7 @@ public:
     constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError{ true } {}
 
-    constexpr Result& operator=(ResultError /* _ */) {
+    constexpr auto operator=(ResultError /* _ */) -> Result& {
         m_hasError = true;
         m_value = nullptr;
         return *this;
@@ -61,7 +61,7 @@ public:
     constexpr Result(T pointer) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value{ pointer } {}
 
-    constexpr Result& operator=(T pointer) {
+    constexpr auto operator=(T pointer) -> Result& {
         m_hasError = false;
         m_value = pointer;
         return *this;
@@ -76,41 +76,41 @@ public:
     : m_hasError{ other.m_hasError }, m_value{ other.m_value } {}
 
     template<PointerSubclassOf<T> U>
-    constexpr inline Result& operator=(const Result<U>& other) {
+    constexpr auto operator=(const Result<U>& other) -> Result& {
         m_hasError = other.m_hasError;
         m_value = other.m_value;
         return *this;
     }
 
-    [[nodiscard]] constexpr inline bool hasError() const {
+    [[nodiscard]] constexpr auto hasError() const -> bool {
         return m_hasError;
     }
 
-    [[nodiscard]] constexpr inline T getValue() const {
+    [[nodiscard]] constexpr auto getValue() const -> T {
         assert(not m_hasError && "Getting value from erronous Result");
         return m_value;
     }
 
-    [[nodiscard]] constexpr inline T getValueOrNull() const {
+    [[nodiscard]] constexpr auto getValueOrNull() const -> T {
         if (m_hasError) {
             return nullptr;
         }
         return m_value;
     }
 
-    [[nodiscard]] constexpr inline T operator->() const {
+    [[nodiscard]] constexpr auto operator->() const -> T {
         return getValue();
     }
 
-    [[nodiscard]] constexpr inline std::add_lvalue_reference_t<base_type> operator*() const {
+    [[nodiscard]] constexpr auto operator*() const -> std::add_lvalue_reference_t<base_type> {
         return *getValue();
     }
 
-    bool constexpr inline operator==(std::nullptr_t) const {
+    auto constexpr operator==(std::nullptr_t) const -> bool {
         return getValueOrNull() == nullptr;
     }
 
-    bool constexpr inline operator!=(std::nullptr_t) const {
+    auto constexpr operator!=(std::nullptr_t) const -> bool {
         return getValueOrNull() != nullptr;
     }
 

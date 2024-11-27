@@ -6,11 +6,11 @@
 
 #define LOG_VAR(VAR) llvm::outs() << #VAR << " = " << VAR << '\n';
 
-#define NO_COPY_AND_MOVE(Class)         \
-    Class(Class&&) = delete;            \
-    Class(const Class&) = delete;       \
-    Class& operator=(Class&&) = delete; \
-    Class& operator=(const Class&) = delete;
+#define NO_COPY_AND_MOVE(Class)               \
+    Class(Class&&) = delete;                  \
+    Class(const Class&) = delete;             \
+    auto operator=(Class&&)->Class& = delete; \
+    auto operator=(const Class&)->Class& = delete;
 
 #define CONCATENATE_DETAIL(x, y) x##y
 #define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
@@ -46,7 +46,7 @@ concept PointerSubclassOf =
 /**
  * Get Twine from "literal"_t
  */
-inline llvm::Twine operator"" _t(const char* str, size_t /*len*/) {
+inline auto operator"" _t(const char* str, size_t /*len*/) -> llvm::Twine {
     return { str };
 }
 

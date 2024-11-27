@@ -34,43 +34,43 @@ inline namespace operators {
     // Binary operators
 
     template<IsFlagsEnum E>
-    constexpr E operator&(E lhs, E rhs) {
+    constexpr auto operator&(E lhs, E rhs) -> E {
         return static_cast<E>(underlying(lhs) & underlying(rhs));
     }
 
     template<IsFlagsEnum E>
-    constexpr E operator|(E lhs, E rhs) {
+    constexpr auto operator|(E lhs, E rhs) -> E {
         return static_cast<E>(underlying(lhs) | underlying(rhs));
     }
 
     template<IsFlagsEnum E>
-    constexpr E operator^(E lhs, E rhs) {
+    constexpr auto operator^(E lhs, E rhs) -> E {
         return static_cast<E>(underlying(lhs) ^ underlying(rhs));
     }
 
     // unary operator
 
     template<IsFlagsEnum E>
-    constexpr E operator~(E val) {
+    constexpr auto operator~(E val) -> E {
         return static_cast<E>(~underlying(val));
     }
 
     // assignment
 
     template<IsFlagsEnum E>
-    constexpr E& operator|=(E& lhs, E rhs) {
+    constexpr auto operator|=(E& lhs, E rhs) -> E& {
         lhs = lhs | rhs;
         return lhs;
     }
 
     template<IsFlagsEnum E>
-    constexpr E& operator&=(E& lhs, E rhs) {
+    constexpr auto operator&=(E& lhs, E rhs) -> E& {
         lhs = lhs & rhs;
         return lhs;
     }
 
     template<IsFlagsEnum E>
-    constexpr E& operator^=(E& lhs, E rhs) {
+    constexpr auto operator^=(E& lhs, E rhs) -> E& {
         lhs = lhs ^ rhs;
         return lhs;
     }
@@ -78,12 +78,12 @@ inline namespace operators {
     //  comparison to underlying type
 
     template<IsFlagsEnum E, typename U = std::underlying_type<E>>
-    constexpr bool operator==(E lhs, U rhs) {
+    constexpr auto operator==(E lhs, U rhs) -> bool {
         return underlying(lhs) == rhs;
     }
 
     template<IsFlagsEnum E, typename U = std::underlying_type<E>>
-    constexpr bool operator!=(E lhs, U rhs) {
+    constexpr auto operator!=(E lhs, U rhs) -> bool {
         return underlying(lhs) != rhs;
     }
 } // namespace operators
@@ -91,7 +91,7 @@ inline namespace operators {
 // helper functions
 
 template<IsFlagsEnum E>
-constexpr bool has(E flags, E bits) {
+constexpr auto has(E flags, E bits) -> bool {
     return (flags & bits) == bits;
 }
 

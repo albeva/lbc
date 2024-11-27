@@ -7,7 +7,7 @@
 namespace lbc::detail {
 struct DeferTask {};
 template<typename F>
-auto operator+(DeferTask, F&& fn) -> decltype(llvm::make_scope_exit(std::forward<F>(fn))) {
+auto operator+(DeferTask /* task */, F&& fn) -> decltype(llvm::make_scope_exit(std::forward<F>(fn))) {
     return llvm::make_scope_exit(std::forward<F>(fn));
 }
 } // namespace lbc::detail
