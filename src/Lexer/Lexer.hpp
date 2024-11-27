@@ -11,26 +11,20 @@ enum class TokenKind : std::uint8_t;
 
 class Lexer final {
 public:
-    Lexer() = delete;
-    Lexer(Lexer&&) = delete;
-    Lexer& operator=(const Lexer&) = delete;
-    Lexer& operator=(Lexer&&) = delete;
-
     Lexer(Context& context, unsigned fileID);
     Lexer(Context& context, unsigned fileID, llvm::SMRange range);
 
     void reset(llvm::SMRange range);
 
-    [[nodiscard]] unsigned int getFileId() const { return m_fileId; }
+    [[nodiscard]] auto getFileId() const -> unsigned int { return m_fileId; }
 
     void next(Token& result);
 
-    inline void peek(Token& result) const {
-        Lexer{ *this }.next(result);
+    void peek(Token& result) const {
+        Lexer(*this).next(result);
     }
 
 private:
-    Lexer(const Lexer&) = default;
 
     void skipUntilLineEnd();
     void skipToNextLine();
@@ -40,20 +34,14 @@ private:
     void endOfStatement(Token& result);
     void invalid(Token& result, const char* loc) const;
     void stringLiteral(Token& result);
-    [[nodiscard]] char escape();
+    [[nodiscard]] auto escape() -> char;
     void token(Token& result, TokenKind kind, int len = 1);
     void numberLiteral(Token& result);
     void identifier(Token& result);
 
-    [[nodiscard]] inline char peekChar(std::size_t offset = 1) const {
-        const char* peek = m_input + offset;
-        if (peek < m_end) {
-            return *peek;
-        }
-        return '\0';
-    }
+    [[nodiscard]] auto peekChar(std::size_t offset = 1) const -> char;
 
-    Context& m_context;
+    Context* m_context;
     unsigned int m_fileId;
     const char* m_input;
     const char* m_end;

@@ -7,23 +7,25 @@
 #include <charconv>
 using namespace lbc;
 
+// NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic, readability-avoid-return-with-void-value)
+
 namespace {
 using llvm::isAlpha;
 using llvm::isDigit;
 
-inline bool isIdentifierChar(char ch) {
+inline auto isIdentifierChar(char ch) -> bool {
     return isAlpha(ch) || isDigit(ch) || ch == '_';
 }
 
-inline bool isLineOrFileEnd(char ch) {
+inline auto isLineOrFileEnd(char ch) -> bool {
     return ch == '\n' || ch == '\r' || ch == '\0';
 }
 
-inline llvm::SMRange makeRange(const char* start, const char* end) {
+inline auto makeRange(const char* start, const char* end) -> llvm::SMRange {
     return { llvm::SMLoc::getFromPointer(start), llvm::SMLoc::getFromPointer(end) };
 }
 
-inline std::optional<char> getEscapeChar(char ch) {
+inline auto getEscapeChar(char ch) -> std::optional<char> {
     switch (ch) {
     case 'a':
         return '\a';
@@ -56,10 +58,10 @@ inline std::optional<char> getEscapeChar(char ch) {
 } // namespace
 
 Lexer::Lexer(Context& context, unsigned fileID)
-: m_context{ context },
+: m_context{ &context },
   m_fileId{ fileID },
   m_hasStmt{ false } {
-    const auto* buffer = m_context.getSourceMrg().getMemoryBuffer(m_fileId);
+    const auto* buffer = m_context->getSourceMrg().getMemoryBuffer(m_fileId);
     if (buffer == nullptr) {
         fatalError("Invalid buffer id");
     }
@@ -69,13 +71,12 @@ Lexer::Lexer(Context& context, unsigned fileID)
 }
 
 Lexer::Lexer(Context& context, unsigned fileID, llvm::SMRange range)
-: m_context{ context },
+: m_context{ &context },
   m_fileId{ fileID },
-  m_hasStmt{ false } {
-    m_input = range.Start.getPointer();
-    m_end = range.End.getPointer();
-    m_eolPos = m_input;
-}
+  m_input{ range.Start.getPointer() },
+  m_end{ range.End.getPointer() },
+  m_eolPos{ m_input },
+  m_hasStmt{ false } {}
 
 void Lexer::reset(llvm::SMRange range) {
     m_input = range.Start.getPointer();
@@ -192,6 +193,8 @@ void Lexer::next(Token& result) {
         case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u':
         case 'v': case 'w': case 'x': case 'y': case 'z':
             return identifier(result);
+        default:
+            break;
         }
 
         return invalid(result, m_input);
@@ -227,6 +230,8 @@ void Lexer::skipToNextLine() {
     case '\n':
         m_input++;
         return;
+    default:
+        return;
     }
 }
 
@@ -254,6 +259,9 @@ void Lexer::skipMultilineComment() {
                 m_input++;
                 level++;
             }
+            break;
+        default:
+            continue;
         }
     }
 }
@@ -313,11 +321,11 @@ void Lexer::stringLiteral(Token& result) {
     result.set(
         TokenKind::StringLiteral,
         makeRange(start, m_input),
-        m_context.retainCopy(literal)
+        m_context->retainCopy(literal)
     );
 }
 
-char Lexer::escape() {
+auto Lexer::escape() -> char {
     if (auto ch = getEscapeChar(peekChar())) {
         m_input++;
         return *ch;
@@ -342,21 +350,24 @@ void Lexer::numberLiteral(Token& result) {
     if (isFloatingPoint) {
         m_input++;
     }
+    m_input++;
 
-    do {
-        auto ch = *++m_input;
+    while (m_input != m_end) {
+        auto ch = *m_input;
         if (ch == '.') {
             if (isFloatingPoint) {
                 return invalid(result, m_input);
             }
             isFloatingPoint = true;
+            m_input++;
             continue;
         }
         if (isDigit(ch)) {
+            m_input++;
             continue;
         }
         break;
-    } while (m_input != m_end);
+    }
 
     if (isFloatingPoint) {
         std::string const number{ start, m_input };
@@ -380,8 +391,9 @@ void Lexer::numberLiteral(Token& result) {
 void Lexer::identifier(Token& result) {
     // assume m_input[0] == '_' || char
     const auto* start = m_input;
+    m_input++;
 
-    while (++m_input != m_end && isIdentifierChar(*m_input)) {}
+    while (m_input != m_end && isIdentifierChar(*m_input)) { m_input++; }
 
     std::string uppercased;
     auto length = std::distance(start, m_input);
@@ -408,8 +420,18 @@ void Lexer::identifier(Token& result) {
     case TokenKind::Null:
         return result.set(TokenKind::NullLiteral, range);
     case TokenKind::Identifier:
-        return result.set(kind, range, m_context.retainCopy(uppercased));
+        return result.set(kind, range, m_context->retainCopy(uppercased));
     default:
         return result.set(kind, range);
     }
 }
+
+auto Lexer::peekChar(std::size_t offset) const -> char {
+    const char* peek = m_input + offset;
+    if (peek < m_end) {
+        return *peek;
+    }
+    return '\0';
+}
+
+// NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic, readability-avoid-return-with-void-value)
