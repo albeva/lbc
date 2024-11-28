@@ -10,33 +10,33 @@ enum class Category : std::uint8_t {
     Literal,
     Symbol,
     Operator,
-    Variable,
     Keyword,
     Type
 };
 
 enum class OpType : std::uint8_t {
+    Unknown,
     Unary,
     Binary
 };
 
 enum class OpAssociativity : std::uint8_t {
+    Unknown,
     Left,
     Right
 };
 
 struct TokenDef final {
-    Category category {};
+    Category category{};
     llvm::StringLiteral str;
-    int precedence {};
-    OpType type {};
-    OpAssociativity assoc {};
-    OperatorType kind {};
+    int precedence = 0;
+    OpType type = OpType::Unknown;
+    OpAssociativity assoc = OpAssociativity::Unknown;
+    OperatorType kind = OperatorType::Arithmetic;
 };
 
 // clang-format off
 namespace literals {
-    // clang-format off
     #define IMPL_LITERAL(ID, kw, ...) constexpr llvm::StringLiteral ID { kw };
     ALL_TOKENS(IMPL_LITERAL)
     #undef IMPL_LITERAL

@@ -28,7 +28,7 @@ public:
         callWithoutParens = 1U << 2U
     };
 
-    Parser(Context& context, Lexer& source, bool isMain, SymbolTable* symbolTable = nullptr);
+    Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() override = default;
 
     [[nodiscard]] auto parse() -> Result<AstModule*>;
@@ -57,8 +57,8 @@ private:
     [[nodiscard]] auto declaration() -> Result<AstStmt*>;
     [[nodiscard]] auto factor() -> Result<AstExpr*>;
     [[nodiscard]] auto primary() -> Result<AstExpr*>;
-    [[nodiscard]] auto unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;
-    [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) -> Result<AstExpr*>;
+    [[nodiscard]] auto unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*>;
+    [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*>;
     [[nodiscard]] auto expression(AstExpr* lhs, int precedence) -> Result<AstExpr*>;
     [[nodiscard]] auto identifier() -> Result<AstIdentExpr*>;
     [[nodiscard]] auto literal() -> Result<AstLiteralExpr*>;
