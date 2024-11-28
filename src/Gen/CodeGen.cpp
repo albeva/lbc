@@ -10,7 +10,6 @@
 #include "Type/Type.hpp"
 #include "ValueHandler.hpp"
 #include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 using namespace lbc;
 using namespace Gen;
@@ -179,7 +178,7 @@ void CodeGen::visit(AstVarDecl& ast) {
     }
 }
 
-void CodeGen::declareGlobalVar(AstVarDecl& ast) {
+void CodeGen::declareGlobalVar(const AstVarDecl& ast) {
     auto* sym = ast.symbol;
     llvm::Constant* constant = nullptr;
     llvm::Type* exprType = sym->getType()->getLlvmType(m_context);
@@ -198,10 +197,11 @@ void CodeGen::declareGlobalVar(AstVarDecl& ast) {
     if (constant == nullptr) {
         constant = llvm::Constant::getNullValue(exprType);
     }
+
     llvm::Value* lvalue = new llvm::GlobalVariable(
         *m_module,
         exprType,
-        false,
+        ast.constant,
         sym->getLlvmLinkage(),
         constant,
         ast.symbol->identifier()

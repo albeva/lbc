@@ -301,6 +301,8 @@ auto Parser::declaration() -> Result<AstStmt*> {
     switch (m_token.getKind()) {
     case TokenKind::Dim:
         return kwDim(attribs);
+    case TokenKind::Const:
+        return kwConst(attribs);
     case TokenKind::Declare:
         return kwDeclare(attribs);
     case TokenKind::Function:
@@ -404,7 +406,7 @@ auto Parser::attributeArgList() -> Result<AstExprList*> {
 }
 
 //----------------------------------------
-// VAR
+// DIM
 //----------------------------------------
 
 /**
@@ -446,7 +448,50 @@ auto Parser::kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*> {
         m_language,
         attribs,
         type,
-        expr
+        expr,
+        false
+    );
+}
+
+//----------------------------------------
+// CONST
+//----------------------------------------
+
+/**
+ * CONST
+ *   = "CONST" identifier [ "AS" TypeExpr ] "=" Expression
+ *   .
+ */
+auto Parser::kwConst(AstAttributeList* attribs) -> Result<AstVarDecl*> {
+    // assume m_token == CONST
+    const auto start = getStart(attribs, m_token);
+    advance();
+
+    // identifier
+    TRY(expect(TokenKind::Identifier))
+    auto id = m_token.getStringValue();
+    auto token = m_token;
+    advance();
+
+    // [ "AS" TypeExpr ]
+    AstTypeExpr* type = nullptr;
+    if (accept(TokenKind::As)) {
+        TRY_ASSIGN(type, typeExpr())
+    }
+
+    // "=" Expression
+    TRY(consume(TokenKind::Assign))
+    TRY_DECL(expr, expression())
+
+    return m_context.create<AstVarDecl>(
+        llvm::SMRange { start, m_endLoc },
+        id,
+        token,
+        m_language,
+        attribs,
+        type,
+        expr,
+        true
     );
 }
 
@@ -716,7 +761,8 @@ auto Parser::udtMember(AstAttributeList* attribs) -> Result<AstDecl*> {
         m_language,
         attribs,
         type,
-        nullptr
+        nullptr,
+        false
     );
 }
 
@@ -943,7 +989,8 @@ auto Parser::kwFor() -> Result<AstForStmt*> {
         m_language,
         nullptr,
         type,
-        expr
+        expr,
+        false
     );
 
     // "TO" Expression [ "STEP" expression ]

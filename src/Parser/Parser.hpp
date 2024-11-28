@@ -65,6 +65,7 @@ private:
     [[nodiscard]] auto ifExpr() -> Result<AstIfExpr*>;
     [[nodiscard]] auto expressionList() -> Result<AstExprList*>;
     [[nodiscard]] auto kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*>;
+    [[nodiscard]] auto kwConst(AstAttributeList* attribs) -> Result<AstVarDecl*>;
     [[nodiscard]] auto kwIf() -> Result<AstIfStmt*>;
     [[nodiscard]] auto ifBlock() -> Result<AstIfStmtBlock*>;
     [[nodiscard]] auto thenBlock(std::vector<AstVarDecl*> decls, AstExpr* expr) -> Result<AstIfStmtBlock*>;

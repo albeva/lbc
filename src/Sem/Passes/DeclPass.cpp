@@ -198,10 +198,12 @@ auto DeclPass::defineVar(AstVarDecl& ast) -> Result<void> {
         return ResultError {};
     }
 
+    ast.expr->type = type;
+
     // The Symbol
     auto* symbol = ast.symbol;
     symbol->valueFlags().external = false;
-    symbol->valueFlags().assignable = true;
+    symbol->valueFlags().assignable = !ast.constant;
     symbol->setType(type);
     ast.symbol = symbol;
 

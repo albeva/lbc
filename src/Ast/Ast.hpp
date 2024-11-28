@@ -411,11 +411,13 @@ struct AstVarDecl final : AstDecl {
         CallingConv callingConv_,
         AstAttributeList* attrs_,
         AstTypeExpr* type_,
-        AstExpr* expr_
+        AstExpr* expr_,
+        bool constant_
     )
     : AstDecl { AstKind::VarDecl, range_, name_, token_, callingConv_, attrs_ }
     , typeExpr { type_ }
-    , expr { expr_ } { }
+    , expr { expr_ }
+    , constant { constant_ } { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::VarDecl;
@@ -423,6 +425,7 @@ struct AstVarDecl final : AstDecl {
 
     AstTypeExpr* typeExpr;
     AstExpr* expr;
+    const bool constant;
 };
 
 struct AstFuncDecl final : AstDecl {

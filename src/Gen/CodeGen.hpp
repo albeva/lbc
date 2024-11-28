@@ -39,7 +39,7 @@ private:
 
     void declareFuncs(AstStmtList& ast);
     void declareFunc(AstFuncDecl& ast);
-    void declareGlobalVar(AstVarDecl& ast);
+    void declareGlobalVar(const AstVarDecl& ast);
     void declareLocalVar(AstVarDecl& ast);
     auto getStringConstant(llvm::StringRef str) -> llvm::Constant*;
 
