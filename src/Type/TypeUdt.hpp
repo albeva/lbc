@@ -21,7 +21,7 @@ public:
     static auto get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) -> const TypeUDT*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::UDT;
+        return type->getFamily() == TypeFamily::UDT;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;

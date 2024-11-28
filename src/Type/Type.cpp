@@ -16,20 +16,20 @@ constexpr TypePointer anyPtrTy { &anyTy }; // void*
 // clang-format off
 
 // primitives
-#define DEFINE_TYPE(ID, STR, KIND) \
+#define DEFINE_TYPE(ID, STR, KIND, CPP) \
     constexpr Type##KIND ID##Ty{};
     PRIMITIVE_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 // integers
-#define DEFINE_TYPE(ID, STR, KIND, BITS, ISSIGNED, ...) \
-    constexpr Type##KIND ID##Ty{ BITS, ISSIGNED };
+#define DEFINE_TYPE(ID, STR, KIND, CPP, BITS, ISSIGNED, ...) \
+    constexpr Type##KIND ID##Ty{ TypeKind::ID, BITS, ISSIGNED };
     INTEGRAL_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 // Floating Points
-#define DEFINE_TYPE(ID, STR, KIND, BITS, ...) \
-    constexpr Type##KIND ID##Ty{ BITS };
+#define DEFINE_TYPE(ID, STR, KIND, CPP, BITS, ...) \
+    constexpr Type##KIND ID##Ty{ TypeKind::ID, BITS };
     FLOATINGPOINT_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
@@ -218,7 +218,7 @@ auto TypeBoolean::asString() const -> std::string {
 
 auto TypeIntegral::get(unsigned bits, bool isSigned) -> const TypeIntegral* {
     // clang-format off
-    #define USE_TYPE(ID, STR, KIND, BITS, IS_SIGNED, ...) \
+    #define USE_TYPE(ID, STR, KIND, CPP, BITS, IS_SIGNED, ...) \
         if (bits == BITS && isSigned == IS_SIGNED)        \
             return &ID##Ty;
     INTEGRAL_TYPES(USE_TYPE)
@@ -242,7 +242,7 @@ auto TypeIntegral::genLlvmType(Context& context) const -> llvm::Type* {
 
 auto TypeIntegral::asString() const -> std::string {
     // clang-format off
-    #define GET_TYPE(ID, STR, KIND, BITS, SIGNED, CPP) \
+    #define GET_TYPE(ID, STR, KIND, CPP, BITS, SIGNED) \
         if (getBits() == (BITS) && isSigned() == (SIGNED)) \
             return STR;
     INTEGRAL_TYPES(GET_TYPE)
@@ -256,7 +256,7 @@ auto TypeIntegral::asString() const -> std::string {
 auto TypeFloatingPoint::get(unsigned bits) -> const TypeFloatingPoint* {
     // clang-format off
     switch (bits) {
-    #define USE_TYPE(ID, STR, KIND, BITS, CPP) \
+    #define USE_TYPE(ID, STR, KIND, CPP, BITS) \
         case BITS:                             \
             return &ID##Ty;
         FLOATINGPOINT_TYPES(USE_TYPE)
@@ -280,8 +280,8 @@ auto TypeFloatingPoint::genLlvmType(Context& context) const -> llvm::Type* {
 
 auto TypeFloatingPoint::asString() const -> std::string {
     // clang-format off
-    #define GET_TYPE(ID, STR, kind, BITS, CPP) \
-        if (getBits() == (BITS))                 \
+    #define GET_TYPE(ID, STR, kind, CPP, BITS) \
+        if (getBits() == (BITS))               \
             return STR;
     FLOATINGPOINT_TYPES(GET_TYPE)
     #undef GET_TYPE
@@ -298,7 +298,6 @@ auto TypeFunction::get(
     bool variadic
 ) -> const TypeFunction* {
     for (const auto& ptr : context.getFuncTypes()) {
-        // cppcheck-suppress useStlAlgorithm
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {
             return ptr;
         }

@@ -8,7 +8,7 @@
 using namespace lbc;
 
 TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
-: TypeRoot { TypeFamily::UDT }
+: TypeRoot { TypeFamily::UDT, TypeKind::ComplexType }
 , m_symbol { symbol }
 , m_symbolTable { symbolTable }
 , m_packed(packed) {

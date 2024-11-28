@@ -22,6 +22,15 @@ enum class TypeFamily : std::uint8_t {
     UDT, // User defined Type (C struct)
 };
 
+// clang-format off
+enum class TypeKind : std::uint8_t {
+    #define TYPE(ID, ...) ID,
+    ALL_TYPES(TYPE)
+    #undef TYPE
+    ComplexType
+};
+// clang-format on
+
 class TypePointer;
 class TypeNumeric;
 class TypeBoolean;
@@ -48,7 +57,8 @@ class TypeRoot {
 public:
     NO_COPY_AND_MOVE(TypeRoot)
 
-    [[nodiscard]] constexpr auto getKind() const -> TypeFamily { return m_kind; }
+    [[nodiscard]] constexpr auto getFamily() const -> TypeFamily { return m_family; }
+    [[nodiscard]] constexpr auto getKind() const -> TypeKind { return m_kind; }
 
     [[nodiscard]] auto getLlvmType(Context& context) const -> llvm::Type* {
         if (m_llvmType == nullptr) {
@@ -65,16 +75,16 @@ public:
     [[nodiscard]] auto getPointer(Context& context) const -> const TypePointer*;
 
     // Type queries
-    [[nodiscard]] constexpr auto isVoid() const -> bool { return m_kind == TypeFamily::Void; }
-    [[nodiscard]] constexpr auto isAny() const -> bool { return m_kind == TypeFamily::Any; }
-    [[nodiscard]] constexpr auto isPointer() const -> bool { return m_kind == TypeFamily::Pointer; }
-    [[nodiscard]] constexpr auto isBoolean() const -> bool { return m_kind == TypeFamily::Boolean; }
+    [[nodiscard]] constexpr auto isVoid() const -> bool { return m_family == TypeFamily::Void; }
+    [[nodiscard]] constexpr auto isAny() const -> bool { return m_family == TypeFamily::Any; }
+    [[nodiscard]] constexpr auto isPointer() const -> bool { return m_family == TypeFamily::Pointer; }
+    [[nodiscard]] constexpr auto isBoolean() const -> bool { return m_family == TypeFamily::Boolean; }
     [[nodiscard]] constexpr auto isNumeric() const -> bool { return isIntegral() || isFloatingPoint(); }
-    [[nodiscard]] constexpr auto isIntegral() const -> bool { return m_kind == TypeFamily::Integral; }
-    [[nodiscard]] constexpr auto isFloatingPoint() const -> bool { return m_kind == TypeFamily::FloatingPoint; }
-    [[nodiscard]] constexpr auto isFunction() const -> bool { return m_kind == TypeFamily::Function; }
-    [[nodiscard]] constexpr auto isZString() const -> bool { return m_kind == TypeFamily::ZString; }
-    [[nodiscard]] constexpr auto isUDT() const -> bool { return m_kind == TypeFamily::UDT; }
+    [[nodiscard]] constexpr auto isIntegral() const -> bool { return m_family == TypeFamily::Integral; }
+    [[nodiscard]] constexpr auto isFloatingPoint() const -> bool { return m_family == TypeFamily::FloatingPoint; }
+    [[nodiscard]] constexpr auto isFunction() const -> bool { return m_family == TypeFamily::Function; }
+    [[nodiscard]] constexpr auto isZString() const -> bool { return m_family == TypeFamily::ZString; }
+    [[nodiscard]] constexpr auto isUDT() const -> bool { return m_family == TypeFamily::UDT; }
     [[nodiscard]] auto isAnyPointer() const -> bool;
     [[nodiscard]] auto isSignedIntegral() const -> bool;
     [[nodiscard]] auto isUnsignedIntegral() const -> bool;
@@ -86,15 +96,16 @@ public:
     [[nodiscard]] auto compare(const TypeRoot* other) const -> TypeComparison;
 
     // clang-format off
-    #define CHECK_TYPE_METHOD(ID, ...) [[nodiscard]] auto is##ID() const -> bool;
+    #define CHECK_TYPE_METHOD(ID, ...) [[nodiscard]] auto is## ID() const -> bool;
     INTEGRAL_TYPES(CHECK_TYPE_METHOD)
     FLOATINGPOINT_TYPES(CHECK_TYPE_METHOD)
     #undef CHECK_TYPE_METHOD
     // clang-format on
 
 protected:
-    constexpr explicit TypeRoot(TypeFamily kind)
-    : m_kind { kind } {
+    constexpr explicit TypeRoot(TypeFamily family, TypeKind kind)
+    : m_family { family }
+    , m_kind { kind } {
     }
 
     [[nodiscard]] virtual auto genLlvmType(Context& context) const -> llvm::Type* = 0;
@@ -104,7 +115,8 @@ private:
         m_llvmType = nullptr;
     }
 
-    const TypeFamily m_kind;
+    const TypeFamily m_family;
+    const TypeKind m_kind;
     mutable llvm::Type* m_llvmType = nullptr;
     friend class Context;
 };
@@ -116,12 +128,12 @@ private:
 class TypeVoid final : public TypeRoot {
 public:
     constexpr TypeVoid()
-    : TypeRoot { TypeFamily::Void } {
+    : TypeRoot { TypeFamily::Void, TypeKind::ComplexType } {
     }
     static auto get() -> const TypeVoid*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::Void;
+        return type->getFamily() == TypeFamily::Void;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;
@@ -136,12 +148,12 @@ protected:
 class TypeAny final : public TypeRoot {
 public:
     constexpr TypeAny()
-    : TypeRoot { TypeFamily::Any } {
+    : TypeRoot { TypeFamily::Any, TypeKind::ComplexType } {
     }
     [[nodiscard]] static auto get() -> const TypeAny*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::Any;
+        return type->getFamily() == TypeFamily::Any;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;
@@ -156,14 +168,14 @@ protected:
 class TypePointer final : public TypeRoot {
 public:
     constexpr explicit TypePointer(const TypeRoot* base)
-    : TypeRoot { TypeFamily::Pointer }
+    : TypeRoot { TypeFamily::Pointer, TypeKind::ComplexType }
     , m_base { base } {
     }
 
     [[nodiscard]] static auto get(Context& context, const TypeRoot* base) -> const TypePointer*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::Pointer;
+        return type->getFamily() == TypeFamily::Pointer;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;
@@ -183,13 +195,13 @@ private:
 class TypeBoolean final : public TypeRoot {
 public:
     constexpr TypeBoolean()
-    : TypeRoot { TypeFamily::Boolean } {
+    : TypeRoot { TypeFamily::Boolean, TypeKind::Bool } {
     }
 
     [[nodiscard]] static auto get() -> const TypeBoolean*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::Boolean;
+        return type->getFamily() == TypeFamily::Boolean;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;
@@ -205,15 +217,15 @@ protected:
 class TypeNumeric : public TypeRoot {
 public:
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        auto kind = type->getKind();
+        auto kind = type->getFamily();
         return kind == TypeFamily::Integral || kind == TypeFamily::FloatingPoint;
     }
 
     [[nodiscard]] constexpr auto getBits() const -> unsigned { return m_bits; }
 
 protected:
-    constexpr TypeNumeric(TypeFamily kind, unsigned bits)
-    : TypeRoot { kind }
+    constexpr TypeNumeric(TypeFamily family, TypeKind kind, unsigned bits)
+    : TypeRoot { family, kind }
     , m_bits { bits } {
     }
 
@@ -226,15 +238,15 @@ private:
  */
 class TypeIntegral final : public TypeNumeric {
 public:
-    constexpr TypeIntegral(unsigned bits, bool isSigned)
-    : TypeNumeric { TypeFamily::Integral, bits }
+    constexpr TypeIntegral(TypeKind kind, unsigned bits, bool isSigned)
+    : TypeNumeric { TypeFamily::Integral, kind, bits }
     , m_signed { isSigned } {
     }
 
     [[nodiscard]] static auto get(unsigned bits, bool isSigned) -> const TypeIntegral*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::Integral;
+        return type->getFamily() == TypeFamily::Integral;
     }
 
     [[nodiscard]] constexpr auto isSigned() const -> bool { return m_signed; }
@@ -256,14 +268,14 @@ private:
  */
 class TypeFloatingPoint final : public TypeNumeric {
 public:
-    constexpr explicit TypeFloatingPoint(unsigned bits)
-    : TypeNumeric { TypeFamily::FloatingPoint, bits } {
+    constexpr explicit TypeFloatingPoint(TypeKind kind, unsigned bits)
+    : TypeNumeric { TypeFamily::FloatingPoint, kind, bits } {
     }
 
     [[nodiscard]] static auto get(unsigned bits) -> const TypeFloatingPoint*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::FloatingPoint;
+        return type->getFamily() == TypeFamily::FloatingPoint;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;
@@ -278,7 +290,7 @@ protected:
 class TypeFunction final : public TypeRoot {
 public:
     TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, bool variadic)
-    : TypeRoot { TypeFamily::Function }
+    : TypeRoot { TypeFamily::Function, TypeKind::ComplexType }
     , m_retType { retType }
     , m_paramTypes { std::move(paramTypes) }
     , m_variadic { variadic } {
@@ -292,7 +304,7 @@ public:
     ) -> const TypeFunction*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::Function;
+        return type->getFamily() == TypeFamily::Function;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;
@@ -322,13 +334,13 @@ private:
 class TypeZString final : public TypeRoot {
 public:
     constexpr TypeZString()
-    : TypeRoot { TypeFamily::ZString } {
+    : TypeRoot { TypeFamily::ZString, TypeKind::ZString } {
     }
 
     [[nodiscard]] static auto get() -> const TypeZString*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        return type->getKind() == TypeFamily::ZString;
+        return type->getFamily() == TypeFamily::ZString;
     }
 
     [[nodiscard]] auto asString() const -> std::string final;

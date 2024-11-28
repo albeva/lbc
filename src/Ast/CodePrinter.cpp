@@ -480,7 +480,7 @@ void CodePrinter::visit(AstLiteralExpr& ast) {
         }
     };
 
-    m_os << std::visit(visitor, ast.value);
+    m_os << std::visit(visitor, ast.constantValue.value());
 }
 
 void CodePrinter::visit(AstUnaryExpr& ast) {

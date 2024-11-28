@@ -74,7 +74,7 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
                 if (const auto* stepIntTy = llvm::dyn_cast<TypeIntegral>(ast.step->type)) {
                     if (stepIntTy->isSigned()) {
                         if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
-                            if (static_cast<int64_t>(std::get<uint64_t>(literal->value)) < 0) {
+                            if (static_cast<int64_t>(std::get<uint64_t>(literal->getValue())) < 0) {
                                 dstTy = iterTy->getSigned();
                             }
                         } else {
@@ -83,7 +83,7 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
                     }
                 } else if (llvm::isa<TypeFloatingPoint>(ast.step->type)) {
                     if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.step)) {
-                        if (std::get<double>(literal->value) < 0.0) {
+                        if (std::get<double>(literal->getValue()) < 0.0) {
                             dstTy = iterTy->getSigned();
                         }
                     } else {
@@ -119,8 +119,8 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const {
 
     if (from != nullptr && to != nullptr) {
         if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
-            auto lhs = std::get<uint64_t>(from->value);
-            auto rhs = std::get<uint64_t>(to->value);
+            auto lhs = std::get<uint64_t>(from->getValue());
+            auto rhs = std::get<uint64_t>(to->getValue());
             if (lhs == rhs) {
                 ast.direction = AstForStmt::Direction::Increment;
                 equal = true;
@@ -140,8 +140,8 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const {
                 }
             }
         } else if (llvm::isa<TypeFloatingPoint>(type)) {
-            auto lhs = std::get<double>(from->value);
-            auto rhs = std::get<double>(to->value);
+            auto lhs = std::get<double>(from->getValue());
+            auto rhs = std::get<double>(to->getValue());
             if (lhs == rhs) {
                 ast.direction = AstForStmt::Direction::Increment;
                 equal = true;
@@ -163,7 +163,7 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const {
     }
 
     if (step->type->isSignedIntegral()) {
-        auto val = static_cast<int64_t>(std::get<uint64_t>(step->value));
+        auto val = static_cast<int64_t>(std::get<uint64_t>(step->getValue()));
         if (val < 0) {
             if (ast.direction == AstForStmt::Direction::Increment) {
                 if (equal) {
@@ -187,14 +187,14 @@ void ForStmtPass::determineForDirection(AstForStmt& ast) const {
             }
         }
     } else if (step->type->isUnsignedIntegral()) {
-        auto val = std::get<uint64_t>(step->value);
+        auto val = std::get<uint64_t>(step->getValue());
         if (val == 0 || ast.direction == AstForStmt::Direction::Decrement) {
             ast.direction = AstForStmt::Direction::Skip;
         } else if (ast.direction == AstForStmt::Direction::Unknown) {
             ast.direction = AstForStmt::Direction::Increment;
         }
     } else if (step->type->isFloatingPoint()) {
-        auto val = std::get<double>(step->value);
+        auto val = std::get<double>(step->getValue());
         if (val < 0.0) {
             if (ast.direction == AstForStmt::Direction::Increment) {
                 if (equal) {

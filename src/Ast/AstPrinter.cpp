@@ -430,7 +430,7 @@ void AstPrinter::visit(AstLiteralExpr& ast) {
 
     m_json.object([&] {
         writeHeader(ast);
-        auto [kind, value] = std::visit(visitor, ast.value);
+        auto [kind, value] = std::visit(visitor, ast.constantValue.value());
         m_json.attribute("kind", Token::description(kind));
         m_json.attribute("value", value);
         if (ast.type != nullptr) {

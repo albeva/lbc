@@ -8,26 +8,26 @@
 
 // ID and STR are used in Token.deh.h for keyword tokens
 
-//     ID        STR         Kind
+//     ID        STR         Kind      c++
 #define PRIMITIVE_TYPES(_) \
-    _( Bool,     "BOOL",     Boolean )  \
-    _( ZString,  "ZSTRING",  ZString )
+    _( Bool,     "BOOL",     Boolean,  bool             )  \
+    _( ZString,  "ZSTRING",  ZString,  llvm::StringRef  )
 
-//     ID        STR         Kind,    Bits  Signed  C++
+//     ID        STR         Kind,     c++          bits    Signed
 #define INTEGRAL_TYPES(_) \
-    _( Byte,     "BYTE",     Integral, 8,   true,   int8_t   ) \
-    _( UByte,    "UBYTE",    Integral, 8,   false,  uint8_t  ) \
-    _( Short,    "SHORT",    Integral, 16,  true,   int16_t  ) \
-    _( UShort,   "USHORT",   Integral, 16,  false,  uint16_t ) \
-    _( Integer,  "INTEGER",  Integral, 32,  true,   int32_t  ) \
-    _( UInteger, "UINTEGER", Integral, 32,  false,  uint32_t ) \
-    _( Long,     "LONG",     Integral, 64,  true,   int64_t  ) \
-    _( ULong,    "ULONG",    Integral, 64,  false,  uint64_t )
+    _( Byte,     "BYTE",     Integral, int8_t,      8,      true  ) \
+    _( UByte,    "UBYTE",    Integral, uint8_t,     8,      false ) \
+    _( Short,    "SHORT",    Integral, int16_t,     16,     true  ) \
+    _( UShort,   "USHORT",   Integral, uint16_t,    16,     false ) \
+    _( Integer,  "INTEGER",  Integral, int32_t,     32,     true  ) \
+    _( UInteger, "UINTEGER", Integral, uint32_t,    32,     false ) \
+    _( Long,     "LONG",     Integral, int64_t,     64,     true  ) \
+    _( ULong,    "ULONG",    Integral, uint64_t,    64,     false )
 
 //     ID        STR         Kind           Bits    c++
 #define FLOATINGPOINT_TYPES(_) \
-    _( Single,   "SINGLE",   FloatingPoint, 32,     float  ) \
-    _( Double,   "DOUBLE",   FloatingPoint, 64,     double )
+    _( Single,   "SINGLE",   FloatingPoint, float,   32 ) \
+    _( Double,   "DOUBLE",   FloatingPoint, double,  64 )
 
 #define ALL_TYPES(_)   \
     PRIMITIVE_TYPES(_) \

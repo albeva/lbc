@@ -408,7 +408,7 @@ auto SemanticAnalyzer::visit(AstLiteralExpr& ast) -> Result<void> {
             return TokenKind::Bool;
         }
     };
-    auto typeKind = std::visit(visitor, ast.value);
+    auto typeKind = std::visit(visitor, ast.constantValue.value());
     ast.type = TypeRoot::fromTokenKind(typeKind);
 
     return {};

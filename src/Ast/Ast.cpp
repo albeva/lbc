@@ -32,7 +32,7 @@ auto AstAttributeList::getStringLiteral(llvm::StringRef key) const -> std::optio
         }
 
         if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(attr->args->exprs[0])) {
-            if (const auto* str = std::get_if<llvm::StringRef>(&literal->value)) {
+            if (const auto* str = std::get_if<llvm::StringRef>(&literal->getValue())) {
                 return *str;
             }
             fatalError("Attribute "_t + key + " must be a string literal", false);

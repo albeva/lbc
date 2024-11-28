@@ -8,6 +8,7 @@
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
+#include "VM/AstExprEvaluator.hpp"
 using namespace lbc;
 using namespace Sem;
 
@@ -191,14 +192,22 @@ auto DeclPass::defineVar(AstVarDecl& ast) -> Result<void> {
         if (type == nullptr) {
             type = ast.expr->type;
         }
+        ast.expr->type = type;
+
+        AstExprEvaluator eval { m_sem.getContext(), *ast.symbol->getSymbolTable() };
+        const auto hasError = eval.evaluate(*ast.expr).hasError();
+        if (ast.constant) {
+            if (hasError || !ast.expr->constantValue.has_value()) {
+                return m_sem.makeError(Diag::constantRequiresAConstantExpr, ast.token);
+            }
+            ast.symbol->setConstantValue(ast.expr->constantValue);
+        }
     }
 
     if (type == nullptr) [[unlikely]] {
         llvm::errs() << "Variable declaration is missing a type\n";
         return ResultError {};
     }
-
-    ast.expr->type = type;
 
     // The Symbol
     auto* symbol = ast.symbol;

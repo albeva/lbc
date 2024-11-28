@@ -186,8 +186,11 @@ void CodeGen::declareGlobalVar(const AstVarDecl& ast) {
 
     // has an init expr?
     if (ast.expr != nullptr) {
-        if (auto* litExpr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
-            auto rvalue = visit(*litExpr);
+        if (const auto& value = ast.expr->constantValue) {
+            const auto rvalue = getConstantValue(sym->getType(), value.value());
+            constant = llvm::cast<llvm::Constant>(rvalue.load());
+        } else if (auto* litExpr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
+            const auto rvalue = visit(*litExpr);
             constant = llvm::cast<llvm::Constant>(rvalue.load());
         } else {
             needsValueAssignment = true;
@@ -442,33 +445,37 @@ auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
 }
 
 auto CodeGen::visit(AstLiteralExpr& ast) -> ValueHandler {
+    return getConstantValue(ast.type, ast.getValue());
+}
+
+auto CodeGen::getConstantValue(const TypeRoot* type, const Token::Value& constant) -> ValueHandler {
     const auto visitor = Visitor {
         [&](std::monostate /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
-                llvm::cast<llvm::PointerType>(ast.type->getLlvmType(m_context))
+                llvm::cast<llvm::PointerType>(type->getLlvmType(m_context))
             );
         },
-        [&](llvm::StringRef str) -> llvm::Value* {
+        [&](const llvm::StringRef str) -> llvm::Value* {
             return getStringConstant(str);
         },
-        [&](uint64_t value) -> llvm::Value* {
+        [&](const uint64_t value) -> llvm::Value* {
             return llvm::ConstantInt::get(
-                ast.type->getLlvmType(m_context),
+                type->getLlvmType(m_context),
                 value,
-                ast.type->isSignedIntegral()
+                type->isSignedIntegral()
             );
         },
-        [&](double value) -> llvm::Value* {
+        [&](const double value) -> llvm::Value* {
             return llvm::ConstantFP::get(
-                ast.type->getLlvmType(m_context),
+                type->getLlvmType(m_context),
                 value
             );
         },
-        [&](bool value) -> llvm::Value* {
+        [&](const bool value) -> llvm::Value* {
             return value ? m_constantTrue : m_constantFalse;
         }
     };
-    return { this, ast.type, std::visit(visitor, ast.value) };
+    return { this, type, std::visit(visitor, constant) };
 }
 
 auto CodeGen::getStringConstant(llvm::StringRef str) -> llvm::Constant* {

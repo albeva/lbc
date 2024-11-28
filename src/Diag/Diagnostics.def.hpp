@@ -55,7 +55,8 @@
     _( undefinedType,                       "Undefined type '{0}'"                                        ) \
     _( notAType,                            "'{0}' is not a type"                                         ) \
     _( symbolAlreadyDefined,                "Symbol '{0}' is already defined"                             ) \
-    _( forIteratorMustBeNumeric,            "FOR iterator type must be numeric, got {0}"                  )
+    _( forIteratorMustBeNumeric,            "FOR iterator type must be numeric, got {0}"                  ) \
+    _( constantRequiresAConstantExpr,       "Expected a constant expression when initialising CONST variable" )
 
 //----------------------------------------
 // All errors

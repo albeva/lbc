@@ -5,6 +5,7 @@
 #include "pch.hpp"
 #include "Ast/AstVisitor.hpp"
 #include "Ast/ControlFlowStack.hpp"
+#include "Type/Type.hpp"
 #include "ValueHandler.hpp"
 
 namespace lbc {
@@ -41,6 +42,7 @@ private:
     void declareFunc(AstFuncDecl& ast);
     void declareGlobalVar(const AstVarDecl& ast);
     void declareLocalVar(AstVarDecl& ast);
+    auto getConstantValue(const TypeRoot* type, const Token::Value& value) -> Gen::ValueHandler;
     auto getStringConstant(llvm::StringRef str) -> llvm::Constant*;
 
     Context& m_context;
