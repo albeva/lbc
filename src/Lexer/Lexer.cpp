@@ -13,19 +13,19 @@ namespace {
 using llvm::isAlpha;
 using llvm::isDigit;
 
-inline auto isIdentifierChar(char ch) -> bool {
+auto isIdentifierChar(const char ch) -> bool {
     return isAlpha(ch) || isDigit(ch) || ch == '_';
 }
 
-inline auto isLineOrFileEnd(char ch) -> bool {
+auto isLineOrFileEnd(const char ch) -> bool {
     return ch == '\n' || ch == '\r' || ch == '\0';
 }
 
-inline auto makeRange(const char* start, const char* end) -> llvm::SMRange {
+auto makeRange(const char* start, const char* end) -> llvm::SMRange {
     return { llvm::SMLoc::getFromPointer(start), llvm::SMLoc::getFromPointer(end) };
 }
 
-inline auto getEscapeChar(char ch) -> std::optional<char> {
+auto getEscapeChar(const char ch) -> std::optional<char> {
     switch (ch) {
     case 'a':
         return '\a';
@@ -57,7 +57,7 @@ inline auto getEscapeChar(char ch) -> std::optional<char> {
 }
 } // namespace
 
-Lexer::Lexer(Context& context, unsigned fileID)
+Lexer::Lexer(Context& context, const unsigned fileID)
 : m_context { &context }
 , m_hasStmt { false }
 , m_fileId { fileID } {
@@ -73,7 +73,7 @@ auto Lexer::getBuffer() const -> const llvm::MemoryBuffer* {
     return m_context->getSourceMrg().getMemoryBuffer(m_fileId);
 }
 
-void Lexer::reset(llvm::SMLoc loc) {
+void Lexer::reset(const llvm::SMLoc loc) {
     m_input = loc.getPointer();
     assert(m_input >= getBuffer()->getBufferStart() && m_input < getBuffer()->getBufferEnd() && "Invalid source location");
     m_eolPos = m_input;
@@ -131,7 +131,7 @@ auto Lexer::next() -> Token {
         case ',':
             return token(TokenKind::Comma);
         case '.': {
-            auto nextCh = m_input[1];
+            const auto nextCh = m_input[1];
             if (nextCh == '.') {
                 if (m_input[2] == '.') {
                     return token(TokenKind::Ellipsis, 3);
@@ -158,7 +158,7 @@ auto Lexer::next() -> Token {
         case '*':
             return token(TokenKind::Multiply);
         case '<': {
-            auto la = m_input[1];
+            const auto la = m_input[1];
             if (la == '>') {
                 return token(TokenKind::NotEqual, 2);
             }
@@ -278,8 +278,7 @@ auto Lexer::stringLiteral() -> Token {
     const auto* begin = m_input + 1;
     while (true) {
         m_input++;
-        auto ch = *m_input;
-        switch (ch) {
+        switch (const auto ch = *m_input) {
         case '\t':
             continue;
         case '\\':
@@ -313,14 +312,14 @@ auto Lexer::stringLiteral() -> Token {
 }
 
 auto Lexer::escape() -> char {
-    if (auto ch = getEscapeChar(m_input[1])) {
+    if (const auto ch = getEscapeChar(m_input[1])) {
         m_input++;
         return *ch;
     }
     return '\0';
 }
 
-auto Lexer::token(TokenKind kind, int len) -> Token {
+auto Lexer::token(TokenKind kind, const int len) -> Token {
     // assume m_input[0] == op[0], m_input[len] == next ch
     m_hasStmt = true;
     const auto* start = m_input;
@@ -340,7 +339,7 @@ auto Lexer::numberLiteral() -> Token {
     m_input++;
 
     while (true) {
-        auto ch = *m_input;
+        const auto ch = *m_input;
         if (ch == '.') {
             if (isFloatingPoint) {
                 return invalid(m_input);
@@ -385,7 +384,7 @@ auto Lexer::identifier() -> Token {
     }
 
     // get uppercased string
-    auto length = static_cast<size_t>(std::distance(start, m_input));
+    const auto length = static_cast<size_t>(std::distance(start, m_input));
     std::string uppercased;
     uppercased.reserve(length);
     std::transform(start, m_input, std::back_inserter(uppercased), llvm::toUpper);
