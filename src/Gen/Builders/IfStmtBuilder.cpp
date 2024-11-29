@@ -13,7 +13,14 @@ IfStmtBuilder::IfStmtBuilder(CodeGen& gen, AstIfStmt& ast)
 
 void IfStmtBuilder::build() {
     auto* func = m_builder.GetInsertBlock()->getParent();
-    auto* endBlock = llvm::BasicBlock::Create(m_llvmContext, "if.end", func);
+
+    llvm::BasicBlock* endBlock = nullptr;
+    const auto makeEndBlock = [&] {
+        if (endBlock == nullptr) {
+            endBlock = llvm::BasicBlock::Create(m_llvmContext, "if.end", func);
+        }
+        return endBlock;
+    };
 
     const auto count = m_ast.blocks.size();
     for (size_t idx = 0; idx < count; idx++) {
@@ -25,11 +32,20 @@ void IfStmtBuilder::build() {
         }
 
         if (block->expr != nullptr) {
+            if (const auto value = block->expr->constantValue) {
+                if (std::get<bool>(value.value())) {
+                    m_gen.visit(*block->stmt);
+                    m_gen.switchBlock(makeEndBlock());
+                    return;
+                }
+                continue;
+            }
+
             auto* condition = m_gen.visit(*block->expr).load();
 
             auto* thenBlock = llvm::BasicBlock::Create(m_llvmContext, "if.then", func);
             if (idx == count - 1) {
-                elseBlock = endBlock;
+                elseBlock = makeEndBlock();
             } else {
                 elseBlock = llvm::BasicBlock::Create(m_llvmContext, "if.else", func);
             }
@@ -37,11 +53,11 @@ void IfStmtBuilder::build() {
 
             m_gen.switchBlock(thenBlock);
         } else {
-            elseBlock = endBlock;
+            elseBlock = makeEndBlock();
         }
 
         m_gen.visit(*block->stmt);
-        m_gen.terminateBlock(endBlock);
+        m_gen.terminateBlock(makeEndBlock());
 
         m_gen.switchBlock(elseBlock);
     }

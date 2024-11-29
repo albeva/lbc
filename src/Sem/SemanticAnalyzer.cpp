@@ -30,8 +30,7 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : ErrorLogger(context.getDiag())
 , m_context { context }
 , m_typePass { *this }
-, m_declPass { *this }
-, m_evaluator {} { }
+, m_declPass { *this } { }
 
 auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
     auto flags = StateFlags { .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
@@ -144,6 +143,9 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
             retType->asString()
         );
     }
+
+    (void)m_evaluator.evaluate(*ast.expr);
+
     return {};
 }
 
@@ -173,6 +175,7 @@ auto SemanticAnalyzer::visit(AstIfStmt& ast) -> Result<void> {
                     TypeBoolean::get()->asString()
                 );
             }
+            (void)m_evaluator.evaluate(*block->expr);
         }
         TRY(visit(*block->stmt))
     }
@@ -325,9 +328,6 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
         );
     }
     TRY(expression(ast.rhs, ast.lhs->type));
-    if (!getExprEvaluator().evaluate(*ast.rhs).hasError()) {
-        ast.constantValue = ast.rhs->constantValue;
-    }
     return {};
 }
 
@@ -385,6 +385,7 @@ auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
         } else {
             TRY(expression(args[index]))
         }
+        (void)m_evaluator.evaluate(*args[index]);
     }
 
     ast.type = type->getReturn();
@@ -688,6 +689,8 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
 
 auto SemanticAnalyzer::visit(AstIfExpr& ast) -> Result<void> {
     TRY(expression(ast.expr))
+    (void)m_evaluator.evaluate(*ast.expr);
+
     if (!ast.expr->type->isBoolean()) {
         return makeError(
             Diag::noViableConversionToType,
@@ -698,7 +701,10 @@ auto SemanticAnalyzer::visit(AstIfExpr& ast) -> Result<void> {
     }
 
     TRY(expression(ast.trueExpr))
+    (void)m_evaluator.evaluate(*ast.trueExpr);
+
     TRY(expression(ast.falseExpr))
+    (void)m_evaluator.evaluate(*ast.falseExpr);
 
     const auto* left = ast.trueExpr->type;
     const auto* right = ast.falseExpr->type;

@@ -89,7 +89,7 @@ auto pop(VariableStack& stack, const TypeRoot* type) -> std::optional<Token::Val
 /**
  * Peeks the value on the stack and returns as a token value
  *
- * @param stack The value to pop from.
+ * @param stack The stack to peek value from
  * @param type The type of the value.
  * @return The value peeked from the stack, or std::nullopt
  */
@@ -516,7 +516,11 @@ AstExprEvaluator::AstExprEvaluator() = default;
 AstExprEvaluator::~AstExprEvaluator() = default;
 
 auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
-    TRY(expr(ast));
+    if (ast.constantValue) {
+        return {};
+    }
+
+    TRY(visit(ast));
 
     if (const auto result = pop(m_stack, ast.type)) {
         ast.constantValue = result;
@@ -528,6 +532,11 @@ auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
 }
 
 auto AstExprEvaluator::expr(AstExpr& ast) -> Result<void> {
+    if (const auto value = ast.constantValue) {
+        TRY(push(m_stack, value.value(), ast.type));
+        return {};
+    }
+
     TRY(visit(ast));
 
     if (const auto result = peek(m_stack, ast.type)) {
@@ -539,7 +548,7 @@ auto AstExprEvaluator::expr(AstExpr& ast) -> Result<void> {
     return {};
 }
 
-auto AstExprEvaluator::visit(AstAssignExpr&) -> Result<void> {
+auto AstExprEvaluator::visit(AstAssignExpr& /*ast*/) -> Result<void> {
     return ResultError{};
 }
 
@@ -550,7 +559,7 @@ auto AstExprEvaluator::visit(AstIdentExpr& ast) -> Result<void> {
     return ResultError{};
 }
 
-auto AstExprEvaluator::visit(AstCallExpr&) -> Result<void> {
+auto AstExprEvaluator::visit(AstCallExpr& /*ast*/) -> Result<void> {
     return ResultError{};
 }
 
@@ -600,19 +609,19 @@ auto AstExprEvaluator::visit(AstCastExpr& ast) -> Result<void> {
 auto AstExprEvaluator::visit(AstIfExpr& ast) -> Result<void> {
     TRY(expr(*ast.expr))
     if (m_stack.pop<bool>()) {
-        return visit(*ast.trueExpr);
+        return expr(*ast.trueExpr);
     }
-    return visit(*ast.falseExpr);
+    return expr(*ast.falseExpr);
 }
 
-auto AstExprEvaluator::visit(AstDereference&) -> Result<void> {
+auto AstExprEvaluator::visit(AstDereference& /*ast*/) -> Result<void> {
     return ResultError{};
 }
 
-auto AstExprEvaluator::visit(AstAddressOf&) -> Result<void> {
+auto AstExprEvaluator::visit(AstAddressOf& /*ast*/) -> Result<void> {
     return ResultError{};
 }
 
-auto AstExprEvaluator::visit(AstMemberExpr&) -> Result<void> {
+auto AstExprEvaluator::visit(AstMemberExpr& /*ast*/) -> Result<void> {
     return ResultError{};
 }

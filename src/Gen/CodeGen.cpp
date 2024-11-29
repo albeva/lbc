@@ -158,14 +158,7 @@ void CodeGen::visit(AstExprList& /*ast*/) {
 
 auto CodeGen::visit(AstAssignExpr& ast) -> ValueHandler {
     const auto lhs = visit(*ast.lhs);
-
-    ValueHandler rhs;
-    if (const auto value = ast.rhs->constantValue) {
-        rhs = getConstantValue(ast.rhs->type, value.value());
-    } else {
-        rhs = visit(*ast.rhs);
-    }
-
+    ValueHandler rhs = expr(*ast.rhs);
     lhs.store(rhs);
     return lhs;
 }
@@ -238,12 +231,7 @@ void CodeGen::declareLocalVar(AstVarDecl& ast) {
 
     // has an init expr?
     if (ast.expr != nullptr) {
-        ValueHandler rvalue;
-        if (const auto& value = ast.expr->constantValue) {
-            rvalue = getConstantValue(ast.symbol->getType(), value.value());
-        } else {
-            rvalue = visit(*ast.expr);
-        }
+        ValueHandler rvalue = expr(*ast.expr);
         m_builder.CreateStore(rvalue.load(), lvalue);
     }
 
@@ -333,7 +321,7 @@ void CodeGen::visit(AstFuncStmt& ast) {
 
 void CodeGen::visit(AstReturnStmt& ast) {
     if (ast.expr != nullptr) {
-        auto value = visit(*ast.expr);
+        auto value = expr(*ast.expr);
         m_builder.CreateRet(value.load());
     } else {
         auto* func = m_builder.GetInsertBlock()->getParent();
@@ -446,7 +434,7 @@ auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
     std::vector<llvm::Value*> values;
     values.reserve(args.size());
     for (const auto& arg : args) {
-        auto* value = visit(*arg).load();
+        auto* value = expr(*arg).load();
         values.emplace_back(value);
     }
 
@@ -457,6 +445,13 @@ auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
 
 auto CodeGen::visit(AstLiteralExpr& ast) -> ValueHandler {
     return getConstantValue(ast.type, ast.getValue());
+}
+
+auto CodeGen::expr(AstExpr& ast) -> Gen::ValueHandler {
+    if (const auto value = ast.constantValue) {
+        return getConstantValue(ast.type, value.value());
+    }
+    return visit(ast);
 }
 
 auto CodeGen::getConstantValue(const TypeRoot* type, const Token::Value& constant) -> ValueHandler {
@@ -500,7 +495,7 @@ auto CodeGen::getStringConstant(llvm::StringRef str) -> llvm::Constant* {
 auto CodeGen::visit(AstUnaryExpr& ast) -> ValueHandler {
     switch (ast.token.getKind()) {
     case TokenKind::Negate: {
-        auto* value = visit(*ast.expr).load();
+        auto* value = expr(*ast.expr).load();
 
         if (value->getType()->isIntegerTy()) {
             return { this, ast.type, m_builder.CreateNeg(value) };
@@ -513,7 +508,7 @@ auto CodeGen::visit(AstUnaryExpr& ast) -> ValueHandler {
         llvm_unreachable("Unexpected unary operator");
     }
     case TokenKind::LogicalNot: {
-        auto value = visit(*ast.expr);
+        auto value = expr(*ast.expr);
         return { this, ast.type, m_builder.CreateNot(value.load(), "lnot") };
     }
     default:
@@ -534,7 +529,7 @@ auto CodeGen::visit(AstBinaryExpr& ast) -> ValueHandler {
 //------------------------------------------------------------------
 
 auto CodeGen::visit(AstCastExpr& ast) -> ValueHandler {
-    auto* value = visit(*ast.expr).load();
+    auto* value = expr(*ast.expr).load();
 
     const bool srcIsSigned = ast.expr->type->isSignedIntegral();
     const bool dstIsSigned = ast.type->isSignedIntegral();
@@ -553,14 +548,14 @@ auto CodeGen::visit(AstCastExpr& ast) -> ValueHandler {
 auto CodeGen::visit(AstIfExpr& ast) -> ValueHandler {
     if (const auto constant = ast.expr->constantValue) {
         if (std::get<bool>(constant.value())) {
-            return visit(*ast.trueExpr);
+            return expr(*ast.trueExpr);
         }
-        return visit(*ast.falseExpr);
+        return expr(*ast.falseExpr);
     }
 
     const auto condValue = visit(*ast.expr);
-    const auto trueValue = visit(*ast.trueExpr);
-    const auto falseValue = visit(*ast.falseExpr);
+    const auto trueValue = expr(*ast.trueExpr);
+    const auto falseValue = expr(*ast.falseExpr);
 
     auto* value = m_builder.CreateSelect(condValue.load(), trueValue.load(), falseValue.load());
     return { this, ast.type, value };
