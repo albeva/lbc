@@ -157,11 +157,17 @@ void CodeGen::visit(AstExprList& /*ast*/) {
 }
 
 auto CodeGen::visit(AstAssignExpr& ast) -> ValueHandler {
-    auto ptr = visit(*ast.lhs);
-    auto value = visit(*ast.rhs);
-    ptr.store(value);
-    // TODO should ptr be loaded or result of store?
-    return ptr;
+    const auto lhs = visit(*ast.lhs);
+
+    ValueHandler rhs;
+    if (const auto value = ast.rhs->constantValue) {
+        rhs = getConstantValue(ast.rhs->type, value.value());
+    } else {
+        rhs = visit(*ast.rhs);
+    }
+
+    lhs.store(rhs);
+    return lhs;
 }
 
 void CodeGen::visit(AstExprStmt& ast) {
@@ -212,12 +218,12 @@ void CodeGen::declareGlobalVar(const AstVarDecl& ast) {
 
     if (needsValueAssignment) {
         if (m_hasImplicitMain) {
-            auto rvalue = visit(*ast.expr);
+            const auto rvalue = visit(*ast.expr);
             m_builder.CreateStore(rvalue.load(), lvalue);
         } else {
             auto* block = m_builder.GetInsertBlock();
             m_builder.SetInsertPoint(getGlobalCtorBlock());
-            auto rvalue = visit(*ast.expr);
+            const auto rvalue = visit(*ast.expr);
             m_builder.CreateStore(rvalue.load(), lvalue);
             m_builder.SetInsertPoint(block);
         }
@@ -232,7 +238,12 @@ void CodeGen::declareLocalVar(AstVarDecl& ast) {
 
     // has an init expr?
     if (ast.expr != nullptr) {
-        auto rvalue = visit(*ast.expr);
+        ValueHandler rvalue;
+        if (const auto& value = ast.expr->constantValue) {
+            rvalue = getConstantValue(ast.symbol->getType(), value.value());
+        } else {
+            rvalue = visit(*ast.expr);
+        }
         m_builder.CreateStore(rvalue.load(), lvalue);
     }
 
@@ -540,9 +551,16 @@ auto CodeGen::visit(AstCastExpr& ast) -> ValueHandler {
 }
 
 auto CodeGen::visit(AstIfExpr& ast) -> ValueHandler {
-    auto condValue = visit(*ast.expr);
-    auto trueValue = visit(*ast.trueExpr);
-    auto falseValue = visit(*ast.falseExpr);
+    if (const auto constant = ast.expr->constantValue) {
+        if (std::get<bool>(constant.value())) {
+            return visit(*ast.trueExpr);
+        }
+        return visit(*ast.falseExpr);
+    }
+
+    const auto condValue = visit(*ast.expr);
+    const auto trueValue = visit(*ast.trueExpr);
+    const auto falseValue = visit(*ast.falseExpr);
 
     auto* value = m_builder.CreateSelect(condValue.load(), trueValue.load(), falseValue.load());
     return { this, ast.type, value };

@@ -5,34 +5,25 @@
 #include "pch.hpp"
 #include "Ast/AstVisitor.hpp"
 #include "Type/Type.hpp"
+#include "VariableStack.hpp"
 
 namespace lbc {
 class Context;
 class SymbolTable;
 
-class AstExprEvaluator final: public AstExprVisitor<AstExprEvaluator, Result<void>> {
+class AstExprEvaluator final : public AstExprVisitor<AstExprEvaluator, Result<void>> {
     NO_COPY_AND_MOVE(AstExprEvaluator)
 public:
-    AstExprEvaluator(Context& context, SymbolTable& symbolTable);
+    AstExprEvaluator();
     ~AstExprEvaluator();
 
-    auto evaluate(AstExpr& expr) -> Result<void>;
+    auto evaluate(AstExpr& ast) -> Result<void>;
 
     AST_EXPR_VISITOR_DECLARE_CONTENT_FUNCS()
-
-    using Value = std::variant<
-        #define TYPE(ID, STR, KIND, CPP, ...) CPP,
-        ALL_TYPES(TYPE)
-        #undef TYPE
-        std::monostate
-    >;
-    using ValueStack = std::stack<Value, std::vector<Value>>;
-
 private:
+    auto expr(AstExpr& ast) -> Result<void>;
 
-    ValueStack m_stack;
-    Context& m_context;
-    SymbolTable& m_symbolTable;
+    VariableStack m_stack;
 };
 
 } // namespace lbc

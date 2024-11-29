@@ -9,6 +9,7 @@
 #include "Diag/DiagnosticEngine.hpp"
 #include "Passes/DeclPass.hpp"
 #include "Passes/TypePass.hpp"
+#include "VM/AstExprEvaluator.hpp"
 
 namespace lbc {
 class Token;
@@ -42,6 +43,7 @@ public:
     [[nodiscard]] auto getSymbolTable() -> SymbolTable* { return m_table; }
     [[nodiscard]] auto getTypePass() -> Sem::TypePass& { return m_typePass; }
     [[nodiscard]] auto getDeclPass() -> Sem::DeclPass& { return m_declPass; }
+    [[nodiscard]] auto getExprEvaluator() -> AstExprEvaluator& { return m_evaluator; }
     [[nodiscard]] auto hasImplicitMain() const -> bool { return m_module->hasImplicitMain; }
 
     auto with(std::invocable auto&& handler) {
@@ -94,6 +96,8 @@ private:
 
     Sem::TypePass m_typePass;
     Sem::DeclPass m_declPass;
+
+    AstExprEvaluator m_evaluator;
 };
 
 } // namespace lbc

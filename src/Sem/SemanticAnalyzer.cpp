@@ -30,7 +30,8 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : ErrorLogger(context.getDiag())
 , m_context { context }
 , m_typePass { *this }
-, m_declPass { *this } { }
+, m_declPass { *this }
+, m_evaluator {} { }
 
 auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
     auto flags = StateFlags { .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
@@ -38,7 +39,6 @@ auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
     ast.symbolTable = m_context.create<SymbolTable>(nullptr);
     return with(&ast, ast.symbolTable, static_cast<AstFuncDecl*>(nullptr), flags, [&]() -> Result<void> {
         for (auto* import : ast.imports) {
-            // cppcheck-suppress useStlAlgorithm
             TRY(visit(*import))
         }
         return visit(*ast.stmtList);
@@ -324,7 +324,11 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
             ast.lhs->type->asString()
         );
     }
-    return expression(ast.rhs, ast.lhs->type);
+    TRY(expression(ast.rhs, ast.lhs->type));
+    if (!getExprEvaluator().evaluate(*ast.rhs).hasError()) {
+        ast.constantValue = ast.rhs->constantValue;
+    }
+    return {};
 }
 
 auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
@@ -408,7 +412,7 @@ auto SemanticAnalyzer::visit(AstLiteralExpr& ast) -> Result<void> {
             return TokenKind::Bool;
         }
     };
-    auto typeKind = std::visit(visitor, ast.constantValue.value());
+    const auto typeKind = std::visit(visitor, ast.constantValue.value());
     ast.type = TypeRoot::fromTokenKind(typeKind);
 
     return {};

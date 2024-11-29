@@ -6,42 +6,6 @@
 using namespace lbc;
 
 namespace {
-/**
- * Decode the token value to the specified type.
- *
- * @param value The token value to decode.
- * @param type The type to decode the value to.
- * @return The decoded value, or std::nullopt if the value could not be decoded.
- */
-auto decode(const Token::Value& value, const TypeRoot* type) -> std::optional<AstExprEvaluator::Value> {
-    // clang-format off
-    switch (type->getKind()) {
-    #define BASIC(ID, STR, KIND, CPP, ...) \
-    case TypeKind::ID:                 \
-        return std::get<CPP>(value);
-        PRIMITIVE_TYPES(BASIC)
-    #undef BASIC
-
-    #define INTEGRAL(ID, STR, KIND, CPP, ...) \
-    case TypeKind::ID:                    \
-        return static_cast<CPP>(std::get<uint64_t>(value));
-        INTEGRAL_TYPES(INTEGRAL)
-    #undef INTEGRAL
-
-    #define FLOATINGP(ID, STR, KIND, CPP, ...) \
-    case TypeKind::ID:                     \
-        return static_cast<CPP>(std::get<double>(value));
-        FLOATINGPOINT_TYPES(FLOATINGP)
-    #undef FLOATINGP
-
-    default:
-        if (type->getFamily() == TypeFamily::Pointer && std::holds_alternative<std::monostate>(value)) {
-            return std::monostate {};
-        }
-        return {};
-    }
-    // clang-format on
-}
 
 /**
  * Push the value onto the stack.
@@ -51,44 +15,108 @@ auto decode(const Token::Value& value, const TypeRoot* type) -> std::optional<As
  * @param type The type of the value.
  * @return Result error if the value could not be pushed onto the stack.
  */
-auto push(AstExprEvaluator::ValueStack& stack, const Token::Value& value, const TypeRoot* type) -> Result<void> {
-    if (const auto result = decode(value, type)) {
-        stack.push(result.value());
-        return {};
-    }
-    return ResultError{};
-}
-
-/**
- * Encode the value to the token value.
- *
- * @param value The value to encode.
- * @return The encoded value, or std::nullopt if the value could not be encoded.
- */
-auto encode(const AstExprEvaluator::Value& value, const TypeRoot* type) -> std::optional<Token::Value> {
+auto push(VariableStack& stack, const Token::Value& value, const TypeRoot* type) -> Result<void> {
     // clang-format off
     switch (type->getKind()) {
-    #define BASIC(ID, STR, KIND, CPP, ...) \
-        case TypeKind::ID:                 \
-            return std::get<CPP>(value);
+    #define BASIC(ID, STR, KIND, CPP, ...)  \
+    case TypeKind::ID:                      \
+        stack.push(std::get<CPP>(value));   \
+        return {};
         PRIMITIVE_TYPES(BASIC)
     #undef BASIC
 
     #define INTEGRAL(ID, STR, KIND, CPP, ...) \
     case TypeKind::ID:                    \
-        return static_cast<uint64_t>(std::get<CPP>(value));
+        stack.push(static_cast<CPP>(std::get<uint64_t>(value))); \
+        return {};
         INTEGRAL_TYPES(INTEGRAL)
     #undef INTEGRAL
 
     #define FLOATINGP(ID, STR, KIND, CPP, ...) \
     case TypeKind::ID:                     \
-        return static_cast<double>(std::get<CPP>(value));
+        stack.push(static_cast<CPP>(std::get<double>(value))); \
+        return {};
         FLOATINGPOINT_TYPES(FLOATINGP)
     #undef FLOATINGP
 
     default:
         if (type->getFamily() == TypeFamily::Pointer && std::holds_alternative<std::monostate>(value)) {
-            return std::monostate {};
+            stack.push(std::monostate{});
+            return {};
+        }
+        return ResultError{};
+    }
+    // clang-format on
+}
+
+/**
+ * Pops the value from the stack and returns as a token value
+ *
+ * @param stack The value to pop from.
+ * @param type The type of the value.
+ * @return The value popped from the stack, or std::nullopt if the value could not be popped.
+ */
+auto pop(VariableStack& stack, const TypeRoot* type) -> std::optional<Token::Value> {
+    // clang-format off
+    switch (type->getKind()) {
+    #define BASIC(ID, STR, KIND, CPP, ...) \
+        case TypeKind::ID:                 \
+            return stack.pop<CPP>();
+        PRIMITIVE_TYPES(BASIC)
+    #undef BASIC
+
+    #define INTEGRAL(ID, STR, KIND, CPP, ...) \
+    case TypeKind::ID:                    \
+        return static_cast<uint64_t>(stack.pop<CPP>());
+        INTEGRAL_TYPES(INTEGRAL)
+    #undef INTEGRAL
+
+    #define FLOATINGP(ID, STR, KIND, CPP, ...) \
+    case TypeKind::ID:                         \
+        return static_cast<double>(stack.pop<CPP>());
+        FLOATINGPOINT_TYPES(FLOATINGP)
+    #undef FLOATINGP
+
+    default:
+        if (type->getFamily() == TypeFamily::Pointer) {
+            return stack.pop<std::monostate>();
+        }
+        return {};
+    }
+    // clang-format on
+}
+
+/**
+ * Peeks the value on the stack and returns as a token value
+ *
+ * @param stack The value to pop from.
+ * @param type The type of the value.
+ * @return The value peeked from the stack, or std::nullopt
+ */
+auto peek(VariableStack& stack, const TypeRoot* type) -> std::optional<Token::Value> {
+    // clang-format off
+    switch (type->getKind()) {
+        #define BASIC(ID, STR, KIND, CPP, ...) \
+            case TypeKind::ID:                 \
+                return stack.peek<CPP>();
+        PRIMITIVE_TYPES(BASIC)
+    #undef BASIC
+
+    #define INTEGRAL(ID, STR, KIND, CPP, ...) \
+    case TypeKind::ID:                    \
+    return static_cast<uint64_t>(stack.peek<CPP>());
+        INTEGRAL_TYPES(INTEGRAL)
+    #undef INTEGRAL
+
+    #define FLOATINGP(ID, STR, KIND, CPP, ...) \
+    case TypeKind::ID:                         \
+    return static_cast<double>(stack.peek<CPP>());
+        FLOATINGPOINT_TYPES(FLOATINGP)
+    #undef FLOATINGP
+
+    default:
+        if (type->getFamily() == TypeFamily::Pointer) {
+            return stack.peek<std::monostate>();
         }
         return {};
     }
@@ -104,19 +132,14 @@ auto encode(const AstExprEvaluator::Value& value, const TypeRoot* type) -> std::
  * @tparam OP The operation to perform.
  * @param stack The value stack containing the operands.
  * @param kind The token kind representing the operation.
- * @param operation The operation to perform.
+ * @param operation callback function that performs the operation.
  *
  * @return Error state if failed to perform the operation.
  */
 template <typename T, typename OP>
-auto performBinaryOperation(AstExprEvaluator::ValueStack& stack, const TokenKind kind, OP operation) -> Result<void> {
-    assert(stack.size() >= 2 && "Binary expression requires two operands");
-
-    const auto rhs = std::get<T>(stack.top());
-    stack.pop();
-
-    const auto lhs = std::get<T>(stack.top());
-    stack.pop();
+auto performBinaryOperation(VariableStack& stack, const TokenKind kind, OP operation) -> Result<void> {
+    const auto rhs = stack.pop<T>();
+    const auto lhs = stack.pop<T>();
 
     if (auto result = operation(kind, lhs, rhs)) {
         const auto value = result.value();
@@ -145,11 +168,8 @@ auto performBinaryOperation(AstExprEvaluator::ValueStack& stack, const TokenKind
  * @return Error state if failed to perform the operation.
  */
 template <typename T, typename OP>
-auto performUnaryOperation(AstExprEvaluator::ValueStack& stack, const TokenKind kind, OP operation) -> Result<void> {
-    assert(stack.size() >= 1 && "Unary expression requires one operand");
-
-    const auto rhs = std::get<T>(stack.top());
-    stack.pop();
+auto performUnaryOperation(VariableStack& stack, const TokenKind kind, OP operation) -> Result<void> {
+    const auto rhs = stack.pop<T>();
 
     if (auto result = operation(kind, rhs)) {
         const auto value = result.value();
@@ -175,7 +195,7 @@ auto performUnaryOperation(AstExprEvaluator::ValueStack& stack, const TokenKind 
  * @param op The token kind representing the operation
  * @param lhs The left-hand side operand
  * @param rhs The right-hand side operand
- * @return The result of the binary operation, or std::nullopt if the operation is not supported
+ * @return The results of the binary operation, or std::nullopt if the operation is not supported
  */
 template <std::integral T>
 auto integralBinaryOperation(const TokenKind op, const T lhs, const T rhs) -> std::optional<T> {
@@ -239,7 +259,7 @@ auto integralUnaryOperation(const TokenKind op, const T rhs) -> std::optional<T>
  * @param kind The token kind representing the operation.
  * @return True if the operation was successful, false otherwise.
  */
-auto performIntegralBinaryOperation(AstExprEvaluator::ValueStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
+auto performIntegralBinaryOperation(VariableStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
     // clang-format off
     switch (type->getKind()) {
         #define INTEGRAL(ID, STR, KIND, CPP, ...) \
@@ -261,7 +281,7 @@ auto performIntegralBinaryOperation(AstExprEvaluator::ValueStack& stack, const T
  * @param kind The token kind representing the operation.
  * @return Error state if operation was not successful.
  */
-auto performIntegralUnaryOperation(AstExprEvaluator::ValueStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
+auto performIntegralUnaryOperation(VariableStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
     // clang-format off
     switch (type->getKind()) {
         #define INTEGRAL(ID, STR, KIND, CPP, ...) \
@@ -383,7 +403,7 @@ auto floatingPointUnaryOperation(const TokenKind op, const T val) -> std::option
  * @param kind The token kind representing the operation.
  * @return Result error if the operation could not be performed.
  */
-auto performFloatingPointBinaryOperation(AstExprEvaluator::ValueStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
+auto performFloatingPointBinaryOperation(VariableStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
     // clang-format off
     switch (type->getKind()) {
         #define FLOATINGPOINT(ID, STR, KIND, CPP, ...) \
@@ -405,7 +425,7 @@ auto performFloatingPointBinaryOperation(AstExprEvaluator::ValueStack& stack, co
  * @param kind The token kind representing the operation.
  * @return Result error if the operation could not be performed.
  */
-auto performFloatingPointUnaryOperation(AstExprEvaluator::ValueStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
+auto performFloatingPointUnaryOperation(VariableStack& stack, const TypeRoot* type, const TokenKind kind) -> Result<void> {
     // clang-format off
     switch (type->getKind()) {
         #define FLOATINGPOINT(ID, STR, KIND, CPP, ...) \
@@ -432,12 +452,11 @@ auto performFloatingPointUnaryOperation(AstExprEvaluator::ValueStack& stack, con
  * @return Result error if the value could not be cast.
  */
 template<typename From, typename To>
-auto cast(AstExprEvaluator::ValueStack& stack) -> Result<void> {
+auto cast(VariableStack& stack) -> Result<void> {
     if constexpr (std::is_same_v<From, llvm::StringRef> || std::is_same_v<To, llvm::StringRef>) {
         return ResultError{};
     } else {
-        const auto value = std::get<From>(stack.top());
-        stack.pop();
+        const auto value = stack.pop<From>();
         stack.push(static_cast<To>(value));
         return {};
     }
@@ -451,7 +470,7 @@ auto cast(AstExprEvaluator::ValueStack& stack) -> Result<void> {
  * @return Result error if the value could not be cast.
  */
 template<typename From>
-auto cast(AstExprEvaluator::ValueStack& stack, const TypeRoot* to) -> Result<void> {
+auto cast(VariableStack& stack, const TypeRoot* to) -> Result<void> {
     switch (to->getKind()) {
         // clang-format off
         #define TYPE(ID, STR, KIND, CPP, ...) \
@@ -473,7 +492,7 @@ auto cast(AstExprEvaluator::ValueStack& stack, const TypeRoot* to) -> Result<voi
  * @param to The type to cast to.
  * @return Result error if the value could not be cast.
  */
-auto cast(AstExprEvaluator::ValueStack& stack, const TypeRoot* from, const TypeRoot* to) -> Result<void> {
+auto cast(VariableStack& stack, const TypeRoot* from, const TypeRoot* to) -> Result<void> {
     if (from == to) {
         return {};
     }
@@ -493,22 +512,28 @@ auto cast(AstExprEvaluator::ValueStack& stack, const TypeRoot* from, const TypeR
 
 } // namespace
 
-AstExprEvaluator::AstExprEvaluator(Context& context, SymbolTable& symbolTable)
-: m_context { context }
-, m_symbolTable { symbolTable } { }
-
+AstExprEvaluator::AstExprEvaluator() = default;
 AstExprEvaluator::~AstExprEvaluator() = default;
 
-auto AstExprEvaluator::evaluate(AstExpr& expr) -> Result<void> {
-    (void)m_context;
-    (void)m_symbolTable;
+auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
+    TRY(expr(ast));
 
-    TRY(visit(expr));
+    if (const auto result = pop(m_stack, ast.type)) {
+        ast.constantValue = result;
+    } else {
+        return ResultError {};
+    }
 
-    assert(m_stack.size() >= 1 && "Stack must contain at least one value");
-    DEFER { m_stack.pop(); };
-    if (const auto result = encode(m_stack.top(), expr.type)) {
-        expr.constantValue = result;
+    return {};
+}
+
+auto AstExprEvaluator::expr(AstExpr& ast) -> Result<void> {
+    TRY(visit(ast));
+
+    if (const auto result = peek(m_stack, ast.type)) {
+        ast.constantValue = result;
+    } else {
+        return ResultError {};
     }
 
     return {};
@@ -534,7 +559,7 @@ auto AstExprEvaluator::visit(AstLiteralExpr& ast) -> Result<void> {
 }
 
 auto AstExprEvaluator::visit(AstUnaryExpr& ast) -> Result<void> {
-    TRY(visit(*ast.expr))
+    TRY(expr(*ast.expr))
     const auto* type = ast.expr->type;
 
     switch (type->getFamily()) {
@@ -550,8 +575,8 @@ auto AstExprEvaluator::visit(AstUnaryExpr& ast) -> Result<void> {
 }
 
 auto AstExprEvaluator::visit(AstBinaryExpr& ast) -> Result<void> {
-    TRY(visit(*ast.lhs))
-    TRY(visit(*ast.rhs))
+    TRY(expr(*ast.lhs))
+    TRY(expr(*ast.rhs))
     const auto* type = ast.lhs->type;
     assert(type == ast.rhs->type && "Binary expression requires operands of the same type");
 
@@ -568,13 +593,13 @@ auto AstExprEvaluator::visit(AstBinaryExpr& ast) -> Result<void> {
 }
 
 auto AstExprEvaluator::visit(AstCastExpr& ast) -> Result<void> {
-    TRY(visit(*ast.expr))
+    TRY(expr(*ast.expr))
     return cast(m_stack, ast.expr->type, ast.type);
 }
 
 auto AstExprEvaluator::visit(AstIfExpr& ast) -> Result<void> {
-    TRY(visit(*ast.expr))
-    if (std::get<bool>(m_stack.top())) {
+    TRY(expr(*ast.expr))
+    if (m_stack.pop<bool>()) {
         return visit(*ast.trueExpr);
     }
     return visit(*ast.falseExpr);
