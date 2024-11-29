@@ -77,7 +77,7 @@ void ForStmtBuilder::configureStep() {
         const auto* stepTy = literal->type;
         llvm::Constant* stepVal = nullptr;
         if (const auto* integral = llvm::dyn_cast<TypeIntegral>(stepTy)) {
-            auto stepLit = std::get<uint64_t>(literal->getValue());
+            auto stepLit = literal->getValue().getIntegral();
             if (integral->isSigned()) {
                 auto sstepLit = static_cast<int64_t>(stepLit);
                 if (sstepLit < 0) {
@@ -86,7 +86,7 @@ void ForStmtBuilder::configureStep() {
             }
             stepVal = llvm::ConstantInt::get(m_llvmType, stepLit, false);
         } else if (llvm::isa<TypeFloatingPoint>(stepTy)) {
-            auto stepLit = std::get<double>(literal->getValue());
+            auto stepLit = literal->getValue().getFloatingPoint();
             if (stepLit < 0) {
                 stepLit = -stepLit;
             }

@@ -4,7 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Ast/ValueFlags.hpp"
-#include "Lexer/Token.hpp"
+#include "Utils/TokenValue.hpp"
 
 namespace lbc {
 class TypeRoot;
@@ -48,8 +48,8 @@ public:
 
     [[nodiscard]] auto name() const -> llvm::StringRef { return m_name; }
 
-    [[nodiscard]] auto getConstantValue() const -> const std::optional<Token::Value>& { return m_constantValue; }
-    [[nodiscard]] auto setConstantValue(const std::optional<Token::Value>& value) { m_constantValue = value; }
+    [[nodiscard]] auto getConstantValue() const -> const std::optional<TokenValue>& { return m_constantValue; }
+    [[nodiscard]] auto setConstantValue(const std::optional<TokenValue>& value) { m_constantValue = value; }
 
     [[nodiscard]] auto getLlvmValue() const -> llvm::Value* { return m_llvmValue; }
     void setLlvmValue(llvm::Value* value) { m_llvmValue = value; }
@@ -98,7 +98,7 @@ private:
     unsigned m_index = 0;
     ValueFlags m_flags {};
     StateFlags m_state {};
-    std::optional<Token::Value> m_constantValue {};
+    std::optional<TokenValue> m_constantValue {};
 };
 
 } // namespace lbc

@@ -13,7 +13,7 @@ namespace VM {
         #define TYPE(ID, STR, KIND, CPP, ...) CPP,
         ALL_TYPES(TYPE)
         #undef TYPE
-        std::monostate
+        TokenValue::NullType
     >;
     // clang-format on
 } // namespace VM

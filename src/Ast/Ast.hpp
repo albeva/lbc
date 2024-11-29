@@ -573,7 +573,6 @@ struct AstTypeExpr final : AstRoot {
 //----------------------------------------
 struct AstExpr : AstRoot {
     using AstRoot::AstRoot;
-    using Value = Token::Value;
 
     static constexpr auto classof(const AstRoot* ast) -> bool {
         return AST_EXPR_RANGE(IS_AST_CLASSOF)
@@ -581,7 +580,7 @@ struct AstExpr : AstRoot {
 
     const TypeRoot* type = nullptr;
     ValueFlags flags {};
-    std::optional<Value> constantValue;
+    std::optional<TokenValue> constantValue;
 };
 
 struct AstExprList : AstRoot {
@@ -650,7 +649,7 @@ struct AstCallExpr final : AstExpr {
 struct AstLiteralExpr final : AstExpr {
     constexpr AstLiteralExpr(
         llvm::SMRange range_,
-        Value value_
+        TokenValue value_
     )
     : AstExpr { AstKind::LiteralExpr, range_ } {
         constantValue = value_;
@@ -660,7 +659,7 @@ struct AstLiteralExpr final : AstExpr {
         return ast->kind == AstKind::LiteralExpr;
     }
 
-    [[nodiscard]] auto getValue() const -> const Value& {
+    [[nodiscard]] auto getValue() const -> const TokenValue& {
         return constantValue.value(); // NOLINT Literal is guaranteed to have constant value set.
     }
 };

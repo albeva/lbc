@@ -4,6 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Token.def.hpp"
+#include "Utils/TokenValue.hpp"
 
 namespace lbc {
 
@@ -25,7 +26,6 @@ enum class OperatorType : std::uint8_t {
 
 class Token final {
 public:
-    using Value = std::variant<std::monostate, llvm::StringRef, uint64_t, double, bool>;
 
     // Describe given token kind
     static auto description(TokenKind kind) -> llvm::StringRef;
@@ -37,7 +37,7 @@ public:
     constexpr Token() = default;
 
     // set token values
-    constexpr Token(TokenKind kind, const llvm::SMRange& range, Value value = std::monostate {})
+    constexpr Token(TokenKind kind, const llvm::SMRange& range, TokenValue value = std::monostate {})
     : m_kind(kind)
     , m_value(value)
     , m_range(range) { }
@@ -48,8 +48,8 @@ public:
 
     [[nodiscard]] auto lexeme() const -> llvm::StringRef;
     [[nodiscard]] auto asString() const -> std::string;
-    [[nodiscard]] constexpr auto getValue() const -> const Value& { return m_value; }
-    [[nodiscard]] constexpr auto getStringValue() const -> llvm::StringRef { return std::get<llvm::StringRef>(m_value); }
+    [[nodiscard]] constexpr auto getValue() const -> const TokenValue& { return m_value; }
+    [[nodiscard]] constexpr auto getStringValue() const -> llvm::StringRef { return m_value.getString(); }
     [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange { return m_range; }
     [[nodiscard]] constexpr auto description() const -> llvm::StringRef { return description(m_kind); }
 
@@ -93,7 +93,7 @@ public:
 
 private:
     TokenKind m_kind = TokenKind::Invalid;
-    Value m_value = std::monostate {};
+    TokenValue m_value = std::monostate {};
     llvm::SMRange m_range;
 };
 

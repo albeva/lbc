@@ -249,7 +249,7 @@ auto cast(const TypeRoot* from, const TypeRoot* to, const VM::Value& value) -> R
 // Conversion between Token::Value and VM::Value
 //------------------------------------------------------------------
 
-auto convert(const TypeRoot* type, const Token::Value& value) -> Result<VM::Value> {
+auto convert(const TypeRoot* type, const TokenValue& value) -> Result<VM::Value> {
     // clang-format off
     switch (type->getKind()) {
         #define BASIC(ID, STR, KIND, CPP, ...)  \
@@ -260,25 +260,25 @@ auto convert(const TypeRoot* type, const Token::Value& value) -> Result<VM::Valu
 
         #define INTEGRAL(ID, STR, KIND, CPP, ...) \
             case TypeKind::ID:                    \
-                return { static_cast<CPP>(std::get<uint64_t>(value)) };
+                return { static_cast<CPP>(value.getIntegral()) };
         INTEGRAL_TYPES(INTEGRAL)
         #undef INTEGRAL
 
         #define FLOATINGP(ID, STR, KIND, CPP, ...) \
             case TypeKind::ID:                     \
-                return { static_cast<CPP>(std::get<double>(value)) };
+                return { static_cast<CPP>(value.getFloatingPoint()) };
         FLOATINGPOINT_TYPES(FLOATINGP)
         #undef FLOATINGP
     default:
-        if (type->isPointer() && std::holds_alternative<std::monostate>(value)) {
-            return { std::monostate{} };
+        if (type->isPointer() && value.isNull()) {
+            return { TokenValue::NullType{} };
         }
         return ResultError{};
     }
     // clang-format on
 }
 
-auto convert(const TypeRoot* type, const VM::Value& value) -> Result<Token::Value> {
+auto convert(const TypeRoot* type, const VM::Value& value) -> Result<TokenValue> {
     // clang-format off
     switch (type->getKind()) {
         #define BASIC(ID, STR, KIND, CPP, ...)  \
@@ -289,18 +289,18 @@ auto convert(const TypeRoot* type, const VM::Value& value) -> Result<Token::Valu
 
         #define INTEGRAL(ID, STR, KIND, CPP, ...) \
             case TypeKind::ID:                    \
-                return { static_cast<uint64_t>(std::get<CPP>(value)) };
+                return { static_cast<TokenValue::IntegralType>(std::get<CPP>(value)) };
         INTEGRAL_TYPES(INTEGRAL)
         #undef INTEGRAL
 
         #define FLOATINGP(ID, STR, KIND, CPP, ...) \
             case TypeKind::ID:                     \
-                return { static_cast<double>(std::get<CPP>(value)) };
+                return { static_cast<TokenValue::FloatingPointType>(std::get<CPP>(value)) };
         FLOATINGPOINT_TYPES(FLOATINGP)
         #undef FLOATINGP
     default:
-        if (type->isPointer() && std::holds_alternative<std::monostate>(value)) {
-            return { std::monostate{} };
+        if (type->isPointer() && std::holds_alternative<TokenValue::NullType>(value)) {
+            return { TokenValue::NullType{} };
         }
         return ResultError{};
     }

@@ -454,24 +454,24 @@ auto CodeGen::expr(AstExpr& ast) -> Gen::ValueHandler {
     return visit(ast);
 }
 
-auto CodeGen::getConstantValue(const TypeRoot* type, const Token::Value& constant) -> ValueHandler {
+auto CodeGen::getConstantValue(const TypeRoot* type, const TokenValue& constant) -> ValueHandler {
     const auto visitor = Visitor {
-        [&](std::monostate /*value*/) -> llvm::Value* {
+        [&](TokenValue::NullType /*value*/) -> llvm::Value* {
             return llvm::ConstantPointerNull::get(
                 llvm::cast<llvm::PointerType>(type->getLlvmType(m_context))
             );
         },
-        [&](const llvm::StringRef str) -> llvm::Value* {
+        [&](const TokenValue::StringType& str) -> llvm::Value* {
             return getStringConstant(str);
         },
-        [&](const uint64_t value) -> llvm::Value* {
+        [&](const TokenValue::IntegralType value) -> llvm::Value* {
             return llvm::ConstantInt::get(
                 type->getLlvmType(m_context),
                 value,
                 type->isSignedIntegral()
             );
         },
-        [&](const double value) -> llvm::Value* {
+        [&](const TokenValue::FloatingPointType value) -> llvm::Value* {
             return llvm::ConstantFP::get(
                 type->getLlvmType(m_context),
                 value
@@ -547,7 +547,7 @@ auto CodeGen::visit(AstCastExpr& ast) -> ValueHandler {
 
 auto CodeGen::visit(AstIfExpr& ast) -> ValueHandler {
     if (const auto constant = ast.expr->constantValue) {
-        if (std::get<bool>(constant.value())) {
+        if (constant.value().getBoolean()) {
             return expr(*ast.trueExpr);
         }
         return expr(*ast.falseExpr);

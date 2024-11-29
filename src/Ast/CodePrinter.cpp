@@ -455,16 +455,16 @@ void CodePrinter::visit(AstCallExpr& ast) {
 
 void CodePrinter::visit(AstLiteralExpr& ast) {
     const auto visitor = Visitor {
-        [](std::monostate /*value*/) -> std::string {
+        [](TokenValue::NullType /*value*/) -> std::string {
             return "NULL";
         },
-        [](llvm::StringRef value) -> std::string {
+        [](TokenValue::StringType value) -> std::string {
             std::string result;
             llvm::raw_string_ostream str { result };
             llvm::printEscapedString(value, str);
             return '"' + result + '"';
         },
-        [&](uint64_t value) -> std::string {
+        [&](TokenValue::IntegralType value) -> std::string {
             const auto* type = ast.type;
             if (type == nullptr || type->isSignedIntegral()) {
                 auto sval = static_cast<int64_t>(value);
@@ -472,7 +472,7 @@ void CodePrinter::visit(AstLiteralExpr& ast) {
             }
             return std::to_string(value);
         },
-        [](double value) -> std::string {
+        [](TokenValue::FloatingPointType value) -> std::string {
             return std::to_string(value);
         },
         [](bool value) -> std::string {

@@ -107,16 +107,16 @@ auto Token::lexeme() const -> llvm::StringRef
 auto Token::asString() const -> std::string
 {
     static constexpr auto visitor = lbc::Visitor {
-        [](std::monostate /*value*/) {
+        [](TokenValue::NullType /*value*/) {
             return literals::Null.str();
         },
-        [](llvm::StringRef value) {
+        [](TokenValue::StringType value) {
             return value.str();
         },
-        [](uint64_t value) {
+        [](TokenValue::IntegralType value) {
             return std::to_string(value);
         },
-        [](double value) {
+        [](TokenValue::FloatingPointType value) {
             return std::to_string(value);
         },
         [](bool value) {

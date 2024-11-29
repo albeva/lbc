@@ -406,13 +406,13 @@ void AstPrinter::visit(AstCallExpr& ast) {
 void AstPrinter::visit(AstLiteralExpr& ast) {
     using Ret = std::pair<TokenKind, std::string>;
     const auto visitor = Visitor {
-        [](std::monostate /*value*/) -> Ret {
+        [](TokenValue::NullType /*value*/) -> Ret {
             return { TokenKind::NullLiteral, "null" };
         },
-        [](llvm::StringRef value) -> Ret {
+        [](TokenValue::StringType value) -> Ret {
             return { TokenKind::StringLiteral, value.str() };
         },
-        [&](uint64_t value) -> Ret {
+        [&](TokenValue::IntegralType value) -> Ret {
             const auto* type = ast.type;
             if (type == nullptr || type->isSignedIntegral()) {
                 auto sval = static_cast<int64_t>(value);
@@ -420,7 +420,7 @@ void AstPrinter::visit(AstLiteralExpr& ast) {
             }
             return { TokenKind::IntegerLiteral, std::to_string(value) };
         },
-        [](double value) -> Ret {
+        [](TokenValue::FloatingPointType value) -> Ret {
             return { TokenKind::FloatingPointLiteral, std::to_string(value) };
         },
         [](bool value) -> Ret {

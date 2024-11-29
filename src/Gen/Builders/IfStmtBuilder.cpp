@@ -33,7 +33,7 @@ void IfStmtBuilder::build() {
 
         if (block->expr != nullptr) {
             if (const auto value = block->expr->constantValue) {
-                if (std::get<bool>(value.value())) {
+                if (value.value().getBoolean()) {
                     m_gen.visit(*block->stmt);
                     m_gen.switchBlock(makeEndBlock());
                     return;

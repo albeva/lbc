@@ -394,19 +394,19 @@ auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
 
 auto SemanticAnalyzer::visit(AstLiteralExpr& ast) -> Result<void> {
     static constexpr auto visitor = Visitor {
-        [](const std::monostate& /*value*/) {
+        [](TokenValue::NullType /*value*/) {
             return TokenKind::Null;
         },
-        [](llvm::StringRef /*value*/) {
+        [](TokenValue::StringType /*value*/) {
             return TokenKind::ZString;
         },
-        [](uint64_t value) {
+        [](TokenValue::IntegralType value) {
             if (value > static_cast<uint64_t>(std::numeric_limits<int32_t>::max())) {
                 return TokenKind::Long;
             }
             return TokenKind::Integer;
         },
-        [](double /*value*/) {
+        [](TokenValue::FloatingPointType /*value*/) {
             return TokenKind::Double;
         },
         [](bool /*value*/) {

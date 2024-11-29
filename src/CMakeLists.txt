@@ -85,6 +85,7 @@ add_library(
     Utils/ValueRestorer.hpp
     VM/AstExprEvaluator.cpp
     VM/AstExprEvaluator.hpp
+    Utils/TokenValue.hpp
 )
 
 target_link_libraries(lbc_lib PUBLIC project_options project_warnings)

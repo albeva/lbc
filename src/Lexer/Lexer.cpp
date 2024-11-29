@@ -358,14 +358,14 @@ auto Lexer::numberLiteral() -> Token {
     if (isFloatingPoint) {
         std::string const number { start, m_input };
         std::size_t size {};
-        double value = std::stod(number, &size);
+        TokenValue::FloatingPointType value = std::stod(number, &size);
         if (size == 0) {
             return invalid(start);
         }
         return { TokenKind::FloatingPointLiteral, makeRange(start, m_input), value };
     }
 
-    uint64_t value {};
+    TokenValue::IntegralType value {};
     constexpr int base10 = 10;
     if (std::from_chars(start, m_input, value, base10).ec != std::errc()) {
         return invalid(start);

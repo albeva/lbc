@@ -43,7 +43,7 @@ private:
     void declareGlobalVar(const AstVarDecl& ast);
     void declareLocalVar(AstVarDecl& ast);
     auto expr(AstExpr& ast) -> Gen::ValueHandler;
-    auto getConstantValue(const TypeRoot* type, const Token::Value& value) -> Gen::ValueHandler;
+    auto getConstantValue(const TypeRoot* type, const TokenValue& value) -> Gen::ValueHandler;
     auto getStringConstant(llvm::StringRef str) -> llvm::Constant*;
 
     Context& m_context;
