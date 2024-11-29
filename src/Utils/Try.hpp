@@ -47,8 +47,8 @@ namespace lbc {
  * @param var The name of the variable to be declared.
  * @param expression The expression to check for errors and whose return type is used for the variable declaration. This should be a call to a function that returns a Result.
  */
-#define TRY_DECL(var, expression)          \
-    decltype((expression).getValue()) var; \
+#define TRY_DECL(var, expression)                                      \
+    std::remove_cvref<decltype((expression).getValue())>::type var {}; \
     TRY_ASSIGN(var, expression)
 
 } // namespace lbc
