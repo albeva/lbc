@@ -37,7 +37,7 @@ public:
     constexpr Token() = default;
 
     // set token values
-    constexpr Token(TokenKind kind, const llvm::SMRange& range, TokenValue value = std::monostate {})
+    constexpr Token(TokenKind kind, const llvm::SMRange& range, TokenValue value = TokenValue::NullType {})
     : m_kind(kind)
     , m_value(value)
     , m_range(range) { }
@@ -93,7 +93,7 @@ public:
 
 private:
     TokenKind m_kind = TokenKind::Invalid;
-    TokenValue m_value = std::monostate {};
+    TokenValue m_value = TokenValue::NullType {};
     llvm::SMRange m_range;
 };
 
