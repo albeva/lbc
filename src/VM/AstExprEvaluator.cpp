@@ -345,6 +345,13 @@ auto AstExprEvaluator::visit(AstCastExpr& ast) -> Result<VM::Value> {
     return cast(ast.expr->type, ast.type, res);
 }
 
+auto AstExprEvaluator::visit(AstIsExpr& ast) -> Result<VM::Value> {
+    if (const auto constant = ast.constantValue) {
+        return { constant.value().getBoolean() };
+    }
+    return ResultError {};
+}
+
 auto AstExprEvaluator::visit(AstIfExpr& ast) -> Result<VM::Value> {
     TRY_DECL(res, expression(*ast.expr))
 

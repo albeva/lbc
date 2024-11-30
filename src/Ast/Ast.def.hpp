@@ -74,6 +74,7 @@
     _( UnaryExpr    ) \
     _( BinaryExpr   ) \
     _( CastExpr     ) \
+    _( IsExpr       ) \
     _( IfExpr       ) \
     _( Dereference  ) \
     _( AddressOf    ) \

@@ -1366,7 +1366,7 @@ void Parser::resolveBinaryOperators() {
 }
 
 /**
- * factor = primary { "(" expressionList ")" | "AS" TypeExpr | <right unary op> } .
+ * factor = primary { "(" expressionList ")" | "AS" TypeExpr | "IS" TypeExpr | <right unary op> } .
  */
 auto Parser::factor() -> Result<AstExpr*> {
     const auto start = m_token.getRange().Start;
@@ -1400,6 +1400,20 @@ auto Parser::factor() -> Result<AstExpr*> {
             expr = cast;
             continue;
         }
+
+        // "IS" TypeExpr
+        if (accept(TokenKind::Is)) {
+            TRY_DECL(type, typeExpr())
+
+            auto* is = m_context.create<AstIsExpr>(
+                llvm::SMRange { start, m_endLoc },
+                expr,
+                type
+            );
+            expr = is;
+            continue;
+        }
+
         break;
     }
     return expr;
@@ -1408,6 +1422,7 @@ auto Parser::factor() -> Result<AstExpr*> {
 /**
  * primary = identifier
  *         | "(" expression ")"
+ *         | TypeOf "is" TypeExpr
  *         | IfExpr
  *         | literal
  *         | <Left Unary Op> [ factor { <Binary Op> expression } ]
@@ -1425,6 +1440,8 @@ auto Parser::primary() -> Result<AstExpr*> {
     }
     case TokenKind::If:
         return ifExpr();
+    case TokenKind::TypeOf:
+        return typeOfIs();
     case TokenKind::Multiply:
         m_token.setKind(TokenKind::Dereference);
         break;
@@ -1476,6 +1493,22 @@ auto Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr
     default:
         return m_context.create<AstBinaryExpr>(range, tkn, lhs, rhs);
     }
+}
+
+/**
+ * TypeOf = TypeOf "is" TypeExpr .
+ */
+auto Parser::typeOfIs() -> Result<AstIsExpr*> {
+    const auto start = m_token.getRange().Start;
+    TRY_DECL(typeOf, kwTypeOf())
+    TRY(consume(TokenKind::Is))
+    TRY_DECL(type, typeExpr())
+
+    return m_context.create<AstIsExpr>(
+        llvm::SMRange { start, m_endLoc },
+        typeOf,
+        type
+    );
 }
 
 /**

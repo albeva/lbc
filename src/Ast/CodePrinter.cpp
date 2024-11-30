@@ -541,6 +541,19 @@ void CodePrinter::visit(AstCastExpr& ast) {
     m_os << ")";
 }
 
+void CodePrinter::visit(AstIsExpr& ast) {
+    const auto visitor = Visitor {
+        [&](AstTypeOf* expr) { visit(*expr); },
+        [&](AstTypeExpr* expr) { visit(*expr); },
+        [&](AstExpr* expr) { visit(*expr); }
+    };
+    m_os << "(";
+    std::visit(visitor, ast.expr);
+    m_os << " IS ";
+    visit(*ast.typeExpr);
+    m_os << ")";
+}
+
 void CodePrinter::visit(AstIfExpr& ast) {
     m_os << "(IF ";
     visit(*ast.expr);

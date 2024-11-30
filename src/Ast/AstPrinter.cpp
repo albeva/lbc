@@ -487,6 +487,21 @@ void AstPrinter::visit(AstCastExpr& ast) {
     });
 }
 
+void AstPrinter::visit(AstIsExpr& ast) {
+    const auto visitor = Visitor {
+        [&](AstTypeOf* expr) { visit(*expr); },
+        [&](AstTypeExpr* expr) { writeType(expr); },
+        [&](AstExpr* expr) { writeExpr(expr); }
+    };
+
+    m_json.object([&] {
+        writeHeader(ast);
+        writeType(ast.typeExpr);
+        // writeExpr(ast.expr);
+        std::visit(visitor, ast.expr);
+    });
+}
+
 void AstPrinter::visit(AstIfExpr& ast) {
     m_json.object([&] {
         writeHeader(ast);

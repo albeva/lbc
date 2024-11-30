@@ -662,14 +662,31 @@ auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, cons
 //------------------------------------------------------------------
 
 auto SemanticAnalyzer::visit(AstCastExpr& ast) -> Result<void> {
-    TRY_ASSIGN(ast.type, m_typePass.visit(*ast.typeExpr))
     TRY(expression(ast.expr))
+    TRY_ASSIGN(ast.type, m_typePass.visit(*ast.typeExpr))
 
     if (ast.expr->type->compare(ast.type) == TypeComparison::Incompatible) {
         return makeError(Diag::invalidCast, ast, ast.expr->type->asString(), ast.type->asString());
     }
 
     ast.flags = ast.expr->flags;
+    return {};
+}
+
+auto SemanticAnalyzer::visit(AstIsExpr& ast) -> Result<void> {
+    const auto visitor = Visitor {
+        [&](AstTypeOf* expr) { return m_typePass.visit(*expr); },
+        [&](AstTypeExpr* expr) { return m_typePass.visit(*expr); },
+        [&](AstExpr* expr) -> Result<const TypeRoot*> {
+            TRY(visit(*expr));
+            return expr->type;
+        }
+    };
+    TRY_DECL(type, std::visit(visitor, ast.expr))
+    TRY(m_typePass.visit(*ast.typeExpr))
+
+    ast.type = TypeBoolean::get();
+    ast.constantValue = type->compare(ast.typeExpr->type) == TypeComparison::Equal;
     return {};
 }
 

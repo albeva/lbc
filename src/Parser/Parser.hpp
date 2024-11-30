@@ -57,6 +57,7 @@ private:
     [[nodiscard]] auto declaration() -> Result<AstStmt*>;
     [[nodiscard]] auto factor() -> Result<AstExpr*>;
     [[nodiscard]] auto primary() -> Result<AstExpr*>;
+    [[nodiscard]] auto typeOfIs() -> Result<AstIsExpr*>;
     [[nodiscard]] auto unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*>;
     [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*>;
     [[nodiscard]] auto expression(AstExpr* lhs, int precedence) -> Result<AstExpr*>;

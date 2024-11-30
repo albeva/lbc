@@ -545,6 +545,10 @@ auto CodeGen::visit(AstCastExpr& ast) -> ValueHandler {
     return { this, ast.type, casted };
 }
 
+auto CodeGen::visit(AstIsExpr& /*ast*/) -> ValueHandler {
+    llvm_unreachable("Visit");
+}
+
 auto CodeGen::visit(AstIfExpr& ast) -> ValueHandler {
     if (const auto constant = ast.expr->constantValue) {
         if (constant.value().getBoolean()) {
