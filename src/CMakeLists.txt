@@ -61,6 +61,8 @@ add_library(
     Sem/Passes/Pass.hpp
     Sem/Passes/TypePass.cpp
     Sem/Passes/TypePass.hpp
+    Sem/ConstantFolder.cpp
+    Sem/ConstantFolder.hpp
     Sem/SemanticAnalyzer.cpp
     Sem/SemanticAnalyzer.hpp
     Symbol/Symbol.cpp
@@ -80,8 +82,6 @@ add_library(
     Utils/Utils.cpp
     Utils/Utils.hpp
     Utils/ValueRestorer.hpp
-    VM/AstExprEvaluator.cpp
-    VM/AstExprEvaluator.hpp
 )
 
 target_link_libraries(lbc_lib PUBLIC project_options project_warnings)

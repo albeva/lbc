@@ -1,7 +1,7 @@
 //
 // Created by Albert Varaksin on 28/11/2024.
 //
-#include "AstExprEvaluator.hpp"
+#include "ConstantFolder.hpp"
 
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
@@ -268,7 +268,7 @@ auto convert(const TypeRoot* type, const VM::Value& value) -> Result<TokenValue>
 
 } // namespace
 
-auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
+auto ConstantFolder::fold(AstExpr& ast) -> Result<void> {
     if (ast.constantValue) {
         return {};
     }
@@ -278,33 +278,33 @@ auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
     return {};
 }
 
-auto AstExprEvaluator::expression(const AstExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::expression(const AstExpr& ast) -> Result<VM::Value> {
     if (ast.constantValue) {
         return convert(ast.type, ast.constantValue.value());
     }
     return ResultError {}; // visit(ast);
 }
 
-auto AstExprEvaluator::visit(AstAssignExpr& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstAssignExpr& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }
 
-auto AstExprEvaluator::visit(AstIdentExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstIdentExpr& ast) -> Result<VM::Value> {
     if (const auto& value = ast.symbol->getConstantValue()) {
         return convert(ast.type, value.value());
     }
     return ResultError {};
 }
 
-auto AstExprEvaluator::visit(AstCallExpr& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstCallExpr& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }
 
-auto AstExprEvaluator::visit(AstLiteralExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstLiteralExpr& ast) -> Result<VM::Value> {
     return convert(ast.type, ast.getValue());
 }
 
-auto AstExprEvaluator::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
     TRY_DECL(res, expression(*ast.expr))
     const auto* type = ast.expr->type;
 
@@ -320,7 +320,7 @@ auto AstExprEvaluator::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
     }
 }
 
-auto AstExprEvaluator::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
     TRY_DECL(lhs, expression(*ast.lhs))
     TRY_DECL(rhs, expression(*ast.rhs))
     const auto* type = ast.lhs->type;
@@ -340,19 +340,19 @@ auto AstExprEvaluator::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
     }
 }
 
-auto AstExprEvaluator::visit(AstCastExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstCastExpr& ast) -> Result<VM::Value> {
     TRY_DECL(res, expression(*ast.expr))
     return cast(ast.expr->type, ast.type, res);
 }
 
-auto AstExprEvaluator::visit(AstIsExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstIsExpr& ast) -> Result<VM::Value> {
     if (const auto constant = ast.constantValue) {
         return { constant.value().getBoolean() };
     }
     return ResultError {};
 }
 
-auto AstExprEvaluator::visit(AstIfExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstIfExpr& ast) -> Result<VM::Value> {
     TRY_DECL(res, expression(*ast.expr))
 
     if (std::get<bool>(res)) {
@@ -362,15 +362,15 @@ auto AstExprEvaluator::visit(AstIfExpr& ast) -> Result<VM::Value> {
     return expression(*ast.falseExpr);
 }
 
-auto AstExprEvaluator::visit(AstDereference& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstDereference& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }
 
-auto AstExprEvaluator::visit(AstAddressOf& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstAddressOf& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }
 
-auto AstExprEvaluator::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }
 
@@ -378,7 +378,7 @@ auto AstExprEvaluator::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
 // operations
 //------------------------------------------------------------------
 
-auto AstExprEvaluator::stringBinaryExpr(const TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> VM::Value {
+auto ConstantFolder::stringBinaryExpr(const TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> VM::Value {
     switch (op) {
     case TokenKind::Plus:
         return m_context.retainCopy(lhs.str() + rhs.str());
@@ -391,7 +391,7 @@ auto AstExprEvaluator::stringBinaryExpr(const TokenKind op, const TokenValue::St
     }
 }
 
-auto AstExprEvaluator::booleanBinaryExpr(const TokenKind op, const bool lhs, const bool rhs) -> VM::Value {
+auto ConstantFolder::booleanBinaryExpr(const TokenKind op, const bool lhs, const bool rhs) -> VM::Value {
     switch (op) {
     case TokenKind::Equal:
         return lhs == rhs;
@@ -406,7 +406,7 @@ auto AstExprEvaluator::booleanBinaryExpr(const TokenKind op, const bool lhs, con
     }
 }
 
-auto AstExprEvaluator::booleanUnaryOperation(const TokenKind op, const bool operand) -> VM::Value {
+auto ConstantFolder::booleanUnaryOperation(const TokenKind op, const bool operand) -> VM::Value {
     switch (op) {
     case TokenKind::LogicalNot:
         return !operand;

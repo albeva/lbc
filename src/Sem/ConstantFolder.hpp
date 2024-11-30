@@ -20,13 +20,13 @@ namespace VM {
     // clang-format on
 } // namespace VM
 
-class AstExprEvaluator final : AstExprVisitor<AstExprEvaluator, Result<VM::Value>> {
+class ConstantFolder final : AstExprVisitor<ConstantFolder, Result<VM::Value>> {
     friend AstExprVisitor;
 
 public:
-    explicit AstExprEvaluator(Context& context)
+    explicit ConstantFolder(Context& context)
     : m_context(context) { }
-    auto evaluate(AstExpr& ast) -> Result<void>;
+    auto fold(AstExpr& ast) -> Result<void>;
 
 private:
     AST_EXPR_VISITOR_DECLARE_CONTENT_FUNCS()

@@ -4,11 +4,11 @@
 #include "DeclPass.hpp"
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
+#include "Sem/ConstantFolder.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeUdt.hpp"
-#include "VM/AstExprEvaluator.hpp"
 using namespace lbc;
 using namespace Sem;
 

@@ -31,7 +31,7 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
 , m_context { context }
 , m_typePass { *this }
 , m_declPass { *this }
-, m_evaluator { context } { }
+, m_constantFolder { context } { }
 
 auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
     auto flags = StateFlags { .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
@@ -310,7 +310,7 @@ auto SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) -> Result<void> {
 
 auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(visit(*ast))
-    (void)m_evaluator.evaluate(*ast);
+    (void)m_constantFolder.fold(*ast);
 
     if (type != nullptr) {
         TRY(coerce(ast, type))
@@ -724,7 +724,7 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
     cast->type = type;
     cast->flags = flags;
     ast = cast; // NOLINT
-    (void)m_evaluator.evaluate(*ast);
+    (void)m_constantFolder.fold(*ast);
     return {};
 }
 
