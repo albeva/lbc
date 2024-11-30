@@ -89,6 +89,7 @@
     _( Ptr,      "PTR"      ) \
     _( Rem,      "REM"      ) \
     _( Return,   "RETURN"   ) \
+    _( SizeOf,   "SIZEOF"   ) \
     _( Step,     "STEP"     ) \
     _( Sub,      "SUB"      ) \
     _( Then,     "THEN"     ) \

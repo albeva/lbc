@@ -123,7 +123,7 @@ auto CompilerBase::run() -> std::string {
     return llvm::StringRef { env->stdoutput.str() }.trim().str();
 }
 
-auto CompilerBase::expected(bool lookForFile) -> std::string {
+auto CompilerBase::expected(const bool lookForFile) const -> std::string {
     (void)this;
     static constexpr std::string_view prefix = "'' CHECK: ";
     static constexpr std::string_view fileKey = "__FILE__";

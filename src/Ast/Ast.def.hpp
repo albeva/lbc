@@ -78,6 +78,7 @@
     _( IfExpr       ) \
     _( Dereference  ) \
     _( AddressOf    ) \
+    _( SizeOfExpr   ) \
     _( MemberExpr   )
 
 #define AST_EXPR_RANGE(_) _(AssignExpr, MemberExpr)

@@ -4,6 +4,7 @@
 #include "Type.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
+#include <llvm/Support/Alignment.h>
 using namespace lbc;
 
 namespace {
@@ -17,26 +18,26 @@ constexpr TypePointer anyPtrTy { &anyTy }; // void*
 
 // primitives
 #define DEFINE_TYPE(ID, STR, KIND, CPP) \
-    constexpr Type##KIND ID##Ty{};
+    constexpr Type## KIND ID## Ty{};
     PRIMITIVE_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 // integers
 #define DEFINE_TYPE(ID, STR, KIND, CPP, BITS, ISSIGNED, ...) \
-    constexpr Type##KIND ID##Ty{ TypeKind::ID, BITS, ISSIGNED };
+    constexpr Type## KIND ID## Ty{ TypeKind::ID, BITS, ISSIGNED };
     INTEGRAL_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 // Floating Points
 #define DEFINE_TYPE(ID, STR, KIND, CPP, BITS, ...) \
-    constexpr Type##KIND ID##Ty{ TypeKind::ID, BITS };
+    constexpr Type## KIND ID## Ty{ TypeKind::ID, BITS };
     FLOATINGPOINT_TYPES(DEFINE_TYPE)
 #undef DEFINE_TYPE
 
 } // namespace
 
-auto TypeRoot::fromTokenKind(TokenKind kind) -> const TypeRoot* {
-    #define CASE_TYPE(ID, ...) case TokenKind::ID: return &ID##Ty;
+auto TypeRoot::fromTokenKind(const TokenKind kind) -> const TypeRoot* {
+    #define CASE_TYPE(ID, ...) case TokenKind::ID: return &ID## Ty;
     switch (kind) {
     PRIMITIVE_TYPES(CASE_TYPE)
     INTEGRAL_TYPES(CASE_TYPE)
@@ -45,6 +46,8 @@ auto TypeRoot::fromTokenKind(TokenKind kind) -> const TypeRoot* {
         return &anyPtrTy;
     case TokenKind::Any:
         return &anyTy;
+    case TokenKind::SizeOf:
+        return &IntegerTy;
     default:
         fatalError("Unknown typeExpr "_t + Token::description(kind), false);
     }
@@ -73,8 +76,8 @@ auto TypeRoot::isUnsignedIntegral() const -> bool {
 
 // clang-format off
 #define CHECK_TYPE_IMPL(ID, ...)             \
-    auto TypeRoot::is##ID() const -> bool {  \
-        return this == &ID##Ty;              \
+    auto TypeRoot::is## ID() const -> bool {  \
+        return this == &ID## Ty;              \
     }
     INTEGRAL_TYPES(CHECK_TYPE_IMPL)
     FLOATINGPOINT_TYPES(CHECK_TYPE_IMPL)
@@ -131,6 +134,21 @@ auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
     }
 
     return TypeComparison::Incompatible;
+}
+
+auto TypeRoot::getSize(Context& context) const -> std::size_t {
+    auto* llvmType = getLlvmType(context);
+    constexpr auto bitsInByte = 8;
+    const auto size = context.getDataLayout().getTypeSizeInBits(llvmType) / bitsInByte;
+    if (size == 0 && isBoolean()) {
+        return 1;
+    }
+    return size;
+}
+
+auto TypeRoot::getAlignment(Context& context) const -> std::size_t {
+    auto* llvmType = getLlvmType(context);
+    return context.getDataLayout().getPrefTypeAlign(llvmType).value();
 }
 
 auto TypeRoot::getPointer(Context& context) const -> const TypePointer* {
@@ -220,7 +238,7 @@ auto TypeIntegral::get(unsigned bits, bool isSigned) -> const TypeIntegral* {
     // clang-format off
     #define USE_TYPE(ID, STR, KIND, CPP, BITS, IS_SIGNED, ...) \
         if (bits == BITS && isSigned == IS_SIGNED)        \
-            return &ID##Ty;
+            return &ID## Ty;
     INTEGRAL_TYPES(USE_TYPE)
     #undef USE_TYPE
     // clang-format on
@@ -258,7 +276,7 @@ auto TypeFloatingPoint::get(unsigned bits) -> const TypeFloatingPoint* {
     switch (bits) {
     #define USE_TYPE(ID, STR, KIND, CPP, BITS) \
         case BITS:                             \
-            return &ID##Ty;
+            return &ID## Ty;
         FLOATINGPOINT_TYPES(USE_TYPE)
     #undef USE_TYPE
     default:

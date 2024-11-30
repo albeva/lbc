@@ -425,6 +425,10 @@ auto CodeGen::visit(AstAddressOf& ast) -> ValueHandler {
     return { this, ast };
 }
 
+auto CodeGen::visit(AstSizeOfExpr& ast) -> ValueHandler {
+    return { this, ast };
+}
+
 auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
     auto* callable = visit(*ast.callable).getAddress();
     const auto* funcType = ast.callable->type->getUnderlyingFunctionType();

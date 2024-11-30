@@ -102,6 +102,9 @@ public:
     #undef CHECK_TYPE_METHOD
     // clang-format on
 
+    [[nodiscard]] auto getSize(Context& context) const -> std::size_t;
+    [[nodiscard]] auto getAlignment(Context& context) const -> std::size_t;
+
 protected:
     constexpr explicit TypeRoot(TypeFamily family, TypeKind kind)
     : m_family { family }

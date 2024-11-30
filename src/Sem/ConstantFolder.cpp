@@ -370,6 +370,13 @@ auto ConstantFolder::visit(AstAddressOf& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }
 
+auto ConstantFolder::visit(AstSizeOfExpr& ast) -> Result<VM::Value> {
+    if (const auto constant = ast.constantValue) {
+        return { constant.value().getIntegral() };
+    }
+    return ResultError {};
+}
+
 auto ConstantFolder::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
 }

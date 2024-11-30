@@ -712,6 +712,21 @@ struct AstAddressOf final : AstExpr {
     AstExpr* expr;
 };
 
+struct AstSizeOfExpr final : AstExpr {
+    constexpr AstSizeOfExpr(
+        llvm::SMRange range_,
+        AstTypeOf* typeExpr_
+    )
+    : AstExpr { AstKind::SizeOfExpr, range_ }
+    , typeExpr { typeExpr_ } { }
+
+    constexpr static auto classof(const AstRoot* ast) -> bool {
+        return ast->kind == AstKind::SizeOfExpr;
+    }
+
+    AstTypeOf* typeExpr;
+};
+
 struct AstBinaryExpr final : AstExpr {
     constexpr AstBinaryExpr(
         llvm::SMRange range_,

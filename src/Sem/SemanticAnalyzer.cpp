@@ -479,6 +479,17 @@ auto SemanticAnalyzer::visit(AstAddressOf& ast) -> Result<void> {
 }
 
 //------------------------------------------------------------------
+// SizeOf
+//------------------------------------------------------------------
+
+auto SemanticAnalyzer::visit(AstSizeOfExpr& ast) -> Result<void> {
+    TRY_DECL(type, m_typePass.visit(*ast.typeExpr))
+    ast.type = TypeIntegral::fromTokenKind(TokenKind::SizeOf);
+    ast.constantValue = static_cast<TokenValue::IntegralType>(type->getSize(m_context));
+    return {};
+}
+
+//------------------------------------------------------------------
 // MemberExpr
 //------------------------------------------------------------------
 
