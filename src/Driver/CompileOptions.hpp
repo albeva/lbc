@@ -172,34 +172,6 @@ struct CompileOptions final {
     void setOutputType(OutputType outputType);
 
     /**
-     * @brief Check if the AST dump is enabled.
-     *
-     * @return True if the AST dump is enabled, false otherwise.
-     */
-    [[nodiscard]] auto getDumpAst() const -> bool { return m_astDump; }
-
-    /**
-     * @brief Enable or disable the AST dump.
-     *
-     * @param dump True to enable the AST dump, false to disable it.
-     */
-    void setDumpAst(bool dump) { m_astDump = dump; }
-
-    /**
-     * @brief Check if the code dump is enabled.
-     *
-     * @return True if the code dump is enabled, false otherwise.
-     */
-    [[nodiscard]] auto getDumpCode() const -> bool { return m_codeDump; }
-
-    /**
-     * @brief Enable or disable the code dump.
-     *
-     * @param dump True to enable the code dump, false to disable it.
-     */
-    void setDumpCode(bool dump) { m_codeDump = dump; }
-
-    /**
      * @brief Get the current optimization level.
      *
      * @return The current optimization level.
@@ -453,8 +425,6 @@ private:
     OptimizationLevel m_optimizationLevel = OptimizationLevel::O2;
     bool m_implicitMain = true;
     bool m_isDebug = false;
-    bool m_astDump = false;
-    bool m_codeDump = false;
     std::optional<fs::path> m_mainPath;
     mutable FilesMap m_inputFiles;
     fs::path m_outputPath;

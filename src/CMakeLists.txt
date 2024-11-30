@@ -5,11 +5,7 @@ add_library(
     Ast/Ast.cpp
     Ast/Ast.def.hpp
     Ast/Ast.hpp
-    Ast/AstPrinter.cpp
-    Ast/AstPrinter.hpp
     Ast/AstVisitor.hpp
-    Ast/CodePrinter.cpp
-    Ast/CodePrinter.hpp
     Ast/ControlFlowStack.hpp
     Ast/ValueFlags.hpp
     Diag/DiagnosticEngine.cpp

@@ -69,10 +69,6 @@ void CmdLineParser::processOption(const Args& args, size_t& index) {
         m_options.setCompilationTarget(CompileOptions::CompilationTarget::JIT);
     } else if (arg == "-emit-llvm") {
         m_options.setOutputType(CompileOptions::OutputType::LLVM);
-    } else if (arg == "-ast-dump") {
-        m_options.setDumpAst(true);
-    } else if (arg == "-code-dump") {
-        m_options.setDumpCode(true);
     } else if (arg == "-g") {
         m_options.setDebugBuild(true);
     } else if (arg == "--toolchain") {
@@ -132,8 +128,6 @@ OPTIONS:
     -c               Only run compile and assemble steps
     -S               Only drive compilation steps
     -emit-llvm       Use the LLVM representation for assembler and object files
-    -ast-dump        Dump AST tree of the parsed source as json
-    -code-dump       Dump AST as source code
     -o <file>        Write output to <file>
     -O<number>       Set optimization. Valid options: O0, OS, O1, O2, O3
     -m32             Generate 32bit i386 code

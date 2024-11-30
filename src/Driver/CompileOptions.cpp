@@ -23,8 +23,6 @@ void CompileOptions::reset() {
     m_optimizationLevel = OptimizationLevel::O2;
     m_implicitMain = true;
     m_isDebug = false;
-    m_astDump = false;
-    m_codeDump = false;
     m_mainPath.reset();
     m_inputFiles.clear();
     m_outputPath.clear();
@@ -55,18 +53,6 @@ void CompileOptions::validate() const {
 
     if (count == 0) {
         fatalError("no input.");
-    }
-
-    if (m_astDump) {
-        if (count != 1 || getInputFiles(FileType::Source).size() != 1) {
-            fatalError("-ast-dump takes single input source file");
-        }
-    }
-
-    if (m_codeDump) {
-        if (count != 1 || getInputFiles(FileType::Source).size() != 1) {
-            fatalError("-code-dump takes single input source file");
-        }
     }
 
     if (count > 1 && !isTargetLinkable() && !m_outputPath.empty()) {

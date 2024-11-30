@@ -46,14 +46,12 @@ private:
 
     void compileSources();
     void compileSource(const Source* source, unsigned ID);
-    void dumpAst();
 
     Context& m_context;
     const CompileOptions& m_options;
 
     std::unordered_map<CompileOptions::FileType, SourceVector> m_sources;
     std::vector<std::unique_ptr<TranslationUnit>> m_modules;
-    void dumpCode();
 };
 
 } // namespace lbc

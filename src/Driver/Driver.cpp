@@ -2,8 +2,6 @@
 // Created by Albert Varaksin on 13/07/2020.
 //
 #include "Driver.hpp"
-#include "Ast/AstPrinter.hpp"
-#include "Ast/CodePrinter.hpp"
 #include "Context.hpp"
 #include "Driver/Toolchain/Toolchain.hpp"
 #include "Gen/CodeGen.hpp"
@@ -54,16 +52,6 @@ void Driver::drive() {
 
     // compile sources
     compile();
-
-    if (m_options.getDumpAst()) {
-        dumpAst();
-        return;
-    }
-
-    if (m_options.getDumpCode()) {
-        dumpCode();
-        return;
-    }
 
     switch (m_options.getCompilationTarget()) {
     case CompileOptions::CompilationTarget::Executable:
@@ -411,11 +399,6 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
         std::exit(EXIT_FAILURE);
     }
 
-    if (m_options.getDumpAst() || m_options.getDumpCode()) {
-        m_modules.emplace_back(std::make_unique<TranslationUnit>(nullptr, source, ast));
-        return;
-    }
-
     // generate IR
     CodeGen gen { m_context };
     gen.visit(*ast);
@@ -427,64 +410,4 @@ void Driver::compileSource(const Source* source, unsigned int ID) {
 
     // Happy Days
     m_modules.emplace_back(std::make_unique<TranslationUnit>(gen.getModule(), source, ast));
-}
-
-void Driver::dumpAst() {
-    auto print = [&](llvm::raw_ostream& stream) {
-        AstPrinter printer { m_context, stream };
-        for (const auto& module : m_modules) {
-            printer.visit(*module->ast);
-        }
-    };
-
-    auto output = m_options.getOutputPath();
-    if (output.empty()) {
-        print(llvm::outs());
-    } else {
-        if (output.is_relative()) {
-            output = fs::absolute(m_options.getWorkingDir() / output);
-        }
-
-        std::error_code errors {};
-        llvm::raw_fd_ostream stream {
-            output.string(),
-            errors,
-            llvm::sys::fs::OpenFlags::OF_None
-        };
-
-        print(stream);
-
-        stream.flush();
-        stream.close();
-    }
-}
-
-void Driver::dumpCode() {
-    auto print = [&](llvm::raw_ostream& stream) {
-        CodePrinter printer { stream };
-        for (const auto& module : m_modules) {
-            printer.visit(*module->ast);
-        }
-    };
-
-    auto output = m_options.getOutputPath();
-    if (output.empty()) {
-        print(llvm::outs());
-    } else {
-        if (output.is_relative()) {
-            output = fs::absolute(m_options.getWorkingDir() / output);
-        }
-
-        std::error_code errors {};
-        llvm::raw_fd_ostream stream {
-            output.string(),
-            errors,
-            llvm::sys::fs::OpenFlags::OF_None
-        };
-
-        print(stream);
-
-        stream.flush();
-        stream.close();
-    }
 }
