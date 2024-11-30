@@ -425,6 +425,10 @@ auto CodeGen::visit(AstAddressOf& ast) -> ValueHandler {
     return { this, ast };
 }
 
+auto CodeGen::visit(AstAlignOfExpr& ast) -> ValueHandler {
+    return { this, ast };
+}
+
 auto CodeGen::visit(AstSizeOfExpr& ast) -> ValueHandler {
     return { this, ast };
 }

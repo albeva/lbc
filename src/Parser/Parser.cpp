@@ -1365,6 +1365,8 @@ auto Parser::primary() -> Result<AstExpr*> {
         return typeOfExpr();
     case TokenKind::SizeOf:
         return sizeOfExpr();
+    case TokenKind::AlignOf:
+        return alignOfExpr();
     case TokenKind::Multiply:
         // When '*' is a prefix operator, then it means dereference
         m_token.setKind(TokenKind::Dereference);
@@ -1489,6 +1491,20 @@ auto Parser::typeOfExpr() -> Result<AstIsExpr*> {
     return m_context.create<AstIsExpr>(
         llvm::SMRange { start, m_endLoc },
         typeOf,
+        type
+    );
+}
+
+/**
+ * SizeOf = "SIZEOF" "(" ( Expression | TypeExpr ) ")" .
+ */
+auto Parser::alignOfExpr() -> Result<AstAlignOfExpr*> {
+    // assume m_token == SIZEOF
+    const auto start = m_token.getRange().Start;
+    TRY_DECL(type, kwTypeOf())
+
+    return m_context.create<AstAlignOfExpr>(
+        llvm::SMRange { start, m_endLoc },
         type
     );
 }

@@ -61,6 +61,7 @@ private:
     [[nodiscard]] auto declaration() -> Result<AstStmt*>;
     [[nodiscard]] auto primary() -> Result<AstExpr*>;
     [[nodiscard]] auto typeOfExpr() -> Result<AstIsExpr*>;
+    [[nodiscard]] auto alignOfExpr() -> Result<AstAlignOfExpr*>;
     [[nodiscard]] auto sizeOfExpr() -> Result<AstSizeOfExpr*>;
     [[nodiscard]] auto prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*>;
     [[nodiscard]] auto postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;

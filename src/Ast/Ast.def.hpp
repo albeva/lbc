@@ -67,6 +67,7 @@
 // Expression nodes extending AstExpr
 //----------------------------------------
 #define AST_EXPR_NODES(_) \
+    _( AlignOfExpr  ) \
     _( AssignExpr   ) \
     _( IdentExpr    ) \
     _( CallExpr     ) \
@@ -81,7 +82,7 @@
     _( SizeOfExpr   ) \
     _( MemberExpr   )
 
-#define AST_EXPR_RANGE(_) _(AssignExpr, MemberExpr)
+#define AST_EXPR_RANGE(_) _(AlignOfExpr, MemberExpr)
 
 //----------------------------------------
 // All content nodes

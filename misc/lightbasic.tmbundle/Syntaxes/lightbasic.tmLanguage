@@ -42,13 +42,13 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(?i:(extern|import|type|function|sub|declare|end|return|dim|is|as|if|then|else|for|to|step|next|continue|exit|do|loop))\b</string>
+			<string>\b(?i:(extern|import|type|function|sub|declare|end|return|dim|if|then|else|for|to|step|next|continue|exit|do|loop))\b</string>
 			<key>name</key>
 			<string>keyword.control.lbc</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(?i:(const|zstring|ubyte|byte|ushort|short|uinteger|integer|ulong|long|ulongint|longint|single|double|ptr|bool|any|typeof))\b</string>
+			<string>\b(?i:(const|zstring|ubyte|byte|ushort|short|uinteger|integer|ulong|long|ulongint|longint|single|double|ptr|bool|any|typeof|sizeof|alignof))\b</string>
 			<key>name</key>
 			<string>storage.typeExpr.lbc</string>
 		</dict>
@@ -60,7 +60,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(?i:(mod|or|and|not))\b</string>
+			<string>\b(?i:(mod|or|and|not|as|is))\b</string>
 			<key>name</key>
 			<string>keyword.operator.lbc</string>
 		</dict>

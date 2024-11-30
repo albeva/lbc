@@ -12,6 +12,7 @@ struct AstIdentExpr;
 struct AstMemberExpr;
 struct AstDereference;
 struct AstAddressOf;
+struct AstAlignOfExpr;
 struct AstSizeOfExpr;
 class TypeRoot;
 class Symbol;
@@ -35,6 +36,7 @@ namespace Gen {
         ValueHandler(CodeGen* gen, AstMemberExpr& ast);
         ValueHandler(CodeGen* gen, AstDereference& ast);
         ValueHandler(CodeGen* gen, AstAddressOf& ast);
+        ValueHandler(CodeGen* gen, AstAlignOfExpr& ast);
         ValueHandler(CodeGen* gen, AstSizeOfExpr& ast);
 
         [[nodiscard]] auto getAddress() const -> llvm::Value*;

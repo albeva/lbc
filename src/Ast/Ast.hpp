@@ -594,6 +594,21 @@ struct AstExprList : AstRoot {
     std::vector<AstExpr*> exprs;
 };
 
+struct AstAlignOfExpr final : AstExpr {
+    constexpr AstAlignOfExpr(
+        llvm::SMRange range_,
+        AstTypeOf* typeExpr_
+    )
+    : AstExpr { AstKind::AlignOfExpr, range_ }
+    , typeExpr { typeExpr_ } { }
+
+    constexpr static auto classof(const AstRoot* ast) -> bool {
+        return ast->kind == AstKind::SizeOfExpr;
+    }
+
+    AstTypeOf* typeExpr;
+};
+
 struct AstAssignExpr final : AstExpr {
     constexpr AstAssignExpr(
         llvm::SMRange range_,

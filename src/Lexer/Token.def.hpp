@@ -68,6 +68,7 @@
     _( ConditionAnd,    ",",    1,      Binary, Left,   Logical     )
 
 #define TOKEN_KEYWORDS(_) \
+    _( AlignOf,  "ALIGNOF"  ) \
     _( Any,      "ANY"      ) \
     _( Const,    "CONST"    ) \
     _( Continue, "CONTINUE" ) \
