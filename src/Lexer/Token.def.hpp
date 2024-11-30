@@ -55,6 +55,9 @@
     _( GreaterThan,     ">",    5,      Binary, Left,   Comparison  ) \
     _( GreaterOrEqual,  ">=",   5,      Binary, Left,   Comparison  ) \
                                                                       \
+    _( Is,              "IS",   5,      Unary,  Right,  Comparison  ) \
+    _( As,              "AS",   5,      Unary,  Right,  Cast        ) \
+                                                                      \
     _( LogicalAnd,      "AND",  4,      Binary, Left,   Logical     ) \
                                                                       \
     _( LogicalOr,       "OR",   3,      Binary, Left,   Logical     ) \
@@ -65,7 +68,6 @@
 
 #define TOKEN_KEYWORDS(_) \
     _( Any,      "ANY"      ) \
-    _( As,       "AS"       ) \
     _( Const,    "CONST"    ) \
     _( Continue, "CONTINUE" ) \
     _( Declare,  "DECLARE"  ) \
@@ -79,7 +81,6 @@
     _( For,      "FOR"      ) \
     _( Function, "FUNCTION" ) \
     _( If,       "IF"       ) \
-    _( Is,       "IS"       ) \
     _( Import,   "IMPORT"   ) \
     _( Loop,     "LOOP"     ) \
     _( Next,     "NEXT"     ) \
@@ -98,6 +99,8 @@
     _( While,    "WHILE"    )
 
 #define TOKEN_OPERATOR_KEYWORD_MAP(_) \
+    _( As         ) \
+    _( Is         ) \
     _( LogicalNot ) \
     _( Modulus    ) \
     _( LogicalAnd ) \

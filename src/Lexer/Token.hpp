@@ -20,6 +20,7 @@ enum class OperatorType : std::uint8_t {
     Arithmetic,
     Logical,
     Comparison,
+    Cast,
     Memory,
     Assignment
 };

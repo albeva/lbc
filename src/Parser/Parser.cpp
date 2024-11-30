@@ -1325,17 +1325,19 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
  */
 auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> {
     while (m_token.getPrecedence() >= precedence) {
-        if (!m_token.isBinary()) {
-            return makeError(Diag::unexpectedToken, m_token, "binary operator", m_token.description());
-        }
-        const auto current = m_token.getPrecedence();
-        auto op = m_token;
-        advance();
+        const auto op = m_token;
 
-        TRY_DECL(rhs, factor())
+        if (m_token.isUnary()) {
+            advance();
+            TRY_ASSIGN(lhs, unary({ lhs->range.Start, m_endLoc }, op, lhs));
+            continue;
+        }
+
+        const auto current = m_token.getPrecedence();
+        advance();
+        TRY_DECL(rhs, factor(current))
 
         resolveBinaryOperators();
-
         while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
             TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
         }
@@ -1368,60 +1370,29 @@ void Parser::resolveBinaryOperators() {
 /**
  * factor = primary { "(" expressionList ")" | "AS" TypeExpr | "IS" TypeExpr | <right unary op> } .
  */
-auto Parser::factor() -> Result<AstExpr*> {
+auto Parser::factor(const int precedence) -> Result<AstExpr*> {
     const auto start = m_token.getRange().Start;
     TRY_DECL(expr, primary())
 
-    while (true) {
-        // Note: Currently have no Right-To-Left unary operators, otherwise handle them here.
+    // Likely a function call
+    if (accept(TokenKind::ParenOpen)) {
+        TRY_DECL(args, expressionList())
 
-        if (accept(TokenKind::ParenOpen)) {
-            TRY_DECL(args, expressionList())
-
-            TRY(consume(TokenKind::ParenClose))
-            expr = m_context.create<AstCallExpr>(
-                llvm::SMRange { start, m_endLoc },
-                expr,
-                args
-            );
-            continue;
-        }
-
-        // "AS" TypeExpr
-        if (accept(TokenKind::As)) {
-            TRY_DECL(type, typeExpr())
-
-            auto* cast = m_context.create<AstCastExpr>(
-                llvm::SMRange { start, m_endLoc },
-                expr,
-                type,
-                false
-            );
-            expr = cast;
-            continue;
-        }
-
-        // "IS" TypeExpr
-        if (accept(TokenKind::Is)) {
-            auto* lhs = m_context.create<AstTypeOf>(
-                expr->getRange(),
-                expr
-            );
-
-            TRY_DECL(rhs, typeExpr())
-
-            auto* is = m_context.create<AstIsExpr>(
-                llvm::SMRange { start, m_endLoc },
-                lhs,
-                rhs
-            );
-
-            expr = is;
-            continue;
-        }
-
-        break;
+        TRY(consume(TokenKind::ParenClose))
+        return m_context.create<AstCallExpr>(
+            llvm::SMRange { start, m_endLoc },
+            expr,
+            args
+        );
     }
+
+    // right to left unary operator
+    if (m_token.isUnary() && m_token.isRightToLeft() && m_token.getPrecedence() >= precedence) {
+        auto tkn = m_token;
+        advance();
+        return unary({ start, m_endLoc }, tkn, expr);
+    }
+
     return expr;
 }
 
@@ -1474,12 +1445,33 @@ auto Parser::primary() -> Result<AstExpr*> {
     return makeError(Diag::expectedExpression, m_token, m_token.description());
 }
 
-auto Parser::unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*> {
+auto Parser::unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
     switch (tkn.getKind()) {
     case TokenKind::Dereference:
         return m_context.create<AstDereference>(range, expr);
     case TokenKind::AddressOf:
         return m_context.create<AstAddressOf>(range, expr);
+    case TokenKind::As: {
+        TRY_DECL(type, typeExpr())
+        return m_context.create<AstCastExpr>(
+            llvm::SMRange { range.Start, m_endLoc },
+            expr,
+            type,
+            false
+        );
+    }
+    case TokenKind::Is: {
+        auto* lhs = m_context.create<AstTypeOf>(
+            expr->getRange(),
+            expr
+        );
+        TRY_DECL(rhs, typeExpr())
+        return m_context.create<AstIsExpr>(
+            llvm::SMRange { range.Start, m_endLoc },
+            lhs,
+            rhs
+        );
+    }
     default:
         return m_context.create<AstUnaryExpr>(range, tkn, expr);
     }
