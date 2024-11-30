@@ -55,10 +55,9 @@ private:
     [[nodiscard]] auto kwImport() -> Result<AstImport*>;
     [[nodiscard]] auto kwExtern() -> Result<AstExtern*>;
     [[nodiscard]] auto declaration() -> Result<AstStmt*>;
-    [[nodiscard]] auto factor(int precedence = 0) -> Result<AstExpr*>;
     [[nodiscard]] auto primary() -> Result<AstExpr*>;
     [[nodiscard]] auto typeOfIs() -> Result<AstIsExpr*>;
-    [[nodiscard]] auto unary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;
+    [[nodiscard]] auto postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;
     [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*>;
     [[nodiscard]] auto expression(AstExpr* lhs, int precedence) -> Result<AstExpr*>;
     [[nodiscard]] auto identifier() -> Result<AstIdentExpr*>;
