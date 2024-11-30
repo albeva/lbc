@@ -84,7 +84,7 @@ private:
     auto logical(AstBinaryExpr& ast) -> Result<void>;
     auto comparison(AstBinaryExpr& ast) -> Result<void>;
 
-    [[nodiscard]] auto canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const -> bool;
+    [[nodiscard]] static auto canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool;
     [[nodiscard]] auto isVariableAccessible(Symbol* symbol) const -> bool;
 
     Context& m_context;

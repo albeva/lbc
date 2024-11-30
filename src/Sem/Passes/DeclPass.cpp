@@ -194,9 +194,8 @@ auto DeclPass::defineVar(AstVarDecl& ast) -> Result<void> {
         }
         ast.expr->type = type;
 
-        const auto hasError = m_sem.getExprEvaluator().evaluate(*ast.expr).hasError();
         if (ast.constant) {
-            if (hasError || !ast.expr->constantValue.has_value()) {
+            if (!ast.expr->constantValue.has_value()) {
                 return m_sem.makeError(Diag::constantRequiresAConstantExpr, ast.token);
             }
             ast.symbol->setConstantValue(ast.expr->constantValue);

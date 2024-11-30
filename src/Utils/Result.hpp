@@ -75,8 +75,8 @@ public:
 
     template <PointerSubclassOf<T> U>
     constexpr Result(const Result<U>& other) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
-    : m_hasError { other.m_hasError }
-    , m_value { other.m_value } {
+    : m_value { other.m_value }
+    , m_hasError { other.m_hasError } {
     }
 
     template <PointerSubclassOf<T> U>
@@ -102,14 +102,6 @@ public:
         return m_value;
     }
 
-    [[nodiscard]] constexpr auto operator->() const -> T {
-        return getValue();
-    }
-
-    [[nodiscard]] constexpr auto operator*() const -> std::add_lvalue_reference_t<base_type> {
-        return *getValue();
-    }
-
     auto constexpr operator==(std::nullptr_t) const -> bool {
         return getValueOrNull() == nullptr;
     }
@@ -125,8 +117,8 @@ public:
     ///    if (result != nullptr) { ... }                     // if result contains a valid pointer
     ///    if (auto* value = result.getValueOrNull()) { ... } // similar to above, but also bind the value
     ///    if (!result.hasError()) { ... }                    // check that result does not contain an error
-    operator bool() = delete;
-    operator bool() const = delete;
+    explicit operator bool() = delete;
+    explicit operator bool() const = delete;
 
 private:
     T m_value {};
@@ -204,8 +196,8 @@ public:
     /// Use following to check:
     ///    auto result = getResult();
     ///    if (!result.hasError()) { ... }                    // check that result does not contain an error
-    operator bool() = delete;
-    operator bool() const = delete;
+    explicit operator bool() = delete;
+    explicit operator bool() const = delete;
 
 private:
     T m_value {};

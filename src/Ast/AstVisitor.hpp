@@ -10,8 +10,12 @@ namespace lbc {
 // NOLINTBEGIN(cppcoreguidelines-pro-type-static-cast-downcast)
 template <class This, typename RetTy = void, typename StmtTy = RetTy, typename ExprTy = RetTy, typename TypeTy = RetTy>
 class AstVisitor {
+    NO_COPY_AND_MOVE(AstVisitor)
+
 protected:
     AstVisitor() = default;
+    virtual ~AstVisitor() = default;
+
 public:
     using GenRetTy = RetTy;
     using StmtRetTy = StmtTy;
@@ -41,11 +45,13 @@ public:
 #undef VISIT_CASE
 };
 
-
 template <class This, typename ExprTy = void>
 class AstExprVisitor {
-protected:
+    NO_COPY_AND_MOVE(AstExprVisitor)
     AstExprVisitor() = default;
+    virtual ~AstExprVisitor() = default;
+    friend This;
+
 public:
     using ExprRetTy = ExprTy;
 
@@ -53,7 +59,7 @@ public:
         // clang-format off
         #define VISIT_CASE(KIND) \
             case AstKind::KIND:  \
-            return static_cast<This*>(this)->visit(static_cast<Ast##KIND&>(ast));
+            return static_cast<This*>(this)->visit(static_cast<Ast## KIND&>(ast));
 
         switch (ast.kind) {
             AST_EXPR_NODES(VISIT_CASE)
@@ -81,7 +87,7 @@ public:
     AST_EXPR_NODES(VISIT_METHOD_EXPR)
 
 #define AST_EXPR_VISITOR_DECLARE_CONTENT_FUNCS() \
-    using AstExprVisitor::visit;                \
+    using AstExprVisitor::visit;                 \
     AST_EXPR_NODES(VISIT_METHOD_EXPR)
 
 } // namespace lbc

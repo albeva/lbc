@@ -30,7 +30,8 @@ SemanticAnalyzer::SemanticAnalyzer(Context& context)
 : ErrorLogger(context.getDiag())
 , m_context { context }
 , m_typePass { *this }
-, m_declPass { *this } { }
+, m_declPass { *this }
+, m_evaluator { context } { }
 
 auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
     auto flags = StateFlags { .allowUseBeforDefiniation = false, .allowRecursiveSymbolLookup = true };
@@ -144,8 +145,6 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
         );
     }
 
-    (void)m_evaluator.evaluate(*ast.expr);
-
     return {};
 }
 
@@ -175,7 +174,6 @@ auto SemanticAnalyzer::visit(AstIfStmt& ast) -> Result<void> {
                     TypeBoolean::get()->asString()
                 );
             }
-            (void)m_evaluator.evaluate(*block->expr);
         }
         TRY(visit(*block->stmt))
     }
@@ -312,9 +310,16 @@ auto SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) -> Result<void> {
 
 auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(visit(*ast))
+    (void)m_evaluator.evaluate(*ast);
+
     if (type != nullptr) {
         TRY(coerce(ast, type))
     }
+
+    if (ast->flags.mustBeConstant && !ast->constantValue) {
+        return makeError(Diag::mustBeConstantExpr, ast);
+    }
+
     return {};
 }
 
@@ -385,7 +390,6 @@ auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
         } else {
             TRY(expression(args[index]))
         }
-        (void)m_evaluator.evaluate(*args[index]);
     }
 
     ast.type = type->getReturn();
@@ -413,7 +417,7 @@ auto SemanticAnalyzer::visit(AstLiteralExpr& ast) -> Result<void> {
             return TokenKind::Bool;
         }
     };
-    const auto typeKind = std::visit(visitor, ast.constantValue.value());
+    const auto typeKind = std::visit(visitor, ast.getValue());
     ast.type = TypeRoot::fromTokenKind(typeKind);
 
     return {};
@@ -480,7 +484,7 @@ auto SemanticAnalyzer::visit(AstAddressOf& ast) -> Result<void> {
 //------------------------------------------------------------------
 
 auto SemanticAnalyzer::visit(AstMemberExpr& ast) -> Result<void> {
-    TRY(visit(*ast.base))
+    TRY(expression(ast.base))
 
     const TypeUDT* udt = resolveUDT(ast.base->type);
     if (udt == nullptr) {
@@ -525,6 +529,22 @@ auto SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) -> Result<void> {
 
     // error: invalid operands to binary expression 'Foo' and 'BAR'
     if (!left->isNumeric() || !right->isNumeric()) {
+        if (left == right && left->isZString()) {
+            if (ast.token.getKind() == TokenKind::Plus) {
+                ast.type = left;
+                ast.flags.mustBeConstant = true;
+                return {};
+            }
+            return makeError(
+                Diag::invalidBinaryExprOperands,
+                ast.token.getRange().Start,
+                ast.getRange(),
+                ast.token.asString(),
+                left->asString(),
+                right->asString()
+            );
+        }
+
         return makeError(
             Diag::invalidBinaryExprOperands,
             ast.token.getRange().Start,
@@ -589,6 +609,10 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
         );
     }
 
+    if (left->isZString()) {
+        ast.flags.mustBeConstant = true;
+    }
+
     const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
         TRY(cast(expr, ty))
         ast.type = TypeBoolean::get();
@@ -617,13 +641,16 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
     }
 }
 
-auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) const -> bool {
-    (void)this;
+auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }
 
     if (left->isPointer() && right->isPointer()) {
+        return op == TokenKind::Equal || op == TokenKind::NotEqual;
+    }
+
+    if (left == right && left->isZString()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }
 
@@ -670,7 +697,7 @@ auto SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) -> Result<voi
 }
 
 auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
-    auto category = ast->flags;
+    const auto flags = ast->flags;
     auto* cast = m_context.create<AstCastExpr>(
         ast->range,
         ast,
@@ -678,8 +705,9 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
         true
     );
     cast->type = type;
-    cast->flags = category;
+    cast->flags = flags;
     ast = cast; // NOLINT
+    (void)m_evaluator.evaluate(*ast);
     return {};
 }
 
@@ -689,7 +717,6 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
 
 auto SemanticAnalyzer::visit(AstIfExpr& ast) -> Result<void> {
     TRY(expression(ast.expr))
-    (void)m_evaluator.evaluate(*ast.expr);
 
     if (!ast.expr->type->isBoolean()) {
         return makeError(
@@ -701,10 +728,7 @@ auto SemanticAnalyzer::visit(AstIfExpr& ast) -> Result<void> {
     }
 
     TRY(expression(ast.trueExpr))
-    (void)m_evaluator.evaluate(*ast.trueExpr);
-
     TRY(expression(ast.falseExpr))
-    (void)m_evaluator.evaluate(*ast.falseExpr);
 
     const auto* left = ast.trueExpr->type;
     const auto* right = ast.falseExpr->type;

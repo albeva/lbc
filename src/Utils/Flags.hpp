@@ -1,8 +1,8 @@
 //
 // Created by Albert on 10/03/2023.
 //
-#include "pch.hpp"
 #pragma once
+#include "pch.hpp"
 
 /**
  * Mark an enum as bitmasked enum

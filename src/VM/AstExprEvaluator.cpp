@@ -2,6 +2,8 @@
 // Created by Albert Varaksin on 28/11/2024.
 //
 #include "AstExprEvaluator.hpp"
+
+#include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
 using namespace lbc;
 
@@ -114,49 +116,6 @@ auto performIntegralUnaryOperation(const TypeRoot* type, const TokenKind kind, c
             llvm_unreachable("invalid type");
     }
     // clang-format on
-}
-
-//------------------------------------------------------------------
-// Boolean operations
-//------------------------------------------------------------------
-
-/**
- * Perform a binary operation on boolean types.
- *
- * @param op The token kind representing the operation.
- * @param lhs The left-hand side operand.
- * @param rhs The right-hand side operand.
- * @return The result of the binary operation, or std::nullopt if the operation is not supported.
- */
-auto booleanBinaryOperation(const TokenKind op, const bool lhs, const bool rhs) -> bool {
-    switch (op) {
-    case TokenKind::Equal:
-        return lhs == rhs;
-    case TokenKind::NotEqual:
-        return lhs != rhs;
-    case TokenKind::LogicalAnd:
-        return lhs && rhs;
-    case TokenKind::LogicalOr:
-        return lhs || rhs;
-    default:
-        llvm_unreachable("unknown operation");
-    }
-}
-
-/**
- * Perform a unary operation on boolean value.
- *
- * @param op The token kind representing the operation.
- * @param val The operand.
- * @return The result of the binary operation, or std::nullopt if the operation is not supported.
- */
-auto booleanUnaryOperation(const TokenKind op, const bool val) -> bool {
-    switch (op) {
-    case TokenKind::LogicalNot:
-        return !val;
-    default:
-        llvm_unreachable("unknown operation");
-    }
 }
 
 //------------------------------------------------------------------
@@ -309,9 +268,6 @@ auto convert(const TypeRoot* type, const VM::Value& value) -> Result<TokenValue>
 
 } // namespace
 
-AstExprEvaluator::AstExprEvaluator() = default;
-AstExprEvaluator::~AstExprEvaluator() = default;
-
 auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
     if (ast.constantValue) {
         return {};
@@ -319,8 +275,14 @@ auto AstExprEvaluator::evaluate(AstExpr& ast) -> Result<void> {
 
     TRY_DECL(res, visit(ast))
     TRY_ASSIGN(ast.constantValue, convert(ast.type, res));
-
     return {};
+}
+
+auto AstExprEvaluator::expression(const AstExpr& ast) -> Result<VM::Value> {
+    if (ast.constantValue) {
+        return convert(ast.type, ast.constantValue.value());
+    }
+    return ResultError {}; // visit(ast);
 }
 
 auto AstExprEvaluator::visit(AstAssignExpr& /*ast*/) -> Result<VM::Value> {
@@ -343,7 +305,7 @@ auto AstExprEvaluator::visit(AstLiteralExpr& ast) -> Result<VM::Value> {
 }
 
 auto AstExprEvaluator::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
-    TRY_DECL(res, visit(*ast.expr))
+    TRY_DECL(res, expression(*ast.expr))
     const auto* type = ast.expr->type;
 
     switch (type->getFamily()) {
@@ -352,15 +314,15 @@ auto AstExprEvaluator::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
     case TypeFamily::FloatingPoint:
         return performFloatingPointUnaryOperation(type, ast.token.getKind(), res);
     case TypeFamily::Boolean:
-        return performUnaryOperation<bool>(ast.token.getKind(), res, booleanUnaryOperation);
+        return booleanUnaryOperation(ast.token.getKind(), std::get<bool>(res));
     default:
         return ResultError {};
     }
 }
 
 auto AstExprEvaluator::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
-    TRY_DECL(lhs, visit(*ast.lhs))
-    TRY_DECL(rhs, visit(*ast.rhs))
+    TRY_DECL(lhs, expression(*ast.lhs))
+    TRY_DECL(rhs, expression(*ast.rhs))
     const auto* type = ast.lhs->type;
     assert(type == ast.rhs->type && "Binary expression requires operands of the same type");
 
@@ -370,24 +332,27 @@ auto AstExprEvaluator::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
     case TypeFamily::FloatingPoint:
         return performFloatingPointBinaryOperation(type, ast.token.getKind(), lhs, rhs);
     case TypeFamily::Boolean:
-        return performBinaryOperation<bool>(ast.token.getKind(), lhs, rhs, booleanBinaryOperation);
+        return booleanBinaryExpr(ast.token.getKind(), std::get<bool>(lhs), std::get<bool>(rhs));
+    case TypeFamily::ZString:
+        return stringBinaryExpr(ast.token.getKind(), std::get<TokenValue::StringType>(lhs), std::get<TokenValue::StringType>(rhs));
     default:
         return ResultError {};
     }
 }
 
 auto AstExprEvaluator::visit(AstCastExpr& ast) -> Result<VM::Value> {
-    TRY_DECL(res, visit(*ast.expr))
+    TRY_DECL(res, expression(*ast.expr))
     return cast(ast.expr->type, ast.type, res);
 }
 
-auto AstExprEvaluator::visit(AstIfExpr& /* ast */) -> Result<VM::Value> {
-    return ResultError {};
-    // TRY(expr(*ast.expr))
-    // if (m_stack.pop<bool>()) {
-    //     return expr(*ast.trueExpr);
-    // }
-    // return expr(*ast.falseExpr);
+auto AstExprEvaluator::visit(AstIfExpr& ast) -> Result<VM::Value> {
+    TRY_DECL(res, expression(*ast.expr))
+
+    if (std::get<bool>(res)) {
+        return expression(*ast.trueExpr);
+    }
+
+    return expression(*ast.falseExpr);
 }
 
 auto AstExprEvaluator::visit(AstDereference& /*ast*/) -> Result<VM::Value> {
@@ -400,4 +365,45 @@ auto AstExprEvaluator::visit(AstAddressOf& /*ast*/) -> Result<VM::Value> {
 
 auto AstExprEvaluator::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
     return ResultError {};
+}
+
+//------------------------------------------------------------------
+// operations
+//------------------------------------------------------------------
+
+auto AstExprEvaluator::stringBinaryExpr(const TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> VM::Value {
+    switch (op) {
+    case TokenKind::Plus:
+        return m_context.retainCopy(lhs.str() + rhs.str());
+    case TokenKind::Equal:
+        return lhs == rhs;
+    case TokenKind::NotEqual:
+        return lhs != rhs;
+    default:
+        llvm_unreachable("Unsupported string operation");
+    }
+}
+
+auto AstExprEvaluator::booleanBinaryExpr(const TokenKind op, const bool lhs, const bool rhs) -> VM::Value {
+    switch (op) {
+    case TokenKind::Equal:
+        return lhs == rhs;
+    case TokenKind::NotEqual:
+        return lhs != rhs;
+    case TokenKind::LogicalAnd:
+        return lhs && rhs;
+    case TokenKind::LogicalOr:
+        return lhs || rhs;
+    default:
+        llvm_unreachable("unknown operation");
+    }
+}
+
+auto AstExprEvaluator::booleanUnaryOperation(const TokenKind op, const bool operand) -> VM::Value {
+    switch (op) {
+    case TokenKind::LogicalNot:
+        return !operand;
+    default:
+        llvm_unreachable("unknown operation");
+    }
 }
