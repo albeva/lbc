@@ -31,6 +31,7 @@
 #define TOKEN_OPERATORS(_) \
     /* ID               Str     Prec    Type    Assoc   Kind       */ \
     _( ParenOpen,       "(",    13,     Unary,  Right,  Call        ) \
+                                                                      \
     _( MemberAccess,    ".",    12,     Binary, Left,   Memory      ) \
                                                                       \
     _( AddressOf,       "@",    11,     Unary,  Left,   Memory      ) \

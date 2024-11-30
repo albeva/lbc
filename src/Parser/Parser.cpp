@@ -1418,6 +1418,16 @@ auto Parser::primary() -> Result<AstExpr*> {
 
 auto Parser::postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
     switch (tkn.getKind()) {
+    case TokenKind::ParenOpen: {
+        TRY_DECL(args, expressionList())
+
+        TRY(consume(TokenKind::ParenClose))
+        return m_context.create<AstCallExpr>(
+            llvm::SMRange { range.Start, m_endLoc },
+            expr,
+            args
+        );
+    }
     case TokenKind::Dereference:
         return m_context.create<AstDereference>(range, expr);
     case TokenKind::AddressOf:
@@ -1429,16 +1439,6 @@ auto Parser::postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr
             expr,
             type,
             false
-        );
-    }
-    case TokenKind::ParenOpen: {
-        TRY_DECL(args, expressionList())
-
-        TRY(consume(TokenKind::ParenClose))
-        return m_context.create<AstCallExpr>(
-            llvm::SMRange { range.Start, m_endLoc },
-            expr,
-            args
         );
     }
     case TokenKind::Is: {

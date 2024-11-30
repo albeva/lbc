@@ -28,7 +28,6 @@ enum class OperatorType : std::uint8_t {
 
 class Token final {
 public:
-
     // Describe given token kind
     static auto description(TokenKind kind) -> llvm::StringRef;
 
