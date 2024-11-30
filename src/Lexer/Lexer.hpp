@@ -12,7 +12,7 @@ enum class TokenKind : std::uint8_t;
 
 class Lexer final {
 public:
-    Lexer(Context& context, unsigned fileID);
+    Lexer(Context& context, unsigned fileID, llvm::SMLoc loc = {});
 
     [[nodiscard]] auto getFileId() const -> unsigned int { return m_fileId; }
     [[nodiscard]] inline auto getBuffer() const -> const llvm::MemoryBuffer*;

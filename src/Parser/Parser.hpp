@@ -18,7 +18,7 @@ enum class AstContinuationAction : std::uint8_t;
 AST_FORWARD_DECLARE()
 struct AstExtern;
 
-class Parser final : private ErrorLogger {
+class Parser final : ErrorLogger {
 public:
     NO_COPY_AND_MOVE(Parser)
 

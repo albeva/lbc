@@ -236,11 +236,10 @@ auto SemanticAnalyzer::visit(AstTypeAlias& ast) -> Result<void> {
 
 auto SemanticAnalyzer::visit(AstTypeOf& ast) -> Result<void> {
     if (auto* loc = std::get_if<llvm::SMLoc>(&ast.typeExpr)) {
-        Lexer lexer { m_context, m_module->fileId };
+        Lexer lexer { m_context, m_module->fileId, *loc };
         Parser parser { m_context, lexer, false, m_table };
 
         auto parsedExpression = getDiag().ignoringErrors([&]() -> bool {
-            lexer.reset(*loc);
             if (auto* type = parser.typeExpr().getValueOrNull()) {
                 ast.typeExpr = type;
                 return true;
@@ -674,19 +673,10 @@ auto SemanticAnalyzer::visit(AstCastExpr& ast) -> Result<void> {
 }
 
 auto SemanticAnalyzer::visit(AstIsExpr& ast) -> Result<void> {
-    const auto visitor = Visitor {
-        [&](AstTypeOf* expr) { return m_typePass.visit(*expr); },
-        [&](AstTypeExpr* expr) { return m_typePass.visit(*expr); },
-        [&](AstExpr* expr) -> Result<const TypeRoot*> {
-            TRY(visit(*expr));
-            return expr->type;
-        }
-    };
-    TRY_DECL(type, std::visit(visitor, ast.expr))
-    TRY(m_typePass.visit(*ast.typeExpr))
-
+    TRY_DECL(lhs, m_typePass.visit(*ast.lhs));
+    TRY_DECL(rhs, m_typePass.visit(*ast.rhs));
     ast.type = TypeBoolean::get();
-    ast.constantValue = type->compare(ast.typeExpr->type) == TypeComparison::Equal;
+    ast.constantValue = lhs->compare(rhs) == TypeComparison::Equal;
     return {};
 }
 

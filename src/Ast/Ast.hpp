@@ -776,23 +776,21 @@ struct AstCastExpr final : AstExpr {
 };
 
 struct AstIsExpr final : AstExpr {
-    using Expr = std::variant<AstTypeOf*, AstTypeExpr*, AstExpr*>;
-
     constexpr AstIsExpr(
         llvm::SMRange range_,
-        Expr expr_,
-        AstTypeExpr* typeExpr_
+        AstTypeOf* lhs_,
+        AstTypeExpr* rhs_
     )
     : AstExpr { AstKind::IsExpr, range_ }
-    , expr { expr_ }
-    , typeExpr { typeExpr_ } { }
+    , lhs(lhs_)
+    , rhs(rhs_) { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::CastExpr;
     }
 
-    Expr expr;
-    AstTypeExpr* typeExpr;
+    AstTypeOf* lhs;
+    AstTypeExpr* rhs;
 };
 
 struct AstIfExpr final : AstExpr {

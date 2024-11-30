@@ -57,7 +57,7 @@ auto getEscapeChar(const char ch) -> std::optional<char> {
 }
 } // namespace
 
-Lexer::Lexer(Context& context, const unsigned fileID)
+Lexer::Lexer(Context& context, const unsigned fileID, const llvm::SMLoc loc)
 : m_context { &context }
 , m_hasStmt { false }
 , m_fileId { fileID } {
@@ -65,7 +65,12 @@ Lexer::Lexer(Context& context, const unsigned fileID)
     if (buffer == nullptr) {
         fatalError("Invalid buffer id");
     }
-    m_input = buffer->getBufferStart();
+    if (loc.isValid()) {
+        m_input = loc.getPointer();
+        assert(m_input >= buffer->getBufferStart() && m_input < buffer->getBufferEnd() && "Invalid source location");
+    } else {
+        m_input = buffer->getBufferStart();
+    }
     m_eolPos = m_input;
 }
 

@@ -1403,13 +1403,19 @@ auto Parser::factor() -> Result<AstExpr*> {
 
         // "IS" TypeExpr
         if (accept(TokenKind::Is)) {
-            TRY_DECL(type, typeExpr())
+            auto* lhs = m_context.create<AstTypeOf>(
+                expr->getRange(),
+                expr
+            );
+
+            TRY_DECL(rhs, typeExpr())
 
             auto* is = m_context.create<AstIsExpr>(
                 llvm::SMRange { start, m_endLoc },
-                expr,
-                type
+                lhs,
+                rhs
             );
+
             expr = is;
             continue;
         }
