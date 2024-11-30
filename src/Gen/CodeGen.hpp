@@ -11,7 +11,9 @@
 namespace lbc {
 class Context;
 
-class CodeGen final : public AstVisitor<CodeGen, void, void, Gen::ValueHandler> {
+class CodeGen final : AstVisitor<CodeGen, void, void, Gen::ValueHandler> {
+    friend AstVisitor;
+
 public:
     explicit CodeGen(Context& context);
 

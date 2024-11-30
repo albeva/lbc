@@ -9,7 +9,6 @@
 namespace lbc {
 class Context;
 
-
 namespace VM {
     // clang-format off
     using Value = std::variant<
@@ -21,12 +20,15 @@ namespace VM {
     // clang-format on
 } // namespace VM
 
-struct AstExprEvaluator final : private AstExprVisitor<AstExprEvaluator, Result<VM::Value>> {
-    explicit AstExprEvaluator(Context& context) : m_context(context) {}
+class AstExprEvaluator final : AstExprVisitor<AstExprEvaluator, Result<VM::Value>> {
+    friend AstExprVisitor;
+
+public:
+    explicit AstExprEvaluator(Context& context)
+    : m_context(context) { }
     auto evaluate(AstExpr& ast) -> Result<void>;
 
 private:
-    friend AstExprVisitor;
     AST_EXPR_VISITOR_DECLARE_CONTENT_FUNCS()
 
     static auto expression(const AstExpr& ast) -> Result<VM::Value>;

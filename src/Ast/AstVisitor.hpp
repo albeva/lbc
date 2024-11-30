@@ -15,6 +15,7 @@ class AstVisitor {
 protected:
     AstVisitor() = default;
     virtual ~AstVisitor() = default;
+    friend This;
 
 public:
     using GenRetTy = RetTy;
