@@ -95,9 +95,6 @@ private:
     [[nodiscard]] auto udtDeclList() -> Result<AstDeclList*>;
     [[nodiscard]] auto udtMember(AstAttributeList* attribs) -> Result<AstDecl*>;
 
-    // replace token kind with another (e.g. Minus to Negate)
-    void updateBinaryOperators();
-
     // If token matches then advance and return true
     auto accept(TokenKind kind) -> bool;
 
@@ -112,6 +109,9 @@ private:
 
     // advance to the next token from the stream
     void advance();
+
+    // replace token kind with another (e.g. Minus to Negate)
+    void adjustTokenKind();
 
     Token m_token;
     Context& m_context;

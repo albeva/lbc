@@ -1289,7 +1289,13 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
     TRY_DECL(expr, primary())
     TRY_ASSIGN(expr, expression(expr, 1))
 
-    // print "hello"
+    // This enables following syntax
+    //   print "message"
+    // without the need of parentheses
+    //
+    // There is some ambiguity however:
+    //   "print -foo"  is seen as "(print - foo)" and not as "print (-foo)"
+    // However, it is how BASIC is expected to work...
     if (flags::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr)) {
         const auto start = expr->range.Start;
         TRY_DECL(args, expressionList())
@@ -1333,49 +1339,12 @@ auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> 
 }
 
 /**
- * Updates current token kind based on the current expression flags.
- *
- * This can modify current flags
- */
-void Parser::updateBinaryOperators() {
-    using namespace flags;
-
-    switch (m_token.getKind()) {
-    case TokenKind::Assign:
-        /**
-         * This is to allow for the following syntax:
-         *   a = b = c
-         * Where the first '=' is treated as an assignment and the second as an equality check.
-         */
-        if (has(m_exprFlags, ExprFlags::useAssign)) {
-            unset(m_exprFlags, ExprFlags::useAssign);
-            set(m_exprFlags, ExprFlags::useEqual);
-        } else if (has(m_exprFlags, ExprFlags::useEqual)) {
-            m_token.setKind(TokenKind::Equal);
-        }
-        break;
-    case TokenKind::Comma:
-        /**
-         * This is to allow for the following syntax:
-         *   if a, b, c then
-         * Where each ',' is treated as low precedence 'logical and' operator.
-         */
-        if (has(m_exprFlags, ExprFlags::commaAsAnd)) {
-            m_token.setKind(TokenKind::ConditionAnd);
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-/**
  * primary = identifier
  *         | "(" expression ")"
  *         | TypeOf "is" TypeExpr
  *         | IfExpr
  *         | literal
- *         | <Left Unary Op> [ primary { <Binary Op> expression } ]
+ *         | <Unary Op> primary { <op> expression }
  *         .
  */
 auto Parser::primary() -> Result<AstExpr*> {
@@ -1424,7 +1393,7 @@ auto Parser::primary() -> Result<AstExpr*> {
 }
 
 /**
- * prefix = <Unary Op> expression
+ * prefix = <Op> expression
  *        .
  */
 auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*> {
@@ -1442,7 +1411,7 @@ auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const 
 }
 
 /**
- * postfix = expression <Postfix Op>
+ * postfix = expression <Op>
  *         .
  */
 auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
@@ -1486,7 +1455,8 @@ auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Re
 }
 
 /**
- * binary = expression <Binary Op> expression       .
+ * binary = expression <Op> expression
+ *        .
  */
 auto Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*> {
     switch (tkn.getKind()) {
@@ -1643,7 +1613,39 @@ auto Parser::consume(const TokenKind kind) -> Result<void> {
 void Parser::advance() {
     m_endLoc = m_token.getRange().End;
     m_token = m_lexer.next();
-    if (m_exprFlags != 0) {
-        updateBinaryOperators();
+    adjustTokenKind();
+}
+
+/**
+ * Updates current token based on the parser state (e.f. m_exprFlags)
+ *
+ * This can modify parse state
+ */
+void Parser::adjustTokenKind() {
+    using namespace flags;
+
+    switch (m_token.getKind()) {
+    case TokenKind::Assign:
+        // This is to allow for the following syntax:
+        //   a = b = c
+        // Where the first '=' is treated as an assignment and the second as an equality check.
+        //
+        if (has(m_exprFlags, ExprFlags::useAssign)) {
+            unset(m_exprFlags, ExprFlags::useAssign);
+            set(m_exprFlags, ExprFlags::useEqual);
+        } else if (has(m_exprFlags, ExprFlags::useEqual)) {
+            m_token.setKind(TokenKind::Equal);
+        }
+        break;
+    case TokenKind::Comma:
+        // This is to allow for the following syntax:
+        //   if a, b, c then
+        // Where each ',' is treated as low precedence 'logical and' operator.
+        if (has(m_exprFlags, ExprFlags::commaAsAnd)) {
+            m_token.setKind(TokenKind::ConditionAnd);
+        }
+        break;
+    default:
+        break;
     }
 }
