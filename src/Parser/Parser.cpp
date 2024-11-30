@@ -1343,7 +1343,8 @@ auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> 
  *         | "(" expression ")"
  *         | TypeOf "is" TypeExpr
  *         | IfExpr
- *         | SizeOf
+ *         | SizeOfExpr
+ *         | AlignOfExpr
  *         | literal
  *         | <Unary Op> primary { <op> expression }
  *         .
@@ -1496,10 +1497,10 @@ auto Parser::typeOfExpr() -> Result<AstIsExpr*> {
 }
 
 /**
- * SizeOf = "SIZEOF" "(" ( Expression | TypeExpr ) ")" .
+ * AlignOfExpr = "AlignOf" "(" ( Expression | TypeExpr ) ")" .
  */
 auto Parser::alignOfExpr() -> Result<AstAlignOfExpr*> {
-    // assume m_token == SIZEOF
+    // assume m_token == ALIGNOF
     const auto start = m_token.getRange().Start;
     TRY_DECL(type, kwTypeOf())
 
