@@ -909,7 +909,7 @@ auto Parser::ifBlock() -> Result<AstIfStmtBlock*> {
         decls.emplace_back(var);
         TRY(consume(TokenKind::Comma))
     }
-    TRY_DECL(expr, expression(ExprFlags::commaAsAnd))
+    TRY_DECL(expr, expression(ExprFlags::defaultSequence))
     TRY(consume(TokenKind::Then))
     return thenBlock(std::move(decls), expr);
 }
@@ -1077,19 +1077,19 @@ auto Parser::kwDo() -> Result<AstDoLoopStmt*> {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PostUntil;
-            TRY_ASSIGN(expr, expression(ExprFlags::commaAsAnd))
+            TRY_ASSIGN(expr, expression(ExprFlags::defaultSequence))
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PostWhile;
-            TRY_ASSIGN(expr, expression(ExprFlags::commaAsAnd))
+            TRY_ASSIGN(expr, expression(ExprFlags::defaultSequence))
         }
     } else {
         // [ Condition ]
         if (accept(TokenKind::Until)) {
             condition = AstDoLoopStmt::Condition::PreUntil;
-            TRY_ASSIGN(expr, expression(ExprFlags::commaAsAnd))
+            TRY_ASSIGN(expr, expression(ExprFlags::defaultSequence))
         } else if (accept(TokenKind::While)) {
             condition = AstDoLoopStmt::Condition::PreWhile;
-            TRY_ASSIGN(expr, expression(ExprFlags::commaAsAnd))
+            TRY_ASSIGN(expr, expression(ExprFlags::defaultSequence))
         }
 
         // EoS StmtList "LOOP"
@@ -1279,33 +1279,18 @@ auto Parser::kwTypeOf() -> Result<AstTypeOf*> {
 //----------------------------------------
 
 /**
- * expression = primary { <unary op> | <Binary Op> expression }
+ * expression = primary { <Unary op> | <Binary Op> expression }
  *            . [ ArgumentList ]
  */
 auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
-    static constexpr auto allowCallWithToken = [](const Token& token) {
-        switch (token.getKind()) {
-        case TokenKind::Multiply:
-        case TokenKind::Minus:
-            return true;
-        default:
-            return !token.isBinary();
-        }
-    };
-
     RESTORE_ON_EXIT(m_exprFlags);
     m_exprFlags = flags;
+
     TRY_DECL(expr, primary())
-
-    resolveBinaryOperators();
-
-    // expr op
-    if (m_token.isOperator()) {
-        TRY_ASSIGN(expr, expression(expr, 1))
-    }
+    TRY_ASSIGN(expr, expression(expr, 1))
 
     // print "hello"
-    if (flags::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr) && allowCallWithToken(m_token)) {
+    if (flags::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr)) {
         const auto start = expr->range.Start;
         TRY_DECL(args, expressionList())
 
@@ -1329,7 +1314,7 @@ auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> 
 
         if (m_token.isUnary()) {
             advance();
-            TRY_ASSIGN(lhs, postfixOrUnary({ lhs->range.Start, m_endLoc }, op, lhs));
+            TRY_ASSIGN(lhs, postfix({ lhs->range.Start, m_endLoc }, op, lhs));
             continue;
         }
 
@@ -1337,7 +1322,6 @@ auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> 
         advance();
         TRY_DECL(rhs, primary())
 
-        resolveBinaryOperators();
         while (m_token.getPrecedence() > current || (m_token.isRightToLeft() && m_token.getPrecedence() == current)) {
             TRY_ASSIGN(rhs, expression(rhs, m_token.getPrecedence()))
         }
@@ -1348,17 +1332,35 @@ auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> 
     return lhs;
 }
 
-void Parser::resolveBinaryOperators() {
+/**
+ * Updates current token kind based on the current expression flags.
+ *
+ * This can modify current flags
+ */
+void Parser::updateBinaryOperators() {
+    using namespace flags;
+
     switch (m_token.getKind()) {
     case TokenKind::Assign:
-        if (flags::has(m_exprFlags, ExprFlags::useAssign)) {
-            flags::unset(m_exprFlags, ExprFlags::useAssign);
-        } else {
+        /**
+         * This is to allow for the following syntax:
+         *   a = b = c
+         * Where the first '=' is treated as an assignment and the second as an equality check.
+         */
+        if (has(m_exprFlags, ExprFlags::useAssign)) {
+            unset(m_exprFlags, ExprFlags::useAssign);
+            set(m_exprFlags, ExprFlags::useEqual);
+        } else if (has(m_exprFlags, ExprFlags::useEqual)) {
             m_token.setKind(TokenKind::Equal);
         }
         break;
     case TokenKind::Comma:
-        if (flags::has(m_exprFlags, ExprFlags::commaAsAnd)) {
+        /**
+         * This is to allow for the following syntax:
+         *   if a, b, c then
+         * Where each ',' is treated as low precedence 'logical and' operator.
+         */
+        if (has(m_exprFlags, ExprFlags::commaAsAnd)) {
             m_token.setKind(TokenKind::ConditionAnd);
         }
         break;
@@ -1368,12 +1370,12 @@ void Parser::resolveBinaryOperators() {
 }
 
 /**
- * factor  = identifier
+ * primary = identifier
  *         | "(" expression ")"
  *         | TypeOf "is" TypeExpr
  *         | IfExpr
  *         | literal
- *         | <Left Unary Op> [ factor { <Binary Op> expression } ]
+ *         | <Left Unary Op> [ primary { <Binary Op> expression } ]
  *         .
  */
 auto Parser::primary() -> Result<AstExpr*> {
@@ -1381,6 +1383,7 @@ auto Parser::primary() -> Result<AstExpr*> {
     case TokenKind::Identifier:
         return identifier();
     case TokenKind::ParenOpen: {
+        // Sub expression
         advance();
         TRY_DECL(expr, expression())
         TRY(consume(TokenKind::ParenClose))
@@ -1389,11 +1392,13 @@ auto Parser::primary() -> Result<AstExpr*> {
     case TokenKind::If:
         return ifExpr();
     case TokenKind::TypeOf:
-        return typeOfIs();
+        return typeOfExpr();
     case TokenKind::Multiply:
+        // When '*' is a prefix operator, then it means dereference
         m_token.setKind(TokenKind::Dereference);
         break;
     case TokenKind::Minus:
+        // When '-' is a prefix operator, then it means negate
         m_token.setKind(TokenKind::Negate);
         break;
     default:
@@ -1403,6 +1408,7 @@ auto Parser::primary() -> Result<AstExpr*> {
         break;
     }
 
+    // is a prefix operator
     if (m_token.isUnary() && m_token.isLeftToRight()) {
         const auto tkn = m_token;
         advance();
@@ -1410,17 +1416,40 @@ auto Parser::primary() -> Result<AstExpr*> {
         TRY_DECL(fact, primary())
         TRY_DECL(expr, expression(fact, tkn.getPrecedence()))
 
-        return postfixOrUnary({ tkn.getRange().Start, m_endLoc }, tkn, expr);
+        return prefix({ tkn.getRange().Start, m_endLoc }, tkn, expr);
     }
 
+    // unexpected token
     return makeError(Diag::expectedExpression, m_token, m_token.description());
 }
 
-auto Parser::postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
+/**
+ * prefix = <Unary Op> expression
+ *        .
+ */
+auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*> {
+    switch (tkn.getKind()) {
+    case TokenKind::Dereference:
+        return m_context.create<AstDereference>(range, expr);
+    case TokenKind::AddressOf:
+        return m_context.create<AstAddressOf>(range, expr);
+    case TokenKind::Negate:
+    case TokenKind::LogicalNot:
+        return m_context.create<AstUnaryExpr>(range, tkn, expr);
+    default:
+        llvm_unreachable("Unexpected prefix operator");
+    }
+}
+
+/**
+ * postfix = expression <Postfix Op>
+ *         .
+ */
+auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
     switch (tkn.getKind()) {
     case TokenKind::ParenOpen: {
+        // Function call
         TRY_DECL(args, expressionList())
-
         TRY(consume(TokenKind::ParenClose))
         return m_context.create<AstCallExpr>(
             llvm::SMRange { range.Start, m_endLoc },
@@ -1428,11 +1457,8 @@ auto Parser::postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr
             args
         );
     }
-    case TokenKind::Dereference:
-        return m_context.create<AstDereference>(range, expr);
-    case TokenKind::AddressOf:
-        return m_context.create<AstAddressOf>(range, expr);
     case TokenKind::As: {
+        // Syntax "a as type" is a cast
         TRY_DECL(type, typeExpr())
         return m_context.create<AstCastExpr>(
             llvm::SMRange { range.Start, m_endLoc },
@@ -1442,6 +1468,7 @@ auto Parser::postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr
         );
     }
     case TokenKind::Is: {
+        // Syntax "a is type" is a type check
         auto* lhs = m_context.create<AstTypeOf>(
             expr->getRange(),
             expr
@@ -1454,10 +1481,13 @@ auto Parser::postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr
         );
     }
     default:
-        return m_context.create<AstUnaryExpr>(range, tkn, expr);
+        llvm_unreachable("Unexpected postfix operator");
     }
 }
 
+/**
+ * binary = expression <Binary Op> expression       .
+ */
 auto Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*> {
     switch (tkn.getKind()) {
     case TokenKind::ConditionAnd: {
@@ -1477,7 +1507,7 @@ auto Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr
 /**
  * TypeOf = TypeOf "is" TypeExpr .
  */
-auto Parser::typeOfIs() -> Result<AstIsExpr*> {
+auto Parser::typeOfExpr() -> Result<AstIsExpr*> {
     const auto start = m_token.getRange().Start;
     TRY_DECL(typeOf, kwTypeOf())
     TRY(consume(TokenKind::Is))
@@ -1515,7 +1545,7 @@ auto Parser::ifExpr() -> Result<AstIfExpr*> {
     const auto start = m_token.getRange().Start;
     advance();
 
-    TRY_DECL(expr, expression(ExprFlags::commaAsAnd))
+    TRY_DECL(expr, expression(ExprFlags::defaultSequence))
 
     TRY(consume(TokenKind::Then))
     TRY_DECL(trueExpr, expression())
@@ -1613,4 +1643,7 @@ auto Parser::consume(const TokenKind kind) -> Result<void> {
 void Parser::advance() {
     m_endLoc = m_token.getRange().End;
     m_token = m_lexer.next();
+    if (m_exprFlags != 0) {
+        updateBinaryOperators();
+    }
 }

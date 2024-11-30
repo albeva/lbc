@@ -25,14 +25,18 @@ public:
     enum class ExprFlags : std::uint8_t {
         commaAsAnd = 1U << 0U,
         useAssign = 1U << 1U,
-        callWithoutParens = 1U << 2U
+        useEqual = 1U << 2U,
+        callWithoutParens = 1U << 3U,
+
+        defaultSequence = commaAsAnd | useEqual,
+        defaultExpr = useEqual
     };
 
     Parser(Context& context, Lexer& lexer, bool isMain, SymbolTable* symbolTable = nullptr);
     ~Parser() override = default;
 
     [[nodiscard]] auto parse() -> Result<AstModule*>;
-    [[nodiscard]] auto expression(ExprFlags flags = {}) -> Result<AstExpr*>;
+    [[nodiscard]] auto expression(ExprFlags flags = ExprFlags::defaultExpr) -> Result<AstExpr*>;
     [[nodiscard]] auto typeExpr() -> Result<AstTypeExpr*>;
 
     void reset();
@@ -56,8 +60,9 @@ private:
     [[nodiscard]] auto kwExtern() -> Result<AstExtern*>;
     [[nodiscard]] auto declaration() -> Result<AstStmt*>;
     [[nodiscard]] auto primary() -> Result<AstExpr*>;
-    [[nodiscard]] auto typeOfIs() -> Result<AstIsExpr*>;
-    [[nodiscard]] auto postfixOrUnary(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;
+    [[nodiscard]] auto typeOfExpr() -> Result<AstIsExpr*>;
+    [[nodiscard]] auto prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*>;
+    [[nodiscard]] auto postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*>;
     [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*>;
     [[nodiscard]] auto expression(AstExpr* lhs, int precedence) -> Result<AstExpr*>;
     [[nodiscard]] auto identifier() -> Result<AstIdentExpr*>;
@@ -91,7 +96,7 @@ private:
     [[nodiscard]] auto udtMember(AstAttributeList* attribs) -> Result<AstDecl*>;
 
     // replace token kind with another (e.g. Minus to Negate)
-    void resolveBinaryOperators();
+    void updateBinaryOperators();
 
     // If token matches then advance and return true
     auto accept(TokenKind kind) -> bool;
