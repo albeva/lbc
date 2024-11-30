@@ -8,8 +8,11 @@
 #include "Driver/JIT.hpp"
 #include <cstdarg>
 #include <fstream>
+
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
 
 namespace {
 auto addTestEnvironment(auto* ptr) {

@@ -331,7 +331,7 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
             ast.lhs->type->asString()
         );
     }
-    TRY(expression(ast.rhs, ast.lhs->type));
+    TRY(expression(ast.rhs, ast.lhs->type))
     return {};
 }
 
@@ -438,7 +438,7 @@ auto SemanticAnalyzer::visit(AstUnaryExpr& ast) -> Result<void> {
         }
         return makeError(Diag::cannotUseTypeAsBoolean, ast.expr, type->asString());
     case TokenKind::Negate:
-        if (type->isNumeric()) {
+        if (type->isSignedIntegral() || type->isFloatingPoint()) {
             ast.type = type;
             break;
         }
@@ -695,8 +695,8 @@ auto SemanticAnalyzer::visit(AstCastExpr& ast) -> Result<void> {
 }
 
 auto SemanticAnalyzer::visit(AstIsExpr& ast) -> Result<void> {
-    TRY_DECL(lhs, m_typePass.visit(*ast.lhs));
-    TRY_DECL(rhs, m_typePass.visit(*ast.rhs));
+    TRY_DECL(lhs, m_typePass.visit(*ast.lhs))
+    TRY_DECL(rhs, m_typePass.visit(*ast.rhs))
     ast.type = TypeBoolean::get();
     ast.constantValue = lhs->compare(rhs) == TypeComparison::Equal;
     return {};
