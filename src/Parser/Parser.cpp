@@ -516,10 +516,15 @@ auto Parser::kwDeclare(AstAttributeList* attribs) -> Result<AstFuncDecl*> {
 }
 
 /**
+ * SubSignature
+ *     = "SUB" id [ "(" [ FuncParamList ] ")" ]
+ *     .
+ *
  * FuncSignature
  *     = "FUNCTION" id [ "(" [ FuncParamList ] ")" ] "AS" TypeExpr
- *     | "SUB" id [ "(" FuncParamList ")" ]
  *     .
+ *
+ * ProcSignature = SubSignature | FuncSignature .
  */
 auto Parser::funcSignature(const llvm::SMLoc start, AstAttributeList* attribs, const FuncFlags funcFlags) -> Result<AstFuncDecl*> {
     bool const isFunc = accept(TokenKind::Function);
@@ -1189,103 +1194,171 @@ auto Parser::continuation(AstContinuationAction action) -> Result<AstContinuatio
 //----------------------------------------
 
 /**
- * TypeExpr = ( identExpr | Any ) { "PTR" }
- *          | "SUB" "(" { FuncParamList } ")" "PTR" { "PTR" }
- *          | "FUNCTION" "(" { FuncParamList } ")" "AS" TypeExpr "PTR" { "PTR" }
- *          | "(" TypeExpr ")"
+ * TypeExpr = ( BuiltInType | "ANY" | identExpr ) { "PTR" }
+ *          | SubSignature "PTR" { "PTR" }
+ *          | "(" ProcSignature ")" "PTR" { "PTR" }
  *          | TypeOf
  *          .
  */
 auto Parser::typeExpr() -> Result<AstTypeExpr*> {
-    return basicTypeExpr(false);
+    TypeParsingContext context {};
+    return basicTypeExpr(context);
 }
 
 /**
  * Parse type expression.
  *
- * @param allowIncompleteTypeExpr if true, the function will return nullptr rather than an error if the type expression is incomplete.
- * @param parens keep track of the number of parentheses.
- * @return the type expression or nullptr if the type expression is incomplete.
+ * TypeExpr = ( BuiltInType | "ANY" | identExpr ) { "PTR" }
+ *          | SubSignature "PTR" { "PTR" }
+ *          | "(" ProcSignature ")" "PTR" { "PTR" }
+ *          | TypeOf
+ *          .
+ * @param context provide context for parsing behaviour
+ * @return a nullptr, an error or a type expression depending on context
  */
-[[nodiscard]] auto Parser::basicTypeExpr(const bool allowIncompleteTypeExpr, int* parens) -> Result<AstTypeExpr*> {
+[[nodiscard]] auto Parser::basicTypeExpr(TypeParsingContext& context) -> Result<AstTypeExpr*> {
     const auto start = m_token.getRange().Start;
-    bool const parenthesized = accept(TokenKind::ParenOpen);
-    if (parenthesized && parens != nullptr) {
-        *parens += 1;
-    }
-    bool mustBePtr = false;
 
+    // Resulting type expression
     AstTypeExpr::TypeExpr expr;
+
     if (m_token.isTypeKeyword() || m_token.is(TokenKind::Any)) {
         expr = m_token.getKind();
         advance();
-    } else if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        TRY_ASSIGN(expr, funcSignature(start, nullptr, FuncFlags::isAnonymous))
-        mustBePtr = true;
+    } else if (m_token.is(TokenKind::Sub)) {
+        TRY_ASSIGN(expr, parseTypeProcedure(false, context))
+    } else if (m_token.is(TokenKind::ParenOpen)) {
+        TRY_ASSIGN(expr, parseTypeProcedure(true, context))
     } else if (m_token.is(TokenKind::TypeOf)) {
         TRY_ASSIGN(expr, kwTypeOf())
     } else if (m_token.is(TokenKind::Identifier)) {
-        auto* ident = identifier(m_token);
-        advance();
-        expr = ident;
-
-        // If we have a symbol table, we can query for the ID.
-        if (m_symbolTable != nullptr) {
-            if (auto* symbol = m_symbolTable->find(ident->name); symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
-                return ResultError {}; // TODO should log an error?
-            }
-        }
-
-        // If next token is any of the terminals, then ID can be a valid type name.
-        // Semantic analyser will verify this at a later stage
-        constexpr auto isTerminal = [](const TokenKind kind) {
-            switch (kind) {
-            case TokenKind::Ptr:
-            case TokenKind::ParenClose:
-            case TokenKind::Comma:
-            case TokenKind::EndOfStmt:
-            case TokenKind::EndOfFile:
-            case TokenKind::BracketClose:
-            case TokenKind::LambdaBody:
-            case TokenKind::Assign:
-                return true;
-            default:
-                return false;
-            }
-        };
-        if (!isTerminal(m_token.getKind())) {
-            if (allowIncompleteTypeExpr) {
-                return nullptr;
-            }
-            return makeError(Diag::expectedTypeExpression, m_token, m_token.lexeme());
-        }
-    } else {
-        if (allowIncompleteTypeExpr) {
+        TRY_DECL(ident, parseTypeIdentifier(context));
+        if (ident == nullptr) {
             return nullptr;
         }
-        return makeError(Diag::expectedTypeExpression, m_token, m_token.lexeme());
-    }
-
-    if (parenthesized) {
-        TRY(consume(TokenKind::ParenClose))
+        expr = ident;
+    } else {
+        return handleIncompleteTypeExpr<AstTypeExpr>(context);
     }
 
     // handle trailing ptr keywords
-    auto deref = 0;
-    while (accept(TokenKind::Ptr)) {
-        deref++;
-    }
+    context.deref += parseDereferences();
 
-    // some constructs must be pointers
-    if (mustBePtr && deref == 0) {
-        return ResultError {};
-    }
-
+    // done
     return m_context.create<AstTypeExpr>(
         llvm::SMRange { start, m_endLoc },
         expr,
-        deref
+        context.deref
     );
+}
+
+/**
+ * Parse identifier inside type expression
+ *
+ * @param context provide context for parsing behaviour
+ * @return an identifier or an error state
+ */
+[[nodiscard]] auto Parser::parseTypeIdentifier(TypeParsingContext& context) -> Result<AstIdentExpr*> {
+    auto* ident = identifier(m_token);
+    advance();
+
+    // If we have a symbol table, we can query for the ID.
+    if (m_symbolTable != nullptr) {
+        auto* symbol = m_symbolTable->find(ident->name);
+        if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
+            return ResultError {}; // NOTE: Semantic analyser handles the error logging.
+        }
+        ident->symbol = symbol;
+    }
+
+    // If next token is something that can either further define type or
+    // terminate type expression, then consider it valid
+    switch (m_token.getKind()) {
+    case TokenKind::Ptr:
+        context.deref += 1;
+        advance();
+        break;
+    case TokenKind::ParenClose:
+    case TokenKind::Comma:
+    case TokenKind::EndOfStmt:
+    case TokenKind::EndOfFile:
+    case TokenKind::BracketClose:
+    case TokenKind::LambdaBody:
+    case TokenKind::Assign:
+        // If we are dealing with a single identifier token, and we have an out ptr,
+        // set that and return null
+        if (context.allowIncompleteType) {
+            context.identifier = ident;
+            return nullptr;
+        }
+        break;
+    default:
+        return handleIncompleteTypeExpr<AstIdentExpr>(context);
+    }
+    return ident;
+}
+
+/**
+ * Parse SUB or FUNCTION inside type expression
+ *
+ * @param enclosed indicate if the type is enclosed in parentheses
+ * @return error state or a func declaration
+ */
+[[nodiscard]] auto Parser::parseTypeProcedure(const bool enclosed, TypeParsingContext& context) -> Result<AstFuncDecl*> {
+    const auto start = m_token.getRange().Start;
+
+    if (enclosed) {
+        // assume there is '('
+        advance();
+    }
+
+    TRY_DECL(func, funcSignature(start, nullptr, FuncFlags::isAnonymous))
+
+    if (enclosed) {
+        // ')'
+        TRY(consume(TokenKind::ParenClose));
+    }
+
+    // Expect a PTR keyword
+    if (m_token.getKind() != TokenKind::Ptr) {
+        return makeError(
+            Diag::procTypesMustHaveAPtr,
+            m_token.getRange().Start,
+            { start, m_endLoc },
+            func->isFunction() ? "FUNCTION" : "SUB"
+        );
+    }
+
+    context.deref += 1;
+    advance();
+
+    return func;
+}
+
+/**
+ * Parse consecutive pointer dereferences in type expressions.
+ *
+ * dim x as integer ptr ptr ptr ptr = null
+ *
+ * @return the number of dereferences.
+ */
+auto Parser::parseDereferences() -> int {
+    int deref = 0;
+    while (accept(TokenKind::Ptr)) {
+        deref++;
+    }
+    return deref;
+}
+
+/**
+ * Return nullptr or an error depending on the value of allowIncompleteTypeExpr.
+ */
+template <typename T>
+[[nodiscard]] auto Parser::handleIncompleteTypeExpr(const TypeParsingContext& context) const -> Result<T*> {
+    if (context.allowIncompleteType) {
+        return nullptr;
+    }
+    return makeError(Diag::expectedTypeExpression, m_token, m_token.lexeme());
 }
 
 /**
@@ -1293,43 +1366,26 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
  *        .
  */
 auto Parser::kwTypeOf() -> Result<AstTypeOf*> {
-    // assume m_token == "TYPEOF"
+    // assume m_token == "TYPEOF" | "SIZEOF" | "ALIGNOF"
     const auto start = m_token.getRange().Start;
     advance();
 
+    // "("
     TRY(consume(TokenKind::ParenOpen))
-    int parens = 1;
+
     AstTypeOf::TypeExpr expr = m_token.getRange().Start;
 
-    TRY_DECL(basic, basicTypeExpr(true, &parens))
+    TypeParsingContext context { .allowIncompleteType = true };
+    TRY_DECL(basic, basicTypeExpr(context))
+
     if (basic != nullptr) {
         expr = basic;
         TRY(consume(TokenKind::ParenClose))
-        if (auto* identifier = std::get_if<AstIdentExpr*>(&basic->expr)) {
-            if (basic->dereference == 0) {
-                expr = *identifier;
-            }
-        }
+    } else if (context.identifier != nullptr) {
+        expr = context.identifier;
+        TRY(consume(TokenKind::ParenClose))
     } else {
-        // Could not determine the type expression. We likely have an expression
-        // which requires reparsing later during semantic analysis.
-        while (true) {
-            if (m_token.is(TokenKind::ParenClose)) {
-                parens--;
-                if (parens == 0) {
-                    advance();
-                    break;
-                }
-                if (parens < 0) {
-                    return makeError(Diag::unexpectedToken, m_token, "type expression", m_token.description());
-                }
-            } else if (m_token.is(TokenKind::ParenOpen)) {
-                parens++;
-            } else if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile, TokenKind::Invalid)) {
-                return makeError(Diag::unexpectedToken, m_token, "type expression", m_token.description());
-            }
-            advance();
-        }
+        TRY(skipUntilMatchingClosingParen(1, "type expression"))
     }
 
     return m_context.create<AstTypeOf>(llvm::SMRange { start, m_endLoc }, expr);
@@ -1749,5 +1805,39 @@ void Parser::adjustTokenKind() {
         break;
     default:
         break;
+    }
+}
+
+/**
+ * Lex until we match the closing paren
+ *
+ * @param parens number of closing parens to match
+ * @param message message to show if there is an error
+ * @return result error or void
+ */
+[[nodiscard]] auto Parser::skipUntilMatchingClosingParen(int parens, llvm::StringRef message) -> Result<void> {
+    while (true) {
+        switch (m_token.getKind()) {
+        case TokenKind::ParenOpen:
+            parens++;
+            break;
+        case TokenKind::ParenClose:
+            parens--;
+            if (parens == 0) {
+                advance();
+                return {};
+            }
+            if (parens < 0) {
+                return makeError(Diag::unexpectedToken, m_token, message, m_token.description());
+            }
+            break;
+        case TokenKind::EndOfStmt:
+        case TokenKind::EndOfFile:
+        case TokenKind::Invalid:
+            return makeError(Diag::unexpectedToken, m_token, message, m_token.description());
+        default:
+            break;
+        }
+        advance();
     }
 }

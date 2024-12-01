@@ -450,6 +450,14 @@ struct AstFuncDecl final : AstDecl {
         return ast->kind == AstKind::FuncDecl;
     }
 
+    constexpr auto isFunction() const -> bool {
+        return retTypeExpr != nullptr;
+    }
+
+    constexpr auto isSub() const -> bool {
+        return retTypeExpr == nullptr;
+    }
+
     AstFuncParamList* params;
     const bool variadic;
     AstTypeExpr* retTypeExpr;

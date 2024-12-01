@@ -21,8 +21,8 @@
     _( expectedExpression,                  "expected expression, got '{0}'"                          ) \
     _( unsupportedExternLanguage,           "Unsupported extern langauge '{0}'"                       ) \
     _( onlyDeclarationsInExtern,            "Only declarations permitted in EXTERN block"             ) \
-    _( expectedTypeExpression,              "expected type expression, got '{0}'"                     )
-
+    _( expectedTypeExpression,              "expected type expression, got '{0}'"                     ) \
+    _( procTypesMustHaveAPtr,               "{0} type missing a trailing PTR"                         )
 
 //----------------------------------------
 // Semantic errors

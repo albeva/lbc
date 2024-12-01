@@ -54,7 +54,20 @@ private:
         isDeclaration = 1U << 1U,
     };
 
-    [[nodiscard]] auto basicTypeExpr(bool allowIncompleteTypeExpr, int* parens = nullptr) -> Result<AstTypeExpr*>;
+    struct TypeParsingContext final {
+        bool allowIncompleteType = false;
+        AstIdentExpr* identifier = nullptr;
+        int deref = 0;
+    };
+
+    [[nodiscard]] auto basicTypeExpr(TypeParsingContext& context) -> Result<AstTypeExpr*>;
+    [[nodiscard]] auto parseTypeIdentifier(TypeParsingContext& context) -> Result<AstIdentExpr*>;
+    [[nodiscard]] auto parseTypeProcedure(bool enclosed, TypeParsingContext& context) -> Result<AstFuncDecl*>;
+    [[nodiscard]] auto parseDereferences() -> int;
+    template <typename T>
+    [[nodiscard]] auto handleIncompleteTypeExpr(const TypeParsingContext& context) const -> Result<T*>;
+    [[nodiscard]] auto kwTypeOf() -> Result<AstTypeOf*>;
+
     [[nodiscard]] auto stmtList() -> Result<AstStmtList*>;
     [[nodiscard]] auto statement() -> Result<AstStmt*>;
     [[nodiscard]] auto kwImport() -> Result<AstImport*>;
@@ -86,7 +99,6 @@ private:
     [[nodiscard]] auto attributeList() -> Result<AstAttributeList*>;
     [[nodiscard]] auto attribute() -> Result<AstAttribute*>;
     [[nodiscard]] auto attributeArgList() -> Result<AstExprList*>;
-    [[nodiscard]] auto kwTypeOf() -> Result<AstTypeOf*>;
     [[nodiscard]] auto kwDeclare(AstAttributeList* attribs) -> Result<AstFuncDecl*>;
     [[nodiscard]] auto funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags) -> Result<AstFuncDecl*>;
     [[nodiscard]] auto funcParamList(bool& isVariadic, bool isAnonymous) -> Result<AstFuncParamList*>;
@@ -116,6 +128,9 @@ private:
 
     // replace token kind with another (e.g. Minus to Negate)
     void adjustTokenKind();
+
+    // skip until matching closing parenthesis
+    [[nodiscard]] auto skipUntilMatchingClosingParen(int parens, llvm::StringRef message) -> Result<void>;
 
     Token m_token;
     Context& m_context;
