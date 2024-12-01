@@ -9,18 +9,18 @@
 namespace lbc {
 class Context;
 
-namespace VM {
-    // clang-format off
-    using Value = std::variant<
-        #define TYPE(ID, STR, KIND, CPP, ...) CPP,
-        ALL_TYPES(TYPE)
-        #undef TYPE
-        TokenValue::NullType
-    >;
-    // clang-format on
-} // namespace VM
+// namespace VM {
+//     // clang-format off
+//     using Value = std::variant<
+//         #define TYPE(ID, STR, KIND, CPP, ...) CPP,
+//         ALL_TYPES(TYPE)
+//         #undef TYPE
+//         TokenValue::NullType
+//     >;
+//     // clang-format on
+// } // namespace VM
 
-class ConstantFolder final : AstExprVisitor<ConstantFolder, Result<VM::Value>> {
+class ConstantFolder final : AstExprVisitor<ConstantFolder, Result<TokenValue>> {
     friend AstExprVisitor;
 
 public:
@@ -31,10 +31,10 @@ public:
 private:
     AST_EXPR_VISITOR_DECLARE_CONTENT_FUNCS()
 
-    static auto expression(const AstExpr& ast) -> Result<VM::Value>;
-    [[nodiscard]] auto stringBinaryExpr(TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> VM::Value;
-    static auto booleanBinaryExpr(TokenKind op, bool lhs, bool rhs) -> VM::Value;
-    static auto booleanUnaryOperation(TokenKind op, bool operand) -> VM::Value;
+    static auto expression(const AstExpr& ast) -> Result<TokenValue>;
+    [[nodiscard]] auto stringBinaryExpr(TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> TokenValue;
+    static auto booleanBinaryExpr(TokenKind op, bool lhs, bool rhs) -> TokenValue;
+    static auto booleanUnaryOperation(TokenKind op, bool operand) -> TokenValue;
     Context& m_context;
 };
 

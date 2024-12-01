@@ -25,6 +25,59 @@ struct TokenValue final : detail::TokenValueBase {
     using StringType = llvm::StringRef;
 
     /**
+     * \brief Retrieve the value of the token as the specified type.
+     *
+     * \tparam T The type to which the token value should be converted.
+     * \return The token value converted to the specified type.
+     */
+    template <typename T>
+    [[nodiscard]] constexpr auto get() const -> T {
+        if constexpr (std::is_same_v<T, bool>) {
+            return getBoolean();
+        }
+        if constexpr (std::is_integral_v<T>) {
+            return static_cast<T>(getIntegral());
+        }
+        if constexpr (std::is_floating_point_v<T>) {
+            return static_cast<T>(getFloatingPoint());
+        }
+        if constexpr (std::is_same_v<T, StringType>) {
+            return getString();
+        }
+        if constexpr (std::is_same_v<T, NullType>) {
+            return NullType{};
+        }
+        llvm_unreachable("Trying to get invalid tyoe");
+    }
+
+    /**
+     * \brief Retrieve the value of the token as the specified type.
+     *
+     * \tparam T The type to which the token value should be converted.
+     * \return The token value converted to the specified type.
+     */
+    template <typename T>
+    constexpr void set(const T& value) {
+        if constexpr (std::is_same_v<T, bool>) {
+            return setBoolean(value);
+        }
+        if constexpr (std::is_integral_v<T>) {
+            return setIntegral(value);
+        }
+        if constexpr (std::is_floating_point_v<T>) {
+            return setFloatingPoint(value);
+        }
+        if constexpr (std::is_same_v<T, StringType>) {
+            return setString(value);
+        }
+        if constexpr (std::is_same_v<T, NullType>) {
+            *this = NullType{};
+            return;
+        }
+        llvm_unreachable("Trying to get invalid tyoe");
+    }
+
+    /**
      * Check if the token value is an integral type.
      */
     [[nodiscard]] constexpr auto isIntegral() const -> bool {

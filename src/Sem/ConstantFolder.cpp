@@ -17,13 +17,17 @@ namespace {
 //------------------------------------------------------------------
 
 template <typename T, typename OP>
-auto performBinaryOperation(const TokenKind kind, const VM::Value& lhs, const VM::Value& rhs, OP operation) -> Result<VM::Value> {
-    return { operation(kind, std::get<T>(lhs), std::get<T>(rhs)) };
+auto performBinaryOperation(const TokenKind kind, const TokenValue& lhs, const TokenValue& rhs, OP operation) -> Result<TokenValue> {
+    TokenValue res;
+    res.set<T>(operation(kind, lhs.get<T>(), rhs.get<T>()));
+    return res;
 }
 
 template <typename T, typename OP>
-auto performUnaryOperation(const TokenKind kind, const VM::Value& operand, OP operation) -> Result<VM::Value> {
-    return { operation(kind, std::get<T>(operand)) };
+auto performUnaryOperation(const TokenKind kind, const TokenValue& operand, OP operation) -> Result<TokenValue> {
+    TokenValue res;
+    res.set<T>(operation(kind, operand.get<T>()));
+    return res;
 }
 
 //------------------------------------------------------------------
@@ -90,7 +94,7 @@ auto unaryArithmetic(const TokenKind op, const T operand) -> T {
 // Integral operations
 //------------------------------------------------------------------!
 
-auto performIntegralBinaryOperation(const TypeRoot* type, const TokenKind kind, const VM::Value& lhs, const VM::Value& rhs) -> Result<VM::Value> {
+auto performIntegralBinaryOperation(const TypeRoot* type, const TokenKind kind, const TokenValue& lhs, const TokenValue& rhs) -> Result<TokenValue> {
     // clang-format off
     switch (type->getKind()) {
     #define INTEGRAL(ID, STR, KIND, CPP, ...)                                              \
@@ -111,7 +115,7 @@ auto performIntegralBinaryOperation(const TypeRoot* type, const TokenKind kind, 
     // clang-format on
 }
 
-auto performIntegralUnaryOperation(const TypeRoot* type, const TokenKind kind, const VM::Value& operand) -> Result<VM::Value> {
+auto performIntegralUnaryOperation(const TypeRoot* type, const TokenKind kind, const TokenValue& operand) -> Result<TokenValue> {
     // clang-format off
     switch (type->getKind()) {
         #define INTEGRAL(ID, STR, KIND, CPP, ...) \
@@ -129,7 +133,7 @@ auto performIntegralUnaryOperation(const TypeRoot* type, const TokenKind kind, c
 // Floating-point operations
 //------------------------------------------------------------------
 
-auto performFloatingPointBinaryOperation(const TypeRoot* type, const TokenKind kind, const VM::Value& lhs, const VM::Value& rhs) -> Result<VM::Value> {
+auto performFloatingPointBinaryOperation(const TypeRoot* type, const TokenKind kind, const TokenValue& lhs, const TokenValue& rhs) -> Result<TokenValue> {
     // clang-format off
     switch (type->getKind()) {
     #define FLOATINGPOINT(ID, STR, KIND, CPP, ...)                                         \
@@ -150,7 +154,7 @@ auto performFloatingPointBinaryOperation(const TypeRoot* type, const TokenKind k
     // clang-format on
 }
 
-auto performFloatingPointUnaryOperation(const TypeRoot* type, const TokenKind kind, const VM::Value& operand) -> Result<VM::Value> {
+auto performFloatingPointUnaryOperation(const TypeRoot* type, const TokenKind kind, const TokenValue& operand) -> Result<TokenValue> {
     // clang-format off
     switch (type->getKind()) {
         #define FLOATINGPOINT(ID, STR, KIND, CPP, ...) \
@@ -169,17 +173,19 @@ auto performFloatingPointUnaryOperation(const TypeRoot* type, const TokenKind ki
 //------------------------------------------------------------------
 
 template <typename From, typename To>
-auto cast(const VM::Value& value) -> Result<VM::Value> {
+auto cast(const TokenValue& value) -> Result<TokenValue> {
     if constexpr (std::is_same_v<From, llvm::StringRef> || std::is_same_v<To, llvm::StringRef>) {
         return ResultError {};
     } else {
-        const auto from = std::get<From>(value);
-        return { static_cast<To>(from) };
+        const auto from = value.get<From>();
+        TokenValue res;
+        res.set<To>(static_cast<To>(from));
+        return res;
     }
 }
 
 template <typename From>
-auto cast(const TypeRoot* to, const VM::Value& value) -> Result<VM::Value> {
+auto cast(const TypeRoot* to, const TokenValue& value) -> Result<TokenValue> {
     switch (to->getKind()) {
         // clang-format off
         #define TYPE(ID, STR, KIND, CPP, ...) \
@@ -193,7 +199,7 @@ auto cast(const TypeRoot* to, const VM::Value& value) -> Result<VM::Value> {
     }
 }
 
-auto cast(const TypeRoot* from, const TypeRoot* to, const VM::Value& value) -> Result<VM::Value> {
+auto cast(const TypeRoot* from, const TypeRoot* to, const TokenValue& value) -> Result<TokenValue> {
     if (from == to) {
         return value;
     }
@@ -211,68 +217,6 @@ auto cast(const TypeRoot* from, const TypeRoot* to, const VM::Value& value) -> R
     }
 }
 
-//------------------------------------------------------------------
-// Conversion between Token::Value and VM::Value
-//------------------------------------------------------------------
-
-auto convert(const TypeRoot* type, const TokenValue& value) -> Result<VM::Value> {
-    // clang-format off
-    switch (type->getKind()) {
-        #define BASIC(ID, STR, KIND, CPP, ...)  \
-        case TypeKind::ID:                      \
-            return { std::get<CPP>(value) };
-        PRIMITIVE_TYPES(BASIC)
-        #undef BASIC
-
-        #define INTEGRAL(ID, STR, KIND, CPP, ...) \
-            case TypeKind::ID:                    \
-                return { static_cast<CPP>(value.getIntegral()) };
-        INTEGRAL_TYPES(INTEGRAL)
-        #undef INTEGRAL
-
-        #define FLOATINGP(ID, STR, KIND, CPP, ...) \
-            case TypeKind::ID:                     \
-                return { static_cast<CPP>(value.getFloatingPoint()) };
-        FLOATINGPOINT_TYPES(FLOATINGP)
-        #undef FLOATINGP
-    default:
-        if (type->isPointer() && value.isNull()) {
-            return { TokenValue::NullType{} };
-        }
-        return ResultError{};
-    }
-    // clang-format on
-}
-
-auto convert(const TypeRoot* type, const VM::Value& value) -> Result<TokenValue> {
-    // clang-format off
-    switch (type->getKind()) {
-        #define BASIC(ID, STR, KIND, CPP, ...)  \
-            case TypeKind::ID:                  \
-                return { std::get<CPP>(value) };
-        PRIMITIVE_TYPES(BASIC)
-        #undef BASIC
-
-        #define INTEGRAL(ID, STR, KIND, CPP, ...) \
-            case TypeKind::ID:                    \
-                return { static_cast<TokenValue::IntegralType>(std::get<CPP>(value)) };
-        INTEGRAL_TYPES(INTEGRAL)
-        #undef INTEGRAL
-
-        #define FLOATINGP(ID, STR, KIND, CPP, ...) \
-            case TypeKind::ID:                     \
-                return { static_cast<TokenValue::FloatingPointType>(std::get<CPP>(value)) };
-        FLOATINGPOINT_TYPES(FLOATINGP)
-        #undef FLOATINGP
-    default:
-        if (type->isPointer() && std::holds_alternative<TokenValue::NullType>(value)) {
-            return { TokenValue::NullType{} };
-        }
-        return ResultError{};
-    }
-    // clang-format on
-}
-
 } // namespace
 
 auto ConstantFolder::fold(AstExpr& ast) -> Result<void> {
@@ -280,38 +224,37 @@ auto ConstantFolder::fold(AstExpr& ast) -> Result<void> {
         return {};
     }
 
-    TRY_DECL(res, visit(ast))
-    TRY_ASSIGN(ast.constantValue, convert(ast.type, res));
+    TRY_ASSIGN(ast.constantValue, visit(ast))
     return {};
 }
 
-auto ConstantFolder::expression(const AstExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::expression(const AstExpr& ast) -> Result<TokenValue> {
     if (ast.constantValue) {
-        return convert(ast.type, ast.constantValue.value());
+        return ast.constantValue.value();
     }
     return ResultError {}; // visit(ast);
 }
 
-auto ConstantFolder::visit(AstAssignExpr& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstAssignExpr& /*ast*/) -> Result<TokenValue> {
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstIdentExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstIdentExpr& ast) -> Result<TokenValue> {
     if (const auto& value = ast.symbol->getConstantValue()) {
-        return convert(ast.type, value.value());
+        return value.value();
     }
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstCallExpr& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstCallExpr& /*ast*/) -> Result<TokenValue> {
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstLiteralExpr& ast) -> Result<VM::Value> {
-    return convert(ast.type, ast.getValue());
+auto ConstantFolder::visit(AstLiteralExpr& ast) -> Result<TokenValue> {
+    return ast.constantValue.value();
 }
 
-auto ConstantFolder::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstUnaryExpr& ast) -> Result<TokenValue> {
     TRY_DECL(res, expression(*ast.expr))
     const auto* type = ast.expr->type;
 
@@ -321,13 +264,13 @@ auto ConstantFolder::visit(AstUnaryExpr& ast) -> Result<VM::Value> {
     case TypeFamily::FloatingPoint:
         return performFloatingPointUnaryOperation(type, ast.token.getKind(), res);
     case TypeFamily::Boolean:
-        return booleanUnaryOperation(ast.token.getKind(), std::get<bool>(res));
+        return booleanUnaryOperation(ast.token.getKind(), res.get<bool>());
     default:
         return ResultError {};
     }
 }
 
-auto ConstantFolder::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstBinaryExpr& ast) -> Result<TokenValue> {
     TRY_DECL(lhs, expression(*ast.lhs))
     TRY_DECL(rhs, expression(*ast.rhs))
     const auto* type = ast.lhs->type;
@@ -339,59 +282,59 @@ auto ConstantFolder::visit(AstBinaryExpr& ast) -> Result<VM::Value> {
     case TypeFamily::FloatingPoint:
         return performFloatingPointBinaryOperation(type, ast.token.getKind(), lhs, rhs);
     case TypeFamily::Boolean:
-        return booleanBinaryExpr(ast.token.getKind(), std::get<bool>(lhs), std::get<bool>(rhs));
+        return booleanBinaryExpr(ast.token.getKind(), lhs.getBoolean(), rhs.getBoolean());
     case TypeFamily::ZString:
-        return stringBinaryExpr(ast.token.getKind(), std::get<TokenValue::StringType>(lhs), std::get<TokenValue::StringType>(rhs));
+        return stringBinaryExpr(ast.token.getKind(), lhs.getString(), rhs.getString());
     default:
         return ResultError {};
     }
 }
 
-auto ConstantFolder::visit(AstCastExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstCastExpr& ast) -> Result<TokenValue> {
     TRY_DECL(res, expression(*ast.expr))
     return cast(ast.expr->type, ast.type, res);
 }
 
-auto ConstantFolder::visit(AstIsExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstIsExpr& ast) -> Result<TokenValue> {
     if (const auto constant = ast.constantValue) {
-        return { constant.value().getBoolean() };
+        return { constant.value() };
     }
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstIfExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstIfExpr& ast) -> Result<TokenValue> {
     TRY_DECL(res, expression(*ast.expr))
 
-    if (std::get<bool>(res)) {
+    if (res.getBoolean()) {
         return expression(*ast.trueExpr);
     }
 
     return expression(*ast.falseExpr);
 }
 
-auto ConstantFolder::visit(AstDereference& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstDereference& /*ast*/) -> Result<TokenValue> {
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstAddressOf& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstAddressOf& /*ast*/) -> Result<TokenValue> {
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstAlignOfExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstAlignOfExpr& ast) -> Result<TokenValue> {
     if (const auto constant = ast.constantValue) {
-        return { constant.value().getIntegral() };
+        return { constant.value() };
     }
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstSizeOfExpr& ast) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstSizeOfExpr& ast) -> Result<TokenValue> {
     if (const auto constant = ast.constantValue) {
-        return { constant.value().getIntegral() };
+        return { constant.value() };
     }
     return ResultError {};
 }
 
-auto ConstantFolder::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
+auto ConstantFolder::visit(AstMemberExpr& /*ast*/) -> Result<TokenValue> {
     return ResultError {};
 }
 
@@ -399,7 +342,7 @@ auto ConstantFolder::visit(AstMemberExpr& /*ast*/) -> Result<VM::Value> {
 // operations
 //------------------------------------------------------------------
 
-auto ConstantFolder::stringBinaryExpr(const TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> VM::Value {
+auto ConstantFolder::stringBinaryExpr(const TokenKind op, const TokenValue::StringType& lhs, const TokenValue::StringType& rhs) const -> TokenValue {
     switch (op) {
     case TokenKind::Plus:
         return m_context.retainCopy(lhs.str() + rhs.str());
@@ -412,7 +355,7 @@ auto ConstantFolder::stringBinaryExpr(const TokenKind op, const TokenValue::Stri
     }
 }
 
-auto ConstantFolder::booleanBinaryExpr(const TokenKind op, const bool lhs, const bool rhs) -> VM::Value {
+auto ConstantFolder::booleanBinaryExpr(const TokenKind op, const bool lhs, const bool rhs) -> TokenValue {
     switch (op) {
     case TokenKind::Equal:
         return lhs == rhs;
@@ -427,7 +370,7 @@ auto ConstantFolder::booleanBinaryExpr(const TokenKind op, const bool lhs, const
     }
 }
 
-auto ConstantFolder::booleanUnaryOperation(const TokenKind op, const bool operand) -> VM::Value {
+auto ConstantFolder::booleanUnaryOperation(const TokenKind op, const bool operand) -> TokenValue {
     switch (op) {
     case TokenKind::LogicalNot:
         return !operand;
