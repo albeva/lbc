@@ -4,6 +4,7 @@
 #include "ConstantFolder.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
+#include <type_traits>
 using namespace lbc;
 
 #ifdef __GNUC__
@@ -19,14 +20,14 @@ namespace {
 template <typename T, typename OP>
 auto performBinaryOperation(const TokenKind kind, const TokenValue& lhs, const TokenValue& rhs, OP operation) -> Result<TokenValue> {
     TokenValue res;
-    res.set<T>(operation(kind, lhs.get<T>(), rhs.get<T>()));
+    res.set(operation(kind, lhs.get<T>(), rhs.get<T>()));
     return res;
 }
 
 template <typename T, typename OP>
 auto performUnaryOperation(const TokenKind kind, const TokenValue& operand, OP operation) -> Result<TokenValue> {
     TokenValue res;
-    res.set<T>(operation(kind, operand.get<T>()));
+    res.set(operation(kind, operand.get<T>()));
     return res;
 }
 

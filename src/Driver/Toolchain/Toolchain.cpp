@@ -10,18 +10,18 @@ using namespace lbc;
 namespace {
 auto getToolPath(const fs::path& base, const ToolKind tool) -> fs::path {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-    const std::string ext = "exe";
+    const std::string ext = ".exe";
 #else
     const std::string ext {};
 #endif
 
     switch (tool) {
     case ToolKind::Optimizer:
-        return base / ("bin/opt" + ext);
+        return base / "bin" / ("opt" + ext);
     case ToolKind::Assembler:
-        return base / ("bin/llc" + ext);
+        return base / "bin" / ("llc" + ext);
     case ToolKind::Linker:
-        return base / ("bin/ld" + ext);
+        return base / "bin" / ("ld" + ext);
     default:
         llvm_unreachable("Invalid ToolKind ID");
     }

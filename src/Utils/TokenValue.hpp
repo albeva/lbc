@@ -34,20 +34,17 @@ struct TokenValue final : detail::TokenValueBase {
     [[nodiscard]] constexpr auto get() const -> T {
         if constexpr (std::is_same_v<T, bool>) {
             return getBoolean();
-        }
-        if constexpr (std::is_integral_v<T>) {
+        } else if constexpr (std::is_integral_v<T>) {
             return static_cast<T>(getIntegral());
-        }
-        if constexpr (std::is_floating_point_v<T>) {
+        } else if constexpr (std::is_floating_point_v<T>) {
             return static_cast<T>(getFloatingPoint());
-        }
-        if constexpr (std::is_same_v<T, StringType>) {
+        } else if constexpr (std::is_same_v<T, StringType>) {
             return getString();
-        }
-        if constexpr (std::is_same_v<T, NullType>) {
+        } else if constexpr (std::is_same_v<T, NullType>) {
             return NullType{};
+        } else {
+            llvm_unreachable("Unsupported type");
         }
-        llvm_unreachable("Trying to get invalid tyoe");
     }
 
     /**
@@ -60,21 +57,18 @@ struct TokenValue final : detail::TokenValueBase {
     constexpr void set(const T& value) {
         if constexpr (std::is_same_v<T, bool>) {
             return setBoolean(value);
-        }
-        if constexpr (std::is_integral_v<T>) {
+        } else if constexpr (std::is_integral_v<T>) {
             return setIntegral(value);
-        }
-        if constexpr (std::is_floating_point_v<T>) {
+        } else if constexpr (std::is_floating_point_v<T>) {
             return setFloatingPoint(value);
-        }
-        if constexpr (std::is_same_v<T, StringType>) {
+        } else if constexpr (std::is_same_v<T, StringType>) {
             return setString(value);
-        }
-        if constexpr (std::is_same_v<T, NullType>) {
+        } else if constexpr (std::is_same_v<T, NullType>) {
             *this = NullType{};
             return;
+        } else {
+            llvm_unreachable("Unsupported type");
         }
-        llvm_unreachable("Trying to get invalid tyoe");
     }
 
     /**
