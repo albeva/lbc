@@ -233,7 +233,7 @@ auto ConstantFolder::expression(const AstExpr& ast) -> Result<TokenValue> {
     if (ast.constantValue) {
         return ast.constantValue.value();
     }
-    return ResultError {}; // visit(ast);
+    return ResultError {};
 }
 
 auto ConstantFolder::visit(AstAssignExpr& /*ast*/) -> Result<TokenValue> {
@@ -252,7 +252,7 @@ auto ConstantFolder::visit(AstCallExpr& /*ast*/) -> Result<TokenValue> {
 }
 
 auto ConstantFolder::visit(AstLiteralExpr& ast) -> Result<TokenValue> {
-    return ast.constantValue.value();
+    return ast.getValue();
 }
 
 auto ConstantFolder::visit(AstUnaryExpr& ast) -> Result<TokenValue> {
