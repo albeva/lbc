@@ -20,7 +20,9 @@
     _( unexpectedReturn,                    "return not allowed outside main module, SUB or FUNCTION" ) \
     _( expectedExpression,                  "expected expression, got '{0}'"                          ) \
     _( unsupportedExternLanguage,           "Unsupported extern langauge '{0}'"                       ) \
-    _( onlyDeclarationsInExtern,            "Only declarations permitted in EXTERN block")
+    _( onlyDeclarationsInExtern,            "Only declarations permitted in EXTERN block"             ) \
+    _( expectedTypeExpression,              "expected type expression, got '{0}'"                     )
+
 
 //----------------------------------------
 // Semantic errors

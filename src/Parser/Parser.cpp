@@ -1197,64 +1197,22 @@ auto Parser::continuation(AstContinuationAction action) -> Result<AstContinuatio
  *          .
  */
 auto Parser::typeExpr() -> Result<AstTypeExpr*> {
-    if (accept(TokenKind::ParenOpen)) {
-        TRY_DECL(expr, typeExpr())
-        TRY(consume(TokenKind::ParenClose))
-        return expr;
-    }
-    return basicTypeExpr();
-
-//    const auto start = m_token.getRange().Start;
-//    bool const parenthesized = accept(TokenKind::ParenOpen);
-//    bool mustBePtr = false;
-//
-//    AstTypeExpr::TypeExpr expr;
-//    if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-//        TRY_ASSIGN(expr, funcSignature(start, nullptr, FuncFlags::isAnonymous))
-//        mustBePtr = true;
-//    } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
-//        expr = m_token.getKind();
-//        advance();
-//    } else if (m_token.is(TokenKind::TypeOf)) {
-//        TRY_ASSIGN(expr, kwTypeOf())
-//    } else {
-//        TRY_DECL(ident, identifier())
-//
-//        if (m_symbolTable != nullptr) {
-//            if (auto* symbol = m_symbolTable->find(ident->name); symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
-//                return ResultError {};
-//            }
-//        }
-//        expr = ident;
-//    }
-//
-//    if (parenthesized) {
-//        TRY(consume(TokenKind::ParenClose))
-//    }
-//
-//    auto deref = 0;
-//    while (accept(TokenKind::Ptr)) {
-//        deref++;
-//    }
-//
-//    if (mustBePtr && deref == 0) {
-//        return ResultError {};
-//    }
-//
-//    return m_context.create<AstTypeExpr>(
-//        llvm::SMRange { start, m_endLoc },
-//        expr,
-//        deref
-//    );
+    return basicTypeExpr(false);
 }
 
 /**
- * Parses partial type
+ * Parse type expression.
  *
- * @return
+ * @param allowIncompleteTypeExpr if true, the function will return nullptr rather than an error if the type expression is incomplete.
+ * @param parens keep track of the number of parentheses.
+ * @return the type expression or nullptr if the type expression is incomplete.
  */
-[[nodiscard]] auto Parser::basicTypeExpr() -> Result<AstTypeExpr*> {
+[[nodiscard]] auto Parser::basicTypeExpr(const bool allowIncompleteTypeExpr, int* parens) -> Result<AstTypeExpr*> {
     const auto start = m_token.getRange().Start;
+    bool const parenthesized = accept(TokenKind::ParenOpen);
+    if (parenthesized && parens != nullptr) {
+        *parens += 1;
+    }
     bool mustBePtr = false;
 
     AstTypeExpr::TypeExpr expr;
@@ -1289,16 +1247,27 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
             case TokenKind::EndOfFile:
             case TokenKind::BracketClose:
             case TokenKind::LambdaBody:
+            case TokenKind::Assign:
                 return true;
             default:
                 return false;
             }
         };
         if (!isTerminal(m_token.getKind())) {
-            return nullptr;
+            if (allowIncompleteTypeExpr) {
+                return nullptr;
+            }
+            return makeError(Diag::expectedTypeExpression, m_token, m_token.lexeme());
         }
     } else {
-        return nullptr;
+        if (allowIncompleteTypeExpr) {
+            return nullptr;
+        }
+        return makeError(Diag::expectedTypeExpression, m_token, m_token.lexeme());
+    }
+
+    if (parenthesized) {
+        TRY(consume(TokenKind::ParenClose))
     }
 
     // handle trailing ptr keywords
@@ -1329,9 +1298,10 @@ auto Parser::kwTypeOf() -> Result<AstTypeOf*> {
     advance();
 
     TRY(consume(TokenKind::ParenOpen))
+    int parens = 1;
     AstTypeOf::TypeExpr expr = m_token.getRange().Start;
 
-    TRY_DECL(basic, basicTypeExpr())
+    TRY_DECL(basic, basicTypeExpr(true, &parens))
     if (basic != nullptr) {
         expr = basic;
         TRY(consume(TokenKind::ParenClose))
@@ -1343,7 +1313,6 @@ auto Parser::kwTypeOf() -> Result<AstTypeOf*> {
     } else {
         // Could not determine the type expression. We likely have an expression
         // which requires reparsing later during semantic analysis.
-        int parens = 1;
         while (true) {
             if (m_token.is(TokenKind::ParenClose)) {
                 parens--;
@@ -1633,11 +1602,10 @@ auto Parser::identifier() -> Result<AstIdentExpr*> {
     );
 }
 
-[[nodiscard]] auto Parser::identifier(const Token& token) -> AstIdentExpr* {
-    auto name = token.getStringValue();
+[[nodiscard]] auto Parser::identifier(const Token& token) const -> AstIdentExpr* {
     return m_context.create<AstIdentExpr>(
         token.getRange(),
-        name
+        token.getStringValue()
     );
 }
 
