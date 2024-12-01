@@ -24,6 +24,13 @@ struct TokenValue final : detail::TokenValueBase {
     using NullType = std::monostate;
     using StringType = llvm::StringRef;
 
+    template <typename T>
+    constexpr static auto from(const T& value) -> TokenValue {
+        TokenValue res;
+        res.set(value);
+        return res;
+    }
+
     /**
      * \brief Retrieve the value of the token as the specified type.
      *
@@ -41,7 +48,7 @@ struct TokenValue final : detail::TokenValueBase {
         } else if constexpr (std::is_same_v<T, StringType>) {
             return getString();
         } else if constexpr (std::is_same_v<T, NullType>) {
-            return NullType{};
+            return NullType {};
         } else {
             llvm_unreachable("Unsupported type");
         }
@@ -64,7 +71,7 @@ struct TokenValue final : detail::TokenValueBase {
         } else if constexpr (std::is_same_v<T, StringType>) {
             return setString(value);
         } else if constexpr (std::is_same_v<T, NullType>) {
-            *this = NullType{};
+            *this = NullType {};
             return;
         } else {
             llvm_unreachable("Unsupported type");

@@ -19,16 +19,12 @@ namespace {
 
 template <typename T, typename OP>
 auto performBinaryOperation(const TokenKind kind, const TokenValue& lhs, const TokenValue& rhs, OP operation) -> Result<TokenValue> {
-    TokenValue res;
-    res.set(operation(kind, lhs.get<T>(), rhs.get<T>()));
-    return res;
+    return TokenValue::from(operation(kind, lhs.get<T>(), rhs.get<T>()));
 }
 
 template <typename T, typename OP>
 auto performUnaryOperation(const TokenKind kind, const TokenValue& operand, OP operation) -> Result<TokenValue> {
-    TokenValue res;
-    res.set(operation(kind, operand.get<T>()));
-    return res;
+    return TokenValue::from(operation(kind, operand.get<T>()));
 }
 
 //------------------------------------------------------------------
@@ -179,9 +175,7 @@ auto cast(const TokenValue& value) -> Result<TokenValue> {
         return ResultError {};
     } else {
         const auto from = value.get<From>();
-        TokenValue res;
-        res.set<To>(static_cast<To>(from));
-        return res;
+        return TokenValue::from(static_cast<To>(from));
     }
 }
 
