@@ -1,10 +1,10 @@
-VERSION="llvm-project-19.1.3"
+VERSION="llvm-project-19.1.4"
 SRC_DIR="$VERSION.src/llvm"
 BUILD_DIR="$VERSION.build"
 
 cmake -G "Ninja" -S "$SRC_DIR" -B "$BUILD_DIR"  \
   -DCMAKE_INSTALL_PREFIX=/usr/local             \
-  -DCMAKE_CXX_STANDARD=23                       \
+  -DCMAKE_CXX_STANDARD=20                       \
   -DCMAKE_BUILD_TYPE=Release                    \
   -DDEFAULT_SYSROOT="$(xcrun --show-sdk-path)"  \
   -DLLVM_ENABLE_ASSERTIONS=ON                   \

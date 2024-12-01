@@ -2,10 +2,13 @@
 // Created by Albert Varaksin on 28/11/2024.
 //
 #include "ConstantFolder.hpp"
-
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
 using namespace lbc;
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wuseless-cast"
+#endif
 
 namespace {
 

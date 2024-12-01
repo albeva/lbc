@@ -39,7 +39,7 @@ auto capturePrintF(const char* format, ...) -> int {
     //     hicpp-vararg
     // )
 
-    va_list args = nullptr;
+    va_list args;
     va_start(args, format);
 
     // figure out the length
@@ -52,6 +52,7 @@ auto capturePrintF(const char* format, ...) -> int {
 
     // printf to a buffer
     std::vector<char> buf(size);
+    va_start(args, format);
     std::vsnprintf(buf.data(), size, format, args);
     env->stdoutput << buf.data();
 
