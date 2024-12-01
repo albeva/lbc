@@ -7,10 +7,6 @@
 #include <type_traits>
 using namespace lbc;
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wuseless-cast"
-#endif
-
 namespace {
 
 //------------------------------------------------------------------
@@ -173,6 +169,8 @@ template <typename From, typename To>
 auto cast(const TokenValue& value) -> Result<TokenValue> {
     if constexpr (std::is_same_v<From, llvm::StringRef> || std::is_same_v<To, llvm::StringRef>) {
         return ResultError {};
+    } else if constexpr (std::is_same_v<From, To>) {
+        return value;
     } else {
         const auto from = value.get<From>();
         return TokenValue::from(static_cast<To>(from));
