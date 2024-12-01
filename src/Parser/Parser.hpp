@@ -54,6 +54,7 @@ private:
         isDeclaration = 1U << 1U,
     };
 
+    [[nodiscard]] auto basicTypeExpr() -> Result<AstTypeExpr*>;
     [[nodiscard]] auto stmtList() -> Result<AstStmtList*>;
     [[nodiscard]] auto statement() -> Result<AstStmt*>;
     [[nodiscard]] auto kwImport() -> Result<AstImport*>;
@@ -68,6 +69,7 @@ private:
     [[nodiscard]] auto binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr* rhs) const -> Result<AstExpr*>;
     [[nodiscard]] auto expression(AstExpr* lhs, int precedence) -> Result<AstExpr*>;
     [[nodiscard]] auto identifier() -> Result<AstIdentExpr*>;
+    [[nodiscard]] auto identifier(const Token& token) -> AstIdentExpr*;
     [[nodiscard]] auto literal() -> Result<AstLiteralExpr*>;
     [[nodiscard]] auto ifExpr() -> Result<AstIfExpr*>;
     [[nodiscard]] auto expressionList() -> Result<AstExprList*>;

@@ -15,9 +15,9 @@ class Context;
  * clang-format off
  */
 enum class Diag : std::uint8_t {
-    #define DIAG(ID, ...) ID,
+#define DIAG(ID, ...) ID,
     ALL_ERRORS(DIAG)
-    #undef DIAG
+#undef DIAG
 };
 // clang-format on
 

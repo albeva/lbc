@@ -20,6 +20,7 @@ class Context;
 
 class SemanticAnalyzer final : AstVisitor<SemanticAnalyzer, Result<void>>, public ErrorLogger {
     friend AstVisitor;
+
 public:
     struct StateFlags final {
         bool allowUseBeforDefiniation : 1;

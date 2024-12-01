@@ -1197,39 +1197,117 @@ auto Parser::continuation(AstContinuationAction action) -> Result<AstContinuatio
  *          .
  */
 auto Parser::typeExpr() -> Result<AstTypeExpr*> {
+    if (accept(TokenKind::ParenOpen)) {
+        TRY_DECL(expr, typeExpr())
+        TRY(consume(TokenKind::ParenClose))
+        return expr;
+    }
+    return basicTypeExpr();
+
+//    const auto start = m_token.getRange().Start;
+//    bool const parenthesized = accept(TokenKind::ParenOpen);
+//    bool mustBePtr = false;
+//
+//    AstTypeExpr::TypeExpr expr;
+//    if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
+//        TRY_ASSIGN(expr, funcSignature(start, nullptr, FuncFlags::isAnonymous))
+//        mustBePtr = true;
+//    } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
+//        expr = m_token.getKind();
+//        advance();
+//    } else if (m_token.is(TokenKind::TypeOf)) {
+//        TRY_ASSIGN(expr, kwTypeOf())
+//    } else {
+//        TRY_DECL(ident, identifier())
+//
+//        if (m_symbolTable != nullptr) {
+//            if (auto* symbol = m_symbolTable->find(ident->name); symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
+//                return ResultError {};
+//            }
+//        }
+//        expr = ident;
+//    }
+//
+//    if (parenthesized) {
+//        TRY(consume(TokenKind::ParenClose))
+//    }
+//
+//    auto deref = 0;
+//    while (accept(TokenKind::Ptr)) {
+//        deref++;
+//    }
+//
+//    if (mustBePtr && deref == 0) {
+//        return ResultError {};
+//    }
+//
+//    return m_context.create<AstTypeExpr>(
+//        llvm::SMRange { start, m_endLoc },
+//        expr,
+//        deref
+//    );
+}
+
+/**
+ * Parses partial type
+ *
+ * @return
+ */
+[[nodiscard]] auto Parser::basicTypeExpr() -> Result<AstTypeExpr*> {
     const auto start = m_token.getRange().Start;
-    bool const parenthesized = accept(TokenKind::ParenOpen);
     bool mustBePtr = false;
 
     AstTypeExpr::TypeExpr expr;
-    if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
-        TRY_ASSIGN(expr, funcSignature(start, nullptr, FuncFlags::isAnonymous))
-        mustBePtr = true;
-    } else if (m_token.is(TokenKind::Any) || m_token.isTypeKeyword()) {
+    if (m_token.isTypeKeyword() || m_token.is(TokenKind::Any)) {
         expr = m_token.getKind();
         advance();
+    } else if (m_token.isOneOf(TokenKind::Sub, TokenKind::Function)) {
+        TRY_ASSIGN(expr, funcSignature(start, nullptr, FuncFlags::isAnonymous))
+        mustBePtr = true;
     } else if (m_token.is(TokenKind::TypeOf)) {
         TRY_ASSIGN(expr, kwTypeOf())
-    } else {
-        TRY_DECL(ident, identifier())
+    } else if (m_token.is(TokenKind::Identifier)) {
+        auto* ident = identifier(m_token);
+        advance();
+        expr = ident;
 
+        // If we have a symbol table, we can query for the ID.
         if (m_symbolTable != nullptr) {
             if (auto* symbol = m_symbolTable->find(ident->name); symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
-                return ResultError {};
+                return ResultError {}; // TODO should log an error?
             }
         }
-        expr = ident;
+
+        // If next token is any of the terminals, then ID can be a valid type name.
+        // Semantic analyser will verify this at a later stage
+        constexpr auto isTerminal = [](const TokenKind kind) {
+            switch (kind) {
+            case TokenKind::Ptr:
+            case TokenKind::ParenClose:
+            case TokenKind::Comma:
+            case TokenKind::EndOfStmt:
+            case TokenKind::EndOfFile:
+            case TokenKind::BracketClose:
+            case TokenKind::LambdaBody:
+                return true;
+            default:
+                return false;
+            }
+        };
+        if (!isTerminal(m_token.getKind())) {
+            return nullptr;
+        }
+    } else {
+        return nullptr;
     }
 
-    if (parenthesized) {
-        TRY(consume(TokenKind::ParenClose))
-    }
-
+    // handle trailing ptr keywords
     auto deref = 0;
     while (accept(TokenKind::Ptr)) {
         deref++;
     }
 
+    // some constructs must be pointers
     if (mustBePtr && deref == 0) {
         return ResultError {};
     }
@@ -1251,27 +1329,41 @@ auto Parser::kwTypeOf() -> Result<AstTypeOf*> {
     advance();
 
     TRY(consume(TokenKind::ParenOpen))
-    llvm::SMLoc exprLoc = m_token.getRange().Start;
-    int parens = 1;
-    while (true) {
-        if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile, TokenKind::Invalid)) {
-            return makeError(Diag::unexpectedToken, m_token, "type expression", m_token.description());
-        }
-        if (m_token.is(TokenKind::ParenClose)) {
-            parens--;
-            if (parens == 0) {
-                advance();
-                break;
+    AstTypeOf::TypeExpr expr = m_token.getRange().Start;
+
+    TRY_DECL(basic, basicTypeExpr())
+    if (basic != nullptr) {
+        expr = basic;
+        TRY(consume(TokenKind::ParenClose))
+        if (auto* identifier = std::get_if<AstIdentExpr*>(&basic->expr)) {
+            if (basic->dereference == 0) {
+                expr = *identifier;
             }
-            if (parens < 0) {
+        }
+    } else {
+        // Could not determine the type expression. We likely have an expression
+        // which requires reparsing later during semantic analysis.
+        int parens = 1;
+        while (true) {
+            if (m_token.is(TokenKind::ParenClose)) {
+                parens--;
+                if (parens == 0) {
+                    advance();
+                    break;
+                }
+                if (parens < 0) {
+                    return makeError(Diag::unexpectedToken, m_token, "type expression", m_token.description());
+                }
+            } else if (m_token.is(TokenKind::ParenOpen)) {
+                parens++;
+            } else if (m_token.isOneOf(TokenKind::EndOfStmt, TokenKind::EndOfFile, TokenKind::Invalid)) {
                 return makeError(Diag::unexpectedToken, m_token, "type expression", m_token.description());
             }
-        } else if (m_token.is(TokenKind::ParenOpen)) {
-            parens++;
+            advance();
         }
-        advance();
     }
-    return m_context.create<AstTypeOf>(llvm::SMRange { start, m_endLoc }, exprLoc);
+
+    return m_context.create<AstTypeOf>(llvm::SMRange { start, m_endLoc }, expr);
 }
 
 //----------------------------------------
@@ -1537,6 +1629,14 @@ auto Parser::identifier() -> Result<AstIdentExpr*> {
 
     return m_context.create<AstIdentExpr>(
         llvm::SMRange { start, m_endLoc },
+        name
+    );
+}
+
+[[nodiscard]] auto Parser::identifier(const Token& token) -> AstIdentExpr* {
+    auto name = token.getStringValue();
+    return m_context.create<AstIdentExpr>(
+        token.getRange(),
         name
     );
 }

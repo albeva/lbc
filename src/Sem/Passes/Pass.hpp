@@ -11,7 +11,7 @@ namespace Sem {
     public:
         NO_COPY_AND_MOVE(Pass)
         explicit Pass(SemanticAnalyzer& sem)
-        : m_sem { sem } {}
+        : m_sem { sem } { }
         virtual ~Pass() = default;
 
     protected:

@@ -52,7 +52,7 @@ public:
     [[nodiscard]] constexpr auto getValue() const -> const TokenValue& { return m_value; }
     [[nodiscard]] constexpr auto getStringValue() const -> llvm::StringRef { return m_value.getString(); }
     [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange { return m_range; }
-    [[nodiscard]] constexpr auto description() const -> llvm::StringRef { return description(m_kind); }
+    [[nodiscard]] auto description() const -> llvm::StringRef { return description(m_kind); }
 
     // Info about operators
     [[nodiscard]] auto isGeneral() const -> bool;

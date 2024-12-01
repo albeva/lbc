@@ -73,7 +73,11 @@ template <typename T>
 auto unaryArithmetic(const TokenKind op, const T operand) -> T {
     switch (op) {
     case TokenKind::Negate:
-        return -operand;
+        if constexpr (std::is_signed_v<T> || std::is_floating_point_v<T>) {
+            return -operand;
+        } else {
+            llvm_unreachable("Negating unsupported type");
+        }
     default:
         llvm_unreachable("unknown operation");
     }

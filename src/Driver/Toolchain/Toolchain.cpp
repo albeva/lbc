@@ -26,7 +26,7 @@ auto getToolPath(const fs::path& base, const ToolKind tool) -> fs::path {
         llvm_unreachable("Invalid ToolKind ID");
     }
 }
-} // ~namespace
+} // namespace
 
 auto Toolchain::createTask(const ToolKind kind) const -> ToolTask {
     return ToolTask { m_context, getPath(kind), kind };

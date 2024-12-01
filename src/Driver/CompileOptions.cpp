@@ -32,7 +32,7 @@ void CompileOptions::reset() {
 }
 
 auto CompileOptions::getFileExt(FileType type) -> std::string_view {
-    const auto* it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
+    const auto it = std::ranges::find(fileTypeExtMap, type, &TypeExpPair::second);
     if (it != fileTypeExtMap.end()) {
         return it->first;
     }
@@ -40,7 +40,7 @@ auto CompileOptions::getFileExt(FileType type) -> std::string_view {
 }
 
 auto CompileOptions::getFileType(const fs::path& path) -> CompileOptions::FileType {
-    const auto* it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
+    const auto it = std::ranges::find(fileTypeExtMap, path.extension(), &TypeExpPair::first);
     if (it != fileTypeExtMap.end()) {
         return it->second;
     }
