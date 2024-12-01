@@ -72,7 +72,7 @@ private:
     [[nodiscard]] auto statement() -> Result<AstStmt*>;
     [[nodiscard]] auto kwImport() -> Result<AstImport*>;
     [[nodiscard]] auto kwExtern() -> Result<AstExtern*>;
-    [[nodiscard]] auto declaration() -> Result<AstStmt*>;
+    [[nodiscard]] auto declaration(bool optional) -> Result<AstStmt*>;
     [[nodiscard]] auto primary() -> Result<AstExpr*>;
     [[nodiscard]] auto typeOfExpr() -> Result<AstIsExpr*>;
     [[nodiscard]] auto alignOfExpr() -> Result<AstAlignOfExpr*>;
@@ -100,14 +100,14 @@ private:
     [[nodiscard]] auto attribute() -> Result<AstAttribute*>;
     [[nodiscard]] auto attributeArgList() -> Result<AstExprList*>;
     [[nodiscard]] auto kwDeclare(AstAttributeList* attribs) -> Result<AstFuncDecl*>;
-    [[nodiscard]] auto funcSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags) -> Result<AstFuncDecl*>;
+    [[nodiscard]] auto procSignature(llvm::SMLoc start, AstAttributeList* attribs, FuncFlags funcFlags) -> Result<AstFuncDecl*>;
     [[nodiscard]] auto funcParamList(bool& isVariadic, bool isAnonymous) -> Result<AstFuncParamList*>;
     [[nodiscard]] auto funcParam(bool isAnonymous) -> Result<AstFuncParamDecl*>;
     [[nodiscard]] auto kwFunction(AstAttributeList* attribs) -> Result<AstFuncStmt*>;
     [[nodiscard]] auto kwReturn() -> Result<AstStmt*>;
     [[nodiscard]] auto kwType(AstAttributeList* attribs) -> Result<AstDecl*>;
-    [[nodiscard]] auto alias(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstTypeAlias*>;
-    [[nodiscard]] auto udt(llvm::StringRef id, Token token, llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstUdtDecl*>;
+    [[nodiscard]] auto alias(Token token, llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstTypeAlias*>;
+    [[nodiscard]] auto udt(Token token, llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstUdtDecl*>;
     [[nodiscard]] auto udtDeclList() -> Result<AstDeclList*>;
     [[nodiscard]] auto udtMember(AstAttributeList* attribs) -> Result<AstDecl*>;
 

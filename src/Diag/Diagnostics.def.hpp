@@ -14,7 +14,7 @@
     _( unexpectedToken,                     "expected '{0}' got '{1}'"                                ) \
     _( moduleNotFound,                      "no such module '{0}'"                                    ) \
     _( failedToLoadModule,                  "failed to load module '{0}'"                             ) \
-    _( expectedDeclarationAfterAttribute,   "expected declaration after attributes, got '{0}'"        ) \
+    _( expectedDeclration,                  "expected declaration, got '{0}'"                         ) \
     _( unexpectedNestedDeclaration,         "unexpected nested declaration '{0}'"                     ) \
     _( variadicArgumentNotLast,             "variadic argument must be last"                          ) \
     _( unexpectedReturn,                    "return not allowed outside main module, SUB or FUNCTION" ) \

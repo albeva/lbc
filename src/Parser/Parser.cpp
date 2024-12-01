@@ -44,9 +44,11 @@ void Parser::reset() {
 }
 
 /**
- * Module
- *   = StmtList
- *   .
+ * Parse given input and return AST module.
+ *
+ * Grammar:
+ * Module = stmtList
+ *        .
  */
 auto Parser::parse() -> Result<AstModule*> {
     TRY_DECL(stmts, stmtList())
@@ -65,9 +67,14 @@ auto Parser::parse() -> Result<AstModule*> {
 //----------------------------------------
 
 /**
- * StmtList
- *   = { Statement }
- *   .
+ * Parse list of statements.
+ *
+ * Each statement represents a "sentence" of code, be it a function call, declaration, control flow, etc.
+ *
+ * Statements are separated by a newline or a colon.
+ *
+ * Grammar:
+ * stmtList = { statement <EndOfStmt> } .
  */
 auto Parser::stmtList() -> Result<AstStmtList*> {
     constexpr auto isNonTerminator = [](const Token& token) {
@@ -133,22 +140,23 @@ auto Parser::stmtList() -> Result<AstStmtList*> {
 }
 
 /**
- * Statement
- *   = Declaration
- *   | IMPORT
- *   | IfStmt
- *   | ForStmt
- *   | DoLoopStmt
- *   | RETURN
- *   | EXIT
- *   | CONTINUE
- *   | Expression
- *   .
+ * Parse single statement.
+ *
+ * Grammar:
+ * statement = declaration
+ *           | "IMPORT"   kwImport
+ *           | "EXTERN"   kwExtern
+ *           | "RETURN"   kwReturn
+ *           | "ID"       kwIf
+ *           | "FOR"      kwFor
+ *           | "DO"       kwDo
+ *           | "CONTINUE" kwContinue
+ *           | "EXIT"     kwExit
+ *           | expression
+ *           .
  */
 auto Parser::statement() -> Result<AstStmt*> {
-    const auto decl = declaration();
-    TRY(decl)
-
+    TRY_DECL(decl, declaration(true))
     if (decl != nullptr) {
         return decl;
     }
@@ -183,13 +191,17 @@ auto Parser::statement() -> Result<AstStmt*> {
     }
 
     TRY_DECL(expr, expression(ExprFlags::useAssign | ExprFlags::callWithoutParens))
+    // TODO: detect a dangling expressions with no side effects and raise warning
     return m_context.create<AstExprStmt>(expr->range, expr);
 }
 
 /**
- * IMPORT
- *   = "IMPORT" id
- *   .
+ * Parse import keyword.
+ *
+ * Import keyword is used to include another module into the current one.
+ *
+ * Grammar:
+ * kwImport = "IMPORT" <id> .
  */
 auto Parser::kwImport() -> Result<AstImport*> {
     // assume m_token == Import
@@ -235,11 +247,15 @@ auto Parser::kwImport() -> Result<AstImport*> {
 }
 
 /**
- * Extern
- *   = [ LanguageStringLiteral ]
- *   ( Statement
- *   | StatementList "END" "EXTERN"
- *   .
+ * Parse EXTERN keyword.
+ *
+ * Extern keyword is used to declare external functions. For example from a C library
+ *
+ * Grammar:
+ * kwExtern        = [ ExternLanguage ] ( ExternStatement | ExternBlock ) .
+ * ExternLanguage  = "C" | "DEFAULT" .
+ * ExternStatement = declaration .
+ * ExternBlock     = <EndOfStmt> { declaration <EndOfStmt> } "END" "EXTERN" .
  */
 auto Parser::kwExtern() -> Result<AstExtern*> {
     // assume m_token == Extern
@@ -262,7 +278,7 @@ auto Parser::kwExtern() -> Result<AstExtern*> {
 
     if (accept(TokenKind::EndOfStmt)) {
         while (m_token.isNot(TokenKind::End)) {
-            TRY_DECL(decl, declaration())
+            TRY_DECL(decl, declaration(false))
             if (decl == nullptr) {
                 return makeError(Diag::onlyDeclarationsInExtern, m_token);
             }
@@ -272,7 +288,7 @@ auto Parser::kwExtern() -> Result<AstExtern*> {
         TRY(consume(TokenKind::End))
         TRY(consume(TokenKind::Extern))
     } else {
-        TRY_DECL(decl, declaration())
+        TRY_DECL(decl, declaration(false))
         stmts.emplace_back(decl);
     }
 
@@ -284,18 +300,23 @@ auto Parser::kwExtern() -> Result<AstExtern*> {
 }
 
 /**
- * Declaration
- *   = [
- *     [ AttributeList ]
- *     ( VAR
- *     | DECLARE
- *     | FUNCTION
- *     | SUB
- *     )
- *   ]
- *   .
+ * Parse declaration statement.
+ *
+ * Declaration is anything that defines a new symbol. This includes variables, constants, functions, etc.
+ * Declarations can include optional attributes.
+ *
+ * Grammar:
+ * Declaration = [ attributeList ]
+ *             ( "DIM"      kwDim
+ *             | "CONST"    kwConst
+ *             | "DECLARE"  kwDeclare
+ *             | "FUNCTION" kwFunction
+ *             | "SUB"      kwFunction
+ *             | "TYPE"     kwType
+ *             ) .
+ * @param optional if true then declaration is optional, otherwise raise an error if no declaration found.
  */
-auto Parser::declaration() -> Result<AstStmt*> {
+auto Parser::declaration(const bool optional) -> Result<AstStmt*> {
     TRY_DECL(attribs, attributeList())
 
     switch (m_token.getKind()) {
@@ -311,13 +332,11 @@ auto Parser::declaration() -> Result<AstStmt*> {
     case TokenKind::Type:
         return kwType(attribs);
     default:
-        break;
+        if (!optional || attribs != nullptr) {
+            return makeError(Diag::expectedDeclration, m_token, m_token.description());
+        }
+        return nullptr;
     }
-
-    if (attribs != nullptr) {
-        return makeError(Diag::expectedDeclarationAfterAttribute, m_token, m_token.description());
-    }
-    return nullptr;
 }
 
 //----------------------------------------
@@ -325,7 +344,10 @@ auto Parser::declaration() -> Result<AstStmt*> {
 //----------------------------------------
 
 /**
- *  AttributeList = [ '[' Attribute { ','  Attribute } ']' ].
+ * Parse attributes which are used to annotate declarations.
+ *
+ * Grammar:
+ * attributeList = [ "[" attribute { "," attribute } "]" ] .
  */
 auto Parser::attributeList() -> Result<AstAttributeList*> {
     if (m_token.isNot(TokenKind::BracketOpen)) {
@@ -354,9 +376,10 @@ auto Parser::attributeList() -> Result<AstAttributeList*> {
 }
 
 /**
- * Attribute
- *   = IdentExpr [ AttributeArgList ]
- *   .
+ * Parse individual attribute
+ *
+ * Grammar:
+ * attribute  = identifier [ attributeArgList ] .
  */
 auto Parser::attribute() -> Result<AstAttribute*> {
     const auto start = m_token.getRange().Start;
@@ -364,9 +387,7 @@ auto Parser::attribute() -> Result<AstAttribute*> {
     TRY_DECL(id, identifier())
 
     AstExprList* args = nullptr;
-    if (m_token.isOneOf(TokenKind::Assign, TokenKind::ParenOpen)) {
-        TRY_ASSIGN(args, attributeArgList())
-    }
+    TRY_ASSIGN(args, attributeArgList())
 
     return m_context.create<AstAttribute>(
         llvm::SMRange { start, m_endLoc },
@@ -376,10 +397,12 @@ auto Parser::attribute() -> Result<AstAttribute*> {
 }
 
 /**
- * AttributeArgList
- *   = "=" Literal
- *   | "(" [ Literal { "," Literal } ] ")"
- *   .
+ * Parse attribute argument list.
+ *
+ * Grammar:
+ * attributeArgList = [ AttrValue | AttrArgs ] .
+ * AttrValue        = "=" literal .
+ * AttrArgs         = "(" [ literal { "," literal } ] ")" .
  */
 auto Parser::attributeArgList() -> Result<AstExprList*> {
     const auto start = m_token.getRange().Start;
@@ -389,7 +412,7 @@ auto Parser::attributeArgList() -> Result<AstExprList*> {
         TRY_DECL(lit, literal())
         args.emplace_back(lit);
     } else if (accept(TokenKind::ParenOpen)) {
-        while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
+        while (m_token.isLiteral()) {
             TRY_DECL(lit, literal())
             args.emplace_back(lit);
             if (!accept(TokenKind::Comma)) {
@@ -397,6 +420,10 @@ auto Parser::attributeArgList() -> Result<AstExprList*> {
             }
         }
         TRY(consume(TokenKind::ParenClose))
+    }
+
+    if (args.empty()) {
+        return nullptr;
     }
 
     return m_context.create<AstExprList>(
@@ -410,12 +437,19 @@ auto Parser::attributeArgList() -> Result<AstExprList*> {
 //----------------------------------------
 
 /**
- * Dim
- *   = "DIM" identifier
- *   ( "=" Expression
- *   | "AS" TypeExpr [ "=" Expression ]
- *   )
- *   .
+ * Declares a variable.
+ *
+ * Variable type can either be explicitly defined or inferred from the expression.
+ * If variable is not initialized then its value is undefined.
+ *
+ * Grammar:
+ * kwDim = "DIM" <id>
+ *       ( "=" expression
+ *       | "AS" typeExpr [ "=" expression ]
+ *       )
+ *       .
+ *
+ * @param attribs optional attributes
  */
 auto Parser::kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*> {
     // assume m_token == VAR
@@ -458,9 +492,15 @@ auto Parser::kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*> {
 //----------------------------------------
 
 /**
- * CONST
- *   = "CONST" identifier [ "AS" TypeExpr ] "=" Expression
- *   .
+ * Declares a constant. Difference from variables declared with DIM are:
+ * - must always be initialized
+ * - must be known at compile time
+ * - cannot be changed later
+ *
+ * Grammar:
+ * kwConst = "CONST" <id> [ "AS" typeExpr ] "=" expression .
+ *
+ * @param attribs optional attributes
  */
 auto Parser::kwConst(AstAttributeList* attribs) -> Result<AstVarDecl*> {
     // assume m_token == CONST
@@ -500,9 +540,14 @@ auto Parser::kwConst(AstAttributeList* attribs) -> Result<AstVarDecl*> {
 //----------------------------------------
 
 /**
- * DECLARE
- *   = "DECLARE" FuncSignature
- *   .
+ * Declares a sub or a function.
+ *
+ * This is used to declare external functions that are implemented in another module
+ *
+ * Grammar:
+ * kwDeclare = "DECLARE" procSignature .
+ *
+ * @param attribs optional attributes
  */
 auto Parser::kwDeclare(AstAttributeList* attribs) -> Result<AstFuncDecl*> {
     // assume m_token == DECLARE
@@ -512,21 +557,24 @@ auto Parser::kwDeclare(AstAttributeList* attribs) -> Result<AstFuncDecl*> {
     const auto start = getStart(attribs, m_token);
     advance();
 
-    return funcSignature(start, attribs, FuncFlags::isDeclaration);
+    return procSignature(start, attribs, FuncFlags::isDeclaration);
 }
 
 /**
- * SubSignature
- *     = "SUB" id [ "(" [ FuncParamList ] ")" ]
- *     .
+ * Parse sub or function signature.
  *
- * FuncSignature
- *     = "FUNCTION" id [ "(" [ FuncParamList ] ")" ] "AS" TypeExpr
- *     .
+ * Difference between SUB and FUNCTION is that FUNCTION must have a return type.
  *
- * ProcSignature = SubSignature | FuncSignature .
+ * Grammar:
+ * procSignature = SubSignature | FuncSignature .
+ * SubSignature  = "SUB" <id> [ "(" funcParamList ")" ] .
+ * FuncSignature = "FUNCTION" <id> [ "(" funcParamList ")" ] "AS" typeExpr
+ *
+ * @param start start location of the declaration
+ * @param attribs optional attributes
+ * @param funcFlags flags to control the parsing behavior
  */
-auto Parser::funcSignature(const llvm::SMLoc start, AstAttributeList* attribs, const FuncFlags funcFlags) -> Result<AstFuncDecl*> {
+auto Parser::procSignature(const llvm::SMLoc start, AstAttributeList* attribs, const FuncFlags funcFlags) -> Result<AstFuncDecl*> {
     bool const isFunc = accept(TokenKind::Function);
     if (!isFunc) {
         TRY(consume(TokenKind::Sub))
@@ -570,15 +618,21 @@ auto Parser::funcSignature(const llvm::SMLoc start, AstAttributeList* attribs, c
 }
 
 /**
- * FuncParamList
- *   = FuncParam { "," FuncParam } [ "," "..." ]
- *   | "..."
- *   .
+ * Parse function parameter list.
+ *
+ * When anonymous function is declared then parameters are not named.
+ * Parameters can be variadic, in which case they must be the last parameter.
+ *
+ * Grammar:
+ * funcParamList = funcParam { "," funcParam } [ "," "..." ] | "..." .
+ *
+ * @param isVariadic out parameter to indicate if the function is variadic
+ * @param isAnonymous true if the function is anonymous
  */
 auto Parser::funcParamList(bool& isVariadic, const bool isAnonymous) -> Result<AstFuncParamList*> {
     const auto start = m_token.getRange().Start;
     std::vector<AstFuncParamDecl*> params;
-    while (!m_token.isOneOf(TokenKind::EndOfFile, TokenKind::ParenClose)) {
+    while (!m_token.is(TokenKind::ParenClose)) {
         if (accept(TokenKind::Ellipsis)) {
             isVariadic = true;
             if (m_token.is(TokenKind::Comma)) {
@@ -586,9 +640,10 @@ auto Parser::funcParamList(bool& isVariadic, const bool isAnonymous) -> Result<A
             }
             break;
         }
-        TRY_DECL(param, funcParam(isAnonymous))
 
+        TRY_DECL(param, funcParam(isAnonymous))
         params.push_back(param);
+
         if (!accept(TokenKind::Comma)) {
             break;
         }
@@ -601,10 +656,14 @@ auto Parser::funcParamList(bool& isVariadic, const bool isAnonymous) -> Result<A
 }
 
 /**
- * FuncParam
- *  = id "AS" TypeExpr
- *  | TypeExpr        // if isAnonymous
- *  .
+ * Parse individual function parameter.
+ *
+ * If the function is anonymous then the parameter is not named.
+ *
+ * Grammar:
+ * funcParam = <id> "AS" typeExpr | typeExpr .
+ *
+ * @param isAnonymous true if the function is anonymous
  */
 auto Parser::funcParam(const bool isAnonymous) -> Result<AstFuncParamDecl*> {
     const auto start = m_token.getRange().Start;
@@ -644,12 +703,14 @@ auto Parser::funcParam(const bool isAnonymous) -> Result<AstFuncParamDecl*> {
 //----------------------------------------
 
 /**
- * TYPE
- *   = "TYPE" id
- *   ( UDT
- *   | TypeAlias
- *   )
- *   .
+ * Parse a type declaration
+ *
+ * This can either be a user defined type or a type alias.
+ *
+ * Grammar:
+ * kwType = "TYPE" <id> ( <EndOfStmt> udt | "AS" alias ) .
+ *
+ * @param attribs optional attributes
  */
 auto Parser::kwType(AstAttributeList* attribs) -> Result<AstDecl*> {
     // assume m_token == TYPE
@@ -657,32 +718,36 @@ auto Parser::kwType(AstAttributeList* attribs) -> Result<AstDecl*> {
     advance();
 
     TRY(expect(TokenKind::Identifier))
-    const auto id = m_token.getStringValue();
     const auto token = m_token;
     advance();
 
     if (accept(TokenKind::EndOfStmt)) {
-        return udt(id, token, start, attribs);
+        return udt(token, start, attribs);
     }
 
     if (accept(TokenKind::As)) {
-        return alias(id, token, start, attribs);
+        return alias(token, start, attribs);
     }
 
     return makeError(Diag::unexpectedToken, m_token, "'=' or end of statement", m_token.description());
 }
 
 /**
- *  alias
- *    = TypeExpr
- *    .
+ * Parse a type alias.
+ *
+ * Grammar:
+ * alias = typeExpr .
+ *
+ * @param token token of the alias, which also includes the name and position
+ * @param start start location of the declaration
+ * @param attribs optional attributes
  */
-auto Parser::alias(llvm::StringRef id, Token token, const llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstTypeAlias*> {
+auto Parser::alias(Token token, const llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstTypeAlias*> {
     TRY_DECL(type, typeExpr())
 
     return m_context.create<AstTypeAlias>(
         llvm::SMRange { start, m_endLoc },
-        id,
+        token.getStringValue(),
         token,
         m_language,
         attribs,
@@ -691,13 +756,16 @@ auto Parser::alias(llvm::StringRef id, Token token, const llvm::SMLoc start, Ast
 }
 
 /**
- * UDT
- *   = EoS
- *     udtDeclList
- *     "END" "TYPE"
- *   .
+ * Parse a user defined type.
+ *
+ * Grammar:
+ * udt = udtDeclList "END" "TYPE" .
+ *
+ * @param token token of the UDT, which also includes the name and position
+ * @param start start location of the declaration
+ * @param attribs optional attributes
  */
-auto Parser::udt(llvm::StringRef id, Token token, const llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstUdtDecl*> {
+auto Parser::udt(Token token, const llvm::SMLoc start, AstAttributeList* attribs) -> Result<AstUdtDecl*> {
     // assume m_token == declaration || "end"
     TRY_DECL(decls, udtDeclList())
 
@@ -706,7 +774,7 @@ auto Parser::udt(llvm::StringRef id, Token token, const llvm::SMLoc start, AstAt
 
     return m_context.create<AstUdtDecl>(
         llvm::SMRange { start, m_endLoc },
-        id,
+        token.getStringValue(),
         token,
         m_language,
         attribs,
@@ -787,7 +855,7 @@ auto Parser::kwFunction(AstAttributeList* attribs) -> Result<AstFuncStmt*> {
 
     bool const isFunction = m_token.is(TokenKind::Function);
     const auto start = getStart(attribs, m_token);
-    TRY_DECL(decl, funcSignature(start, attribs, {}))
+    TRY_DECL(decl, procSignature(start, attribs, {}))
 
     RESTORE_ON_EXIT(m_scope);
     m_scope = Scope::Function;
@@ -1302,6 +1370,7 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
  * Parse SUB or FUNCTION inside type expression
  *
  * @param enclosed indicate if the type is enclosed in parentheses
+ * @param context provide context for parsing behaviour
  * @return error state or a func declaration
  */
 [[nodiscard]] auto Parser::parseTypeProcedure(const bool enclosed, TypeParsingContext& context) -> Result<AstFuncDecl*> {
@@ -1312,7 +1381,7 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
         advance();
     }
 
-    TRY_DECL(func, funcSignature(start, nullptr, FuncFlags::isAnonymous))
+    TRY_DECL(func, procSignature(start, nullptr, FuncFlags::isAnonymous))
 
     if (enclosed) {
         // ')'
