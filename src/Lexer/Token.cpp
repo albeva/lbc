@@ -27,7 +27,7 @@ enum class OpAssociativity : std::uint8_t {
 };
 
 struct TokenDef final {
-    Category category{};
+    Category category {};
     llvm::StringLiteral str;
     int precedence = 0;
     OpType type = OpType::Unknown;

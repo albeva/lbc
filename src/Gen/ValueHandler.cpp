@@ -71,12 +71,14 @@ ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast)
 , m_type { ast.type } {
 }
 
-ValueHandler::ValueHandler(CodeGen* gen, AstAlignOfExpr& ast): PointerUnion { &ast }
+ValueHandler::ValueHandler(CodeGen* gen, AstAlignOfExpr& ast)
+: PointerUnion { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
 
-ValueHandler::ValueHandler(CodeGen* gen, AstSizeOfExpr& ast): PointerUnion { &ast }
+ValueHandler::ValueHandler(CodeGen* gen, AstSizeOfExpr& ast)
+: PointerUnion { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
