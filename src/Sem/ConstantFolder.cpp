@@ -166,9 +166,9 @@ auto performFloatingPointUnaryOperation(const TypeRoot* type, const TokenKind ki
 //------------------------------------------------------------------
 
 template <typename From, typename To>
-auto cast(const TokenValue& value) -> Result<TokenValue> {
+auto cast(const TokenValue& value) -> TokenValue {
     if constexpr (std::is_same_v<From, llvm::StringRef> || std::is_same_v<To, llvm::StringRef>) {
-        return ResultError {};
+        llvm_unreachable("Invalid conversion to/from string");
     } else if constexpr (std::is_same_v<From, To>) {
         return value;
     } else {
