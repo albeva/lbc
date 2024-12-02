@@ -24,13 +24,13 @@ public:
         return type->getFamily() == TypeFamily::UDT;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
     [[nodiscard]] auto getSymbol() const -> Symbol& { return m_symbol; }
     [[nodiscard]] auto getSymbolTable() const -> SymbolTable& { return m_symbolTable; }
 
 protected:
-    auto genLlvmType(Context& context) const -> llvm::Type* final;
+    auto genLlvmType(Context& context) const -> llvm::Type* override;
 
 private:
     Symbol& m_symbol;

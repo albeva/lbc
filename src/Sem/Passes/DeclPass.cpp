@@ -170,11 +170,6 @@ auto DeclPass::defineFunc(AstFuncDecl& ast) -> Result<void> {
 
 auto DeclPass::defineFuncParam(AstFuncParamDecl& ast) -> Result<void> {
     const auto* type = ast.typeExpr->type;
-    if (type->isUDT()) {
-        llvm::errs() << "Passing types by values is not implemented\n";
-        return ResultError {};
-    }
-
     TRY_ASSIGN(ast.symbol, createNewSymbol(ast, type))
     return {};
 }

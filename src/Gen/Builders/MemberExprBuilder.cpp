@@ -43,6 +43,13 @@ void MemberExprBuilder::base(AstExpr& ast) {
             ptr->getLlvmType(m_gen.getContext()),
             m_addr
         );
+    } else if (const auto* ref = llvm::dyn_cast<TypeReference>(symbol->getType())) {
+        gep();
+        m_type = ref->getBase()->getLlvmType(m_gen.getContext());
+        m_addr = m_builder.CreateLoad(
+            ref->getLlvmType(m_gen.getContext()),
+            m_addr
+        );
     }
 }
 

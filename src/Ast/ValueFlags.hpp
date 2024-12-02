@@ -16,6 +16,7 @@ struct ValueFlags final {
     uint8_t assignable : 1;
     uint8_t external : 1;
     uint8_t mustBeConstant : 1;
+    uint8_t reference : 1;
 };
 
 } // namespace lbc

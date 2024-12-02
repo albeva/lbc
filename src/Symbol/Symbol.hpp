@@ -98,7 +98,7 @@ private:
     unsigned m_index = 0;
     ValueFlags m_flags {};
     StateFlags m_state {};
-    std::optional<TokenValue> m_constantValue {};
+    std::optional<TokenValue> m_constantValue;
 };
 
 } // namespace lbc

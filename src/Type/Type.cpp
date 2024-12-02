@@ -89,6 +89,21 @@ auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
         return TypeComparison::Equal;
     }
 
+    if (const auto* left = llvm::dyn_cast<TypeReference>(this)) {
+        // -> type
+        if (left->getBase() == other) {
+            return TypeComparison::RemoveReference;
+        }
+        return TypeComparison::Incompatible;
+    }
+
+    if (const auto* right = llvm::dyn_cast<TypeReference>(other)) {
+        if (this == right->getBase()) {
+            return TypeComparison::AddReference;
+        }
+        return TypeComparison::Incompatible;
+    }
+
     if (const auto* left = llvm::dyn_cast<TypePointer>(this)) {
         if (const auto* right = llvm::dyn_cast<TypePointer>(other)) {
             if (left->getBase()->isAny()) {
@@ -155,6 +170,11 @@ auto TypeRoot::getPointer(Context& context) const -> const TypePointer* {
     return TypePointer::get(context, this);
 }
 
+auto TypeRoot::getReference(Context& context) const -> const TypeReference* {
+    assert(!this->isReference() && "Type is already a reference");
+    return TypeReference::get(context, this);
+}
+
 auto TypeRoot::getUnderlyingFunctionType() const -> const TypeFunction* {
     if (isFunction()) {
         return llvm::cast<TypeFunction>(this);
@@ -199,14 +219,17 @@ auto TypePointer::get(Context& context, const TypeRoot* base) -> const TypePoint
         return &anyPtrTy;
     }
 
-    for (const auto& ptr : context.getPtrTypes()) {
-        if (ptr->m_base == base) {
-            return ptr;
+    assert(!base->isReference() && "Cannot get pointer of a reference");
+
+    for (const auto& ptr : context.getTypes(TypeFamily::Pointer)) {
+        const auto* ptrType = llvm::cast<TypePointer>(ptr);
+        if (ptrType->m_base == base) {
+            return ptrType;
         }
     }
 
-    auto* ty = context.create<TypePointer>(base);
-    context.getPtrTypes().push_back(ty);
+    const auto* ty = context.create<TypePointer>(base);
+    context.getTypes(TypeFamily::Pointer).push_back(ty);
     return ty;
 }
 
@@ -216,6 +239,30 @@ auto TypePointer::genLlvmType(Context& context) const -> llvm::Type* {
 
 auto TypePointer::asString() const -> std::string {
     return m_base->asString() + " PTR";
+}
+
+// Reference
+
+auto TypeReference::get(Context& context, const TypeRoot* base) -> const TypeReference* {
+    assert(!base->isReference() && "Type is already a reference");
+
+    for (const auto& ptrRef : context.getTypes(TypeFamily::Reference)) {
+        if (const auto* ptr = llvm::cast<TypeReference>(ptrRef); ptr->m_base == base) {
+            return ptr;
+        }
+    }
+
+    const auto* ty = context.create<TypeReference>(base);
+    context.getTypes(TypeFamily::Reference).push_back(ty);
+    return ty;
+}
+
+auto TypeReference::genLlvmType(Context& context) const -> llvm::Type* {
+    return llvm::PointerType::get(context.getLlvmContext(), 0);
+}
+
+auto TypeReference::asString() const -> std::string {
+    return m_base->asString() + " REF";
 }
 
 // Bool
@@ -315,14 +362,15 @@ auto TypeFunction::get(
     llvm::SmallVector<const TypeRoot*> paramTypes,
     bool variadic
 ) -> const TypeFunction* {
-    for (const auto& ptr : context.getFuncTypes()) {
+    for (const auto& funcPtr : context.getTypes(TypeFamily::Function)) {
+        const auto* ptr = llvm::cast<TypeFunction>(funcPtr);
         if (ptr->getReturn() == retType && ptr->getParams() == paramTypes && ptr->isVariadic() == variadic) {
             return ptr;
         }
     }
 
     auto* ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
-    context.getFuncTypes().push_back(ty);
+    context.getTypes(TypeFamily::Function).push_back(ty);
     return ty;
 }
 

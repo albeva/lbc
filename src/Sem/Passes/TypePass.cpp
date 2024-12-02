@@ -28,8 +28,12 @@ auto TypePass::visit(AstTypeExpr& ast) const -> Result<const TypeRoot*> {
     };
     TRY_DECL(type, std::visit(visitor, ast.expr))
 
-    for (int i = 0; i < ast.dereference; i++) {
+    for (int i = 0; i < ast.indirection; i++) {
         type = type->getPointer(m_sem.getContext());
+    }
+
+    if (ast.isReference) {
+        type = type->getReference(m_sem.getContext());
     }
 
     ast.type = type;
@@ -69,11 +73,6 @@ auto TypePass::visit(AstFuncDecl& ast) const -> Result<const TypeRoot*> {
     const TypeRoot* retType = nullptr;
     if (ast.retTypeExpr != nullptr) {
         TRY_ASSIGN(retType, visit(*ast.retTypeExpr))
-        if (retType->isUDT()) {
-            // TODO: Implement returning types by value
-            llvm::errs() << "Returning types by value is not implemented" << '\n';
-            return ResultError {};
-        }
     } else {
         retType = TypeVoid::get();
     }

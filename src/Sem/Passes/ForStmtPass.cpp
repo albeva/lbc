@@ -46,10 +46,10 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
     switch (type->compare(ast.limit->type)) {
     case TypeComparison::Incompatible:
         fatalError("Incompatible types in FOR");
+    case TypeComparison::Equal:
+        break;
     case TypeComparison::Downcast:
         TRY(m_sem.convert(ast.limit, type))
-        break;
-    case TypeComparison::Equal:
         break;
     case TypeComparison::Upcast:
         if (ast.iterator->typeExpr != nullptr) {
@@ -59,6 +59,9 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
             ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
+    case TypeComparison::RemoveReference:
+    case TypeComparison::AddReference:
+        fatalError("To/From reference not yet implemented in ForStmtPass");
     }
 
     // type STEP type check
@@ -66,6 +69,8 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
         switch (type->compare(ast.step->type)) {
         case TypeComparison::Incompatible:
             fatalError("Incompatible types in STEP");
+        case TypeComparison::Equal:
+            break;
         case TypeComparison::Downcast:
         case TypeComparison::Upcast: {
             const auto* dstTy = type;
@@ -94,8 +99,9 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
             TRY(m_sem.convert(ast.step, dstTy))
             break;
         }
-        case TypeComparison::Equal:
-            break;
+        case TypeComparison::RemoveReference:
+        case TypeComparison::AddReference:
+            llvm_unreachable("To/From reference not yet implemented in ForStmtPass");
         }
     }
 

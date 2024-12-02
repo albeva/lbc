@@ -22,6 +22,9 @@ auto resolveUDT(const TypeRoot* type) -> const TypeUDT* {
     if (const auto* ptr = llvm::dyn_cast<TypePointer>(type)) {
         return llvm::dyn_cast<TypeUDT>(ptr->getBase());
     }
+    if (const auto* ptr = llvm::dyn_cast<TypeReference>(type)) {
+        return llvm::dyn_cast<TypeUDT>(ptr->getBase());
+    }
     return nullptr;
 }
 } // namespace
@@ -47,12 +50,12 @@ auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
 
 auto SemanticAnalyzer::visit(AstStmtList& ast) -> Result<void> {
     TRY(m_declPass.declare(ast))
-    for (auto& func : ast.funcs) {
+    for (const auto& func : ast.funcs) {
         // cppcheck-suppress useStlAlgorithm
         TRY(visit(*func))
     }
 
-    for (auto& stmt : ast.stmts) {
+    for (const auto& stmt : ast.stmts) {
         // cppcheck-suppress useStlAlgorithm
         TRY(visit(*stmt))
     }
@@ -159,7 +162,7 @@ auto SemanticAnalyzer::visit(AstIfStmt& ast) -> Result<void> {
 
         m_table = block->symbolTable;
         TRY(m_declPass.declareAndDefine(block->decls))
-        for (auto& var : block->decls) {
+        for (const auto& var : block->decls) {
             for (size_t next = idx + 1; next < ast.blocks.size(); next++) {
                 ast.blocks[next]->symbolTable->insert(var->symbol);
             }
@@ -403,7 +406,7 @@ auto SemanticAnalyzer::visit(AstLiteralExpr& ast) -> Result<void> {
         [](TokenValue::StringType /*value*/) {
             return TokenKind::ZString;
         },
-        [](TokenValue::IntegralType value) {
+        [](const TokenValue::IntegralType value) {
             if (value > static_cast<uint64_t>(std::numeric_limits<int32_t>::max())) {
                 return TokenKind::Long;
             }
@@ -583,16 +586,20 @@ auto SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) -> Result<void> {
     };
 
     switch (left->compare(right)) {
-    case TypeComparison::Downcast:
-        return castTo(ast.rhs, left);
+    case TypeComparison::Incompatible:
+        llvm_unreachable("Unexpected incompatible types");
     case TypeComparison::Equal:
         ast.type = left;
         return {};
+    case TypeComparison::Downcast:
+        return castTo(ast.rhs, left);
     case TypeComparison::Upcast:
         return castTo(ast.lhs, right);
-    default:
-        llvm_unreachable("unknown comparison result");
+    case TypeComparison::RemoveReference:
+    case TypeComparison::AddReference:
+        llvm_unreachable("To/From reference not yet implemented");
     }
+    llvm_unreachable("Unhandled type comparison result");
 }
 
 auto SemanticAnalyzer::logical(AstBinaryExpr& ast) -> Result<void> {
@@ -650,16 +657,18 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
             left->asString(),
             right->asString()
         );
-    case TypeComparison::Downcast:
-        return castTo(ast.rhs, left);
     case TypeComparison::Equal:
         ast.type = TypeBoolean::get();
         return {};
+    case TypeComparison::Downcast:
+        return castTo(ast.rhs, left);
     case TypeComparison::Upcast:
         return castTo(ast.lhs, right);
-    default:
-        llvm_unreachable("unknown comparison result");
+    case TypeComparison::RemoveReference:
+    case TypeComparison::AddReference:
+        llvm_unreachable("To/From reference not yet implemented");
     }
+    llvm_unreachable("Unhandled type comparison result");
 }
 
 auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
@@ -715,14 +724,20 @@ auto SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) -> Result<voi
     switch (ast->type->compare(type)) {
     case TypeComparison::Incompatible:
         return makeError(Diag::invalidImplicitConversion, ast, ast->type->asString(), type->asString());
+    case TypeComparison::Equal:
+        return {};
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);
-    case TypeComparison::Equal:
+    case TypeComparison::RemoveReference:
+        ast = m_context.create<AstDereference>(ast->range, ast);
         return {};
-    default:
-        llvm_unreachable("unknown comparison result");
+    case TypeComparison::AddReference:
+        ast = m_context.create<AstAddressOf>(ast->range, ast);
+        return {};
     }
+
+    return ResultError{};
 }
 
 auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void> {

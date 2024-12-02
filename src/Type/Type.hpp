@@ -7,20 +7,20 @@
 
 namespace lbc {
 
+// clang-format off
 enum class TypeFamily : std::uint8_t {
-    Void, // Void, lack of typeExpr
-    Any, // any ptr, null
-    Pointer, // Ptr to another typeExpr
-    Boolean, // true / false
-
-    Integral, // signed / unsigned integer 8, 16, 32, ... bits
-    FloatingPoint, // single, double
-
-    Function, // function
-    ZString, // nil terminated string, byte ptr / char*
-
-    UDT, // User defined Type (C struct)
+    Void,           // Void, lack of typeExpr
+    Any,            // any ptr, null
+    Pointer,        // Ptr to another typeExpr
+    Reference,      // Reference to another type
+    Boolean,        // true / false
+    Integral,       // signed / unsigned integer 8, 16, 32, ... bits
+    FloatingPoint,  // single, double
+    Function,       // Functions and SUBs and other user callable routines
+    ZString,        // nil terminated string, byte ptr / char*
+    UDT,            // User defined Type (C struct)
 };
+// clang-format on
 
 // clang-format off
 enum class TypeKind : std::uint8_t {
@@ -32,6 +32,7 @@ enum class TypeKind : std::uint8_t {
 // clang-format on
 
 class TypePointer;
+class TypeReference;
 class TypeNumeric;
 class TypeBoolean;
 class TypeIntegral;
@@ -42,10 +43,18 @@ class Context;
 enum class TokenKind : std::uint8_t;
 
 enum class TypeComparison : std::uint8_t {
+    /// No viable conversion possible
     Incompatible,
-    Downcast,
+    /// Types are same and require no conversion
     Equal,
-    Upcast
+    /// Smaller to larger. E.g. integer to short
+    Downcast,
+    /// Smaller to Larger. E.g. short to integer
+    Upcast,
+    /// Convert to reference. E.g. Integer to Integer Ref
+    AddReference,
+    /// Convert from reference to base type. E.g. Integer Ref to Integer
+    RemoveReference
 };
 
 /**
@@ -73,11 +82,13 @@ public:
     [[nodiscard]] virtual auto asString() const -> std::string = 0;
 
     [[nodiscard]] auto getPointer(Context& context) const -> const TypePointer*;
+    [[nodiscard]] auto getReference(Context& context) const -> const TypeReference*;
 
     // Type queries
     [[nodiscard]] constexpr auto isVoid() const -> bool { return m_family == TypeFamily::Void; }
     [[nodiscard]] constexpr auto isAny() const -> bool { return m_family == TypeFamily::Any; }
     [[nodiscard]] constexpr auto isPointer() const -> bool { return m_family == TypeFamily::Pointer; }
+    [[nodiscard]] constexpr auto isReference() const -> bool { return m_family == TypeFamily::Reference; }
     [[nodiscard]] constexpr auto isBoolean() const -> bool { return m_family == TypeFamily::Boolean; }
     [[nodiscard]] constexpr auto isNumeric() const -> bool { return isIntegral() || isFloatingPoint(); }
     [[nodiscard]] constexpr auto isIntegral() const -> bool { return m_family == TypeFamily::Integral; }
@@ -106,7 +117,7 @@ public:
     [[nodiscard]] auto getAlignment(Context& context) const -> std::size_t;
 
 protected:
-    constexpr explicit TypeRoot(TypeFamily family, TypeKind kind)
+    constexpr explicit TypeRoot(const TypeFamily family, const TypeKind kind)
     : m_family { family }
     , m_kind { kind } {
     }
@@ -114,7 +125,7 @@ protected:
     [[nodiscard]] virtual auto genLlvmType(Context& context) const -> llvm::Type* = 0;
 
 private:
-    void reset() {
+    void reset() const {
         m_llvmType = nullptr;
     }
 
@@ -139,10 +150,10 @@ public:
         return type->getFamily() == TypeFamily::Void;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 };
 
 /**
@@ -159,10 +170,10 @@ public:
         return type->getFamily() == TypeFamily::Any;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 };
 
 /**
@@ -181,12 +192,39 @@ public:
         return type->getFamily() == TypeFamily::Pointer;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
     [[nodiscard]] constexpr auto getBase() const -> const TypeRoot* { return m_base; }
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
+
+private:
+    const TypeRoot* m_base;
+};
+
+/**
+ * Pointer to another typeExpr
+ */
+class TypeReference final : public TypeRoot {
+public:
+    constexpr explicit TypeReference(const TypeRoot* base)
+    : TypeRoot { TypeFamily::Reference, TypeKind::ComplexType }
+    , m_base { base } {
+    }
+
+    [[nodiscard]] static auto get(Context& context, const TypeRoot* base) -> const TypeReference*;
+
+    constexpr static auto classof(const TypeRoot* type) -> bool {
+        return type->getFamily() == TypeFamily::Reference;
+    }
+
+    [[nodiscard]] auto asString() const -> std::string override;
+
+    [[nodiscard]] constexpr auto getBase() const -> const TypeRoot* { return m_base; }
+
+protected:
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 
 private:
     const TypeRoot* m_base;
@@ -207,10 +245,10 @@ public:
         return type->getFamily() == TypeFamily::Boolean;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 };
 
 /**
@@ -220,14 +258,14 @@ protected:
 class TypeNumeric : public TypeRoot {
 public:
     constexpr static auto classof(const TypeRoot* type) -> bool {
-        auto kind = type->getFamily();
+        const auto kind = type->getFamily();
         return kind == TypeFamily::Integral || kind == TypeFamily::FloatingPoint;
     }
 
     [[nodiscard]] constexpr auto getBits() const -> unsigned { return m_bits; }
 
 protected:
-    constexpr TypeNumeric(TypeFamily family, TypeKind kind, unsigned bits)
+    constexpr TypeNumeric(const TypeFamily family, const TypeKind kind, const unsigned bits)
     : TypeRoot { family, kind }
     , m_bits { bits } {
     }
@@ -241,7 +279,7 @@ private:
  */
 class TypeIntegral final : public TypeNumeric {
 public:
-    constexpr TypeIntegral(TypeKind kind, unsigned bits, bool isSigned)
+    constexpr TypeIntegral(const TypeKind kind, const unsigned bits, const bool isSigned)
     : TypeNumeric { TypeFamily::Integral, kind, bits }
     , m_signed { isSigned } {
     }
@@ -257,10 +295,10 @@ public:
     [[nodiscard]] auto getSigned() const -> const TypeIntegral*;
     [[nodiscard]] auto getUnsigned() const -> const TypeIntegral*;
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 
 private:
     const bool m_signed;
@@ -271,7 +309,7 @@ private:
  */
 class TypeFloatingPoint final : public TypeNumeric {
 public:
-    constexpr explicit TypeFloatingPoint(TypeKind kind, unsigned bits)
+    constexpr explicit TypeFloatingPoint(const TypeKind kind, const unsigned bits)
     : TypeNumeric { TypeFamily::FloatingPoint, kind, bits } {
     }
 
@@ -281,10 +319,10 @@ public:
         return type->getFamily() == TypeFamily::FloatingPoint;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 };
 
 /**
@@ -292,7 +330,7 @@ protected:
  */
 class TypeFunction final : public TypeRoot {
 public:
-    TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, bool variadic)
+    TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, const bool variadic)
     : TypeRoot { TypeFamily::Function, TypeKind::ComplexType }
     , m_retType { retType }
     , m_paramTypes { std::move(paramTypes) }
@@ -310,7 +348,7 @@ public:
         return type->getFamily() == TypeFamily::Function;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
     [[nodiscard]] auto getReturn() const -> const TypeRoot* { return m_retType; }
     [[nodiscard]] auto getParams() const -> const llvm::SmallVector<const TypeRoot*>& { return m_paramTypes; }
@@ -321,7 +359,7 @@ public:
     }
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 
 private:
     friend class Context;
@@ -346,10 +384,10 @@ public:
         return type->getFamily() == TypeFamily::ZString;
     }
 
-    [[nodiscard]] auto asString() const -> std::string final;
+    [[nodiscard]] auto asString() const -> std::string override;
 
 protected:
-    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* final;
+    [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
 };
 
 } // namespace lbc

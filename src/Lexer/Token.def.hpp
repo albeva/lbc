@@ -88,6 +88,7 @@
     _( Next,     "NEXT"     ) \
     _( Null,     "NULL"     ) \
     _( Ptr,      "PTR"      ) \
+    _( Ref,      "REF"      ) \
     _( Rem,      "REM"      ) \
     _( Return,   "RETURN"   ) \
     _( SizeOf,   "SIZEOF"   ) \

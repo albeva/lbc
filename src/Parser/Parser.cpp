@@ -1310,13 +1310,14 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
     }
 
     // handle trailing ptr keywords
-    context.deref += parseDereferences();
+    TRY(parseDereferences(context))
 
     // done
     return m_context.create<AstTypeExpr>(
         llvm::SMRange { start, m_endLoc },
         expr,
-        context.deref
+        context.indirection,
+        context.isReference
     );
 }
 
@@ -1343,7 +1344,11 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
     // terminate type expression, then consider it valid
     switch (m_token.getKind()) {
     case TokenKind::Ptr:
-        context.deref += 1;
+        context.indirection += 1;
+        advance();
+        break;
+    case TokenKind::Ref:
+        context.isReference = true;
         advance();
         break;
     case TokenKind::ParenClose:
@@ -1398,7 +1403,7 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
         );
     }
 
-    context.deref += 1;
+    context.indirection += 1;
     advance();
 
     return func;
@@ -1411,12 +1416,26 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
  *
  * @return the number of dereferences.
  */
-auto Parser::parseDereferences() -> int {
-    int deref = 0;
-    while (accept(TokenKind::Ptr)) {
-        deref++;
+auto Parser::parseDereferences(TypeParsingContext& context) -> Result<void> {
+    while (true) {
+        switch (m_token.getKind()) {
+        case TokenKind::Ptr:
+            if (context.isReference) {
+                return makeError(Diag::invalidPointerToReference, m_token);
+            }
+            context.indirection++;
+            break;
+        case TokenKind::Ref:
+            if (context.isReference) {
+                return makeError(Diag::invalidReferenceToReference, m_token);
+            }
+            context.isReference = true;
+            break;
+        default:
+            return {};
+        }
+        advance();
     }
-    return deref;
 }
 
 /**

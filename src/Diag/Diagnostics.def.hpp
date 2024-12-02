@@ -22,7 +22,9 @@
     _( unsupportedExternLanguage,           "Unsupported extern langauge '{0}'"                       ) \
     _( onlyDeclarationsInExtern,            "Only declarations permitted in EXTERN block"             ) \
     _( expectedTypeExpression,              "expected type expression, got '{0}'"                     ) \
-    _( procTypesMustHaveAPtr,               "{0} type missing a trailing PTR"                         )
+    _( procTypesMustHaveAPtr,               "{0} type missing a trailing PTR"                         ) \
+    _( invalidPointerToReference,           "Cannot have a pointer to a reference"                    ) \
+    _( invalidReferenceToReference,         "Cannot have a reference to a reference"                  )
 
 //----------------------------------------
 // Semantic errors

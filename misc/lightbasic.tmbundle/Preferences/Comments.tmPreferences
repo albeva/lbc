@@ -11,28 +11,28 @@
 		<key>shellVariables</key>
 		<array>
 			<dict>
-				<key>name</key>
-				<string>TM_COMMENT_START</string>
 				<key>llvmValue</key>
 				<string>' </string>
+				<key>name</key>
+				<string>TM_COMMENT_START</string>
 			</dict>
 			<dict>
-				<key>name</key>
-				<string>TM_COMMENT_START_2</string>
 				<key>llvmValue</key>
 				<string>/'</string>
+				<key>name</key>
+				<string>TM_COMMENT_START_2</string>
 			</dict>
 			<dict>
-				<key>name</key>
-				<string>TM_COMMENT_END_2</string>
 				<key>llvmValue</key>
 				<string>'/</string>
+				<key>name</key>
+				<string>TM_COMMENT_END_2</string>
 			</dict>
 			<dict>
-				<key>name</key>
-				<string>TM_COMMENT_DISABLE_INDENT_2</string>
 				<key>llvmValue</key>
 				<string>yes</string>
+				<key>name</key>
+				<string>TM_COMMENT_DISABLE_INDENT_2</string>
 			</dict>
 		</array>
 	</dict>

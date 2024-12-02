@@ -11,11 +11,11 @@ class DataLayout;
 
 namespace lbc {
 struct CompileOptions;
-class TypeFunction;
-class TypePointer;
 class DiagnosticEngine;
 class Toolchain;
 class JIT;
+class TypeRoot;
+enum class TypeFamily : std::uint8_t;
 
 /**
  * Context holds various data and memory allocations required for the compilation process.
@@ -73,28 +73,18 @@ public:
     }
 
     /**
-     * Get all function types
+     * Get all types for given family
      *
      * @return vector of types
      */
-    auto getFuncTypes() -> auto& {
-        return funcTypes;
-    }
-
-    /**
-     * Get all pointer types
-     *
-     * @return vector of types
-     */
-    auto getPtrTypes() -> auto& {
-        return ptrTypes;
+    [[nodiscard]] auto getTypes(const TypeFamily family) -> auto& {
+        return m_types[family];
     }
 
 private:
     struct Pimpl;
 
-    std::vector<TypeFunction*> funcTypes;
-    std::vector<TypePointer*> ptrTypes;
+    std::unordered_map<TypeFamily, std::vector<const TypeRoot*>> m_types;
     std::unique_ptr<Pimpl> m_pimpl;
     CompileOptions& m_options;
 

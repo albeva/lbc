@@ -231,7 +231,7 @@ void CodeGen::declareLocalVar(AstVarDecl& ast) {
 
     // has an init expr?
     if (ast.expr != nullptr) {
-        ValueHandler rvalue = expr(*ast.expr);
+        const ValueHandler rvalue = expr(*ast.expr);
         m_builder.CreateStore(rvalue.load(), lvalue);
     }
 
@@ -262,6 +262,7 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
         *m_module
     );
     fn->setCallingConv(llvm::CallingConv::C);
+    fn->setLinkage(llvm::GlobalValue::ExternalLinkage);
     ast.symbol->setLlvmValue(fn);
 
     if (ast.params != nullptr) {

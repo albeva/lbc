@@ -559,20 +559,23 @@ struct AstTypeExpr final : AstRoot {
     using TypeExpr = std::variant<AstIdentExpr*, AstFuncDecl*, AstTypeOf*, TokenKind>;
 
     constexpr AstTypeExpr(
-        llvm::SMRange range_,
-        TypeExpr expr_,
-        int deref
+        const llvm::SMRange range_,
+        const TypeExpr expr_,
+        const int indirection_,
+        const bool isReference_
     )
     : AstRoot { AstKind::TypeExpr, range_ }
     , expr { expr_ }
-    , dereference { deref } { }
+    , indirection { indirection_ }
+    , isReference { isReference_ } { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::TypeExpr;
     }
 
     TypeExpr expr;
-    const int dereference;
+    const int indirection;
+    const bool isReference;
     const TypeRoot* type = nullptr;
 };
 

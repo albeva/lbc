@@ -50,16 +50,12 @@ Context::~Context() = default;
 void Context::reset() {
     m_jit.reset();
 
-    for (auto& func : funcTypes) {
-        func->reset();
+    for (const auto& [key, vec] : m_types) {
+        for (const auto& type : vec) {
+            type->reset();
+        }
     }
-
-    for (auto& ptr : ptrTypes) {
-        ptr->reset();
-    }
-
-    funcTypes.clear();
-    ptrTypes.clear();
+    m_types.clear();
 
     m_options.reset();
     m_sourceMgr = llvm::SourceMgr {};

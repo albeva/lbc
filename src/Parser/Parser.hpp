@@ -57,13 +57,14 @@ private:
     struct TypeParsingContext final {
         bool allowIncompleteType = false;
         AstIdentExpr* identifier = nullptr;
-        int deref = 0;
+        int indirection = 0;
+        bool isReference = false;
     };
 
     [[nodiscard]] auto basicTypeExpr(TypeParsingContext& context) -> Result<AstTypeExpr*>;
     [[nodiscard]] auto parseTypeIdentifier(TypeParsingContext& context) -> Result<AstIdentExpr*>;
     [[nodiscard]] auto parseTypeProcedure(bool enclosed, TypeParsingContext& context) -> Result<AstFuncDecl*>;
-    [[nodiscard]] auto parseDereferences() -> int;
+    [[nodiscard]] auto parseDereferences(TypeParsingContext& context) -> Result<void>;
     template <typename T>
     [[nodiscard]] auto handleIncompleteTypeExpr(const TypeParsingContext& context) const -> Result<T*>;
     [[nodiscard]] auto kwTypeOf() -> Result<AstTypeOf*>;
