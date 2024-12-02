@@ -485,7 +485,7 @@ auto SemanticAnalyzer::visit(AstAddressOf& ast) -> Result<void> {
 auto SemanticAnalyzer::visit(AstAlignOfExpr& ast) -> Result<void> {
     TRY_DECL(type, m_typePass.visit(*ast.typeExpr))
     ast.type = TypeRoot::fromTokenKind(TokenKind::SizeOf);
-    ast.constantValue = type->getAlignment(m_context);
+    ast.constantValue = TokenValue::from(type->getAlignment(m_context));
     return {};
 }
 
@@ -496,7 +496,7 @@ auto SemanticAnalyzer::visit(AstAlignOfExpr& ast) -> Result<void> {
 auto SemanticAnalyzer::visit(AstSizeOfExpr& ast) -> Result<void> {
     TRY_DECL(type, m_typePass.visit(*ast.typeExpr))
     ast.type = TypeRoot::fromTokenKind(TokenKind::SizeOf);
-    ast.constantValue = type->getSize(m_context);
+    ast.constantValue = TokenValue::from(type->getSize(m_context));
     return {};
 }
 

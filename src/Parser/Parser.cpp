@@ -1473,7 +1473,6 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
     m_exprFlags = flags;
 
     TRY_DECL(expr, primary())
-    TRY_ASSIGN(expr, expression(expr, 1))
 
     // This enables following syntax
     //   print "message"
@@ -1482,18 +1481,24 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
     // There is some ambiguity however:
     //   "print -foo"  is seen as "(print - foo)" and not as "print (-foo)"
     // However, it is how BASIC is expected to work...
-    if (flags::has(flags, ExprFlags::callWithoutParens) && llvm::isa<AstIdentExpr>(*expr)) {
+    if (flags::has(flags, ExprFlags::callWithoutParens) && expr->kind == AstKind::IdentExpr) {
+        // if next token is a binary or a right to left operator, then we can assume it is not a sub call
+        if (m_token.isBinary() || m_token.isRightToLeft()) {
+            return expression(expr, 1);
+        }
+
         const auto start = expr->range.Start;
         TRY_DECL(args, expressionList())
 
-        expr = m_context.create<AstCallExpr>(
+        return m_context.create<AstCallExpr>(
             llvm::SMRange { start, m_endLoc },
             expr,
             args
         );
     }
 
-    return expr;
+    // Normal expression
+    return expression(expr, 1);
 }
 
 /**
