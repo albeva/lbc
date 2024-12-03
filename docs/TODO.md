@@ -6,10 +6,11 @@ dynamic arrays, in no particular order.
 
 - [x] Implement passing UDTs by value
 - [x] Implement returning UDTs by value
-- [ ] Fix issues with taking address of unsupported types.
-    - [ ] literals
-    - [ ] non-reference return types
-    - [ ] constanbts
+- [ ] Fix `RETURN` statement at the root level
+- [x] Fix issues with taking address of unsupported types.
+    - [x] literals
+    - [x] non-reference return types
+    - [x] constants
 - [ ] Move primitive types to Context, so they are not global.
 - [ ] Add support for reference types.
     - Internally references are just pointers, but do not require `*` to dereference value
@@ -19,7 +20,7 @@ dynamic arrays, in no particular order.
     - [x] Add support for reference types in the code generator
     - [ ] Disallow casting reference away
     - [ ] Check when returning a reference to local variable
-    - [ ] HAndle `IS` and `AS` operators
+    - [ ] Handle `IS` and `AS` operators
     - [ ] Support reference in `IF` expressions
     - [ ] Fix `FOR` statement to work with reference types
     - [ ] After `CONST` variable support been added, allow implicit conversions to `const ref` types as in c++

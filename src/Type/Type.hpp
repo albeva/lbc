@@ -83,6 +83,7 @@ public:
 
     [[nodiscard]] auto getPointer(Context& context) const -> const TypePointer*;
     [[nodiscard]] auto getReference(Context& context) const -> const TypeReference*;
+    [[nodiscard]] constexpr virtual auto getBase() const -> const TypeRoot* { return this; }
 
     // Type queries
     [[nodiscard]] constexpr auto isVoid() const -> bool { return m_family == TypeFamily::Void; }
@@ -194,7 +195,7 @@ public:
 
     [[nodiscard]] auto asString() const -> std::string override;
 
-    [[nodiscard]] constexpr auto getBase() const -> const TypeRoot* { return m_base; }
+    [[nodiscard]] constexpr auto getBase() const -> const TypeRoot* override { return m_base; }
 
 protected:
     [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;
@@ -221,7 +222,7 @@ public:
 
     [[nodiscard]] auto asString() const -> std::string override;
 
-    [[nodiscard]] constexpr auto getBase() const -> const TypeRoot* { return m_base; }
+    [[nodiscard]] constexpr auto getBase() const -> const TypeRoot* override { return m_base; }
 
 protected:
     [[nodiscard]] auto genLlvmType(Context& context) const -> llvm::Type* override;

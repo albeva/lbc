@@ -334,8 +334,22 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
             ast.lhs->type->asString()
         );
     }
-    TRY(expression(ast.rhs, ast.lhs->type))
-    return {};
+
+    const auto deref = [&](AstExpr*& expr) {
+        const auto* type = expr->type;
+        const auto flags = expr->flags;
+
+        expr = m_context.create<AstDereference>(expr->range, expr);
+        expr->type = type->getBase();
+        expr->flags = flags;
+        expr->constantValue = std::nullopt;
+    };
+
+    if (const auto* type = ast.lhs->type; type->isReference()) {
+        deref(ast.lhs);
+    }
+
+    return expression(ast.rhs, ast.lhs->type);
 }
 
 auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
@@ -655,6 +669,20 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
         return {};
     };
 
+    const auto deref = [&](AstExpr*& expr) {
+        const auto* type = expr->type;
+        assert(type->isReference() && "Expected reference type");
+
+        auto flags = expr->flags;
+        flags.addressable = false;
+        flags.assignable = false;
+
+        expr = m_context.create<AstDereference>(expr->range, expr);
+        expr->type = type->getBase();
+        expr->flags = flags;
+        expr->constantValue = std::nullopt;
+    };
+
     switch (left->compare(right)) {
     case TypeComparison::Incompatible:
         return makeError(
@@ -673,13 +701,26 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
     case TypeComparison::Upcast:
         return castTo(ast.lhs, right);
     case TypeComparison::RemoveReference:
+        deref(ast.lhs);
+        ast.type = TypeBoolean::get();
+        return {};
     case TypeComparison::AddReference:
-        llvm_unreachable("To/From reference not yet implemented");
+        deref(ast.rhs);
+        ast.type = TypeBoolean::get();
+        return {};
     }
     llvm_unreachable("Unhandled type comparison result");
 }
 
 auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(left)) {
+        left = ref->getBase();
+    }
+
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(right)) {
+        right = ref->getBase();
+    }
+
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }

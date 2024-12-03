@@ -111,7 +111,6 @@ private:
     SymbolTable* m_table;
     const TypeRoot* m_type;
     AstDecl* m_decl;
-
     llvm::StringRef m_alias;
     llvm::Value* m_llvmValue = nullptr;
     unsigned m_index = 0;

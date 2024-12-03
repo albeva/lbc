@@ -158,7 +158,7 @@ void CodeGen::visit(AstExprList& /*ast*/) {
 }
 
 auto CodeGen::visit(AstAssignExpr& ast) -> ValueHandler {
-    const auto lhs = visit(*ast.lhs);
+    const ValueHandler lhs = visit(*ast.lhs);
     ValueHandler rhs = expr(*ast.rhs);
     lhs.store(rhs);
     return lhs;
