@@ -352,8 +352,8 @@ auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
         return makeError(Diag::useBeforeDefinition, ast, ast.name);
     }
 
-    ast.type = symbol->getType();
     ast.symbol = symbol;
+    ast.type = symbol->getType();
     ast.flags = symbol->valueFlags();
 
     return {};
@@ -394,6 +394,12 @@ auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
     }
 
     ast.type = type->getReturn();
+
+    if (ast.type->isReference()) {
+        ast.flags.addressable = true;
+        ast.flags.addressable = true;
+    }
+
     return {};
 }
 
@@ -475,6 +481,9 @@ auto SemanticAnalyzer::visit(AstDereference& ast) -> Result<void> {
 
 auto SemanticAnalyzer::visit(AstAddressOf& ast) -> Result<void> {
     TRY(visit(*ast.expr))
+    if (not ast.expr->flags.addressable) {
+        return makeError(Diag::cannotTakeAddressOf, ast.expr, ast.expr->type->asString());
+    }
     ast.type = TypePointer::get(m_context, ast.expr->type);
     ast.flags = ast.expr->flags;
     return {};

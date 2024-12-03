@@ -20,6 +20,8 @@ struct ValueFlags final {
     uint8_t external : 1;
     uint8_t mustBeConstant : 1;
     uint8_t reference : 1;
+    /// Can take address of the expression. E.g. sub, function or a variable
+    uint8_t addressable : 1;
 };
 
 } // namespace lbc

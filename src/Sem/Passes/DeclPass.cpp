@@ -72,7 +72,7 @@ auto DeclPass::define(AstDecl& ast) -> Result<void> {
         state.beingDefined = false;
     };
 
-    if (auto* alias = llvm::dyn_cast<AstTypeAlias>(&ast)) {
+    if (const auto* alias = llvm::dyn_cast<AstTypeAlias>(&ast)) {
         return defineAlias(*alias);
     }
     if (auto* udt = llvm::dyn_cast<AstUdtDecl>(&ast)) {
@@ -149,6 +149,7 @@ auto DeclPass::defineFunc(AstFuncDecl& ast) const -> Result<void> {
     } else {
         symbol->valueFlags().external = !ast.hasImpl;
     }
+    symbol->valueFlags().addressable = true;
 
     // func type
     TRY_DECL(type, m_sem.getTypePass().visit(ast))
@@ -172,6 +173,7 @@ auto DeclPass::defineFuncParam(AstFuncParamDecl& ast) const -> Result<void> {
     const auto* type = ast.typeExpr->type;
     TRY_ASSIGN(ast.symbol, createNewSymbol(ast, type))
 
+    // TODO function params should be readonly/const by default
     ast.symbol->valueFlags().assignable = true;
 
     return {};
@@ -209,6 +211,7 @@ auto DeclPass::defineVar(AstVarDecl& ast) const -> Result<void> {
     auto* symbol = ast.symbol;
     symbol->valueFlags().external = false;
     symbol->valueFlags().assignable = !ast.constant;
+    symbol->valueFlags().addressable = !ast.constant;
     symbol->setType(type);
     ast.symbol = symbol;
 
