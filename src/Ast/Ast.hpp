@@ -18,6 +18,8 @@ enum class CallingConv : std::uint8_t {
     C
 };
 
+enum class SymbolVisibility : uint8_t;
+
 // clang-format off
 enum class AstKind : std::uint8_t {
     #define KIND_ENUM(id, ...) id,
@@ -374,12 +376,14 @@ struct AstDecl : AstStmt {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
+        SymbolVisibility visibility_,
         CallingConv callingConv_,
         AstAttributeList* attribs
     )
     : AstStmt { kind_, range_ }
     , name { name_ }
     , token { token_ }
+    , visibility { visibility_ }
     , callingConv { callingConv_ }
     , attributes { attribs } { }
 
@@ -389,6 +393,7 @@ struct AstDecl : AstStmt {
 
     const llvm::StringRef name;
     const Token token;
+    const SymbolVisibility visibility;
     const CallingConv callingConv;
     AstAttributeList* attributes;
     bool local = true;
@@ -408,13 +413,14 @@ struct AstVarDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
+        SymbolVisibility visibility_,
         CallingConv callingConv_,
         AstAttributeList* attrs_,
         AstTypeExpr* type_,
         AstExpr* expr_,
         bool constant_
     )
-    : AstDecl { AstKind::VarDecl, range_, name_, token_, callingConv_, attrs_ }
+    : AstDecl { AstKind::VarDecl, range_, name_, token_, visibility_, callingConv_, attrs_ }
     , typeExpr { type_ }
     , expr { expr_ }
     , constant { constant_ } { }
@@ -433,6 +439,7 @@ struct AstFuncDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
+        SymbolVisibility visibility_,
         CallingConv callingConv_,
         AstAttributeList* attrs_,
         AstFuncParamList* params_,
@@ -440,7 +447,7 @@ struct AstFuncDecl final : AstDecl {
         AstTypeExpr* retType_,
         bool hasImpl_
     )
-    : AstDecl { AstKind::FuncDecl, range_, name_, token_, callingConv_, attrs_ }
+    : AstDecl { AstKind::FuncDecl, range_, name_, token_, visibility_, callingConv_, attrs_ }
     , params { params_ }
     , variadic { variadic_ }
     , retTypeExpr { retType_ }
@@ -450,11 +457,11 @@ struct AstFuncDecl final : AstDecl {
         return ast->kind == AstKind::FuncDecl;
     }
 
-    constexpr auto isFunction() const -> bool {
+    [[nodiscard]] constexpr auto isFunction() const -> bool {
         return retTypeExpr != nullptr;
     }
 
-    constexpr auto isSub() const -> bool {
+    [[nodiscard]] constexpr auto isSub() const -> bool {
         return retTypeExpr == nullptr;
     }
 
@@ -470,11 +477,12 @@ struct AstFuncParamDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
+        SymbolVisibility visibility_,
         CallingConv callingConv_,
         AstAttributeList* attrs,
         AstTypeExpr* type_
     )
-    : AstDecl { AstKind::FuncParamDecl, range_, name_, token_, callingConv_, attrs }
+    : AstDecl { AstKind::FuncParamDecl, range_, name_, token_, visibility_, callingConv_, attrs }
     , typeExpr { type_ } { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {
@@ -500,11 +508,12 @@ struct AstUdtDecl final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
+        SymbolVisibility visibility_,
         CallingConv callingConv_,
         AstAttributeList* attrs,
         AstDeclList* decls_
     )
-    : AstDecl { AstKind::UdtDecl, range_, name_, token_, callingConv_, attrs }
+    : AstDecl { AstKind::UdtDecl, range_, name_, token_, visibility_, callingConv_, attrs }
     , decls { decls_ } { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {
@@ -520,11 +529,12 @@ struct AstTypeAlias final : AstDecl {
         llvm::SMRange range_,
         llvm::StringRef name_,
         Token token_,
+        SymbolVisibility visibility_,
         CallingConv callingConv_,
         AstAttributeList* attrs,
         AstTypeExpr* typeExpr_
     )
-    : AstDecl { AstKind::TypeAlias, range_, name_, token_, callingConv_, attrs }
+    : AstDecl { AstKind::TypeAlias, range_, name_, token_, visibility_, callingConv_, attrs }
     , typeExpr { typeExpr_ } { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {

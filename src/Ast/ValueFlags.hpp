@@ -8,20 +8,19 @@ namespace lbc {
 
 struct ValueFlags final {
     enum class Kind : uint8_t {
-        type,
-        variable,
-        function
+        Type,
+        Variable,
+        Function
     };
+    // Value kind
     Kind kind : 2;
-    /// Symbol can be assigned a value if:
-    /// - is a variable
-    /// - variable is not a constant or readonly
+    /// Can assign value
     uint8_t assignable : 1;
-    uint8_t external : 1;
-    uint8_t mustBeConstant : 1;
-    uint8_t reference : 1;
-    /// Can take address of the expression. E.g. sub, function or a variable
+    /// Can take address
     uint8_t addressable : 1;
+    /// Is a constant
+    uint8_t constant : 1;
 };
+static_assert(sizeof(ValueFlags) == 1);
 
 } // namespace lbc

@@ -13,7 +13,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
 , m_symbolTable { symbolTable }
 , m_packed(packed) {
     symbol.setType(this);
-    symbol.valueFlags().kind = ValueFlags::Kind::type;
+    symbol.valueFlags().kind = ValueFlags::Kind::Type;
 }
 
 auto TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) -> const TypeUDT* {

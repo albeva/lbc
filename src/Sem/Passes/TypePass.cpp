@@ -46,7 +46,7 @@ auto TypePass::visit(AstIdentExpr& ast) const -> Result<const TypeRoot*> {
         return m_sem.makeError(Diag::undefinedType, ast, ast.name);
     }
 
-    if (symbol->valueFlags().kind != ValueFlags::Kind::type) {
+    if (symbol->valueFlags().kind != ValueFlags::Kind::Type) {
         return m_sem.makeError(Diag::notAType, ast, ast.name);
     }
 

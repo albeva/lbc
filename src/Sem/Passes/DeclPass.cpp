@@ -27,11 +27,11 @@ auto DeclPass::declare(AstDecl& ast) const -> Result<void> {
     TRY_DECL(symbol, createNewSymbol(ast, nullptr))
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
-        symbol->valueFlags().kind = ValueFlags::Kind::function;
+        symbol->valueFlags().kind = ValueFlags::Kind::Function;
     } else if (llvm::isa<AstVarDecl>(&ast)) {
-        symbol->valueFlags().kind = ValueFlags::Kind::variable;
+        symbol->valueFlags().kind = ValueFlags::Kind::Variable;
     } else {
-        symbol->valueFlags().kind = ValueFlags::Kind::type;
+        symbol->valueFlags().kind = ValueFlags::Kind::Type;
     }
 
     ast.symbol = symbol;
@@ -107,7 +107,7 @@ auto DeclPass::defineAlias(const AstTypeAlias& ast) const -> Result<void> {
     if (auto* parent = std::visit(getSymbol, ast.typeExpr->expr)) {
         symbol->valueFlags() = parent->valueFlags();
     } else {
-        symbol->valueFlags().kind = ValueFlags::Kind::type;
+        symbol->valueFlags().kind = ValueFlags::Kind::Type;
     }
 
     return {};
@@ -145,9 +145,9 @@ auto DeclPass::defineFunc(AstFuncDecl& ast) const -> Result<void> {
     // main or external?
     if (m_sem.hasImplicitMain() && symbol->name() == "MAIN" && symbol->alias().empty()) {
         symbol->setAlias("main");
-        symbol->valueFlags().external = true;
+        symbol->setVisibility(SymbolVisibility::External);
     } else {
-        symbol->valueFlags().external = !ast.hasImpl;
+        symbol->setVisibility(ast.visibility);
     }
     symbol->valueFlags().addressable = true;
 
@@ -209,7 +209,7 @@ auto DeclPass::defineVar(AstVarDecl& ast) const -> Result<void> {
 
     // The Symbol
     auto* symbol = ast.symbol;
-    symbol->valueFlags().external = false;
+    symbol->setVisibility(SymbolVisibility::Private);
     symbol->valueFlags().assignable = !ast.constant;
     symbol->valueFlags().addressable = !ast.constant;
     symbol->setType(type);

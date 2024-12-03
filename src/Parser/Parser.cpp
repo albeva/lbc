@@ -28,6 +28,7 @@ Parser::Parser(Context& context, Lexer& lexer, const bool isMain, SymbolTable* s
 , m_lexer { lexer }
 , m_isMain { isMain }
 , m_symbolTable { symbolTable }
+, m_visibility { SymbolVisibility::Private }
 , m_language { CallingConv::Default }
 , m_scope { Scope::Root } {
     advance();
@@ -262,6 +263,9 @@ auto Parser::kwExtern() -> Result<AstExtern*> {
     const auto start = m_token.getRange().Start;
     advance();
     RESTORE_ON_EXIT(m_language);
+    RESTORE_ON_EXIT(m_visibility);
+
+    m_visibility = SymbolVisibility::External;
 
     if (m_token.is(TokenKind::StringLiteral)) {
         if (auto str = m_token.getStringValue().upper(); str == "C") {
@@ -479,6 +483,7 @@ auto Parser::kwDim(AstAttributeList* attribs) -> Result<AstVarDecl*> {
         llvm::SMRange { start, m_endLoc },
         id,
         token,
+        m_visibility,
         m_language,
         attribs,
         type,
@@ -527,6 +532,7 @@ auto Parser::kwConst(AstAttributeList* attribs) -> Result<AstVarDecl*> {
         llvm::SMRange { start, m_endLoc },
         id,
         token,
+        m_visibility,
         m_language,
         attribs,
         type,
@@ -608,6 +614,7 @@ auto Parser::procSignature(const llvm::SMLoc start, AstAttributeList* attribs, c
         llvm::SMRange { start, m_endLoc },
         id,
         token,
+        m_visibility,
         m_language,
         attribs,
         params,
@@ -692,6 +699,7 @@ auto Parser::funcParam(const bool isAnonymous) -> Result<AstFuncParamDecl*> {
         llvm::SMRange { start, m_endLoc },
         id,
         token,
+        m_visibility,
         m_language,
         nullptr,
         type
@@ -749,6 +757,7 @@ auto Parser::alias(Token token, const llvm::SMLoc start, AstAttributeList* attri
         llvm::SMRange { start, m_endLoc },
         token.getStringValue(),
         token,
+        m_visibility,
         m_language,
         attribs,
         type
@@ -776,6 +785,7 @@ auto Parser::udt(Token token, const llvm::SMLoc start, AstAttributeList* attribs
         llvm::SMRange { start, m_endLoc },
         token.getStringValue(),
         token,
+        m_visibility,
         m_language,
         attribs,
         decls
@@ -831,6 +841,7 @@ auto Parser::udtMember(AstAttributeList* attribs) -> Result<AstDecl*> {
         llvm::SMRange { start, m_endLoc },
         id,
         token,
+        m_visibility,
         m_language,
         attribs,
         type,
@@ -1059,6 +1070,7 @@ auto Parser::kwFor() -> Result<AstForStmt*> {
         llvm::SMRange { idStart, m_endLoc },
         id,
         token,
+        m_visibility,
         m_language,
         nullptr,
         type,
@@ -1334,7 +1346,7 @@ auto Parser::typeExpr() -> Result<AstTypeExpr*> {
     // If we have a symbol table, we can query for the ID.
     if (m_symbolTable != nullptr) {
         auto* symbol = m_symbolTable->find(ident->name);
-        if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::type) {
+        if (symbol == nullptr || symbol->valueFlags().kind != ValueFlags::Kind::Type) {
             return ResultError {}; // NOTE: Semantic analyser handles the error logging.
         }
         ident->symbol = symbol;

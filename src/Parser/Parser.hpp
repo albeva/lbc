@@ -14,6 +14,7 @@ class SymbolTable;
 class Lexer;
 struct AstIfStmtBlock;
 enum class CallingConv : std::uint8_t;
+enum class SymbolVisibility : uint8_t;
 enum class AstContinuationAction : std::uint8_t;
 AST_FORWARD_DECLARE()
 struct AstExtern;
@@ -138,8 +139,8 @@ private:
     Lexer& m_lexer;
     const bool m_isMain;
     SymbolTable* m_symbolTable;
+    SymbolVisibility m_visibility;
     CallingConv m_language;
-
     Scope m_scope;
     llvm::SMLoc m_endLoc;
     std::vector<AstImport*> m_imports;

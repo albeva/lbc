@@ -318,7 +318,7 @@ auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result
         TRY(coerce(ast, type))
     }
 
-    if (ast->flags.mustBeConstant && !ast->constantValue) {
+    if (ast->flags.constant && !ast->constantValue) {
         return makeError(Diag::mustBeConstantExpr, ast);
     }
 
@@ -362,7 +362,7 @@ auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
 auto SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const -> bool {
     return symbol->stateFlags().declared
         || m_flags.allowUseBeforDefiniation
-        || symbol->valueFlags().kind != ValueFlags::Kind::variable
+        || symbol->valueFlags().kind != ValueFlags::Kind::Variable
         || symbol->getSymbolTable()->getFunction() != m_function;
 }
 
@@ -564,7 +564,7 @@ auto SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) -> Result<void> {
         if (left == right && left->isZString()) {
             if (ast.token.getKind() == TokenKind::Plus) {
                 ast.type = left;
-                ast.flags.mustBeConstant = true;
+                ast.flags.constant = true;
                 return {};
             }
             return makeError(
@@ -646,7 +646,7 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
     }
 
     if (left->isZString()) {
-        ast.flags.mustBeConstant = true;
+        ast.flags.constant = true;
     }
 
     const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
@@ -745,7 +745,7 @@ auto SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) -> Result<voi
         return {};
     }
 
-    return ResultError{};
+    return ResultError {};
 }
 
 auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void> {

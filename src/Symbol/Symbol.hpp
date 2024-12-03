@@ -11,6 +11,12 @@ class TypeRoot;
 struct AstDecl;
 class SymbolTable;
 
+enum class SymbolVisibility : uint8_t {
+    External, // Externally visible symbol.
+    Internal, // Internally visible within the module
+    Private // Visible only within current translation unit
+};
+
 class Symbol final {
 public:
     NO_COPY_AND_MOVE(Symbol)
@@ -54,6 +60,9 @@ public:
     [[nodiscard]] auto getLlvmValue() const -> llvm::Value* { return m_llvmValue; }
     void setLlvmValue(llvm::Value* value) { m_llvmValue = value; }
 
+    [[nodiscard]] auto getVisibility() const -> SymbolVisibility { return m_visibility; }
+    void setVisibility(const SymbolVisibility visibility) { m_visibility = visibility; }
+
     [[nodiscard]] auto alias() const -> llvm::StringRef { return m_alias; }
     void setAlias(llvm::StringRef alias) { m_alias = alias; }
 
@@ -70,10 +79,15 @@ public:
     }
 
     [[nodiscard]] auto getLlvmLinkage() const -> llvm::GlobalValue::LinkageTypes {
-        if (m_flags.external) {
-            return llvm::GlobalValue::LinkageTypes::ExternalLinkage;
+        switch (m_visibility) {
+        case SymbolVisibility::External:
+            return llvm::GlobalValue::ExternalLinkage;
+        case SymbolVisibility::Internal:
+            return llvm::GlobalValue::InternalLinkage;
+        case SymbolVisibility::Private:
+            return llvm::GlobalValue::PrivateLinkage;
         }
-        return llvm::GlobalValue::LinkageTypes::InternalLinkage;
+        llvm_unreachable("Unhandled visiblity");
     }
 
     // Make vanilla new/delete illegal.
@@ -98,6 +112,7 @@ private:
     unsigned m_index = 0;
     ValueFlags m_flags {};
     StateFlags m_state {};
+    SymbolVisibility m_visibility = SymbolVisibility::Private;
     std::optional<TokenValue> m_constantValue;
 };
 
