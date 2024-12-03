@@ -7,6 +7,7 @@
 #include "Builders/ForStmtBuilder.hpp"
 #include "Builders/IfStmtBuilder.hpp"
 #include "Driver/Context.hpp"
+#include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
 #include "ValueHandler.hpp"
 #include <llvm/IR/DerivedTypes.h>

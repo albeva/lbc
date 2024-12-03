@@ -12,9 +12,14 @@ struct AstDecl;
 class SymbolTable;
 
 enum class SymbolVisibility : uint8_t {
-    External, // Externally visible symbol.
+    Private, // Visible only within current translation unit
     Internal, // Internally visible within the module
-    Private // Visible only within current translation unit
+    External, // Externally visible symbol.
+};
+
+enum class CallingConv : std::uint8_t {
+    Default,
+    C
 };
 
 class Symbol final {

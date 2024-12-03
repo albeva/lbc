@@ -6,19 +6,16 @@
 #include "Ast.def.hpp"
 #include "ControlFlowStack.hpp"
 #include "Lexer/Token.hpp"
-#include "Symbol/SymbolTable.hpp"
 #include "ValueFlags.hpp"
 
 namespace lbc {
 class TypeRoot;
+class SymbolTable;
+class Symbol;
 AST_FORWARD_DECLARE()
 
-enum class CallingConv : std::uint8_t {
-    Default,
-    C
-};
-
 enum class SymbolVisibility : uint8_t;
+enum class CallingConv : std::uint8_t;
 
 // clang-format off
 enum class AstKind : std::uint8_t {

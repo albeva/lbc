@@ -4,6 +4,7 @@
 #include "ConstantFolder.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Token.hpp"
+#include "Symbol/Symbol.hpp"
 #include <type_traits>
 using namespace lbc;
 

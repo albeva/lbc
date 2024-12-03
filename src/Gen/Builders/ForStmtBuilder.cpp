@@ -6,6 +6,7 @@
 #include "Gen/CodeGen.hpp"
 #include "Gen/Helpers.hpp"
 #include "Gen/ValueHandler.hpp"
+#include "Symbol/Symbol.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
 using namespace Gen;

@@ -5,6 +5,7 @@
 #include "Ast/Ast.hpp"
 #include "Driver/Context.hpp"
 #include "Sem/SemanticAnalyzer.hpp"
+#include "Symbol/SymbolTable.hpp"
 #include "Type/Type.hpp"
 using namespace lbc;
 using namespace Sem;
