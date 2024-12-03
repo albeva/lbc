@@ -617,8 +617,8 @@ auto SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) -> Result<void> {
         return castTo(ast.rhs, left);
     case TypeComparison::Upcast:
         return castTo(ast.lhs, right);
-    case TypeComparison::RemoveReference:
-    case TypeComparison::AddReference:
+    case TypeComparison::RemovesReference:
+    case TypeComparison::AddsReference:
         llvm_unreachable("To/From reference not yet implemented");
     }
     llvm_unreachable("Unhandled type comparison result");
@@ -700,11 +700,11 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
         return castTo(ast.rhs, left);
     case TypeComparison::Upcast:
         return castTo(ast.lhs, right);
-    case TypeComparison::RemoveReference:
+    case TypeComparison::RemovesReference:
         deref(ast.lhs);
         ast.type = TypeBoolean::get();
         return {};
-    case TypeComparison::AddReference:
+    case TypeComparison::AddsReference:
         deref(ast.rhs);
         ast.type = TypeBoolean::get();
         return {};
@@ -778,10 +778,10 @@ auto SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) -> Result<voi
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);
-    case TypeComparison::RemoveReference:
+    case TypeComparison::RemovesReference:
         ast = m_context.create<AstDereference>(ast->range, ast);
         return {};
-    case TypeComparison::AddReference:
+    case TypeComparison::AddsReference:
         ast = m_context.create<AstAddressOf>(ast->range, ast);
         return {};
     }

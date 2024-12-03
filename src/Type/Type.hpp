@@ -52,9 +52,9 @@ enum class TypeComparison : std::uint8_t {
     /// Smaller to Larger. E.g. short to integer
     Upcast,
     /// Convert to reference. E.g. Integer to Integer Ref
-    AddReference,
+    AddsReference,
     /// Convert from reference to base type. E.g. Integer Ref to Integer
-    RemoveReference
+    RemovesReference
 };
 
 /**

@@ -92,14 +92,14 @@ auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
     if (const auto* left = llvm::dyn_cast<TypeReference>(this)) {
         // -> type
         if (left->getBase() == other) {
-            return TypeComparison::RemoveReference;
+            return TypeComparison::RemovesReference;
         }
         return TypeComparison::Incompatible;
     }
 
     if (const auto* right = llvm::dyn_cast<TypeReference>(other)) {
         if (this == right->getBase()) {
-            return TypeComparison::AddReference;
+            return TypeComparison::AddsReference;
         }
         return TypeComparison::Incompatible;
     }
