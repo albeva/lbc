@@ -13,6 +13,9 @@ struct ValueFlags final {
         function
     };
     Kind kind : 2;
+    /// Symbol can be assigned a value if:
+    /// - is a variable
+    /// - variable is not a constant or readonly
     uint8_t assignable : 1;
     uint8_t external : 1;
     uint8_t mustBeConstant : 1;

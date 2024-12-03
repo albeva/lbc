@@ -35,7 +35,7 @@ Type DynamicArray Of T
     End Constructor
 
     '' Copy constructor
-    Copy Constructor ' copy As Const DynamicArray Ref
+    Copy Constructor ' (copy As Const DynamicArray Ref)
         If copy.isEmpty Then
             Constructor
         Else
@@ -46,7 +46,7 @@ Type DynamicArray Of T
     End Constructor
 
     '' Move constructor
-    Move Constructor ' move As DynamicArray Ref
+    Move Constructor ' (move As DynamicArray Ref)
         This.data     = move.data
         This.size     = move.size
         This.capacity = move.capacity

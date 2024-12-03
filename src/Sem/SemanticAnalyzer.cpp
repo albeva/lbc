@@ -341,7 +341,6 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
 auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
     auto* symbol = m_table->find(ast.name, m_flags.allowRecursiveSymbolLookup);
     if (symbol == nullptr) {
-        // TODO: Generate better error messages when evaluating UDT lookup
         return makeError(Diag::unknownIdentifier, ast, ast.name);
     }
 

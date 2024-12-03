@@ -6,22 +6,34 @@ dynamic arrays, in no particular order.
 
 - [x] Implement passing UDTs by value
 - [x] Implement returning UDTs by value
+- [ ] Fix issues with taking address of unsupported types.
+    - [ ] literals
+    - [ ] non-reference return types
+    - [ ] constanbts
 - [ ] Move primitive types to Context, so they are not global.
 - [ ] Add support for reference types.
     - Internally references are just pointers, but do not require `*` to dereference value
     - Are guaranteed to be not null.
-    - [ ] Add support for reference types in the parser
-    - [ ] Add support for reference types in the semantic analyzer
-    - [ ] Add support for reference types in the code generator
+    - [x] Add support for reference types in the parser
+    - [x] Add support for reference types in the semantic analyzer
+    - [x] Add support for reference types in the code generator
     - [ ] Disallow casting reference away
     - [ ] Check when returning a reference to local variable
     - [ ] HAndle `IS` and `AS` operators
     - [ ] Support reference in `IF` expressions
     - [ ] Fix `FOR` statement to work with reference types
     - [ ] After `CONST` variable support been added, allow implicit conversions to `const ref` types as in c++
+- [ ] Remove all implicit type conversions:
+  - allow pointers to work with `NULL` keyword 
+  - all conversions must be explicitly casts with `AS` operator
 - [ ] Add support for more complex LHS in call expressions without parenthesis.
     - pointer dereferencing: `*funcPTr "Hello"`
     - member access: `funcPtr.member "hello"`
+- [ ] Add support for `COST` function arguments
+- [ ] Figure out naming of `DIM`, `CONST` (which acts more like `constexpr` from C++), maybe `READONLY` and `MUTABLE` or `VAR` and `LET`?
+  - Check what VisualBasic does, any other modern BASIC dialects? 
+  - [ ] Implement these keywords
+  - [ ] Make function params readonly by default
 - [ ] Introduce `->` for pointer dereferencing?
   - Is there benefit in having this? Currently, we use `.` for member access and pointer dereferencing. When adding
     reference support, should there be way to distinguish between the three?
@@ -63,3 +75,4 @@ dynamic arrays, in no particular order.
     syntax and semantics.
 - [ ] Add support for interfaces
 - [ ] Implement compiler intrinsic TypeInfo templated interface
+- [ ] Massievly refactor error reporting for better compiler warnings and errors
