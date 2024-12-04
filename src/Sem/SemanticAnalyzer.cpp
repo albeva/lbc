@@ -721,7 +721,7 @@ auto SemanticAnalyzer::visit(AstIsExpr& ast) -> Result<void> {
     TRY_DECL(lhs, m_typePass.visit(*ast.lhs))
     TRY_DECL(rhs, m_typePass.visit(*ast.rhs))
     ast.type = TypeBoolean::get();
-    ast.constantValue = lhs->compare(rhs) == TypeComparison::Equal;
+    ast.constantValue = (lhs->compare(rhs) == TypeComparison::Equal) && !ast.isNot;
     return {};
 }
 

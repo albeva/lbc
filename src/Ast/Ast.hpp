@@ -825,13 +825,15 @@ struct AstCastExpr final : AstExpr {
 
 struct AstIsExpr final : AstExpr {
     constexpr AstIsExpr(
-        llvm::SMRange range_,
+        const llvm::SMRange range_,
         AstTypeOf* lhs_,
-        AstTypeExpr* rhs_
+        AstTypeExpr* rhs_,
+        const bool isNot_
     )
     : AstExpr { AstKind::IsExpr, range_ }
     , lhs(lhs_)
-    , rhs(rhs_) { }
+    , rhs(rhs_)
+    , isNot(isNot_) { }
 
     constexpr static auto classof(const AstRoot* ast) -> bool {
         return ast->kind == AstKind::CastExpr;
@@ -839,6 +841,7 @@ struct AstIsExpr final : AstExpr {
 
     AstTypeOf* lhs;
     AstTypeExpr* rhs;
+    bool isNot;
 };
 
 struct AstIfExpr final : AstExpr {

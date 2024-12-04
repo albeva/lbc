@@ -1639,13 +1639,22 @@ auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const 
 }
 
 /**
- * postfix = expression <Op>
- *         .
+ * Parse postfix or right to left unary operators.
+ *
+ * Grammar:
+ * postfix         = PostfixCallExpr | PostfixAsExpr | PostfixIsExpr .
+ * PostfixCallExpr = "(" expressionList ")" .
+ * PostfixAsExpr   = "as" typeExpr .
+ * PostfixIsExpr   = "is" [ "not" ] typeExpr .
+ *
+ * @param range range of the expression
+ * @param tkn token of the operator
+ * @param expr expression to apply the operator to
+ * @return an error or the expression with the operator applied
  */
 auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
     switch (tkn.getKind()) {
     case TokenKind::ParenOpen: {
-        // Function call
         TRY_DECL(args, expressionList())
         TRY(consume(TokenKind::ParenClose))
         return m_context.create<AstCallExpr>(
@@ -1655,7 +1664,6 @@ auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Re
         );
     }
     case TokenKind::As: {
-        // Syntax "a as type" is a cast
         TRY_DECL(type, typeExpr())
         return m_context.create<AstCastExpr>(
             llvm::SMRange { range.Start, m_endLoc },
@@ -1665,16 +1673,17 @@ auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Re
         );
     }
     case TokenKind::Is: {
-        // Syntax "a is type" is a type check
         auto* lhs = m_context.create<AstTypeOf>(
             expr->getRange(),
             expr
         );
+        const bool isNot = accept(TokenKind::LogicalNot);
         TRY_DECL(rhs, typeExpr())
         return m_context.create<AstIsExpr>(
             llvm::SMRange { range.Start, m_endLoc },
             lhs,
-            rhs
+            rhs,
+            isNot
         );
     }
     default:
@@ -1703,18 +1712,23 @@ auto Parser::binary(llvm::SMRange range, const Token& tkn, AstExpr* lhs, AstExpr
 }
 
 /**
- * TypeOf = TypeOf "is" TypeExpr .
+ * Check expression is (or not) of a given type.
+ *
+ * Grammar:
+ * typeOfExpr = expression "is" [ "not" ] typeExpr .
  */
 auto Parser::typeOfExpr() -> Result<AstIsExpr*> {
     const auto start = m_token.getRange().Start;
     TRY_DECL(typeOf, kwTypeOf())
     TRY(consume(TokenKind::Is))
+    const bool isNot = accept(TokenKind::LogicalNot);
     TRY_DECL(type, typeExpr())
 
     return m_context.create<AstIsExpr>(
         llvm::SMRange { start, m_endLoc },
         typeOf,
-        type
+        type,
+        isNot
     );
 }
 
