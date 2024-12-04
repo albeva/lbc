@@ -188,11 +188,12 @@ auto DeclPass::defineVar(AstVarDecl& ast) const -> Result<void> {
 
     // expression?
     if (ast.expr != nullptr) {
-        TRY(m_sem.expression(ast.expr, type))
         if (type == nullptr) {
+            TRY(m_sem.expression(ast.expr))
             type = ast.expr->type;
+        } else {
+            TRY(m_sem.expression(ast.expr, type))
         }
-        ast.expr->type = type;
 
         if (ast.constant) {
             if (!ast.expr->constantValue.has_value()) {

@@ -50,11 +50,7 @@ enum class TypeComparison : std::uint8_t {
     /// Smaller to larger. E.g. integer to short
     Downcast,
     /// Smaller to Larger. E.g. short to integer
-    Upcast,
-    /// Convert to reference. E.g. Integer to Integer Ref
-    AddsReference,
-    /// Convert from reference to base type. E.g. Integer Ref to Integer
-    RemovesReference
+    Upcast
 };
 
 /**
@@ -219,6 +215,9 @@ public:
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::Reference;
     }
+
+    // References are technically pointers, in some cases can be useful to simply convert the type
+    [[nodiscard]] auto convertToPointer(Context& context) const -> const TypePointer*;
 
     [[nodiscard]] auto asString() const -> std::string override;
 

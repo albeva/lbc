@@ -7,6 +7,7 @@ dynamic arrays, in no particular order.
 - [x] Implement passing UDTs by value
 - [x] Implement returning UDTs by value
 - [ ] Fix `RETURN` statement at the root level
+- [ ] Dereferencing within expression shoudl be a reference, without creating a copy. `(*ptr).foo` should be equivalent to `ptr.foo`
 - [x] Fix issues with taking address of unsupported types.
     - [x] literals
     - [x] non-reference return types

@@ -41,6 +41,12 @@ public:
     /// Creates a CAST expression, without folding
     auto cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>;
 
+    /// Create dereference "*expr" ast node
+    auto deref(AstExpr*& ast) const -> Result<void>;
+
+    /// Create address "&expr" ast node
+    auto addr(AstExpr*& ast) const -> Result<void>;
+
     [[nodiscard]] auto getContext() -> Context& { return m_context; }
     [[nodiscard]] auto getSymbolTable() -> SymbolTable* { return m_table; }
     [[nodiscard]] auto getTypePass() -> Sem::TypePass& { return m_typePass; }
@@ -48,7 +54,7 @@ public:
     [[nodiscard]] auto getExprEvaluator() -> ConstantFolder& { return m_constantFolder; }
     [[nodiscard]] auto hasImplicitMain() const -> bool { return m_module->hasImplicitMain; }
 
-    auto with(std::invocable auto&& handler) {
+    static auto with(std::invocable auto&& handler) {
         return handler();
     }
 

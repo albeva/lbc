@@ -22,9 +22,7 @@ auto resolveUDT(const TypeRoot* type) -> const TypeUDT* {
     if (const auto* ptr = llvm::dyn_cast<TypePointer>(type)) {
         return llvm::dyn_cast<TypeUDT>(ptr->getBase());
     }
-    if (const auto* ptr = llvm::dyn_cast<TypeReference>(type)) {
-        return llvm::dyn_cast<TypeUDT>(ptr->getBase());
-    }
+
     return nullptr;
 }
 } // namespace
@@ -137,9 +135,10 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
         return makeError(Diag::subShouldNotReturnAValue, ast.expr);
     }
 
-    TRY(expression(ast.expr))
+    TRY(expression(ast.expr, retType))
 
-    if (ast.expr->type != retType) {
+    const auto* base = retType->isReference() ? retType->getBase()->getPointer(m_context) : retType;
+    if (ast.expr->type != base) {
         return makeError(
             Diag::invalidFunctionReturnType,
             ast.expr,
@@ -312,10 +311,20 @@ auto SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) -> Result<void> {
 
 auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(visit(*ast))
-    (void)m_constantFolder.fold(*ast);
+
+    if (ast->type->isReference()) {
+        TRY(deref(ast));
+    } else {
+        (void)m_constantFolder.fold(*ast);
+    }
 
     if (type != nullptr) {
-        TRY(coerce(ast, type))
+        if (type->isReference()) {
+            TRY(coerce(ast, type->getBase()))
+            TRY(addr(ast));
+        } else {
+            TRY(coerce(ast, type))
+        }
     }
 
     if (ast->flags.constant && !ast->constantValue) {
@@ -326,7 +335,7 @@ auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result
 }
 
 auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
-    TRY(visit(*ast.lhs))
+    TRY(expression(ast.lhs))
     if (not ast.lhs->flags.assignable) {
         return makeError(
             Diag::targetNotAssignable,
@@ -334,21 +343,7 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
             ast.lhs->type->asString()
         );
     }
-
-    const auto deref = [&](AstExpr*& expr) {
-        const auto* type = expr->type;
-        const auto flags = expr->flags;
-
-        expr = m_context.create<AstDereference>(expr->range, expr);
-        expr->type = type->getBase();
-        expr->flags = flags;
-        expr->constantValue = std::nullopt;
-    };
-
-    if (const auto* type = ast.lhs->type; type->isReference()) {
-        deref(ast.lhs);
-    }
-
+    ast.type = ast.lhs->type;
     return expression(ast.rhs, ast.lhs->type);
 }
 
@@ -381,7 +376,7 @@ auto SemanticAnalyzer::isVariableAccessible(Symbol* symbol) const -> bool {
 }
 
 auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
-    TRY(visit(*ast.callable))
+    TRY(expression(ast.callable))
 
     const auto* type = llvm::dyn_cast<TypeFunction>(ast.callable->type);
     if (type == nullptr) {
@@ -477,7 +472,7 @@ auto SemanticAnalyzer::visit(AstUnaryExpr& ast) -> Result<void> {
 //------------------------------------------------------------------
 
 auto SemanticAnalyzer::visit(AstDereference& ast) -> Result<void> {
-    TRY(visit(*ast.expr))
+    TRY(expression(ast.expr))
 
     if (const auto* type = llvm::dyn_cast<TypePointer>(ast.expr->type)) {
         ast.type = type->getBase();
@@ -494,7 +489,7 @@ auto SemanticAnalyzer::visit(AstDereference& ast) -> Result<void> {
 //------------------------------------------------------------------
 
 auto SemanticAnalyzer::visit(AstAddressOf& ast) -> Result<void> {
-    TRY(visit(*ast.expr))
+    TRY(expression(ast.expr))
     if (not ast.expr->flags.addressable) {
         return makeError(Diag::cannotTakeAddressOf, ast.expr, ast.expr->type->asString());
     }
@@ -530,7 +525,10 @@ auto SemanticAnalyzer::visit(AstSizeOfExpr& ast) -> Result<void> {
 //------------------------------------------------------------------
 
 auto SemanticAnalyzer::visit(AstMemberExpr& ast) -> Result<void> {
-    TRY(expression(ast.base))
+    TRY(visit(*ast.base))
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(ast.base->type)) {
+        ast.base->type = ref->convertToPointer(m_context);
+    }
 
     const TypeUDT* udt = resolveUDT(ast.base->type);
     if (udt == nullptr) {
@@ -540,7 +538,7 @@ auto SemanticAnalyzer::visit(AstMemberExpr& ast) -> Result<void> {
     auto flags = m_flags;
     flags.allowRecursiveSymbolLookup = false;
     TRY(with(&udt->getSymbolTable(), flags, [&] {
-        return visit(*ast.member);
+        return visit(*ast.member); // TODO: should this go through expression() ?
     }))
 
     ast.type = ast.member->type;
@@ -617,11 +615,9 @@ auto SemanticAnalyzer::arithmetic(AstBinaryExpr& ast) -> Result<void> {
         return castTo(ast.rhs, left);
     case TypeComparison::Upcast:
         return castTo(ast.lhs, right);
-    case TypeComparison::RemovesReference:
-    case TypeComparison::AddsReference:
-        llvm_unreachable("To/From reference not yet implemented");
+    default:
+        fatalError("Unhandled type comparison result");
     }
-    llvm_unreachable("Unhandled type comparison result");
 }
 
 auto SemanticAnalyzer::logical(AstBinaryExpr& ast) -> Result<void> {
@@ -663,26 +659,6 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
         ast.flags.constant = true;
     }
 
-    const auto castTo = [&](AstExpr*& expr, const TypeRoot* ty) -> Result<void> {
-        TRY(cast(expr, ty))
-        ast.type = TypeBoolean::get();
-        return {};
-    };
-
-    const auto deref = [&](AstExpr*& expr) {
-        const auto* type = expr->type;
-        assert(type->isReference() && "Expected reference type");
-
-        auto flags = expr->flags;
-        flags.addressable = false;
-        flags.assignable = false;
-
-        expr = m_context.create<AstDereference>(expr->range, expr);
-        expr->type = type->getBase();
-        expr->flags = flags;
-        expr->constantValue = std::nullopt;
-    };
-
     switch (left->compare(right)) {
     case TypeComparison::Incompatible:
         return makeError(
@@ -697,30 +673,19 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
         ast.type = TypeBoolean::get();
         return {};
     case TypeComparison::Downcast:
-        return castTo(ast.rhs, left);
+        TRY(cast(ast.rhs, left))
+        ast.type = TypeBoolean::get();
+        return {};
     case TypeComparison::Upcast:
-        return castTo(ast.lhs, right);
-    case TypeComparison::RemovesReference:
-        deref(ast.lhs);
+        TRY(cast(ast.lhs, right))
         ast.type = TypeBoolean::get();
         return {};
-    case TypeComparison::AddsReference:
-        deref(ast.rhs);
-        ast.type = TypeBoolean::get();
-        return {};
+    default:
+        llvm_unreachable("Unhandled type comparison result");
     }
-    llvm_unreachable("Unhandled type comparison result");
 }
 
 auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
-    if (const auto* ref = llvm::dyn_cast<TypeReference>(left)) {
-        left = ref->getBase();
-    }
-
-    if (const auto* ref = llvm::dyn_cast<TypeReference>(right)) {
-        right = ref->getBase();
-    }
-
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }
@@ -778,15 +743,9 @@ auto SemanticAnalyzer::coerce(AstExpr*& ast, const TypeRoot* type) -> Result<voi
     case TypeComparison::Downcast:
     case TypeComparison::Upcast:
         return cast(ast, type);
-    case TypeComparison::RemovesReference:
-        ast = m_context.create<AstDereference>(ast->range, ast);
-        return {};
-    case TypeComparison::AddsReference:
-        ast = m_context.create<AstAddressOf>(ast->range, ast);
-        return {};
+    default:
+        fatalError("Unhandled type comparison result");
     }
-
-    return ResultError {};
 }
 
 auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
@@ -801,6 +760,28 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
     cast->flags = flags;
     ast = cast; // NOLINT
     (void)m_constantFolder.fold(*ast);
+    return {};
+}
+
+/// Create dereference "*expr" ast node
+auto SemanticAnalyzer::deref(AstExpr*& ast) const -> Result<void> {
+    auto* deref = m_context.create<AstDereference>(ast->range, ast);
+    deref->type = ast->type->getBase();
+    deref->flags = ast->flags;
+    deref->constantValue = std::nullopt;
+    ast = deref;
+    return {};
+}
+
+/// Create address "&expr" ast node
+auto SemanticAnalyzer::addr(AstExpr*& ast) const -> Result<void> {
+    auto* addr = m_context.create<AstAddressOf>(ast->range, ast);
+    addr->type = ast->type->getBase()->getPointer(m_context);
+    addr->flags = ast->flags;
+    addr->flags.assignable = false;
+    addr->flags.addressable = false;
+    addr->flags.constant = false;
+    ast = addr;
     return {};
 }
 

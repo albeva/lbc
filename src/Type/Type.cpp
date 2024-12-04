@@ -89,21 +89,6 @@ auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
         return TypeComparison::Equal;
     }
 
-    if (const auto* left = llvm::dyn_cast<TypeReference>(this)) {
-        // -> type
-        if (left->getBase() == other) {
-            return TypeComparison::RemovesReference;
-        }
-        return TypeComparison::Incompatible;
-    }
-
-    if (const auto* right = llvm::dyn_cast<TypeReference>(other)) {
-        if (this == right->getBase()) {
-            return TypeComparison::AddsReference;
-        }
-        return TypeComparison::Incompatible;
-    }
-
     if (const auto* left = llvm::dyn_cast<TypePointer>(this)) {
         if (const auto* right = llvm::dyn_cast<TypePointer>(other)) {
             if (left->getBase()->isAny()) {
@@ -259,6 +244,10 @@ auto TypeReference::get(Context& context, const TypeRoot* base) -> const TypeRef
 
 auto TypeReference::genLlvmType(Context& context) const -> llvm::Type* {
     return llvm::PointerType::get(context.getLlvmContext(), 0);
+}
+
+auto TypeReference::convertToPointer(Context& context) const -> const TypePointer* {
+    return TypePointer::get(context, m_base);
 }
 
 auto TypeReference::asString() const -> std::string {

@@ -60,9 +60,8 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
             ast.iterator->symbol->setType(ast.limit->type);
         }
         break;
-    case TypeComparison::RemovesReference:
-    case TypeComparison::AddsReference:
-        fatalError("To/From reference not yet implemented in ForStmtPass");
+    default:
+        fatalError("Unhandled type comparison result");
     }
 
     // type STEP type check
@@ -100,9 +99,8 @@ auto ForStmtPass::analyze(AstForStmt& ast) const -> Result<void> {
             TRY(m_sem.convert(ast.step, dstTy))
             break;
         }
-        case TypeComparison::RemovesReference:
-        case TypeComparison::AddsReference:
-            llvm_unreachable("To/From reference not yet implemented in ForStmtPass");
+        default:
+            fatalError("Unhandled type comparison result");
         }
     }
 
