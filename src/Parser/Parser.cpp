@@ -1621,10 +1621,20 @@ auto Parser::primary() -> Result<AstExpr*> {
 }
 
 /**
- * prefix = <Op> expression
- *        .
+ * Parse prefix or unary left to right operators.
+ *
+ * Grammar:
+ * prefix           = PrefixDerefExpr | PrefixAddrOfExpr | PrefixUnaryExpr .
+ * PrefixDerefExpr  = "*" expression .
+ * PrefixAddrOfExpr = "@" expression .
+ * PrefixUnaryExpr  = ("-" | "NOT") expression .
+ *
+ * @param range range of the expression
+ * @param tkn token of the operator
+ * @param expr expression to apply the operator to
+ * @return an error or the expression with the operator applied
  */
-auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*> {
+auto Parser::prefix(const llvm::SMRange range, const Token& tkn, AstExpr* expr) const -> Result<AstExpr*> {
     switch (tkn.getKind()) {
     case TokenKind::Dereference:
         return m_context.create<AstDereference>(range, expr);
@@ -1639,7 +1649,7 @@ auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const 
 }
 
 /**
- * Parse postfix or right to left unary operators.
+ * Parse postfix or unary right to left operators.
  *
  * Grammar:
  * postfix         = PostfixCallExpr | PostfixAsExpr | PostfixIsExpr .
@@ -1652,7 +1662,7 @@ auto Parser::prefix(llvm::SMRange range, const Token& tkn, AstExpr* expr) const 
  * @param expr expression to apply the operator to
  * @return an error or the expression with the operator applied
  */
-auto Parser::postfix(llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
+auto Parser::postfix(const llvm::SMRange range, const Token& tkn, AstExpr* expr) -> Result<AstExpr*> {
     switch (tkn.getKind()) {
     case TokenKind::ParenOpen: {
         TRY_DECL(args, expressionList())
