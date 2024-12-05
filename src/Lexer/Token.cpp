@@ -76,22 +76,21 @@ constexpr const std::array tokenDefs {
 
 constexpr auto getDef(TokenKind kind) -> const TokenDef&
 {
-    auto index = static_cast<size_t>(kind);
+    const auto index = static_cast<size_t>(kind);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return tokenDefs[index];
 }
 
 } // namespace
 
-auto Token::description(TokenKind kind) -> llvm::StringRef
+auto Token::description(const TokenKind kind) -> llvm::StringRef
 {
     return getDef(kind).str;
 }
 
-auto Token::findKind(llvm::StringRef str) -> TokenKind
+auto Token::findKind(const llvm::StringRef str) -> TokenKind
 {
-    auto iter = keywordsToKind.find(str);
-    if (iter != keywordsToKind.end()) {
+    if (const auto iter = keywordsToKind.find(str); iter != keywordsToKind.end()) {
         return iter->second;
     }
     return TokenKind::Identifier;
@@ -101,7 +100,7 @@ auto Token::lexeme() const -> llvm::StringRef
 {
     const auto* start = m_range.Start.getPointer();
     const auto* end = m_range.End.getPointer();
-    return { start, static_cast<size_t>(std::distance(start, end)) };
+    return { start, static_cast<size_t>(std::distance(start, end)) }; // NOLINT
 }
 
 auto Token::asString() const -> std::string
@@ -110,16 +109,16 @@ auto Token::asString() const -> std::string
         [](TokenValue::NullType /*value*/) {
             return literals::Null.str();
         },
-        [](TokenValue::StringType value) {
+        [](const TokenValue::StringType value) {
             return value.str();
         },
-        [](TokenValue::IntegralType value) {
+        [](const TokenValue::IntegralType value) {
             return std::to_string(value);
         },
-        [](TokenValue::FloatingPointType value) {
+        [](const TokenValue::FloatingPointType value) {
             return std::to_string(value);
         },
-        [](bool value) {
+        [](const bool value) {
             return (value ? literals::True : literals::False).str();
         }
     };
@@ -181,7 +180,7 @@ auto Token::isRightToLeft() const -> bool
     return getDef(m_kind).assoc == OpAssociativity::Right;
 }
 
-auto Token::getOperatorType(TokenKind kind) -> OperatorType
+auto Token::getOperatorType(const TokenKind kind) -> OperatorType
 {
     return getDef(kind).kind;
 }
