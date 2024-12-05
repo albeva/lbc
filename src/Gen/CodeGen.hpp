@@ -52,6 +52,7 @@ private:
     llvm::LLVMContext& m_llvmContext;
     unsigned int m_fileId = ~0U;
     Scope m_scope = Scope::Root;
+    AstFuncStmt* m_currentFunc = nullptr;
     std::unique_ptr<llvm::Module> m_module;
     llvm::Function* m_globalCtorFunc = nullptr;
     llvm::IRBuilder<> m_builder;

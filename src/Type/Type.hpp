@@ -100,6 +100,14 @@ public:
     // Handy shorthands
     [[nodiscard]] auto getUnderlyingFunctionType() const -> const TypeFunction*;
 
+    // Remove reference, otherwise no effect
+    [[nodiscard]] auto removeReference() const -> const TypeRoot* {
+        if (isReference()) {
+            return getBase();
+        }
+        return this;
+    }
+
     // Comparison
     [[nodiscard]] auto compare(const TypeRoot* other) const -> TypeComparison;
 

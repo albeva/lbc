@@ -94,17 +94,17 @@ auto ValueHandler::getAddress() const -> llvm::Value* {
         return value;
     }
 
-    if (auto* symbol = dyn_cast<Symbol*>()) {
+    if (const auto* symbol = dyn_cast<Symbol*>()) {
         return symbol->getLlvmValue();
     }
 
     auto* ast = dyn_cast<AstExpr*>();
 
-    if (auto* deref = llvm::dyn_cast<AstDereference>(ast)) {
+    if (const auto* deref = llvm::dyn_cast<AstDereference>(ast)) {
         return m_gen->visit(*deref->expr).load();
     }
 
-    if (auto* addrOf = llvm::dyn_cast<AstAddressOf>(ast)) {
+    if (const auto* addrOf = llvm::dyn_cast<AstAddressOf>(ast)) {
         return m_gen->visit(*addrOf->expr).getAddress();
     }
 
@@ -115,31 +115,46 @@ auto ValueHandler::getAddress() const -> llvm::Value* {
     llvm_unreachable("Unknown ValueHandler type");
 }
 
-auto ValueHandler::load() const -> llvm::Value* {
-    auto* addr = getAddress();
-    if (is<llvm::Value*>()) {
-        return addr;
-    }
+auto ValueHandler::load(const bool addressOnly) const -> llvm::Value* {
+    const auto loadAddress = [&]() -> llvm::Value* {
+        auto* addr = getAddress();
 
-    if (auto* ast = dyn_cast<AstExpr*>()) {
-        if (llvm::isa<AstAddressOf>(ast)) {
+        if (addressOnly || is<llvm::Value*>()) {
             return addr;
         }
-    }
 
-    return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
+        if (auto* ast = dyn_cast<AstExpr*>()) {
+            if (llvm::isa<AstAddressOf>(ast)) {
+                return addr;
+            }
+        }
+
+        return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
+    };
+
+    auto* addr = loadAddress();
+    if (!addressOnly) {
+        if (const auto* ref = llvm::dyn_cast<TypeReference>(m_type)) {
+            return m_gen->getBuilder().CreateLoad(ref->getBase()->getLlvmType(m_gen->getContext()), addr);
+        }
+    } else if (const auto* ref = llvm::dyn_cast<TypeReference>(m_type)) {
+        if (is<llvm::Value*>()) {
+            return m_gen->getBuilder().CreateLoad(ref->convertToPointer(m_gen->getContext())->getLlvmType(m_gen->getContext()), addr);
+        }
+    }
+    return addr;
 }
 
 auto ValueHandler::getLlvmType() const -> llvm::Type* {
-    if (auto* value = dyn_cast<llvm::Value*>()) {
+    if (const auto* value = dyn_cast<llvm::Value*>()) {
         return value->getType();
     }
 
-    if (auto* symbol = dyn_cast<Symbol*>()) {
+    if (const auto* symbol = dyn_cast<Symbol*>()) {
         return symbol->getType()->getLlvmType(m_gen->getContext());
     }
 
-    if (auto* ast = dyn_cast<AstExpr*>()) {
+    if (const auto* ast = dyn_cast<AstExpr*>()) {
         return ast->type->getLlvmType(m_gen->getContext());
     }
 
@@ -148,9 +163,14 @@ auto ValueHandler::getLlvmType() const -> llvm::Type* {
 
 void ValueHandler::store(llvm::Value* val) const {
     auto* addr = getAddress();
+    if (!is<llvm::Value*>()) {
+        if (const auto* ref = llvm::dyn_cast<TypeReference>(m_type)) {
+            addr = m_gen->getBuilder().CreateLoad(ref->getLlvmType(m_gen->getContext()), addr);
+        }
+    }
     m_gen->getBuilder().CreateStore(val, addr);
 }
 
-void ValueHandler::store(ValueHandler& val) const {
-    store(val.load());
+void ValueHandler::store(const ValueHandler& val) const {
+    store(val.load(m_type->isReference()));
 }
