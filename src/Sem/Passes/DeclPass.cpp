@@ -192,7 +192,7 @@ auto DeclPass::defineVar(AstVarDecl& ast) const -> Result<void> {
             TRY(m_sem.expression(ast.expr))
             type = ast.expr->type;
         } else {
-            TRY(m_sem.expression(ast.expr, type))
+            TRY(m_sem.expression(ast.expr, type->removeReference()))
         }
 
         if (ast.constant) {

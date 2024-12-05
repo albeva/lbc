@@ -89,6 +89,14 @@ auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
         return TypeComparison::Equal;
     }
 
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(this)) {
+        return ref->getBase()->compare(other);
+    }
+
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(other)) {
+        return compare(ref->getBase());
+    }
+
     if (const auto* left = llvm::dyn_cast<TypePointer>(this)) {
         if (const auto* right = llvm::dyn_cast<TypePointer>(other)) {
             if (left->getBase()->isAny()) {

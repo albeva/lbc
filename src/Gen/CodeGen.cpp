@@ -159,7 +159,7 @@ void CodeGen::visit(AstExprList& /*ast*/) {
 
 auto CodeGen::visit(AstAssignExpr& ast) -> ValueHandler {
     const ValueHandler lhs = visit(*ast.lhs);
-    ValueHandler rhs = expr(*ast.rhs);
+    const ValueHandler rhs = expr(*ast.rhs);
     lhs.store(rhs);
     return lhs;
 }
@@ -183,15 +183,16 @@ void CodeGen::declareGlobalVar(const AstVarDecl& ast) {
     llvm::Constant* constant = nullptr;
     llvm::Type* exprType = sym->getType()->getLlvmType(m_context);
     bool needsValueAssignment = false;
+    const bool isReference = sym->getType()->isReference();
 
     // has an init expr?
     if (ast.expr != nullptr) {
         if (const auto& value = ast.expr->constantValue) {
             const auto rvalue = getConstantValue(sym->getType(), value.value());
-            constant = llvm::cast<llvm::Constant>(rvalue.load());
+            constant = llvm::cast<llvm::Constant>(rvalue.load(isReference));
         } else if (auto* litExpr = llvm::dyn_cast<AstLiteralExpr>(ast.expr)) {
             const auto rvalue = visit(*litExpr);
-            constant = llvm::cast<llvm::Constant>(rvalue.load());
+            constant = llvm::cast<llvm::Constant>(rvalue.load(isReference));
         } else {
             needsValueAssignment = true;
         }
@@ -213,12 +214,12 @@ void CodeGen::declareGlobalVar(const AstVarDecl& ast) {
     if (needsValueAssignment) {
         if (m_hasImplicitMain) {
             const auto rvalue = visit(*ast.expr);
-            m_builder.CreateStore(rvalue.load(), lvalue);
+            m_builder.CreateStore(rvalue.load(isReference), lvalue);
         } else {
             auto* block = m_builder.GetInsertBlock();
             m_builder.SetInsertPoint(getGlobalCtorBlock());
             const auto rvalue = visit(*ast.expr);
-            m_builder.CreateStore(rvalue.load(), lvalue);
+            m_builder.CreateStore(rvalue.load(isReference), lvalue);
             m_builder.SetInsertPoint(block);
         }
     }
@@ -324,7 +325,7 @@ void CodeGen::visit(AstFuncStmt& ast) {
 void CodeGen::visit(AstReturnStmt& ast) {
     if (ast.expr != nullptr) {
         auto value = expr(*ast.expr);
-        m_builder.CreateRet(value.load());
+        m_builder.CreateRet(value.load(true));
     } else {
         auto* func = m_builder.GetInsertBlock()->getParent();
         auto* retTy = func->getReturnType();

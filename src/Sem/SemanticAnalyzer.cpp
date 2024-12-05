@@ -137,8 +137,8 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
 
     TRY(expression(ast.expr, retType))
 
-    const auto* base = retType->isReference() ? retType->getBase()->getPointer(m_context) : retType;
-    if (ast.expr->type->compare(base) != TypeComparison::Equal) {
+    // const auto* base = retType->isReference() ? retType->getBase()->getPointer(m_context) : retType;
+    if (ast.expr->type->compare(retType) != TypeComparison::Equal) {
         return makeError(
             Diag::invalidFunctionReturnType,
             ast.expr,
@@ -312,19 +312,19 @@ auto SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) -> Result<void> {
 auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(visit(*ast))
 
-    if (ast->type->isReference()) {
-        TRY(deref(ast));
-    } else {
+    // if (ast->type->isReference()) {
+        // TRY(deref(ast));
+    // } else {
         (void)m_constantFolder.fold(*ast);
-    }
+    // }
 
     if (type != nullptr) {
-        if (type->isReference()) {
-            TRY(coerce(ast, type->getBase()))
-            TRY(addr(ast));
-        } else {
+        // if (type->isReference()) {
+            // TRY(coerce(ast, type->getBase()))
+            // TRY(addr(ast));
+        // } else {
             TRY(coerce(ast, type))
-        }
+        // }
     }
 
     if (ast->flags.constant && !ast->constantValue) {
@@ -346,7 +346,7 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
     }
 
     ast.type = ast.lhs->type;
-    return expression(ast.rhs, ast.lhs->type);
+    return expression(ast.rhs, ast.type->removeReference());
 }
 
 auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
@@ -688,6 +688,14 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
 }
 
 auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
+    if (left->isReference()) {
+        left = left->getBase();
+    }
+
+    if (right->isReference()) {
+        right = right->getBase();
+    }
+
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;
     }
@@ -766,24 +774,24 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
 }
 
 /// Create dereference "*expr" ast node
-auto SemanticAnalyzer::deref(AstExpr*& ast) const -> Result<void> {
-    auto* deref = m_context.create<AstDereference>(ast->range, ast);
-    deref->type = ast->type->getBase();
-    deref->flags = ast->flags;
-    deref->constantValue = std::nullopt;
-    ast = deref;
+auto SemanticAnalyzer::deref(AstExpr*& /* ast */) const -> Result<void> {
+    // auto* deref = m_context.create<AstDereference>(ast->range, ast);
+    // deref->type = ast->type->getBase();
+    // deref->flags = ast->flags;
+    // deref->constantValue = std::nullopt;
+    // ast = deref;
     return {};
 }
 
 /// Create address "&expr" ast node
-auto SemanticAnalyzer::addr(AstExpr*& ast) const -> Result<void> {
-    auto* addr = m_context.create<AstAddressOf>(ast->range, ast);
-    addr->type = ast->type->getBase()->getPointer(m_context);
-    addr->flags = ast->flags;
-    addr->flags.assignable = false;
-    addr->flags.addressable = false;
-    addr->flags.constant = false;
-    ast = addr;
+auto SemanticAnalyzer::addr(AstExpr*& /* ast */) const -> Result<void> {
+    // auto* addr = m_context.create<AstAddressOf>(ast->range, ast);
+    // addr->type = ast->type->getBase()->getPointer(m_context);
+    // addr->flags = ast->flags;
+    // addr->flags.assignable = false;
+    // addr->flags.addressable = false;
+    // addr->flags.constant = false;
+    // ast = addr;
     return {};
 }
 
