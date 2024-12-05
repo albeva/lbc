@@ -72,10 +72,9 @@ constexpr const std::array tokenDefs {
     #undef TYPE
     #undef OPERATOR
 };
-// clang-format off
+// clang-format on
 
-constexpr auto getDef(TokenKind kind) -> const TokenDef&
-{
+constexpr auto getDef(TokenKind kind) -> const TokenDef& {
     const auto index = static_cast<size_t>(kind);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return tokenDefs[index];
@@ -83,28 +82,24 @@ constexpr auto getDef(TokenKind kind) -> const TokenDef&
 
 } // namespace
 
-auto Token::description(const TokenKind kind) -> llvm::StringRef
-{
+auto Token::description(const TokenKind kind) -> llvm::StringRef {
     return getDef(kind).str;
 }
 
-auto Token::findKind(const llvm::StringRef str) -> TokenKind
-{
+auto Token::findKind(const llvm::StringRef str) -> TokenKind {
     if (const auto iter = keywordsToKind.find(str); iter != keywordsToKind.end()) {
         return iter->second;
     }
     return TokenKind::Identifier;
 }
 
-auto Token::lexeme() const -> llvm::StringRef
-{
+auto Token::lexeme() const -> llvm::StringRef {
     const auto* start = m_range.Start.getPointer();
     const auto* end = m_range.End.getPointer();
     return { start, static_cast<size_t>(std::distance(start, end)) }; // NOLINT
 }
 
-auto Token::asString() const -> std::string
-{
+auto Token::asString() const -> std::string {
     static constexpr auto visitor = lbc::Visitor {
         [](TokenValue::NullType /*value*/) {
             return literals::Null.str();
@@ -129,63 +124,51 @@ auto Token::asString() const -> std::string
     return description().str();
 }
 
-auto Token::isGeneral() const -> bool
-{
+auto Token::isGeneral() const -> bool {
     return getDef(m_kind).category == Category::General;
 }
 
-auto Token::isLiteral() const -> bool
-{
+auto Token::isLiteral() const -> bool {
     return getDef(m_kind).category == Category::Literal;
 }
 
-auto Token::isSymbol() const -> bool
-{
+auto Token::isSymbol() const -> bool {
     return getDef(m_kind).category == Category::Symbol;
 }
 
-auto Token::isOperator() const -> bool
-{
+auto Token::isOperator() const -> bool {
     return getDef(m_kind).category == Category::Operator;
 }
 
-auto Token::isKeyword() const -> bool
-{
+auto Token::isKeyword() const -> bool {
     const auto cat = getDef(m_kind).category;
     return cat == Category::Keyword || cat == Category::Type;
 }
 
-auto Token::getPrecedence() const -> int
-{
+auto Token::getPrecedence() const -> int {
     return getDef(m_kind).precedence;
 }
 
-auto Token::isBinary() const -> bool
-{
+auto Token::isBinary() const -> bool {
     return getDef(m_kind).type == OpType::Binary;
 }
 
-auto Token::isUnary() const -> bool
-{
+auto Token::isUnary() const -> bool {
     return getDef(m_kind).type == OpType::Unary;
 }
 
-auto Token::isLeftToRight() const -> bool
-{
+auto Token::isLeftToRight() const -> bool {
     return getDef(m_kind).assoc == OpAssociativity::Left;
 }
 
-auto Token::isRightToLeft() const -> bool
-{
+auto Token::isRightToLeft() const -> bool {
     return getDef(m_kind).assoc == OpAssociativity::Right;
 }
 
-auto Token::getOperatorType(const TokenKind kind) -> OperatorType
-{
+auto Token::getOperatorType(const TokenKind kind) -> OperatorType {
     return getDef(kind).kind;
 }
 
-auto Token::isTypeKeyword() const -> bool
-{
+auto Token::isTypeKeyword() const -> bool {
     return getDef(m_kind).category == Category::Type;
 }

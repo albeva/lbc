@@ -201,11 +201,10 @@ auto DeclPass::defineVar(AstVarDecl& ast) const -> Result<void> {
             }
             ast.symbol->setConstantValue(ast.expr->constantValue);
         }
-    }
-
-    if (type == nullptr) [[unlikely]] {
-        llvm::errs() << "Variable declaration is missing a type\n";
-        return ResultError {};
+    } else if (type == nullptr) [[unlikely]] {
+        llvm_unreachable("Missing type");
+    } else if (type->isReference()) {
+        return m_sem.makeError(Diag::referenceReqioresAnInitializer, ast.token.getRange().Start, ast.getRange(), ast.name);
     }
 
     // The Symbol

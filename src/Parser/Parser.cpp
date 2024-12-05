@@ -1563,10 +1563,10 @@ auto Parser::expression(AstExpr* lhs, const int precedence) -> Result<AstExpr*> 
 /**
  * primary = identifier
  *         | "(" expression ")"
- *         | TypeOf "is" TypeExpr
- *         | IfExpr
- *         | SizeOfExpr
- *         | AlignOfExpr
+ *         | typeOfExpr
+ *         | ifExpr
+ *         | sizeOfExpr
+ *         | alignOfExpr
  *         | literal
  *         | <Unary Op> primary { <op> expression }
  *         .

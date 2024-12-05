@@ -336,6 +336,7 @@ auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result
 
 auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
     TRY(expression(ast.lhs))
+
     if (not ast.lhs->flags.assignable) {
         return makeError(
             Diag::targetNotAssignable,
@@ -343,6 +344,7 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
             ast.lhs->type->asString()
         );
     }
+
     ast.type = ast.lhs->type;
     return expression(ast.rhs, ast.lhs->type);
 }
@@ -405,7 +407,7 @@ auto SemanticAnalyzer::visit(AstCallExpr& ast) -> Result<void> {
     ast.type = type->getReturn();
 
     if (ast.type->isReference()) {
-        ast.flags.addressable = true;
+        ast.flags.assignable = true;
         ast.flags.addressable = true;
     }
 
