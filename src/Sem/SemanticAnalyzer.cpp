@@ -757,28 +757,6 @@ auto SemanticAnalyzer::cast(AstExpr*& ast, const TypeRoot* type) -> Result<void>
     return {};
 }
 
-/// Create dereference "*expr" ast node
-auto SemanticAnalyzer::deref(AstExpr*& /* ast */) const -> Result<void> {
-    // auto* deref = m_context.create<AstDereference>(ast->range, ast);
-    // deref->type = ast->type->getBase();
-    // deref->flags = ast->flags;
-    // deref->constantValue = std::nullopt;
-    // ast = deref;
-    return {};
-}
-
-/// Create address "&expr" ast node
-auto SemanticAnalyzer::addr(AstExpr*& /* ast */) const -> Result<void> {
-    // auto* addr = m_context.create<AstAddressOf>(ast->range, ast);
-    // addr->type = ast->type->getBase()->getPointer(m_context);
-    // addr->flags = ast->flags;
-    // addr->flags.assignable = false;
-    // addr->flags.addressable = false;
-    // addr->flags.constant = false;
-    // ast = addr;
-    return {};
-}
-
 //------------------------------------------------------------------
 // IfExpr
 //------------------------------------------------------------------
