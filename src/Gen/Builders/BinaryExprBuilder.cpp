@@ -25,7 +25,7 @@ auto BinaryExprBuilder::comparison() -> ValueHandler {
     auto* rhsValue = m_gen.visit(*m_ast.rhs).load();
 
     const auto* ty = m_ast.lhs->type;
-    auto pred = Gen::getCmpPred(ty->removeReference(), m_ast.token.getKind());
+    auto pred = Gen::getCmpPred(ty, m_ast.token.getKind());
     return { &m_gen, m_ast.type, m_builder.CreateCmp(pred, lhsValue, rhsValue) };
 }
 

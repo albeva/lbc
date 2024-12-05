@@ -8,6 +8,8 @@ using namespace lbc;
 using namespace Gen;
 
 auto lbc::Gen::getCmpPred(const TypeRoot* type, TokenKind op) -> llvm::CmpInst::Predicate {
+    type = type->removeReference();
+
     if (const auto* integral = llvm::dyn_cast<TypeIntegral>(type)) {
         const bool isSigned = integral->isSigned();
         switch (op) {
@@ -62,6 +64,8 @@ auto lbc::Gen::getCmpPred(const TypeRoot* type, TokenKind op) -> llvm::CmpInst::
 }
 
 auto lbc::Gen::getBinOpPred(const TypeRoot* type, TokenKind op) -> llvm::Instruction::BinaryOps {
+    type = type->removeReference();
+
     if (type->isIntegral()) {
         const auto sign = type->isSignedIntegral();
         switch (op) {
