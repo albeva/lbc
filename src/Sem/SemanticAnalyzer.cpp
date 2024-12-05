@@ -122,7 +122,7 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
     } else {
         retType = llvm::cast<TypeFunction>(m_function->symbol->getType())->getReturn();
     }
-    auto isVoid = retType->isVoid();
+    const auto isVoid = retType->isVoid();
 
     if (ast.expr == nullptr) {
         if (!isVoid && !canOmitExpression) {
@@ -135,9 +135,8 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
         return makeError(Diag::subShouldNotReturnAValue, ast.expr);
     }
 
-    TRY(expression(ast.expr, retType))
+    TRY(expression(ast.expr, retType->removeReference()))
 
-    // const auto* base = retType->isReference() ? retType->getBase()->getPointer(m_context) : retType;
     if (ast.expr->type->compare(retType) != TypeComparison::Equal) {
         return makeError(
             Diag::invalidFunctionReturnType,
@@ -311,20 +310,10 @@ auto SemanticAnalyzer::visit(AstTypeExpr& /*ast*/) -> Result<void> {
 
 auto SemanticAnalyzer::expression(AstExpr*& ast, const TypeRoot* type) -> Result<void> {
     TRY(visit(*ast))
-
-    // if (ast->type->isReference()) {
-        // TRY(deref(ast));
-    // } else {
-        (void)m_constantFolder.fold(*ast);
-    // }
+    (void)m_constantFolder.fold(*ast);
 
     if (type != nullptr) {
-        // if (type->isReference()) {
-            // TRY(coerce(ast, type->getBase()))
-            // TRY(addr(ast));
-        // } else {
-            TRY(coerce(ast, type))
-        // }
+        TRY(coerce(ast, type))
     }
 
     if (ast->flags.constant && !ast->constantValue) {
@@ -687,14 +676,9 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
     }
 }
 
-auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
-    if (left->isReference()) {
-        left = left->getBase();
-    }
-
-    if (right->isReference()) {
-        right = right->getBase();
-    }
+auto SemanticAnalyzer::!canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
+    left = left->removeReference();
+    right = right->removeReference();
 
     if (left->isBoolean() && right->isBoolean()) {
         return op == TokenKind::Equal || op == TokenKind::NotEqual;

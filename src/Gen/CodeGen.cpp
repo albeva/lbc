@@ -284,7 +284,9 @@ void CodeGen::visit(AstFuncParamDecl& /*ast*/) {
 
 void CodeGen::visit(AstFuncStmt& ast) {
     RESTORE_ON_EXIT(m_scope);
+    RESTORE_ON_EXIT(m_currentFunc);
     m_scope = Scope::Function;
+    m_currentFunc = &ast;
 
     RESTORE_ON_EXIT(m_declareAsGlobals);
     m_declareAsGlobals = false;
@@ -312,8 +314,7 @@ void CodeGen::visit(AstFuncStmt& ast) {
 
     block = m_builder.GetInsertBlock();
     if (block->getTerminator() == nullptr) {
-        auto* retType = func->getReturnType();
-        if (!retType->isVoidTy()) {
+        if (const auto* retType = func->getReturnType(); !retType->isVoidTy()) {
             fatalError("No RETURN statement");
         }
         m_builder.CreateRetVoid();
@@ -324,13 +325,21 @@ void CodeGen::visit(AstFuncStmt& ast) {
 
 void CodeGen::visit(AstReturnStmt& ast) {
     if (ast.expr != nullptr) {
-        auto value = expr(*ast.expr);
-        m_builder.CreateRet(value.load(true));
+        const auto value = expr(*ast.expr);
+        constexpr auto isReference = [](const AstFuncStmt* func) {
+            if (func == nullptr) {
+                return false;
+            }
+            const TypeRoot* retType = func->decl->retTypeExpr->type;
+            if (retType == nullptr) {
+                return false;
+            }
+            return retType->isReference();
+        };
+        m_builder.CreateRet(value.load(isReference(m_currentFunc)));
     } else {
-        auto* func = m_builder.GetInsertBlock()->getParent();
-        auto* retTy = func->getReturnType();
-
-        if (retTy->isVoidTy()) {
+        const auto* func = m_builder.GetInsertBlock()->getParent();
+        if (auto* retTy = func->getReturnType(); retTy->isVoidTy()) {
             m_builder.CreateRetVoid();
         } else {
             auto* constant = llvm::Constant::getNullValue(retTy);
@@ -441,11 +450,14 @@ auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
     const auto* funcType = ast.callable->type->getUnderlyingFunctionType();
     auto* llvmFunc = funcType->getLlvmFunctionType(m_context);
 
+    const auto& params = funcType->getParams();
     const auto& args = ast.args->exprs;
+
     std::vector<llvm::Value*> values;
     values.reserve(args.size());
-    for (const auto& arg : args) {
-        auto* value = expr(*arg).load();
+    for (size_t idx = 0; idx < args.size(); idx++) {
+        const bool isReference = params.size() > idx ? params[idx]->isReference() : false;
+        auto* value = expr(*args[idx]).load(isReference);
         values.emplace_back(value);
     }
 

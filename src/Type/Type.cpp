@@ -372,7 +372,13 @@ auto TypeFunction::get(
 }
 
 auto TypeFunction::genLlvmType(Context& context) const -> llvm::Type* {
-    auto* retTy = m_retType->getLlvmType(context);
+    // auto* retTy = m_retType->getLlvmType(context);
+    llvm::Type* retTy = nullptr;
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(m_retType)) {
+        retTy = ref->convertToPointer(context)->getLlvmType(context);
+    } else {
+        retTy = m_retType->getLlvmType(context);
+    }
 
     llvm::SmallVector<llvm::Type*> params;
     params.reserve(m_paramTypes.size());
