@@ -676,7 +676,7 @@ auto SemanticAnalyzer::comparison(AstBinaryExpr& ast) -> Result<void> {
     }
 }
 
-auto SemanticAnalyzer::!canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
+auto SemanticAnalyzer::canPerformBinary(TokenKind op, const TypeRoot* left, const TypeRoot* right) -> bool {
     left = left->removeReference();
     right = right->removeReference();
 
