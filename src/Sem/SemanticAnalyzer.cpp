@@ -135,7 +135,7 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
         return makeError(Diag::subShouldNotReturnAValue, ast.expr);
     }
 
-    TRY(expression(ast.expr, retType->removeReference()))
+    TRY(expression(ast.expr, retType))
 
     if (ast.expr->type->compare(retType) != TypeComparison::Equal) {
         return makeError(
@@ -335,7 +335,7 @@ auto SemanticAnalyzer::visit(AstAssignExpr& ast) -> Result<void> {
     }
 
     ast.type = ast.lhs->type;
-    return expression(ast.rhs, ast.type->removeReference());
+    return expression(ast.rhs, ast.type);
 }
 
 auto SemanticAnalyzer::visit(AstIdentExpr& ast) -> Result<void> {
