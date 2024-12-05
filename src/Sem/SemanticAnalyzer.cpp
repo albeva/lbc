@@ -138,7 +138,7 @@ auto SemanticAnalyzer::visit(AstReturnStmt& ast) -> Result<void> {
     TRY(expression(ast.expr, retType))
 
     const auto* base = retType->isReference() ? retType->getBase()->getPointer(m_context) : retType;
-    if (ast.expr->type != base) {
+    if (ast.expr->type->compare(base) != TypeComparison::Equal) {
         return makeError(
             Diag::invalidFunctionReturnType,
             ast.expr,
