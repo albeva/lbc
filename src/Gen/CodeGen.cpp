@@ -468,7 +468,7 @@ auto CodeGen::visit(AstCallExpr& ast) -> ValueHandler {
     std::vector<llvm::Value*> values;
     values.reserve(args.size());
     for (size_t idx = 0; idx < args.size(); idx++) {
-        const bool isReference = params.size() > idx ? params[idx]->isReference() : false;
+        const bool isReference = params.size() > idx && params[idx]->isReference();
         auto* value = expr(*args[idx]).load(isReference);
         values.emplace_back(value);
     }
