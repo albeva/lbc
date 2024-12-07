@@ -212,7 +212,9 @@ auto TypePointer::get(Context& context, const TypeRoot* base) -> const TypePoint
         return &anyPtrTy;
     }
 
-    assert(!base->isReference() && "Cannot get pointer of a reference");
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(base)) {
+        return ref->convertToPointer(context);
+    }
 
     for (const auto& ptr : context.getTypes(TypeFamily::Pointer)) {
         const auto* ptrType = llvm::cast<TypePointer>(ptr);

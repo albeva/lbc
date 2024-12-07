@@ -123,15 +123,19 @@ auto ValueHandler::load(const bool asReference) const -> llvm::Value* {
         return addr;
     }
 
-    // If we are loading address of something - return address
-    if (auto* ast = dyn_cast<AstExpr*>()) {
-        if (llvm::isa<AstAddressOf>(ast)) {
+    auto& builder = m_gen->getBuilder();
+    auto& ctx = m_gen->getContext();
+
+    // For AstAddressOf expressions, return the address, without loading actual value.
+    if (auto* expr = dyn_cast<AstExpr*>()) {
+        if (const auto* addrof = llvm::dyn_cast<AstAddressOf>(expr)) {
+            // For references, load held address
+            if (addrof->expr->type->isReference()) {
+                return builder.CreateLoad(getLlvmType(), addr);
+            }
             return addr;
         }
     }
-
-    auto& builder = m_gen->getBuilder();
-    auto& ctx = m_gen->getContext();
 
     // If we are loading reference - return address
     if (asReference) {
