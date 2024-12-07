@@ -260,7 +260,7 @@ void CodeGen::declareFuncs(AstStmtList& ast) {
 
 void CodeGen::declareFunc(AstFuncDecl& ast) {
     auto* sym = ast.symbol;
-    const auto* funcTy =  ast.symbol->getType()->getUnderlyingFunctionType();
+    const auto* funcTy = ast.symbol->getType()->getUnderlyingFunctionType();
     auto* llvmTy = funcTy->getLlvmFunctionType(m_context);
     auto* fn = llvm::Function::Create(
         llvmTy,
