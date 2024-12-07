@@ -115,58 +115,61 @@ auto ValueHandler::getAddress() const -> llvm::Value* {
     llvm_unreachable("Unknown ValueHandler type");
 }
 
-auto ValueHandler::load(const bool addressOnly) const -> llvm::Value* {
-    const auto loadAddress = [&]() -> llvm::Value* {
-        auto* addr = getAddress();
+auto ValueHandler::load(const bool asReference) const -> llvm::Value* {
+    auto* addr = getAddress();
 
-        if (addressOnly || is<llvm::Value*>()) {
+    // value is an intermediary. It is already loaded and expected type
+    if (is<llvm::Value*>()) {
+        return addr;
+    }
+
+    // If we are loading address of something - return address
+    if (auto* ast = dyn_cast<AstExpr*>()) {
+        if (llvm::isa<AstAddressOf>(ast)) {
             return addr;
         }
-
-        if (auto* ast = dyn_cast<AstExpr*>()) {
-            if (llvm::isa<AstAddressOf>(ast)) {
-                return addr;
-            }
-        }
-
-        return m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
-    };
-
-    auto* addr = loadAddress();
-    if (!addressOnly) {
-        if (const auto* ref = llvm::dyn_cast<TypeReference>(m_type)) {
-            return m_gen->getBuilder().CreateLoad(ref->getBase()->getLlvmType(m_gen->getContext()), addr);
-        }
-    } else if (const auto* ref = llvm::dyn_cast<TypeReference>(m_type)) {
-        if (is<llvm::Value*>()) {
-            return m_gen->getBuilder().CreateLoad(ref->convertToPointer(m_gen->getContext())->getLlvmType(m_gen->getContext()), addr);
-        }
     }
-    return addr;
+
+    auto& builder = m_gen->getBuilder();
+    auto& ctx = m_gen->getContext();
+
+    // If we are loading reference - return address
+    if (asReference) {
+        // if we are loading reference of reference - return the address reference holds
+        if (const auto& ref = llvm::dyn_cast<TypeReference>(m_type)) {
+            return builder.CreateLoad(ref->getLlvmType(ctx), addr);
+        }
+        return addr;
+    }
+
+    // If this is a reference, dereference it
+    if (const auto& ref = llvm::dyn_cast<TypeReference>(m_type)) {
+        addr = builder.CreateLoad(ref->getLlvmType(ctx), addr);
+        return builder.CreateLoad(ref->getBase()->getLlvmType(ctx), addr);
+    }
+
+    // Load value
+    return builder.CreateLoad(getLlvmType(), addr);
 }
 
 auto ValueHandler::getLlvmType() const -> llvm::Type* {
     if (const auto* value = dyn_cast<llvm::Value*>()) {
         return value->getType();
     }
-
     if (const auto* symbol = dyn_cast<Symbol*>()) {
         return symbol->getType()->getLlvmType(m_gen->getContext());
     }
-
     if (const auto* ast = dyn_cast<AstExpr*>()) {
         return ast->type->getLlvmType(m_gen->getContext());
     }
-
     llvm_unreachable("Unknown type in getLlvmType");
 }
 
 void ValueHandler::store(llvm::Value* val) const {
     auto* addr = getAddress();
-    if (!is<llvm::Value*>()) {
-        if (const auto* ref = llvm::dyn_cast<TypeReference>(m_type)) {
-            addr = m_gen->getBuilder().CreateLoad(ref->getLlvmType(m_gen->getContext()), addr);
-        }
+    // If assigning to reference - load the target address first
+    if (llvm::isa<TypeReference>(m_type) && !is<llvm::Value*>()) {
+        addr = m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
     }
     m_gen->getBuilder().CreateStore(val, addr);
 }

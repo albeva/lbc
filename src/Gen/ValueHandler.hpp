@@ -40,7 +40,7 @@ namespace Gen {
         ValueHandler(CodeGen* gen, AstSizeOfExpr& ast);
 
         [[nodiscard]] auto getAddress() const -> llvm::Value*;
-        [[nodiscard]] auto load(bool addressOnly = false) const -> llvm::Value*;
+        [[nodiscard]] auto load(bool asReference = false) const -> llvm::Value*;
         [[nodiscard]] auto getLlvmType() const -> llvm::Type*;
         void store(llvm::Value* val) const;
         void store(const ValueHandler& val) const;

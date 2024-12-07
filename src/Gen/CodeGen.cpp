@@ -264,7 +264,7 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
         *m_module
     );
     fn->setCallingConv(llvm::CallingConv::C);
-    // fn->setLinkage(ast.symbol->getLlvmLinkage());
+    fn->setLinkage(ast.symbol->getLlvmLinkage());
     ast.symbol->setLlvmValue(fn);
 
     if (ast.params != nullptr) {
