@@ -150,6 +150,9 @@ void CodeGen::visit(AstImport& ast) {
     }
     RESTORE_ON_EXIT(m_fileId);
     m_fileId = ast.module->fileId;
+    for (auto* import : ast.module->imports) {
+        visit(*import);
+    }
     visit(*ast.module->stmtList);
 }
 

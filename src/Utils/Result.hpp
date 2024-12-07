@@ -19,7 +19,6 @@ class [[nodiscard]] Result<void> final {
 public:
     constexpr Result() = default;
 
-    // cppcheck-suppress noExplicitConstructor
     /* explicit */ constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError { true } {
     }
@@ -46,7 +45,6 @@ public:
     constexpr Result() = default;
 
     /// Null value with defined error
-    // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError { true } {
     }
@@ -58,7 +56,6 @@ public:
     }
 
     /// given pointer value without error
-    // cppcheck-suppress noExplicitConstructor
     constexpr Result(T pointer) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_value { pointer } {
     }
@@ -135,7 +132,6 @@ public:
     constexpr Result() = default;
 
     /// Null value with defined error
-    // cppcheck-suppress noExplicitConstructor
     constexpr Result(ResultError /* _ */) // NOLINT(hicpp-explicit-conversions,google-explicit-constructor)
     : m_hasError { true } {
     }

@@ -6,4 +6,8 @@ extern "C"
     Declare Sub srand(seed As UInteger)
     Declare Function rand As Integer
     Declare Function time(time_t As Any Ptr) As ULong
+    [alias="exit"] Declare Sub terminate(code As Integer)
+
+    Const EXIT_SUCCESS = 0
+    Const EXIT_FAILURE = 1
 end extern

@@ -377,7 +377,6 @@ auto TypeFunction::genLlvmType(Context& context) const -> llvm::Type* {
     llvm::SmallVector<llvm::Type*> params;
     params.reserve(m_paramTypes.size());
     for (const auto& param : m_paramTypes) {
-        // cppcheck-suppress useStlAlgorithm
         params.emplace_back(param->getLlvmType(context));
     }
 

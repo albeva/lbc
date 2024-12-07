@@ -138,7 +138,6 @@ void Driver::processInputs() {
         auto type = paths.first;
         auto& dst = getSources(type);
         for (const auto& path : paths.second) {
-            // cppcheck-suppress useStlAlgorithm
             dst.emplace_back(Source::create(type, m_options.resolveFilePath(path), false));
         }
     }

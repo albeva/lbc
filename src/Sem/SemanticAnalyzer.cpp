@@ -49,12 +49,10 @@ auto SemanticAnalyzer::visit(AstModule& ast) -> Result<void> {
 auto SemanticAnalyzer::visit(AstStmtList& ast) -> Result<void> {
     TRY(m_declPass.declare(ast))
     for (const auto& func : ast.funcs) {
-        // cppcheck-suppress useStlAlgorithm
         TRY(visit(*func))
     }
 
     for (const auto& stmt : ast.stmts) {
-        // cppcheck-suppress useStlAlgorithm
         TRY(visit(*stmt))
     }
     return {};

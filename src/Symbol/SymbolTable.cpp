@@ -16,8 +16,8 @@ void SymbolTable::import(SymbolTable* table) {
     m_imports.push_back(table);
 }
 
-auto SymbolTable::find(llvm::StringRef name, bool recursive) const -> Symbol* {
-    if (auto iter = m_symbols.find(name); iter != m_symbols.end()) {
+auto SymbolTable::find(const llvm::StringRef name, const bool recursive) const -> Symbol* {
+    if (const auto iter = m_symbols.find(name); iter != m_symbols.end()) {
         return iter->second;
     }
 
@@ -26,7 +26,6 @@ auto SymbolTable::find(llvm::StringRef name, bool recursive) const -> Symbol* {
     }
 
     for (const auto* imported : m_imports) {
-        // cppcheck-suppress useStlAlgorithm
         if (auto* found = imported->find(name, recursive)) {
             return found;
         }
