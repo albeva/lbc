@@ -233,11 +233,12 @@ void CodeGen::declareGlobalVar(const AstVarDecl& ast) {
 void CodeGen::declareLocalVar(AstVarDecl& ast) {
     llvm::Type* exprType = ast.symbol->getType()->getLlvmType(m_context);
     auto* lvalue = m_builder.CreateAlloca(exprType, nullptr, ast.symbol->identifier());
+    const bool isReference = ast.symbol->getType()->isReference();
 
     // has an init expr?
     if (ast.expr != nullptr) {
         const ValueHandler rvalue = expr(*ast.expr);
-        m_builder.CreateStore(rvalue.load(), lvalue);
+        m_builder.CreateStore(rvalue.load(isReference), lvalue);
     }
 
     ast.symbol->setLlvmValue(lvalue);
@@ -259,9 +260,10 @@ void CodeGen::declareFuncs(AstStmtList& ast) {
 
 void CodeGen::declareFunc(AstFuncDecl& ast) {
     auto* sym = ast.symbol;
-    auto* fnTy = ast.symbol->getType()->getUnderlyingFunctionType()->getLlvmFunctionType(m_context);
+    const auto* funcTy =  ast.symbol->getType()->getUnderlyingFunctionType();
+    auto* llvmTy = funcTy->getLlvmFunctionType(m_context);
     auto* fn = llvm::Function::Create(
-        fnTy,
+        llvmTy,
         sym->getLlvmLinkage(),
         ast.symbol->identifier(),
         *m_module
@@ -270,11 +272,18 @@ void CodeGen::declareFunc(AstFuncDecl& ast) {
     fn->setLinkage(ast.symbol->getLlvmLinkage());
     ast.symbol->setLlvmValue(fn);
 
+    if (llvm::isa_and_present<TypeReference>(funcTy->getReturn())) {
+        fn->addRetAttr(llvm::Attribute::NonNull);
+    }
+
     if (ast.params != nullptr) {
         auto* iter = fn->arg_begin();
         for (const auto& param : ast.params->params) {
             iter->setName(param->symbol->identifier());
             iter->addAttr(llvm::Attribute::NoUndef);
+            if (param->typeExpr->isReference) {
+                iter->addAttr(llvm::Attribute::NonNull);
+            }
             param->symbol->setLlvmValue(iter);
             iter++; // NOLINT
         }
