@@ -63,7 +63,8 @@
     _( constantRequiresAConstantExpr,       "Expected a constant expression when initialising CONST variable" ) \
     _( mustBeConstantExpr,                  "Expression must be constant"                                 ) \
     _( cannotTakeAddressOf,                 "Cannot take the address of value of type '{0}'"              ) \
-    _( referenceReqioresAnInitializer,      "Declaration of reference variable '{0}' requires an initializer" )
+    _( referenceReqioresAnInitializer,      "Declaration of reference variable '{0}' requires an initializer" ) \
+    _( assignNonAddresValueToReference,     "Assigning non-addressable expression to reference variable '{0}'")
 
 
 //----------------------------------------

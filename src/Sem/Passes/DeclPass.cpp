@@ -193,6 +193,14 @@ auto DeclPass::defineVar(AstVarDecl& ast) const -> Result<void> {
             type = ast.expr->type;
         } else {
             TRY(m_sem.expression(ast.expr, type))
+            if (type->isReference() && !ast.expr->flags.addressable) {
+                return m_sem.makeError(
+                    Diag::assignNonAddresValueToReference,
+                    ast.token.getRange().Start,
+                    ast.expr->getRange(),
+                    ast.name
+                );
+            }
         }
 
         if (ast.constant) {
