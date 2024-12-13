@@ -14,7 +14,7 @@ class Context;
  * User defined type
  */
 class TypeUDT final : public TypeRoot {
-    TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed, const TypeQualifier qualifiers = TypeQualifier::None);
+    TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed, TypeQualifier qualifiers = TypeQualifier::None);
     friend class Context;
 
 public:
