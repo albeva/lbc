@@ -7,8 +7,8 @@
 #include "Symbol/SymbolTable.hpp"
 using namespace lbc;
 
-TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
-: TypeRoot { TypeFamily::UDT, TypeKind::ComplexType }
+TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, const bool packed, const TypeQualifier qualifiers)
+: TypeRoot { TypeFamily::UDT, TypeKind::ComplexType, qualifiers }
 , m_symbol { symbol }
 , m_symbolTable { symbolTable }
 , m_packed(packed) {
@@ -16,7 +16,7 @@ TypeUDT::TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed)
     symbol.valueFlags().kind = ValueFlags::Kind::Type;
 }
 
-auto TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) -> const TypeUDT* {
+auto TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed, const TypeQualifier qualifiers) -> const TypeUDT* {
     if (const auto* type = symbol.getType()) {
         if (const auto* udt = llvm::dyn_cast<TypeUDT>(type)) {
             return udt;
@@ -24,7 +24,7 @@ auto TypeUDT::get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bo
         fatalError("Symbol should hold UDT type pointer!");
     }
 
-    return context.create<TypeUDT>(symbol, symbolTable, packed);
+    return context.create<TypeUDT>(symbol, symbolTable, packed, qualifiers);
 }
 
 auto TypeUDT::asString() const -> std::string {

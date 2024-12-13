@@ -14,11 +14,11 @@ class Context;
  * User defined type
  */
 class TypeUDT final : public TypeRoot {
-    TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed);
+    TypeUDT(Symbol& symbol, SymbolTable& symbolTable, bool packed, const TypeQualifier qualifiers = TypeQualifier::None);
     friend class Context;
 
 public:
-    static auto get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed) -> const TypeUDT*;
+    static auto get(Context& context, Symbol& symbol, SymbolTable& symbolTable, bool packed, TypeQualifier qualifiers = TypeQualifier::None) -> const TypeUDT*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::UDT;

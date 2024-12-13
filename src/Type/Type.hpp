@@ -6,7 +6,6 @@
 #include "Type.def.hpp"
 
 namespace lbc {
-
 // clang-format off
 enum class TypeFamily : std::uint8_t {
     Void,           // Void, lack of typeExpr
@@ -42,16 +41,28 @@ class TypeZString;
 class Context;
 enum class TokenKind : std::uint8_t;
 
+/**
+ * Enum representing the result of a type comparison.
+ */
 enum class TypeComparison : std::uint8_t {
-    /// No viable conversion possible
-    Incompatible,
-    /// Types are same and require no conversion
-    Equal,
-    /// Smaller to larger. E.g. integer to short
-    Downcast,
-    /// Smaller to Larger. E.g. short to integer
-    Upcast
+    Incompatible, ///< No viable conversion possible
+    Equal,        ///< Types are same and require no conversion
+    Downcast,     ///< Smaller to larger. E.g. integer to short
+    Upcast        ///< Smaller to Larger. E.g. short to integer
 };
+
+/**
+ * Enum representing type qualifiers.
+ * These qualifiers can be used to specify additional properties of types.
+ */
+enum class TypeQualifier : std::uint8_t {
+    None     = 0b00000000, ///< No qualifiers
+    Const    = 0b00000001, ///< Constant type
+    Volatile = 0b00000010, ///< Volatile type
+    Mutable  = 0b00000011, ///< Mutable type
+    All      = 0b11111111  ///< All qualifiers
+};
+MARK_AS_FLAGS_ENUM(TypeQualifier);
 
 /**
  * Base typeExpr is root for all lb types
@@ -97,8 +108,17 @@ public:
     [[nodiscard]] auto isSignedIntegral() const -> bool;
     [[nodiscard]] auto isUnsignedIntegral() const -> bool;
 
+    // Qualifiers
+    [[nodiscard]] constexpr auto isConst() const -> bool { return flags::has(m_qualifiers, TypeQualifier::Const); }
+    [[nodiscard]] constexpr auto isVolatile() const -> bool { return flags::has(m_qualifiers, TypeQualifier::Volatile); }
+    [[nodiscard]] constexpr auto isMutable() const -> bool { return flags::has(m_qualifiers, TypeQualifier::Mutable); }
+    [[nodiscard]] constexpr auto getQualifiers() const -> TypeQualifier { return m_qualifiers; }
+    [[nodiscard]] auto withQualifiers(Context& context, TypeQualifier qualifiers) const -> const TypeRoot*;
+    [[nodiscard]] auto withoutQualifiers(Context& context, TypeQualifier qualifiers = TypeQualifier::All) const -> const TypeRoot*;
+
     // Handy shorthands
-    [[nodiscard]] auto getUnderlyingFunctionType() const -> const TypeFunction*;
+    [[nodiscard]] auto
+    getUnderlyingFunctionType() const -> const TypeFunction*;
 
     // Remove reference, otherwise no effect
     [[nodiscard]] auto removeReference() const -> const TypeRoot* {
@@ -122,10 +142,14 @@ public:
     [[nodiscard]] auto getAlignment(Context& context) const -> std::size_t;
 
 protected:
-    constexpr explicit TypeRoot(const TypeFamily family, const TypeKind kind)
+    constexpr explicit TypeRoot(
+        const TypeFamily family,
+        const TypeKind kind,
+        const TypeQualifier qualifier
+    )
     : m_family { family }
-    , m_kind { kind } {
-    }
+    , m_kind { kind }
+    , m_qualifiers { qualifier } { }
 
     [[nodiscard]] virtual auto genLlvmType(Context& context) const -> llvm::Type* = 0;
 
@@ -136,6 +160,7 @@ private:
 
     const TypeFamily m_family;
     const TypeKind m_kind;
+    const TypeQualifier m_qualifiers;
     mutable llvm::Type* m_llvmType = nullptr;
     friend class Context;
 };
@@ -147,7 +172,7 @@ private:
 class TypeVoid final : public TypeRoot {
 public:
     constexpr TypeVoid()
-    : TypeRoot { TypeFamily::Void, TypeKind::ComplexType } {
+    : TypeRoot { TypeFamily::Void, TypeKind::ComplexType, TypeQualifier::None } {
     }
     static auto get() -> const TypeVoid*;
 
@@ -167,7 +192,7 @@ protected:
 class TypeAny final : public TypeRoot {
 public:
     constexpr TypeAny()
-    : TypeRoot { TypeFamily::Any, TypeKind::ComplexType } {
+    : TypeRoot { TypeFamily::Any, TypeKind::ComplexType, TypeQualifier::None } {
     }
     [[nodiscard]] static auto get() -> const TypeAny*;
 
@@ -186,12 +211,12 @@ protected:
  */
 class TypePointer final : public TypeRoot {
 public:
-    constexpr explicit TypePointer(const TypeRoot* base)
-    : TypeRoot { TypeFamily::Pointer, TypeKind::ComplexType }
+    constexpr explicit TypePointer(const TypeRoot* base, const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeRoot { TypeFamily::Pointer, TypeKind::ComplexType, qualifiers }
     , m_base { base } {
     }
 
-    [[nodiscard]] static auto get(Context& context, const TypeRoot* base) -> const TypePointer*;
+    [[nodiscard]] static auto get(Context& context, const TypeRoot* base, TypeQualifier qualifiers = TypeQualifier::None) -> const TypePointer*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::Pointer;
@@ -213,12 +238,12 @@ private:
  */
 class TypeReference final : public TypeRoot {
 public:
-    constexpr explicit TypeReference(const TypeRoot* base)
-    : TypeRoot { TypeFamily::Reference, TypeKind::ComplexType }
+    constexpr explicit TypeReference(const TypeRoot* base, const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeRoot { TypeFamily::Reference, TypeKind::ComplexType, qualifiers }
     , m_base { base } {
     }
 
-    [[nodiscard]] static auto get(Context& context, const TypeRoot* base) -> const TypeReference*;
+    [[nodiscard]] static auto get(Context& context, const TypeRoot* base, TypeQualifier qualifiers = TypeQualifier::None) -> const TypeReference*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::Reference;
@@ -243,11 +268,11 @@ private:
  */
 class TypeBoolean final : public TypeRoot {
 public:
-    constexpr TypeBoolean()
-    : TypeRoot { TypeFamily::Boolean, TypeKind::Bool } {
+    explicit constexpr TypeBoolean(const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeRoot { TypeFamily::Boolean, TypeKind::Bool, qualifiers } {
     }
 
-    [[nodiscard]] static auto get() -> const TypeBoolean*;
+    [[nodiscard]] static auto get(TypeQualifier qualifiers = TypeQualifier::None) -> const TypeBoolean*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::Boolean;
@@ -273,8 +298,8 @@ public:
     [[nodiscard]] constexpr auto getBits() const -> unsigned { return m_bits; }
 
 protected:
-    constexpr TypeNumeric(const TypeFamily family, const TypeKind kind, const unsigned bits)
-    : TypeRoot { family, kind }
+    constexpr TypeNumeric(const TypeFamily family, const TypeKind kind, const unsigned bits, const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeRoot { family, kind, qualifiers }
     , m_bits { bits } {
     }
 
@@ -287,12 +312,12 @@ private:
  */
 class TypeIntegral final : public TypeNumeric {
 public:
-    constexpr TypeIntegral(const TypeKind kind, const unsigned bits, const bool isSigned)
-    : TypeNumeric { TypeFamily::Integral, kind, bits }
+    constexpr TypeIntegral(const TypeKind kind, const unsigned bits, const bool isSigned, const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeNumeric { TypeFamily::Integral, kind, bits, qualifiers }
     , m_signed { isSigned } {
     }
 
-    [[nodiscard]] static auto get(unsigned bits, bool isSigned) -> const TypeIntegral*;
+    [[nodiscard]] static auto get(unsigned bits, bool isSigned, TypeQualifier qualifiers = TypeQualifier::None) -> const TypeIntegral*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::Integral;
@@ -317,11 +342,11 @@ private:
  */
 class TypeFloatingPoint final : public TypeNumeric {
 public:
-    constexpr explicit TypeFloatingPoint(const TypeKind kind, const unsigned bits)
-    : TypeNumeric { TypeFamily::FloatingPoint, kind, bits } {
+    constexpr explicit TypeFloatingPoint(const TypeKind kind, const unsigned bits, const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeNumeric { TypeFamily::FloatingPoint, kind, bits, qualifiers } {
     }
 
-    [[nodiscard]] static auto get(unsigned bits) -> const TypeFloatingPoint*;
+    [[nodiscard]] static auto get(unsigned bits, TypeQualifier qualifiers = TypeQualifier::None) -> const TypeFloatingPoint*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::FloatingPoint;
@@ -338,8 +363,8 @@ protected:
  */
 class TypeFunction final : public TypeRoot {
 public:
-    TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, const bool variadic)
-    : TypeRoot { TypeFamily::Function, TypeKind::ComplexType }
+    TypeFunction(const TypeRoot* retType, llvm::SmallVector<const TypeRoot*>&& paramTypes, const bool variadic, const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeRoot { TypeFamily::Function, TypeKind::ComplexType, qualifiers }
     , m_retType { retType }
     , m_paramTypes { std::move(paramTypes) }
     , m_variadic { variadic } {
@@ -349,7 +374,8 @@ public:
         Context& context,
         const TypeRoot* retType,
         llvm::SmallVector<const TypeRoot*> paramTypes,
-        bool variadic
+        bool variadic,
+        TypeQualifier qualifiers = TypeQualifier::None
     ) -> const TypeFunction*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
@@ -382,11 +408,11 @@ private:
  */
 class TypeZString final : public TypeRoot {
 public:
-    constexpr TypeZString()
-    : TypeRoot { TypeFamily::ZString, TypeKind::ZString } {
+    explicit constexpr TypeZString(const TypeQualifier qualifiers = TypeQualifier::None)
+    : TypeRoot { TypeFamily::ZString, TypeKind::ZString, qualifiers } {
     }
 
-    [[nodiscard]] static auto get() -> const TypeZString*;
+    [[nodiscard]] static auto get(TypeQualifier qualifiers = TypeQualifier::None) -> const TypeZString*;
 
     constexpr static auto classof(const TypeRoot* type) -> bool {
         return type->getFamily() == TypeFamily::ZString;

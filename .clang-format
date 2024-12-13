@@ -8,6 +8,8 @@ BreakBeforeBraces: Attach
 AllowShortBlocksOnASingleLine: Empty
 ConstructorInitializerIndentWidth: 0
 FixNamespaceComments: true
+AlignConsecutiveAssignments: Consecutive
+AlignTrailingComments: true
 IncludeCategories:
   - Priority: 1
     Regex: ^"pch\.hpp"

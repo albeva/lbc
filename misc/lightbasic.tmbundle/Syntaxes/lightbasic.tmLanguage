@@ -90,7 +90,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(?i:(true|false|null))\b</string>
+			<string>\b(?i:(true|false|null|this))\b</string>
 			<key>name</key>
 			<string>constant.language.lbc</string>
 		</dict>

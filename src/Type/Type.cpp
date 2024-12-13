@@ -10,8 +10,8 @@ using namespace lbc;
 namespace {
 
 // Commonly used types
-constexpr TypeVoid voidTy {}; // VOID
-constexpr TypeAny anyTy {}; // Any typeExpr
+constexpr TypeVoid voidTy {};              // VOID
+constexpr TypeAny anyTy {};                // Any typeExpr
 constexpr TypePointer anyPtrTy { &anyTy }; // void*
 
 // clang-format off
@@ -72,6 +72,16 @@ auto TypeRoot::isUnsignedIntegral() const -> bool {
         return false;
     }
     return !llvm::cast<TypeIntegral>(this)->isSigned();
+}
+
+auto TypeRoot::withQualifiers(Context& /*context*/, TypeQualifier /*qualifiers*/) const -> const TypeRoot* {
+    (void)this;
+    return nullptr;
+}
+
+auto TypeRoot::withoutQualifiers(Context& /*context*/, TypeQualifier /*qualifiers*/) const -> const TypeRoot* {
+    (void)this;
+    return nullptr;
 }
 
 // clang-format off
@@ -145,9 +155,9 @@ auto TypeRoot::compare(const TypeRoot* other) const -> TypeComparison {
 }
 
 auto TypeRoot::getSize(Context& context) const -> std::size_t {
-    auto* llvmType = getLlvmType(context);
+    auto* llvmType            = getLlvmType(context);
     constexpr auto bitsInByte = 8;
-    const auto size = context.getDataLayout().getTypeSizeInBits(llvmType) / bitsInByte;
+    const auto size           = context.getDataLayout().getTypeSizeInBits(llvmType) / bitsInByte;
     if (size == 0 && isBoolean()) {
         return 1;
     }
@@ -207,7 +217,7 @@ auto TypeAny::asString() const -> std::string {
 
 // Pointer
 
-auto TypePointer::get(Context& context, const TypeRoot* base) -> const TypePointer* {
+auto TypePointer::get(Context& context, const TypeRoot* base, const TypeQualifier qualifiers) -> const TypePointer* {
     if (base == &anyTy) {
         return &anyPtrTy;
     }
@@ -223,7 +233,7 @@ auto TypePointer::get(Context& context, const TypeRoot* base) -> const TypePoint
         }
     }
 
-    const auto* ty = context.create<TypePointer>(base);
+    const auto* ty = context.create<TypePointer>(base, qualifiers);
     context.getTypes(TypeFamily::Pointer).push_back(ty);
     return ty;
 }
@@ -238,7 +248,7 @@ auto TypePointer::asString() const -> std::string {
 
 // Reference
 
-auto TypeReference::get(Context& context, const TypeRoot* base) -> const TypeReference* {
+auto TypeReference::get(Context& context, const TypeRoot* base, const TypeQualifier qualifiers) -> const TypeReference* {
     assert(!base->isReference() && "Type is already a reference");
 
     for (const auto& ptrRef : context.getTypes(TypeFamily::Reference)) {
@@ -247,7 +257,7 @@ auto TypeReference::get(Context& context, const TypeRoot* base) -> const TypeRef
         }
     }
 
-    const auto* ty = context.create<TypeReference>(base);
+    const auto* ty = context.create<TypeReference>(base, qualifiers);
     context.getTypes(TypeFamily::Reference).push_back(ty);
     return ty;
 }
@@ -266,7 +276,7 @@ auto TypeReference::asString() const -> std::string {
 
 // Bool
 
-auto TypeBoolean::get() -> const TypeBoolean* {
+auto TypeBoolean::get(const TypeQualifier /*qualifiers*/) -> const TypeBoolean* {
     return &BoolTy;
 }
 
@@ -280,7 +290,7 @@ auto TypeBoolean::asString() const -> std::string {
 
 // Integer
 
-auto TypeIntegral::get(unsigned bits, bool isSigned) -> const TypeIntegral* {
+auto TypeIntegral::get(unsigned bits, bool isSigned, const TypeQualifier /*qualifiers*/) -> const TypeIntegral* {
     // clang-format off
     #define USE_TYPE(ID, STR, KIND, CPP, BITS, IS_SIGNED, ...) \
         if (bits == BITS && isSigned == IS_SIGNED)        \
@@ -317,7 +327,7 @@ auto TypeIntegral::asString() const -> std::string {
 
 // Floating Point
 
-auto TypeFloatingPoint::get(unsigned bits) -> const TypeFloatingPoint* {
+auto TypeFloatingPoint::get(unsigned bits, const TypeQualifier /*qualifiers*/) -> const TypeFloatingPoint* {
     // clang-format off
     switch (bits) {
     #define USE_TYPE(ID, STR, KIND, CPP, BITS) \
@@ -359,7 +369,8 @@ auto TypeFunction::get(
     Context& context,
     const TypeRoot* retType,
     llvm::SmallVector<const TypeRoot*> paramTypes,
-    bool variadic
+    bool variadic,
+    const TypeQualifier qualifiers
 ) -> const TypeFunction* {
     for (const auto& funcPtr : context.getTypes(TypeFamily::Function)) {
         const auto* ptr = llvm::cast<TypeFunction>(funcPtr);
@@ -368,7 +379,7 @@ auto TypeFunction::get(
         }
     }
 
-    auto* ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic);
+    auto* ty = context.create<TypeFunction>(retType, std::move(paramTypes), variadic, qualifiers);
     context.getTypes(TypeFamily::Function).push_back(ty);
     return ty;
 }
@@ -401,7 +412,7 @@ auto TypeFunction::asString() const -> std::string {
 }
 
 // ZString
-auto TypeZString::get() -> const TypeZString* {
+auto TypeZString::get(const TypeQualifier /*qualifiers*/) -> const TypeZString* {
     return &ZStringTy;
 }
 
