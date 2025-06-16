@@ -55,7 +55,7 @@
     _( invalidCast,                         "Invalid cast from '{0}' to '{1}'"                            ) \
     _( invalidImplicitConversion,           "Invalid implicit conversion '{0}' to '{1}'"                  ) \
     _( mismatchingIfExprBranchTypes,        "Mismatching types in IF expression branches '{0}' and '{1}'" ) \
-    _( circularTypeDependency,              "Circular type dependency detected"                           ) \
+    _( circularTypeDependency,              "Circular type dependency detected on '{0}'"                  ) \
     _( undefinedType,                       "Undefined type '{0}'"                                        ) \
     _( notAType,                            "'{0}' is not a type"                                         ) \
     _( symbolAlreadyDefined,                "Symbol '{0}' is already defined"                             ) \

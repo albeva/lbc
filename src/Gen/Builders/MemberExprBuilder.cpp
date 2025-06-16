@@ -54,7 +54,7 @@ void MemberExprBuilder::base(AstExpr& ast) {
 }
 
 auto MemberExprBuilder::member(AstExpr& ast) -> Symbol* {
-    auto* symbol = m_gen.visit(ast).dyn_cast<Symbol*>();
+    auto* symbol = dyn_cast<Symbol*>(m_gen.visit(ast).value());
     if (symbol == nullptr) {
         fatalError("MemberAccess expressions should be symbols!");
     }

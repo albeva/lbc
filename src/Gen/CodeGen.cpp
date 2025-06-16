@@ -522,7 +522,7 @@ auto CodeGen::getConstantValue(const TypeRoot* type, const TokenValue& constant)
 auto CodeGen::getStringConstant(llvm::StringRef str) -> llvm::Constant* {
     auto [iter, inserted] = m_stringLiterals.try_emplace(str, nullptr);
     if (inserted) {
-        iter->second = m_builder.CreateGlobalStringPtr(str);
+        iter->second = m_builder.CreateGlobalString(str);
     }
     return iter->second;
 }

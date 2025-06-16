@@ -98,7 +98,8 @@ private:
      */
     template <typename... Args>
     static auto format(Diag diag, Args&&... args) -> std::string {
-        return llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
+        auto str = llvm::formatv(getText(diag), std::forward<Args>(args)...).str();
+        return str;
     }
 
     /**

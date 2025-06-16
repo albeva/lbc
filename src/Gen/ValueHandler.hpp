@@ -18,8 +18,10 @@ class TypeRoot;
 class Symbol;
 
 namespace Gen {
-    class ValueHandler final : public llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*> {
+    class ValueHandler final {
     public:
+        using ValueUnion = llvm::PointerUnion<llvm::Value*, Symbol*, AstExpr*>;
+
         /// Create temporary allocated variable - it is not inserted into symbol table
         static auto createTemp(CodeGen& gen, AstExpr& expr, llvm::StringRef name = "") -> ValueHandler;
 
@@ -49,7 +51,10 @@ namespace Gen {
             return m_gen != nullptr;
         }
 
+        [[nodiscard]] auto value() const -> const ValueUnion& { return m_union; }
+
     private:
+        ValueUnion m_union;
         CodeGen* m_gen = nullptr;
         const TypeRoot* m_type = nullptr;
     };

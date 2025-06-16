@@ -44,13 +44,13 @@ auto ValueHandler::createOpaqueValue(CodeGen& gen, const TypeRoot* type, llvm::V
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, const TypeRoot* type, llvm::Value* value)
-: PointerUnion { value }
+: m_union { value }
 , m_gen { gen }
 , m_type { type } {
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, Symbol* symbol)
-: PointerUnion { symbol }
+: m_union { symbol }
 , m_gen { gen }
 , m_type { symbol->getType() } {
 }
@@ -60,45 +60,45 @@ ValueHandler::ValueHandler(CodeGen* gen, AstIdentExpr& ast)
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, AstMemberExpr& ast)
-: PointerUnion { &ast }
+: m_union { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAddressOf& ast)
-: PointerUnion { &ast }
+: m_union { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, AstAlignOfExpr& ast)
-: PointerUnion { &ast }
+: m_union { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, AstSizeOfExpr& ast)
-: PointerUnion { &ast }
+: m_union { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
 
 ValueHandler::ValueHandler(CodeGen* gen, AstDereference& ast)
-: PointerUnion { &ast }
+: m_union { &ast }
 , m_gen { gen }
 , m_type { ast.type } {
 }
 
 auto ValueHandler::getAddress() const -> llvm::Value* {
-    if (auto* value = dyn_cast<llvm::Value*>()) {
+    if (auto* value = dyn_cast<llvm::Value*>(m_union)) {
         return value;
     }
 
-    if (const auto* symbol = dyn_cast<Symbol*>()) {
+    if (const auto* symbol = dyn_cast<Symbol*>(m_union)) {
         return symbol->getLlvmValue();
     }
 
-    auto* ast = dyn_cast<AstExpr*>();
+    auto* ast = dyn_cast<AstExpr*>(m_union);
 
     if (const auto* deref = llvm::dyn_cast<AstDereference>(ast)) {
         return m_gen->visit(*deref->expr).load();
@@ -119,14 +119,14 @@ auto ValueHandler::load(const bool asReference) const -> llvm::Value* {
     auto* addr = getAddress();
 
     // value is an intermediary. It is already loaded and expected type
-    if (is<llvm::Value*>()) {
+    if (isa<llvm::Value*>(m_union)) {
         return addr;
     }
 
     auto& builder = m_gen->getBuilder();
     auto& ctx = m_gen->getContext();
 
-    if (auto* expr = dyn_cast<AstExpr*>()) {
+    if (auto* expr = dyn_cast<AstExpr*>(m_union)) {
         // Handle: @expr
         if (const auto* addrof = llvm::dyn_cast<AstAddressOf>(expr)) {
             if (addrof->expr->type->isReference()) {
@@ -156,13 +156,13 @@ auto ValueHandler::load(const bool asReference) const -> llvm::Value* {
 }
 
 auto ValueHandler::getLlvmType() const -> llvm::Type* {
-    if (const auto* value = dyn_cast<llvm::Value*>()) {
+    if (const auto* value = dyn_cast<llvm::Value*>(m_union)) {
         return value->getType();
     }
-    if (const auto* symbol = dyn_cast<Symbol*>()) {
+    if (const auto* symbol = dyn_cast<Symbol*>(m_union)) {
         return symbol->getType()->getLlvmType(m_gen->getContext());
     }
-    if (const auto* ast = dyn_cast<AstExpr*>()) {
+    if (const auto* ast = dyn_cast<AstExpr*>(m_union)) {
         return ast->type->getLlvmType(m_gen->getContext());
     }
     llvm_unreachable("Unknown type in getLlvmType");
@@ -170,7 +170,7 @@ auto ValueHandler::getLlvmType() const -> llvm::Type* {
 
 void ValueHandler::store(llvm::Value* val) const {
     auto* addr = getAddress();
-    if (llvm::isa<TypeReference>(m_type) && !is<llvm::Value*>()) {
+    if (llvm::isa<TypeReference>(m_type) && !isa<llvm::Value*>(m_union)) {
         addr = m_gen->getBuilder().CreateLoad(getLlvmType(), addr);
     }
     m_gen->getBuilder().CreateStore(val, addr);
