@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2024 Albert Varaksin
+Copyright (c) 2025 Albert Varaksin
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
