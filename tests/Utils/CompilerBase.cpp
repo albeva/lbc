@@ -20,7 +20,7 @@ auto addTestEnvironment(auto* ptr) {
     return ptr;
 }
 
-struct CompileEnvironment : ::testing::Environment {
+struct CompileEnvironment final : ::testing::Environment {
     CompileEnvironment() = default;
     std::stringstream stdoutput;
     lbc::CompileOptions options {};
@@ -90,7 +90,7 @@ CompilerBase::CompilerBase() = default;
 CompilerBase::~CompilerBase() = default;
 
 void CompilerBase::SetUp() {
-    auto workingPath = getBasePath();
+    const auto workingPath = getBasePath();
 
     // reset the shared context
     env->context.reset();
@@ -101,7 +101,7 @@ void CompilerBase::SetUp() {
     env->options.setCompilationTarget(lbc::CompileOptions::CompilationTarget::JIT);
     env->options.setWorkingDir(workingPath);
 
-    // when targeting windows, compiler executable has .exe file extension
+    // when targeting windows, the compiler executable has .exe file extension
     std::string binary = "lbc";
     if (env->context.getTriple().isOSWindows()) {
         binary += ".exe";
@@ -122,7 +122,7 @@ void CompilerBase::TearDown() {
     m_driver.reset();
 }
 
-auto CompilerBase::run() -> std::string {
+auto CompilerBase::run() const -> std::string {
     m_driver->drive();
     return llvm::StringRef { env->stdoutput.str() }.trim().str();
 }
