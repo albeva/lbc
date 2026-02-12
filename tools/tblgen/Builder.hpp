@@ -26,37 +26,72 @@ public:
     }
 
     template <std::invocable Func>
-    void enumClass(const StringRef name, const StringRef type, Func&& func) {
-        m_os << m_space << "enum class " << name << " ";
-        if (not type.empty()) {
-            m_os << ": " << type << " ";
-        }
-        indent(true, std::forward<Func>(func));
-        m_os << ";\n\n";
-    }
-
-    void enumCase(const Streamable auto& name) const {
-        m_os << m_space << name << ",\n";
-    }
-
-    void enumCase(const Streamable auto& name, const Streamable auto& comment) const {
-        commentLine(comment);
-        m_os << m_space << name << ",\n";
-    }
-
-    template <std::invocable Func>
-    void block(const Streamable auto& line, Func&& func) {
+    auto block(const Streamable auto& line, Func&& func) -> Builder& {
         m_os << m_space << line << " ";
         indent(true, std::forward<Func>(func));
         m_os << "\n";
-    }
-
-    void line(const Streamable auto& line) {
-        m_os << m_space << line << ";\n";
+        return *this;
     }
 
     template <std::invocable Func>
-    void indent(const bool scoped, Func&& func) {
+    auto block(const Streamable auto& line, const bool terminate, Func&& func) -> Builder& {
+        m_os << m_space << line << " ";
+        indent(true, std::forward<Func>(func));
+        m_os << "\n";
+        if (terminate) {
+            m_os << m_space << ";\n";
+        }
+        return *this;
+    }
+
+    auto line(const Streamable auto& line, const StringRef terminator = ";") -> Builder& {
+        m_os << m_space << line << terminator << "\n";
+        return *this;
+    }
+
+    static auto quoted(const StringRef line) -> std::string {
+        std::string result { "\"" };
+        result.reserve(line.size() + 2);
+        for (const auto& c : line) {
+            switch (c) {
+            case '"':
+                result += "\\\"";
+                break;
+            case '\n':
+                result += "\\n";
+                break;
+            case '\r':
+                result += "\\r";
+                break;
+            case '\v':
+                result += "\\v";
+                break;
+            case '\f':
+                result += "\\f";
+                break;
+            case '\0':
+                result += "\\0";
+                break;
+            default:
+                result += c;
+            }
+        }
+        result += '"';
+        return result;
+    }
+
+    auto newline() -> Builder& {
+        m_os << "\n";
+        return *this;
+    }
+
+    auto add(const Streamable auto& content) -> Builder& {
+        m_os << content;
+        return *this;
+    }
+
+    template <std::invocable Func>
+    auto indent(const bool scoped, Func&& func) -> Builder& {
         if (scoped) {
             m_os << "{\n";
         }
@@ -70,14 +105,40 @@ public:
         if (scoped) {
             m_os << m_space << "}";
         }
+
+        return *this;
     }
 
-    void commentLine(const Streamable auto& comment) const {
+    auto comment(const Streamable auto& comment) -> Builder& {
         m_os << m_space << "/// " << comment << "\n";
+        return *this;
     }
 
-    [[nodiscard]] auto space() const -> const std::string& {
-        return m_space;
+    auto doc(const StringRef comment) -> Builder& {
+        m_os << m_space << "/**\n";
+        m_os << m_space << " * ";
+        for (const auto& ch : comment) {
+            switch (ch) {
+            case '\n':
+                m_os << '\n'
+                     << m_space << " * ";
+                continue;
+            case '\r':
+            case '\v':
+            case '\f':
+                continue;
+            default:
+                m_os << ch;
+            }
+        }
+        m_os << '\n'
+             << m_space << " */\n";
+        return *this;
+    }
+
+    auto space() -> Builder& {
+        m_os << m_space;
+        return *this;
     }
 
 private:
