@@ -25,6 +25,7 @@ target_compile_options(project_options INTERFACE -fno-exceptions -fno-rtti)
 
 # LLVM
 include(cmake/llvm.cmake)
+include(cmake/tblgen.cmake)
 
 # Add subfolders
 add_subdirectory(configured_files)

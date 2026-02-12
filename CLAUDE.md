@@ -85,6 +85,7 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 - PascalCase for classes, camelCase for functions, lowercase for namespaces
 - Root namespace: `lbc`
 - 4-space indentation, LF line endings
+- Max line length in documents and source code is 120 characters per line.
 
 ## Important Patterns
 
