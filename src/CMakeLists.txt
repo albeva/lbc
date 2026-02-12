@@ -12,7 +12,9 @@ target_sources(lbc_lib
     FILES
     Lexer/Lexer.hpp
     Parser/Parser.hpp
+    Utilities/Diagnostics.hpp
     Utilities/Sample.hpp
+    Utilities/Try.hpp
 )
 target_link_libraries(lbc_lib PRIVATE project_options project_warnings)
 target_include_directories(lbc_lib PRIVATE "${CMAKE_BINARY_DIR}/configured_files/include")

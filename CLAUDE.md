@@ -78,7 +78,7 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 
 - C++23 standard, no exceptions, no RTTI, no modules/`import std;`
 - Do not use `noexcept` — redundant since exceptions are globally disabled
-- GCC and Clang only; GNU extensions are acceptable
+- Target GCC, Clang and MSVC compilers.
 - Classes use `final` by default
 - Use `[[nodiscard]]` on function declarations where appropriate
 - Prefer `std::string_view` and `"text"sv` literals over `std::string`
