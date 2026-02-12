@@ -3,11 +3,15 @@ add_library(lbc_lib)
 
 target_sources(lbc_lib
     PRIVATE
+    Lexer/Lexer.cpp
+    Parser/Parser.cpp
     Utilities/Sample.cpp
 
     PUBLIC FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
+    Lexer/Lexer.hpp
+    Parser/Parser.hpp
     Utilities/Sample.hpp
 )
 target_link_libraries(lbc_lib PRIVATE project_options project_warnings)
