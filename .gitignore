@@ -1,0 +1,25 @@
+# Global
+.DS_Store
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+.vs/
+.zed/
+
+# build
+build/
+bin/
+
+# cmake
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+CMakeSettings.json
