@@ -1,0 +1,22 @@
+---
+BasedOnStyle: WebKit
+Language: Cpp
+Standard: c++20
+AlignAfterOpenBracket: BlockIndent
+AlignOperands: AlignAfterOperator
+BreakBeforeBraces: Attach
+AllowShortBlocksOnASingleLine: Empty
+ConstructorInitializerIndentWidth: 0
+FixNamespaceComments: true
+AlignTrailingComments: true
+AlignConsecutiveBitFields: true
+SortIncludes: CaseSensitive
+IncludeCategories:
+    - Priority: 1
+      Regex: ^"pch\.hpp"
+    - Priority: 2
+      Regex: ^<
+    - Priority: 3
+      Regex: .*
+    - Priority: 4
+      Regex: ^<gtest/

@@ -8,6 +8,9 @@
 .vs/
 .zed/
 
+# AIs
+.claude/
+
 # build
 build/
 bin/
