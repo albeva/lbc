@@ -1,3 +1,4 @@
+#include <string>
 #include <gtest/gtest.h>
 #include "Utilities/Sample.hpp"
 using namespace lbc::utils;

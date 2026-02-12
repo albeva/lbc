@@ -14,9 +14,9 @@ SortIncludes: CaseSensitive
 IncludeCategories:
     - Priority: 1
       Regex: ^"pch\.hpp"
+    - Priority: 3
+      Regex: ^<gtest/
     - Priority: 2
       Regex: ^<
-    - Priority: 3
-      Regex: .*
     - Priority: 4
-      Regex: ^<gtest/
+      Regex: .*

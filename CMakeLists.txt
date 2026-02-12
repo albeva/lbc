@@ -14,7 +14,7 @@ project(
     VERSION 0.0.1
     DESCRIPTION "A toy BASIC compiler"
     HOMEPAGE_URL "https://github.com/albeva/lbc"
-    LANGUAGES CXX C
+    LANGUAGES CXX
 )
 project_options(
     WARNINGS_AS_ERRORS
@@ -27,6 +27,3 @@ target_compile_options(project_options INTERFACE -fno-exceptions -fno-rtti)
 add_subdirectory(configured_files)
 add_subdirectory(src)
 add_subdirectory(tests)
-
-# Package the project
-package_project(TARGETS lbc)
