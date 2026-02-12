@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 4.2.2)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 include(FetchContent)
-include(cmake/llvm.cmake)
 
 # Add project_options from https://github.com/aminya/project_options
 FetchContent_Declare(_project_options URL "https://github.com/aminya/project_options/archive/refs/tags/v0.41.0.zip")
@@ -24,7 +23,11 @@ project_options(
 # Disable rtti and exceptions
 target_compile_options(project_options INTERFACE -fno-exceptions -fno-rtti)
 
+# LLVM
+include(cmake/llvm.cmake)
+
 # Add subfolders
 add_subdirectory(configured_files)
+add_subdirectory(tools)
 add_subdirectory(src)
 add_subdirectory(tests)
