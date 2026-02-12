@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 lbc is a BASIC compiler with an LLVM backend, written in clean, modern C++23. Targets GCC and Clang only (MSVC is intentionally unsupported; GNU extensions are used). No C++20 modules or `import std;` — these features are too buggy. Exceptions and RTTI are disabled (`-fno-exceptions -fno-rtti`). Uses CMake with Ninja as the build generator and Google Test for testing.
 
+## Your Role
+
+These are the rules I ask you to adhere to at all times:
+
+- Your primary purpose is to help, advise and review code I write.
+- I write the code, you provide critique and feedback.
+- Do not generate any code unless I explicitly ask you to.
+- When asked to write code, do only the minimum viable scope to fulfill the request.
+- If asked coding task or refactor is a large task, stop and ask me how to proceed.
+- When committing, do not mention your co-authorships.
+- Never push to git repo, you commit only.
+
 ## Build Commands
 
 ```bash
@@ -48,12 +60,23 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).
 - `src/pch.hpp` — Precompiled header shared across `lbc_lib`, `lbc`, and `tests`. Common STL headers go here.
 
+### Compiler Pipeline
+
+Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR → machine code).
+
+- **Frontend is pure C++23** — no LLVM headers or types. All source management, diagnostics, and AST are self-contained.
+- **IR** — a typed, serializable, interpretable intermediate representation. Preserves semantic information (types, generics, module interfaces) that LLVM IR discards. Serves as the central representation for module import/export, compile-time evaluation, and template instantiation. No optimization passes — all optimization is delegated to LLVM.
+- **LLVM is isolated to the backend module** — lowers IR to LLVM IR for machine code emission.
+- **Target queries** — the backend exposes an abstract interface for target-specific info (type sizes, alignment, calling conventions) that the frontend uses during semantic analysis. This keeps the frontend LLVM-free while supporting full C ABI compatibility (data types, bitfields, packed structs, calling conventions).
+- This separation allows future alternative backends (e.g. WASM, C codegen) without touching the frontend.
+
 ## Code Conventions
 
 - C++23 standard, no exceptions, no RTTI, no modules/`import std;`
+- Do not use `noexcept` — redundant since exceptions are globally disabled
 - GCC and Clang only; GNU extensions are acceptable
 - Classes use `final` by default
-- Use `[[nodiscard]]` and `noexcept` on function declarations
+- Use `[[nodiscard]]` on function declarations where appropriate
 - Prefer `std::string_view` and `"text"sv` literals over `std::string`
 - PascalCase for classes, camelCase for functions, lowercase for namespaces
 - Root namespace: `lbc`

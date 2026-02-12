@@ -10,7 +10,7 @@ namespace @PROJECT_NAME@::cmake {
         std::string_view name, description, version;
         int major, minor, patch;
     };
-    static const constexpr Project project {
+    static constexpr Project project {
         .name        = "@PROJECT_NAME@",
         .description = "@PROJECT_DESCRIPTION@",
         .version     = "@PROJECT_VERSION@",

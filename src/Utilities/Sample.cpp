@@ -1,4 +1,5 @@
 #include "Sample.hpp"
+#include <cmake/config.hpp>
 using namespace lbc::utils;
 
 auto Sample::getMessage() noexcept-> std::string_view{
