@@ -20,6 +20,9 @@ target_include_directories(lbc_lib PRIVATE "${CMAKE_BINARY_DIR}/configured_files
 # precompile header
 target_precompile_headers(lbc_lib PUBLIC pch.hpp)
 
+# link llvm
+configure_llvm(lbc_lib)
+
 # lbc executable
 add_executable(lbc main.cpp)
 target_link_libraries(lbc PRIVATE lbc_lib project_options project_warnings)
