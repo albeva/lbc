@@ -106,6 +106,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Operator categories
             // --------------------------------------------------------------------
             build
+                .doc("Operator category classification")
                 .block("enum class Category : std::uint8_t", true, [&] {
                     for (const auto* category : categories) {
                         build.line(category->getName(), ",");
@@ -117,7 +118,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // number of tokens in total
             // --------------------------------------------------------------------
             build
-                .comment("Number of total tokens")
+                .doc("Total number of token kinds")
                 .line("static constexpr std::size_t COUNT = " + std::to_string(tokens.size()), ";\n");
 
             // --------------------------------------------------------------------
@@ -130,6 +131,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // get value
             // --------------------------------------------------------------------
             build
+                .doc("Return the underlying Value enum")
                 .block("constexpr auto value() const", [&] {
                     build.line("return m_value");
                 })
@@ -158,6 +160,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // isOneOf
             // --------------------------------------------------------------------
             build
+                .doc("Check if this token matches any of the given kinds")
                 .line("template <typename... Tkns>", "")
                 .block("[[nodiscard]] constexpr auto isOneOf(Tkns... tkn) const -> bool", [&] {
                     build.line("return ((m_value == TokenKind(tkn).m_value) || ...)");
@@ -170,6 +173,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             for (const auto* group : groups) {
                 if (const auto range = findRange(tokens, "group", group)) {
                     build
+                        .doc(("Check if this token belongs to the " + group->getName() + " group").str())
                         .block("[[nodiscard]] constexpr auto is" + group->getName() + "() const -> bool", [&] {
                             build.line("return m_value >= " + range->first->getName() + " && m_value <= " + range->second->getName());
                         })
@@ -181,6 +185,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Get operator category
             // --------------------------------------------------------------------
             build
+                .doc("Return the operator category, or std::nullopt for non-operators")
                 .block("constexpr auto getCategory() const -> std::optional<Category>", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
@@ -203,6 +208,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                     continue;
                 }
                 build
+                    .doc(("Check if this is a " + category->getName() + " operator").str())
                     .block("[[nodiscard]] constexpr auto is" + category->getName() + "() const -> bool", [&] {
                         build.line("return getCategory() == Category::" + category->getName());
                     })
@@ -213,6 +219,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Get operator precedence
             // --------------------------------------------------------------------
             build
+                .doc("Return operator precedence (higher binds tighter), or 0 for non-operators")
                 .block("constexpr auto getPrecedence() const -> int", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
@@ -230,6 +237,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Check if operator isBinary
             // --------------------------------------------------------------------
             build
+                .doc("Check if this is a binary operator")
                 .block("constexpr auto isBinary() const -> bool", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
@@ -247,6 +255,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Check if operator isUnary
             // --------------------------------------------------------------------
             build
+                .doc("Check if this is a unary operator")
                 .block("constexpr auto isUnary() const -> bool", [&] {
                     build.line("return isOperator() && !isBinary()");
                 })
@@ -256,6 +265,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Check if operator isLeftAssociative
             // --------------------------------------------------------------------
             build
+                .doc("Check if this operator is left-associative")
                 .block("constexpr auto isLeftAssociative() const -> bool", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
@@ -273,6 +283,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Check if operator isRightAssociative
             // --------------------------------------------------------------------
             build
+                .doc("Check if this operator is right-associative")
                 .block("constexpr auto isRightAssociative() const -> bool", [&] {
                     build.line("return isOperator() && !isLeftAssociative()");
                 })
@@ -282,6 +293,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Get string
             // --------------------------------------------------------------------
             build
+                .doc("Return the string representation of this token")
                 .block("[[nodiscard]] constexpr auto string() const -> std::string_view", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* token : tokens) {
@@ -301,6 +313,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                     continue;
                 }
                 build
+                    .doc(("Return all " + group->getName() + " tokens").str())
                     .block("[[nodiscard]] static consteval auto all" + group->getName() + "s() -> std::array<TokenKind, " + std::to_string(all.size()) + ">", [&] {
                         build.space();
                         os << "return {";
