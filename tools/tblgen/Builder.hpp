@@ -30,16 +30,11 @@ public:
     }
 
     ~Builder() {
-        if (!closed) {
-            footer();
-        }
+        footer();
     }
 
     auto closeNamespace() -> Builder& {
-        if (!closed) {
-            closed = true;
-            footer();
-        }
+        footer();
         return *this;
     }
 
@@ -181,7 +176,11 @@ private:
         m_os << "namespace " << m_ns << " {\n\n";
     }
 
-    void footer() const {
+    void footer() {
+        if (closed) {
+            return;
+        }
+        closed = true;
         m_os << "} // namespace " << m_ns << "\n";
     }
 

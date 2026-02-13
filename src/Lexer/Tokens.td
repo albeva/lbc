@@ -8,6 +8,7 @@ def Literal  : Group;
 def Symbol   : Group;
 def Operator : Group;
 def Keyword  : Group;
+def Type     : Group;
 
 // Define Operator categories
 class Category;
@@ -40,6 +41,7 @@ class Operator<
     Category category = cat_;
 }
 class Keyword<string str>  : Token<str, Keyword>;
+class Type<string str> : Token<str, Type>;
 
 // General
 def Invalid    : General<"<Invalid>">;
@@ -121,3 +123,6 @@ def TypeKw    : Keyword<"TYPE">;
 def TypeOf    : Keyword<"TYPEOF">;
 def Until     : Keyword<"UNTIL">;
 def While     : Keyword<"WHILE">;
+
+// Types
+include "Type/Types.td"

@@ -74,12 +74,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
         os,
         records.getInputFilename(),
         "lbc::lexer",
-        { "array",
-          "cstdint",
-          "format",
-          "functional",
-          "string_view",
-          "utility" }
+        { "pch.hpp" }
     };
 
     // TokenKind struct
@@ -233,11 +228,22 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .doc("Return operator precedence (higher binds tighter), or 0 for non-operators")
                 .block("constexpr auto getPrecedence() const -> int", [&] {
                     build.block("switch (m_value)", [&] {
+                        std::int64_t value = 0;
+                        bool first = true;
                         for (const auto* op : operators) {
+                            if (first) {
+                                first = false;
+                                value = op->getValueAsInt("prec");
+                            } else {
+                                if (const auto newValue = op->getValueAsInt("prec"); value != newValue) {
+                                    build.line("    return " + std::to_string(value));
+                                    value = newValue;
+                                }
+                            }
                             build
-                                .line("case " + op->getName(), ":")
-                                .line("    return " + std::to_string(op->getValueAsInt("prec")));
+                                .line("case " + op->getName(), ":");
                         }
+                        build.line("    return " + std::to_string(value));
                         build.line("default", ":")
                             .line("    return 0");
                     });
@@ -252,10 +258,12 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .block("constexpr auto isBinary() const -> bool", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
-                            build
-                                .line("case " + op->getName(), ":")
-                                .line("    return "s + (op->getValueAsBit("isBinary") ? "true" : "false"));
+                            if (!op->getValueAsBit("isBinary")) {
+                                continue;
+                            }
+                            build.line("case " + op->getName(), ":");
                         }
+                        build.line("    return true");
                         build.line("default", ":")
                             .line("    return false");
                     });
@@ -280,10 +288,12 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .block("constexpr auto isLeftAssociative() const -> bool", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
-                            build
-                                .line("case " + op->getName(), ":")
-                                .line("    return "s + (op->getValueAsBit("isLeftAssociative") ? "true" : "false"));
+                            if (!op->getValueAsBit("isLeftAssociative")) {
+                                continue;
+                            }
+                            build.line("case " + op->getName(), ":");
                         }
+                        build.line("    return true");
                         build.line("default", ":")
                             .line("    return false");
                     });
@@ -346,27 +356,29 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // get operators that are alpha-numeric
             // --------------------------------------------------------------------
             {
-                auto opkws = operators | std::views::filter([](const Record* record) {
-                                 return std::isalpha(*(record->getValueAsString("str").begin()));
-                             });
-                const auto count = std::ranges::distance(opkws);
-                build
-                    .doc("Return all operators that look like keywords")
-                    .block("[[nodiscard]] static consteval auto allOperatorKeywords() -> std::array<TokenKind, " + std::to_string(count) + ">", [&] {
-                        build.space();
-                        os << "return {";
-                        bool first = true;
-                        for (const auto* token : opkws) {
-                            if (first) {
-                                first = false;
-                            } else {
-                                os << ", ";
+                static constexpr auto pred = [](const Record* record) {
+                    return std::isalpha(*(record->getValueAsString("str").begin()));
+                };
+                auto opkws = operators | std::views::filter(pred);
+                if (const auto count = std::ranges::distance(opkws); count != 0) {
+                    build
+                        .doc("Return all operators that look like keywords")
+                        .block("[[nodiscard]] static consteval auto allOperatorKeywords() -> std::array<TokenKind, " + std::to_string(count) + ">", [&] {
+                            build.space();
+                            os << "return {";
+                            bool first = true;
+                            for (const auto* token : opkws) {
+                                if (first) {
+                                    first = false;
+                                } else {
+                                    os << ", ";
+                                }
+                                os << token->getName();
                             }
-                            os << token->getName();
-                        }
-                        os << "};\n";
-                    })
-                    .newline();
+                            os << "};\n";
+                        })
+                        .newline();
+                }
             }
 
             // --------------------------------------------------------------------
@@ -401,7 +413,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
         .block("struct std::formatter<lbc::lexer::TokenKind, char> final", true, [&] {
             // parse
             build
-                .block("constexpr auto parse(std::format_parse_context& ctx)", [&] {
+                .block("constexpr static auto parse(std::format_parse_context& ctx)", [&] {
                     build.line("return ctx.begin()");
                 })
                 .newline();

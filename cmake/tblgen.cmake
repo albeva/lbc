@@ -19,7 +19,7 @@ function(add_tblgen target tblgen_tool)
         add_custom_command(
             OUTPUT "${inc_abs}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${inc_dir}"
-            COMMAND ${tblgen_tool} "${td_abs}" -o "${inc_abs}"
+            COMMAND ${tblgen_tool} "${td_abs}" --write-if-changed -o "${inc_abs}" -I "${CMAKE_CURRENT_SOURCE_DIR}"
             COMMAND clang-format -i --style=file:"${PROJECT_SOURCE_DIR}/.clang-format" "${inc_abs}"
             DEPENDS ${tblgen_tool} "${td_abs}"
             COMMENT "Generating ${inc_rel}"
