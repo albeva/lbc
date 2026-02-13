@@ -29,7 +29,8 @@ fi
         -DLLVM_TARGETS_TO_BUILD="host"               \
         -DLLVM_OPTIMIZED_TABLEGEN=ON                 \
         -DLLVM_INSTALL_UTILS=ON                      \
-        -DLLVM_INCLUDE_TESTS=OFF
-    cmake --build "$BUILD_DIR"
-    cmake --install "$BUILD_DIR"
+        -DLLVM_INCLUDE_TESTS=OFF                     \
+        -DLLVM_INCLUDE_BENCHMARKS=OFF
+
+    cmake --build "$BUILD_DIR" --target install
 )

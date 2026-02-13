@@ -27,7 +27,6 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
     default:
         std::unreachable();
     }
-    return true;
 }
 
 } // namespace

@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-lbc is a BASIC compiler with an LLVM backend, written in clean, modern C++23. Targets GCC and Clang only (MSVC is
-intentionally unsupported; GNU extensions are used). No C++20 modules or `import std;` — these features are too buggy.
-Exceptions and RTTI are disabled (`-fno-exceptions -fno-rtti`). Uses CMake with Ninja as the build generator and Google
-Test for testing.
+lbc is a BASIC compiler with an LLVM backend, written in clean, modern C++23. Targets GCC, Clang, and MSVC. No C++20
+modules or `import std;` — these features are too buggy. Exceptions and RTTI are disabled on GCC/Clang
+(`-fno-exceptions -fno-rtti`); left at defaults on MSVC. Uses CMake with Ninja as the build generator and Google Test
+for testing.
 
 ## Your Role
 
@@ -63,6 +63,8 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
 - `tests/` — Google Test suite, links against `lbc_lib`.
 - `tools/tblgen/` — Custom LLVM TableGen backends. Builds a single `lbc-tblgen` binary that
   selects a generator via `--gen=<name>`. Generators are declared in `Generators.hpp`.
+- `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
+  `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).
 - `src/pch.hpp` — Precompiled header shared across `lbc_lib`, `lbc`, and `tests`.
   Common STL headers go here.
