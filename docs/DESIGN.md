@@ -82,17 +82,22 @@ would otherwise drift out of sync.
   )
   ```
 
-  Paths are relative to the calling `CMakeLists.txt`. Each `.td` file produces a corresponding
-  `.inc` file under the build directory, formatted with clang-format. The generated include
-  directory is added to the target automatically.
+  Paths are relative to the calling `CMakeLists.txt`. Each `.td` file produces a
+  corresponding `.inc` file under the build directory, formatted with clang-format.
+  The generated include directory is added to the target automatically.
 
-- **`.inc` files** are raw C++ fragments. A hand-written header wraps them with the
-  appropriate namespace and includes.
+- **`.inc` files** are self-contained generated headers with `#pragma once`, includes,
+  and namespace wrapping. A thin hand-written header (e.g. `Token.hpp`) includes the
+  `.inc` for use by the rest of the codebase.
+- **`Builder`** (`tools/tblgen/Builder.hpp`) is a lightweight helper for emitting
+  formatted C++ from TableGen backends. Provides RAII namespace scoping, indentation
+  tracking, block/line helpers, and a fluent interface.
 
 ### Current uses
 
-- `src/Lexer/Tokens.td` — defines token kinds, categories, and spellings. Generates enums
-  and constexpr lookup functions.
+- `src/Lexer/Tokens.td` — token kinds, groups, operator properties (precedence,
+  associativity, category). Generates a `TokenKind` struct with query methods,
+  `std::hash` and `std::formatter` specializations.
 
 ## C Interoperability
 

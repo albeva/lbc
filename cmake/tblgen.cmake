@@ -29,5 +29,5 @@ function(add_tblgen target tblgen_tool)
 
     add_custom_target(${target}_tblgen DEPENDS ${all_inc_files})
     add_dependencies(${target} ${target}_tblgen)
-    target_include_directories(${target} PRIVATE "${generated_dir}")
+    target_include_directories(${target} PUBLIC "${generated_dir}")
 endfunction()

@@ -70,7 +70,17 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
     const auto operators = sortedByDef(records.getAllDerivedDefinitions("Operator"));
 
     // Code builder
-    Builder build { os, records.getInputFilename(), "lbc::lexer" };
+    Builder build {
+        os,
+        records.getInputFilename(),
+        "lbc::lexer",
+        { "array",
+          "cstdint",
+          "format",
+          "functional",
+          "string_view",
+          "utility" }
+    };
 
     // TokenKind struct
     build
@@ -108,6 +118,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             build
                 .doc("Operator category classification")
                 .block("enum class Category : std::uint8_t", true, [&] {
+                    build.line("Invalid", ",");
                     for (const auto* category : categories) {
                         build.line(category->getName(), ",");
                     }
@@ -185,8 +196,8 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Get operator category
             // --------------------------------------------------------------------
             build
-                .doc("Return the operator category, or std::nullopt for non-operators")
-                .block("constexpr auto getCategory() const -> std::optional<Category>", [&] {
+                .doc("Return the operator category, or Invalid for non-operators")
+                .block("constexpr auto getCategory() const -> Category", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
                             build
@@ -195,7 +206,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                         }
                         build
                             .line("default", ":")
-                            .line("return std::nullopt");
+                            .line("    return Category::Invalid");
                     });
                 })
                 .newline();
@@ -208,7 +219,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                     continue;
                 }
                 build
-                    .doc(("Check if this is a " + category->getName() + " operator").str())
+                    .doc(("Check if this is an " + category->getName() + " operator").str())
                     .block("[[nodiscard]] constexpr auto is" + category->getName() + "() const -> bool", [&] {
                         build.line("return getCategory() == Category::" + category->getName());
                     })
@@ -297,7 +308,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .block("[[nodiscard]] constexpr auto string() const -> std::string_view", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* token : tokens) {
-                            build.line("case " + token->getName() + ": return " + build.quoted(token->getValueAsString("str")) + "sv");
+                            build.line("case " + token->getName() + ": return " + build.quoted(token->getValueAsString("str")));
                         }
                     });
                     build.line("std::unreachable()");
@@ -332,12 +343,75 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             }
 
             // --------------------------------------------------------------------
+            // get operators that are alpha-numeric
+            // --------------------------------------------------------------------
+            {
+                auto opkws = operators | std::views::filter([](const Record* record) {
+                                 return std::isalpha(*(record->getValueAsString("str").begin()));
+                             });
+                const auto count = std::ranges::distance(opkws);
+                build
+                    .doc("Return all operators that look like keywords")
+                    .block("[[nodiscard]] static consteval auto allOperatorKeywords() -> std::array<TokenKind, " + std::to_string(count) + ">", [&] {
+                        build.space();
+                        os << "return {";
+                        bool first = true;
+                        for (const auto* token : opkws) {
+                            if (first) {
+                                first = false;
+                            } else {
+                                os << ", ";
+                            }
+                            os << token->getName();
+                        }
+                        os << "};\n";
+                    })
+                    .newline();
+            }
+
+            // --------------------------------------------------------------------
             // value field
             // --------------------------------------------------------------------
             build
                 .line("private:", "")
                 .line("Value m_value");
-        });
+        })
+        .closeNamespace()
+        .newline();
+
+    // --------------------------------------------------------------------
+    // std::hash
+    // --------------------------------------------------------------------
+    build
+        .doc("Support hashing TokenKind")
+        .line("template <>", "")
+        .block("struct std::hash<lbc::lexer::TokenKind> final", true, [&] {
+            build.block("[[nodiscard]] auto operator()(const lbc::lexer::TokenKind& value) const noexcept -> std::size_t", [&] {
+                build.line("return std::hash<std::underlying_type_t<lbc::lexer::TokenKind::Value>> {}(value.value())");
+            });
+        })
+        .newline();
+
+    // --------------------------------------------------------------------
+    // std::formatter
+    // --------------------------------------------------------------------
+    build
+        .doc("Support using TokenKind with std::print and std::format")
+        .line("template <>", "")
+        .block("struct std::formatter<lbc::lexer::TokenKind, char> final", true, [&] {
+            // parse
+            build
+                .block("constexpr auto parse(std::format_parse_context& ctx)", [&] {
+                    build.line("return ctx.begin()");
+                })
+                .newline();
+
+            build.block("auto format(const lbc::lexer::TokenKind& value, auto& ctx) const", [&] {
+                build.line("return std::format_to(ctx.out(), \"{}\", value.string())");
+            });
+        })
+        .newline();
+
     return false;
 }
 

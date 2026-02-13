@@ -58,11 +58,14 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
 
 ## Architecture
 
-- `src/` — Main source code. Compiled into a static library (`lbc_lib`) and a thin executable (`lbc`) that links against
-  it.
+- `src/` — Main source code. Compiled into a static library (`lbc_lib`) and a thin
+  executable (`lbc`) that links against it.
 - `tests/` — Google Test suite, links against `lbc_lib`.
+- `tools/tblgen/` — Custom LLVM TableGen backends. Builds `lbc-tblgen` for code generation
+  from `.td` files.
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).
-- `src/pch.hpp` — Precompiled header shared across `lbc_lib`, `lbc`, and `tests`. Common STL headers go here.
+- `src/pch.hpp` — Precompiled header shared across `lbc_lib`, `lbc`, and `tests`.
+  Common STL headers go here.
 
 ### Compiler Pipeline
 
