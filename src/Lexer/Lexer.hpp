@@ -6,6 +6,7 @@
 namespace lbc::lexer {
 
 class Lexer final {
+public:
     Lexer();
 };
 
