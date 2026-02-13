@@ -68,23 +68,27 @@ would otherwise drift out of sync.
 ### Setup
 
 - **`.td` files** live alongside the code that uses them (e.g. `src/Lexer/Tokens.td`).
-- **Custom backends** live in `tools/tblgen/`. Each backend is a small C++ program that reads
-  `.td` records via the LLVM TableGen library and emits a `.inc` file.
-- **`lbc-tblgen`** is the build tool target, linked against `LLVMTableGen` and `LLVMSupport`
-  via the `configure_tblgen()` CMake function.
+- **Custom backends** live in `tools/tblgen/`. Each backend implements an emitter function
+  declared in `Generators.hpp`. The shared `main.cpp` dispatches to the selected generator
+  via the `--gen=<name>` command-line flag.
+- **`lbc-tblgen`** is a single build tool binary, linked against `LLVMTableGen` and
+  `LLVMSupport` via the `configure_tblgen()` CMake function. Adding a new generator means
+  adding an emitter function, a `Generator` enum value in `main.cpp`, and a declaration in
+  `Generators.hpp`.
 - **`add_tblgen()`** is a CMake function (defined in `cmake/tblgen.cmake`) that wires
-  generation into the build. Usage:
+  generation into the build. Each `GENERATOR`/`INPUT` group produces one `.inc` file. Usage:
 
   ```cmake
   add_tblgen(<target> <tblgen_tool>
-      path/to/Foo.td
-      path/to/Bar.td
+      GENERATOR <gen-name> INPUT <path/to/Foo.td> [OUTPUT <path/to/Foo.inc>]
+      GENERATOR <gen-name> INPUT <path/to/Bar.td>
   )
   ```
 
-  Paths are relative to the calling `CMakeLists.txt`. Each `.td` file produces a
-  corresponding `.inc` file under the build directory, formatted with clang-format.
-  The generated include directory is added to the target automatically.
+  Paths are relative to the calling `CMakeLists.txt`. If `OUTPUT` is omitted, the `.inc`
+  filename is derived from the input (`.td` → `.inc`). Each entry passes `--gen=<gen-name>`
+  to the tool. Generated files are formatted with clang-format and placed under the build
+  directory. The generated include directory is added to the target automatically.
 
 - **`.inc` files** are self-contained generated headers with `#pragma once`, includes,
   and namespace wrapping. A thin hand-written header (e.g. `Token.hpp`) includes the

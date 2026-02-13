@@ -1,12 +1,10 @@
 // Custom TableGen backend for generating token definitions.
 // Reads Tokens.td and emits TokenKinds.inc
-#include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/TableGen/Main.h>
 #include <llvm/TableGen/Record.h>
 #include <ranges>
-#include <span>
 #include "Builder.hpp"
+#include "Generators.hpp"
 using namespace llvm;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
@@ -15,8 +13,8 @@ namespace {
 
 auto sortedByDef(const ArrayRef<const Record*> arr) -> std::vector<const Record*> {
     std::vector<const Record*> tokens { arr };
-    std::ranges::sort(tokens, [](const Record* a, const Record* b) {
-        return a->getID() < b->getID();
+    std::ranges::sort(tokens, [](const Record* one, const Record* two) {
+        return one->getID() < two->getID();
     });
     return tokens;
 }
@@ -62,6 +60,8 @@ auto contains(const std::vector<const Record*>& tokens, const StringRef field, c
     const auto it = std::ranges::find_if(tokens, pred);
     return it != tokens.end();
 }
+
+} // namespace
 
 auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
     const auto tokens = sortedByDef(records.getAllDerivedDefinitions("Token"));
@@ -318,7 +318,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .block("[[nodiscard]] constexpr auto string() const -> std::string_view", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* token : tokens) {
-                            build.line("case " + token->getName() + ": return " + build.quoted(token->getValueAsString("str")));
+                            build.line("case " + token->getName() + ": return " + Builder::quoted(token->getValueAsString("str")));
                         }
                     });
                     build.line("std::unreachable()");
@@ -425,12 +425,4 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
         .newline();
 
     return false;
-}
-
-} // namespace
-
-auto main(const int argc, const char* argv[]) -> int {
-    const auto span = std::span(argv, static_cast<std::size_t>(argc));
-    cl::ParseCommandLineOptions(argc, argv);
-    return TableGenMain(span.front(), emitTokens);
 }
