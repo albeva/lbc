@@ -3,3 +3,6 @@
 //
 #include "Lexer.hpp"
 using namespace lbc::lexer;
+
+Lexer::Lexer() {
+}

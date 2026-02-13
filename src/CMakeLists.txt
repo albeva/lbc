@@ -7,7 +7,6 @@ target_sources(lbc_lib
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/Parser.cpp
-    Utilities/Sample.cpp
 
     PUBLIC FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
@@ -16,7 +15,6 @@ target_sources(lbc_lib
     Lexer/Token.hpp
     Parser/Parser.hpp
     Utilities/Diagnostics.hpp
-    Utilities/Sample.hpp
     Utilities/Try.hpp
 )
 
