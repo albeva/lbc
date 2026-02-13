@@ -15,6 +15,7 @@ target_sources(lbc_lib
     Lexer/Token.hpp
     Parser/Parser.hpp
     Utilities/Diagnostics.hpp
+    Utilities/LiteralValue.hpp
     Utilities/Try.hpp
 )
 

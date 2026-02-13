@@ -5,6 +5,7 @@
 
 // STL
 #include <array>
+#include <cstdint>
 #include <expected>
 #include <format>
 #include <print>
@@ -12,7 +13,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
-#include <cstdint>
+#include <variant>
 
 namespace lbc {
 using namespace std::string_view_literals;
