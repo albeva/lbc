@@ -169,7 +169,7 @@ private:
         m_os << "#pragma once\n";
 
         for (const auto& include : m_includes) {
-            m_os << "#include <" << include << ">\n";
+            m_os << "#include " << include << "\n";
         }
 
         m_os << "\n";

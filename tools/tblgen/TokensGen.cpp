@@ -74,7 +74,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
         os,
         records.getInputFilename(),
         "lbc::lexer",
-        { "pch.hpp" }
+        { "\"pch.hpp\"" }
     };
 
     // TokenKind struct

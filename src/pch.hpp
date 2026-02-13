@@ -4,12 +4,15 @@
 #pragma once
 
 // STL
+#include <array>
 #include <expected>
+#include <format>
 #include <print>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <cstdint>
 
 namespace lbc {
 using namespace std::string_view_literals;
