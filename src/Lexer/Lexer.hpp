@@ -21,7 +21,7 @@ public:
 private:
     [[maybe_unused]] Context& m_context;
     [[maybe_unused]] unsigned m_id;
-    [[maybe_unused]] Cursor m_current {}, m_end {};
+    [[maybe_unused]] Cursor m_current, m_end;
 };
 
 } // namespace lbc

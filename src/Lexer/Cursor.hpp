@@ -111,7 +111,7 @@ public:
      * Extract the text between this cursor and other as a StringRef.
      */
     [[nodiscard]] constexpr auto stringTo(const Cursor& other) const -> llvm::StringRef {
-        return llvm::StringRef { m_ptr, distanceTo(other) };
+        return { m_ptr, distanceTo(other) };
     }
 
 private:
