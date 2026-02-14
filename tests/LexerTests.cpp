@@ -36,7 +36,7 @@ TEST(LexerTests, MultilineComment) {
 
 TEST(LexerTests, NestedMultilineComment) {
     Context context;
-    auto lexer = makeLexer(context, "/' outer /' inner '/ still outer '/ 42");
+    auto lexer = makeLexer(context, "/' outer\n/'\ninner\n'/\nstill outer '/ 42");
     auto tok = lexer.next();
     EXPECT_EQ(tok.kind(), TokenKind::IntegerLiteral);
 }
