@@ -1,8 +1,14 @@
 #pragma once
+#include "GeneratorBase.hpp"
 
-namespace llvm {
-class raw_ostream;
-class RecordKeeper;
-} // namespace llvm
+class TokensGenerator final : public GeneratorBase {
+public:
+    using GeneratorBase::GeneratorBase;
+    [[nodiscard]] auto run() -> bool final;
+};
 
-auto emitTokens(llvm::raw_ostream& os, const llvm::RecordKeeper& records, llvm::StringRef generator) -> bool;
+class AstGenerator final : public GeneratorBase {
+public:
+    using GeneratorBase::GeneratorBase;
+    [[nodiscard]] auto run() -> bool final;
+};

@@ -9,6 +9,7 @@ namespace {
 
 enum class Generator : std::uint8_t {
     TokensDef,
+    AstDef,
 };
 
 const auto generatorOpt = cl::opt<Generator> {
@@ -16,14 +17,17 @@ const auto generatorOpt = cl::opt<Generator> {
     cl::desc("Generator to run"),
     cl::Required,
     cl::values(
-        clEnumValN(Generator::TokensDef, "lbc-tokens-def", "Generate token definitions")
+        clEnumValN(Generator::TokensDef, "lbc-tokens-def", "Generate token definitions"),
+        clEnumValN(Generator::AstDef, "lbc-ast-def", "Generate AST node definitions")
     )
 };
 
 auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
     switch (generatorOpt) {
     case Generator::TokensDef:
-        return emitTokens(os, records, "lbc-tokens-def");
+        return TokensGenerator(os, records, "lbc-tokens-def").run();
+    case Generator::AstDef:
+        return AstGenerator(os, records, "lbc-ast-def").run();
     default:
         std::unreachable();
     }

@@ -22,7 +22,7 @@ enum class DiagMessage : std::uint8_t {
 };
 
 /**
- * Recursive-descent parser for lbc BASIC. Implementation is split across
+ * Recursive-descent parser. Implementation is split across
  * multiple .cpp files by concern: ParseDecl, ParseExpr, ParseStmt,
  * ParseType, and Parser.cpp for common utilities.
  */

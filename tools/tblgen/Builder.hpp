@@ -7,6 +7,8 @@
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include "../../src/Utilities/NoCopy.hpp"
+
 using namespace llvm;
 
 template <typename T>
@@ -15,8 +17,10 @@ concept Streamable = requires(raw_ostream& os, T val) {
 };
 
 /// Simple abstraction to generate C++ code
-class Builder final { // NOLINT(*-special-member-functions)
+class Builder { // NOLINT(*-special-member-functions)
 public:
+    NO_COPY_AND_MOVE(Builder)
+
     explicit Builder(
         raw_ostream& os,
         const StringRef file, // NOLINT(*-easily-swappable-parameters)
@@ -32,7 +36,7 @@ public:
         header();
     }
 
-    ~Builder() {
+    virtual ~Builder() {
         footer();
     }
 
@@ -169,6 +173,9 @@ public:
         return *this;
     }
 
+protected:
+    raw_ostream& m_os; // NOLINT(*-avoid-const-or-ref-data-members)
+
 private:
     void updateSpace() {
         m_space.clear();
@@ -200,7 +207,6 @@ private:
         m_os << "} // namespace " << m_ns << "\n";
     }
 
-    raw_ostream& m_os; // NOLINT(*-avoid-const-or-ref-data-members)
     StringRef m_file;
     StringRef m_generator;
     StringRef m_ns;

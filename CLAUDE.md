@@ -62,9 +62,12 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
   executable (`lbc`) that links against it.
 - `tests/` — Google Test suite, links against `lbc_lib`.
 - `tools/tblgen/` — Custom LLVM TableGen backends. Builds a single `lbc-tblgen` binary that
-  selects a generator via `--gen=<name>`. Generators are declared in `Generators.hpp`.
-  Generated `.inc` files are emitted alongside their source `.td` files in the source tree
-  (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.inc`) and are git-tracked.
+  selects a generator via `--gen=<name>`. `Builder` provides C++ code-generation helpers;
+  `GeneratorBase` extends it with `RecordKeeper` access and common utilities (`sortedByDef`,
+  `findRange`, `collect`, `contains`). Concrete generators live in `gens/` and extend
+  `GeneratorBase`. Generated `.inc` files are emitted alongside their source `.td` files
+  in the source tree (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.inc`) and are
+  git-tracked.
 - `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
   `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).
