@@ -16,13 +16,21 @@ namespace lbc {
  */
 class [[nodiscard]] Cursor final {
 public:
-    constexpr Cursor() = default;
-
     /**
      * Construct a cursor pointing to the given position.
      */
     constexpr explicit Cursor(const char* ptr)
-    : m_ptr(ptr) { }
+    : m_ptr(ptr) {
+        assert(m_ptr != nullptr && "Cursor initialised with a nullptr");
+    }
+
+    /**
+     * Return a new cursor pointing to the next position.
+     */
+    [[nodiscard]] constexpr auto next() const -> Cursor {
+        assert(*m_ptr != '\0' && "getting next past \0 terminator");
+        return Cursor { m_ptr + 1 }; // NOLINT(*-pro-bounds-pointer-arithmetic)
+    }
 
     /**
      * Return the character at the current position.
@@ -90,8 +98,8 @@ public:
      * asserts ordering and that no null terminator lies between them.
      */
     [[nodiscard]] constexpr auto distanceTo(const Cursor& other) const -> std::size_t {
-#if LBC_DEBUG_BUILD
         assert(m_ptr <= other.m_ptr && "Current cursor should be before other");
+#if LBC_DEBUG_BUILD
         for (const auto* ptr = m_ptr; ptr != other.m_ptr; ++ptr) { // NOLINT(*-pro-bounds-pointer-arithmetic)
             assert(*ptr != '\0' && "distance should not cover \0 terminator");
         }
@@ -101,17 +109,25 @@ public:
     }
 
     /**
-     * Check if the cursor has been initialised with a valid pointer.
-     */
-    [[nodiscard]] constexpr auto isValid() const -> bool {
-        return m_ptr != nullptr;
-    }
-
-    /**
      * Extract the text between this cursor and other as a StringRef.
      */
     [[nodiscard]] constexpr auto stringTo(const Cursor& other) const -> llvm::StringRef {
         return { m_ptr, distanceTo(other) };
+    }
+
+    /**
+     * Return the current position as an LLVM source location.
+     */
+    [[nodiscard]] constexpr auto loc() const -> llvm::SMLoc {
+        return llvm::SMLoc::getFromPointer(m_ptr);
+    }
+
+    /**
+     * Return the source range from this cursor to other.
+     */
+    [[nodiscard]] constexpr auto rangeTo(const Cursor& other) const -> llvm::SMRange {
+        assert(distanceTo(other) >= 0 && "rangeTo must form a valid source range");
+        return { loc(), other.loc() };
     }
 
 private:

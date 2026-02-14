@@ -6,8 +6,6 @@
 #include "Builder.hpp"
 #include "Generators.hpp"
 using namespace llvm;
-using namespace std::string_literals;
-using namespace std::string_view_literals;
 
 namespace {
 
@@ -320,7 +318,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Return the string representation of this token")
-                .block("[[nodiscard]] constexpr auto string() const -> std::string_view", [&] {
+                .block("[[nodiscard]] constexpr auto string() const -> llvm::StringRef", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* token : tokens) {
                             build.line("case " + token->getName() + ": return " + Builder::quoted(token->getValueAsString("str")));

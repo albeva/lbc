@@ -6,7 +6,7 @@
 
 namespace lbc {
 
-struct LiteralValue final : std::variant<std::monostate, bool, std::uint64_t, double, std::string_view> {
+struct LiteralValue final : std::variant<std::monostate, bool, std::uint64_t, double, llvm::StringRef> {
     using variant::variant;
 };
 

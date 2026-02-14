@@ -83,6 +83,11 @@ public:
      */
     [[nodiscard]] constexpr auto isIdentifierChar() const -> bool { return isAlpha() || isDigit() || m_char == '_'; }
 
+    /**
+     * Check if this is a valid identifier start character (underscore or letter).
+     */
+    [[nodiscard]] constexpr auto isIdentifierStartChar() const -> bool { return m_char == '_' || isAlpha(); }
+
 private:
     char m_char;
 };

@@ -15,7 +15,8 @@ auto main(int argc, const char* argv[]) -> int {
     lbc::Lexer lexer { context, id };
     while (true) {
         auto token = lexer.next();
-        std::println("token = {}", token.kind());
+        std::println("'{}'", token);
+
         if (token.kind() == lbc::TokenKind::EndOfFile) {
             break;
         }

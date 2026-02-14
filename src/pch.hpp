@@ -6,6 +6,7 @@
 // STL
 #include <array>
 #include <cassert>
+#include <charconv>
 #include <cstdint>
 #include <expected>
 #include <format>
@@ -26,6 +27,7 @@
 
 // LBC utilities
 #include "Utilities/NoCopy.hpp"
+#include "Utilities/ValueRestorer.hpp"
 
 namespace lbc {
 using namespace std::string_view_literals;

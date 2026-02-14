@@ -92,6 +92,12 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 - 4-space indentation, LF line endings
 - Max line length in documents and source code is 120 characters per line.
 
+## Documentation Style
+
+- Use `/** */` comments for functions, classes, enum types, and other declarations
+- Use `///` comments only for data members and enum cases
+- In doc comments, use `@`-style commands (`@param`, `@return`, etc.), never backslash style (`\p`, `\c`, `\a`, etc.)
+
 ## Important Patterns
 
 - Error handling: prefer `std::expected` for returning errors (no exceptions)
