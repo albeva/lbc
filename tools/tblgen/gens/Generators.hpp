@@ -1,5 +1,5 @@
 #pragma once
-#include "GeneratorBase.hpp"
+#include "../GeneratorBase.hpp"
 
 class TokensGenerator final : public GeneratorBase {
 public:

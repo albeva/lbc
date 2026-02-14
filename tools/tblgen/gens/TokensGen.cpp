@@ -1,6 +1,6 @@
 // Custom TableGen backend for generating token definitions.
 // Reads Tokens.td and emits TokenKinds.inc
-#include "../Generators.hpp"
+#include "Generators.hpp"
 
 auto TokensGenerator::run() -> bool {
     const auto tokens = sortedByDef(m_records.getAllDerivedDefinitions("Token"));

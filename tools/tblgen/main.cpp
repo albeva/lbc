@@ -2,7 +2,7 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/TableGen/Main.h>
 #include <llvm/TableGen/Record.h>
-#include "Generators.hpp"
+#include "gens/Generators.hpp"
 using namespace llvm;
 
 namespace {
