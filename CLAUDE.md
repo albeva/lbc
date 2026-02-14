@@ -63,6 +63,8 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
 - `tests/` — Google Test suite, links against `lbc_lib`.
 - `tools/tblgen/` — Custom LLVM TableGen backends. Builds a single `lbc-tblgen` binary that
   selects a generator via `--gen=<name>`. Generators are declared in `Generators.hpp`.
+  Generated `.inc` files are emitted alongside their source `.td` files in the source tree
+  (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.inc`) and are git-tracked.
 - `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
   `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).
@@ -86,7 +88,7 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 - Target GCC, Clang and MSVC compilers.
 - Classes use `final` by default
 - Use `[[nodiscard]]` on function declarations where appropriate
-- Prefer `std::string_view` and `"text"sv` literals over `std::string`
+- Prefer `llvm::StringRef` for string references; use `std::string_view` / `"text"sv` when LLVM types are not available
 - PascalCase for classes, camelCase for functions, lowercase for namespaces
 - Root namespace: `lbc`
 - 4-space indentation, LF line endings

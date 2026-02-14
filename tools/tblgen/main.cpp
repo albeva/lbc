@@ -23,7 +23,7 @@ const auto generatorOpt = cl::opt<Generator> {
 auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
     switch (generatorOpt) {
     case Generator::TokensDef:
-        return emitTokens(os, records);
+        return emitTokens(os, records, "lbc-tokens-def");
     default:
         std::unreachable();
     }

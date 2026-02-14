@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.hpp"
-#include "Lexer/Tokens.inc"
+#include "TokenKind.inc"
 #include "Utilities/LiteralValue.hpp"
 namespace lbc {
 

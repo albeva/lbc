@@ -4,11 +4,11 @@
 # )
 #
 # For each GENERATOR/INPUT group, runs <tblgen_tool> with --gen=<gen_name>
-# to produce a .inc file under ${CMAKE_BINARY_DIR}/generated/.
+# to produce a .inc file alongside the INPUT .td file in the source tree.
 # If OUTPUT is omitted, the .inc filename is derived from the INPUT (.td -> .inc).
-# Adds the generated include directory to <target> and wires up rebuild dependencies.
+# OUTPUT is resolved relative to the directory containing the INPUT file.
+# Wires up rebuild dependencies so the .inc is regenerated when the .td or tool changes.
 function(add_tblgen target tblgen_tool)
-    set(generated_dir "${CMAKE_BINARY_DIR}/generated")
     set(all_inc_files "")
 
     # Parse GENERATOR ... INPUT ... [OUTPUT ...] groups from ARGN
@@ -48,23 +48,25 @@ function(add_tblgen target tblgen_tool)
             endif()
         endif()
 
-        # Resolve paths
+        # Resolve input to absolute path and get its directory
         cmake_path(ABSOLUTE_PATH td_file BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE td_abs)
+        cmake_path(GET td_abs PARENT_PATH td_dir)
 
+        # Resolve output path relative to the input file's directory
         if(output_file STREQUAL "")
-            cmake_path(RELATIVE_PATH td_abs BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE inc_rel)
-            cmake_path(REMOVE_EXTENSION inc_rel)
-            set(inc_rel "${inc_rel}.inc")
+            cmake_path(GET td_abs FILENAME inc_name)
+            cmake_path(REMOVE_EXTENSION inc_name)
+            set(inc_name "${inc_name}.inc")
         else()
-            set(inc_rel "${output_file}")
+            set(inc_name "${output_file}")
         endif()
 
-        set(inc_abs "${generated_dir}/${inc_rel}")
-        cmake_path(GET inc_abs PARENT_PATH inc_dir)
+        cmake_path(ABSOLUTE_PATH inc_name BASE_DIRECTORY "${td_dir}" OUTPUT_VARIABLE inc_abs)
+        cmake_path(RELATIVE_PATH td_abs BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE td_rel)
+        cmake_path(RELATIVE_PATH inc_abs BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE inc_rel)
 
         add_custom_command(
             OUTPUT "${inc_abs}"
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${inc_dir}"
             COMMAND ${tblgen_tool} "${td_abs}" --gen="${gen_name}" --write-if-changed -o "${inc_abs}" -I "${CMAKE_CURRENT_SOURCE_DIR}"
             DEPENDS ${tblgen_tool} "${td_abs}"
             COMMENT "Generating ${inc_rel} (--gen=${gen_name})"
@@ -76,5 +78,4 @@ function(add_tblgen target tblgen_tool)
 
     add_custom_target(${target}_tblgen DEPENDS ${all_inc_files})
     add_dependencies(${target} ${target}_tblgen)
-    target_include_directories(${target} PUBLIC "${generated_dir}")
 endfunction()

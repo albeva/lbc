@@ -61,7 +61,7 @@ auto contains(const std::vector<const Record*>& tokens, const StringRef field, c
 
 } // namespace
 
-auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
+auto emitTokens(raw_ostream& os, const RecordKeeper& records, const StringRef generator) -> bool {
     const auto tokens = sortedByDef(records.getAllDerivedDefinitions("Token"));
     const auto groups = sortedByDef(records.getAllDerivedDefinitions("Group"));
     const auto categories = sortedByDef(records.getAllDerivedDefinitions("Category"));
@@ -71,6 +71,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
     Builder build {
         os,
         records.getInputFilename(),
+        generator,
         "lbc",
         { "\"pch.hpp\"" }
     };
@@ -89,8 +90,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .block("enum Value : std::uint8_t", true, [&] {
                     for (const auto* token : tokens) {
                         build.line(token->getName(), ",");
-                    }
-                })
+                    } }, "*-use-enum-class")
                 .newline();
 
             // --------------------------------------------------------------------
@@ -129,14 +129,16 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Token kind constructors
             // --------------------------------------------------------------------
             build.line("constexpr TokenKind() = default", ";\n");
-            build.line("constexpr TokenKind(const Value value) : m_value(value) { }", "\n");
+            build
+                .line("constexpr TokenKind(const Value value) // NOLINT(*-explicit-conversions)", "")
+                .line(": m_value(value) { }", "\n");
 
             // --------------------------------------------------------------------
             // get value
             // --------------------------------------------------------------------
             build
                 .doc("Return the underlying Value enum")
-                .block("constexpr auto value() const", [&] {
+                .block("[[nodiscard]] constexpr auto value() const", [&] {
                     build.line("return m_value");
                 })
                 .newline();
@@ -154,8 +156,8 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // Comparison
             // --------------------------------------------------------------------
             build
-                .line("constexpr auto operator==(const TokenKind& value) const -> bool = default", ";\n")
-                .block("constexpr auto operator==(const Value value) const -> bool", [&] {
+                .line("[[nodiscard]] constexpr auto operator==(const TokenKind& value) const -> bool = default", ";\n")
+                .block("[[nodiscard]] constexpr auto operator==(const Value value) const -> bool", [&] {
                     build.line("return m_value == value");
                 })
                 .newline();
@@ -190,7 +192,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Return the operator category, or Invalid for non-operators")
-                .block("constexpr auto getCategory() const -> Category", [&] {
+                .block("[[nodiscard]] constexpr auto getCategory() const -> Category", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* cat : categories) {
                             const auto cases = collect(operators, "category", cat);
@@ -229,27 +231,30 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Return operator precedence (higher binds tighter), or 0 for non-operators")
-                .block("constexpr auto getPrecedence() const -> int", [&] {
-                    build.block("switch (m_value)", [&] {
-                        std::int64_t value = 0;
-                        bool first = true;
-                        for (const auto* op : operators) {
-                            if (first) {
-                                first = false;
-                                value = op->getValueAsInt("prec");
-                            } else {
-                                if (const auto newValue = op->getValueAsInt("prec"); value != newValue) {
-                                    build.line("    return " + std::to_string(value));
-                                    value = newValue;
+                .block("[[nodiscard]] constexpr auto getPrecedence() const -> int", [&] {
+                    build
+                        .line("// NOLINTBEGIN(*-magic-numbers)", "")
+                        .block("switch (m_value)", [&] {
+                            std::int64_t value = 0;
+                            bool first = true;
+                            for (const auto* op : operators) {
+                                if (first) {
+                                    first = false;
+                                    value = op->getValueAsInt("prec");
+                                } else {
+                                    if (const auto newValue = op->getValueAsInt("prec"); value != newValue) {
+                                        build.line("    return " + std::to_string(value));
+                                        value = newValue;
+                                    }
                                 }
+                                build
+                                    .line("case " + op->getName(), ":");
                             }
-                            build
-                                .line("case " + op->getName(), ":");
-                        }
-                        build.line("    return " + std::to_string(value));
-                        build.line("default", ":")
-                            .line("    return 0");
-                    });
+                            build.line("    return " + std::to_string(value));
+                            build.line("default", ":")
+                                .line("    return 0");
+                        })
+                        .line("// NOLINTEND(*-magic-numbers)", "");
                 })
                 .newline();
 
@@ -258,7 +263,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Check if this is a binary operator")
-                .block("constexpr auto isBinary() const -> bool", [&] {
+                .block("[[nodiscard]] constexpr auto isBinary() const -> bool", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
                             if (!op->getValueAsBit("isBinary")) {
@@ -278,7 +283,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Check if this is a unary operator")
-                .block("constexpr auto isUnary() const -> bool", [&] {
+                .block("[[nodiscard]] constexpr auto isUnary() const -> bool", [&] {
                     build.line("return isOperator() && !isBinary()");
                 })
                 .newline();
@@ -288,7 +293,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Check if this operator is left-associative")
-                .block("constexpr auto isLeftAssociative() const -> bool", [&] {
+                .block("[[nodiscard]] constexpr auto isLeftAssociative() const -> bool", [&] {
                     build.block("switch (m_value)", [&] {
                         for (const auto* op : operators) {
                             if (!op->getValueAsBit("isLeftAssociative")) {
@@ -308,7 +313,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
             // --------------------------------------------------------------------
             build
                 .doc("Check if this operator is right-associative")
-                .block("constexpr auto isRightAssociative() const -> bool", [&] {
+                .block("[[nodiscard]] constexpr auto isRightAssociative() const -> bool", [&] {
                     build.line("return isOperator() && !isLeftAssociative()");
                 })
                 .newline();
@@ -351,7 +356,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                             os << token->getName();
                         }
                         os << "};\n";
-                    })
+                    }, "*-magic-numbers")
                     .newline();
             }
 
@@ -368,7 +373,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                         .doc("Return all operators that look like keywords")
                         .block("[[nodiscard]] static consteval auto allOperatorKeywords() -> std::array<TokenKind, " + std::to_string(count) + ">", [&] {
                             build.space();
-                            os << "return {";
+                            os << "return { ";
                             bool first = true;
                             for (const auto* token : opkws) {
                                 if (first) {
@@ -378,8 +383,8 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                                 }
                                 os << token->getName();
                             }
-                            os << "};\n";
-                        })
+                            os << " };\n";
+                        }, "*-magic-numbers")
                         .newline();
                 }
             }
