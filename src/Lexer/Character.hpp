@@ -88,6 +88,21 @@ public:
      */
     [[nodiscard]] constexpr auto isIdentifierStartChar() const -> bool { return m_char == '_' || isAlpha(); }
 
+    /**
+     * Check if this is a visible (printable) ASCII character (>= space).
+     */
+    [[nodiscard]] constexpr auto isVisible() const -> bool {
+        return m_char >= ' ';
+    }
+
+    /**
+     * Check if this character is a valid escape sequence identifier
+     * (i.e., the character following a backslash in a string literal).
+     */
+    [[nodiscard]] constexpr auto isValidEscape() const -> bool {
+        return isOneOf('a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"', '0');
+    }
+
 private:
     char m_char;
 };

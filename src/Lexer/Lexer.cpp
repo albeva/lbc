@@ -140,6 +140,7 @@ auto Lexer::next() -> Token {
             // clang-format on
             return identifier();
         default:
+            m_input.advance();
             return invalid();
         }
     }
@@ -265,10 +266,8 @@ auto Lexer::identifier() -> Token {
     });
 
     // Is a keyword?
-    const auto iter = kKeywords.find(m_buffer);
-    if (iter != kKeywords.end()) {
-        const auto kind = iter->second;
-        switch (kind.value()) {
+    if (const auto iter = kKeywords.find(m_buffer); iter != kKeywords.end()) {
+        switch (iter->second.value()) {
         case TokenKind::True:
             return token(TokenKind::BooleanLiteral, true);
         case TokenKind::False:
@@ -276,7 +275,7 @@ auto Lexer::identifier() -> Token {
         case TokenKind::Null:
             return token(TokenKind::NullLiteral);
         default:
-            return token(kind);
+            return token(iter->second);
         }
     }
 
@@ -290,18 +289,30 @@ auto Lexer::stringLiteral() -> Token {
     m_start = m_input;
     m_input.advance();
 
+    bool hasError = false;
     m_input.advanceWhile([&](const auto ch) {
-        // TODO: Implement escape sequences
-        return not ch.isOneOf('\0', '"', '\r', '\n');
+        if (ch == '\\') {
+            if (m_input.peek().isValidEscape()) {
+                m_input.advance();
+                return true;
+            }
+            hasError = true;
+            return false;
+        }
+        if (!ch.isVisible()) {
+            hasError = true;
+            return false;
+        }
+        return !(ch == '"' || ch.isFileOrLineEnd());
     });
 
     // unclosed string?
-    if (m_input.current() != '"') {
+    if (hasError || m_input.current() != '"') {
         return invalid();
     }
+
     const auto str = m_start.next().stringTo(m_input);
     m_input.advance();
-
     return token(TokenKind::StringLiteral, str);
 }
 

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <expected>
 #include <format>
+#include <optional>
 #include <print>
 #include <string>
 #include <string_view>

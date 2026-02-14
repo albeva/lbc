@@ -20,8 +20,19 @@ public:
         assert(range.Start.isValid() && range.End.isValid() && "Token should be created from a valid range");
     }
 
+    /**
+     * Return the token kind.
+     */
     [[nodiscard]] constexpr auto kind() const -> TokenKind { return m_kind; }
+
+    /**
+     * Return the source range covering this token.
+     */
     [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange { return m_range; }
+
+    /**
+     * Return the literal value associated with this token, if any.
+     */
     [[nodiscard]] constexpr auto getValue() const -> LiteralValue { return m_value; }
 
     /**

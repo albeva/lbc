@@ -25,6 +25,11 @@ public:
     }
 
     /**
+     * Compare two cursors for positional equality.
+     */
+    constexpr auto operator==(const Cursor& other) const -> bool = default;
+
+    /**
      * Return a new cursor pointing to the next position.
      */
     [[nodiscard]] constexpr auto next() const -> Cursor {
