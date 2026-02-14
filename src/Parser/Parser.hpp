@@ -3,9 +3,9 @@
 //
 #pragma once
 #include "pch.hpp"
-namespace lbc::parser {
+namespace lbc {
 
 class Parser {
 };
 
-} // namespace lbc::parser
+} // namespace lbc

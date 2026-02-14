@@ -1,9 +1,11 @@
 # lbc library
-add_library(lbc_lib)
+add_library(lbc_lib
+    Lexer/Character.hpp)
 
 # lbc sources
 target_sources(lbc_lib
     PRIVATE
+    Driver/Context.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/Parser.cpp
@@ -11,11 +13,15 @@ target_sources(lbc_lib
     PUBLIC FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
+    Driver/Context.hpp
+    Lexer/Character.hpp
+    Lexer/Cursor.hpp
     Lexer/Lexer.hpp
     Lexer/Token.hpp
     Parser/Parser.hpp
     Utilities/Diagnostics.hpp
     Utilities/LiteralValue.hpp
+    Utilities/NoCopy.hpp
     Utilities/Try.hpp
 )
 

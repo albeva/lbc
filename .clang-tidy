@@ -10,6 +10,7 @@ Checks: '-*,
     portability-*,
     readability-*,
     -*-function-cognitive-complexity,
+    -*-special-member-functions,
     '
 WarningsAsErrors: '*'
 CheckOptions:

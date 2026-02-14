@@ -73,7 +73,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
     Builder build {
         os,
         records.getInputFilename(),
-        "lbc::lexer",
+        "lbc",
         { "\"pch.hpp\"" }
     };
 
@@ -194,10 +194,15 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 .doc("Return the operator category, or Invalid for non-operators")
                 .block("constexpr auto getCategory() const -> Category", [&] {
                     build.block("switch (m_value)", [&] {
-                        for (const auto* op : operators) {
-                            build
-                                .line("case " + op->getName(), ":")
-                                .line("    return Category::" + op->getValue("category")->getValue()->getAsString());
+                        for (const auto* cat : categories) {
+                            const auto cases = collect(operators, "category", cat);
+                            if (cases.empty()) {
+                                continue;
+                            }
+                            for (const auto* cse : cases) {
+                                build.line("case " + cse->getName(), ":");
+                            }
+                            build.line("    return Category::" + cat->getName());
                         }
                         build
                             .line("default", ":")
@@ -214,7 +219,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                     continue;
                 }
                 build
-                    .doc(("Check if this is an " + category->getName() + " operator").str())
+                    .doc(("Check if this is " + Builder::articulate(category->getName()) + category->getName() + " operator").str())
                     .block("[[nodiscard]] constexpr auto is" + category->getName() + "() const -> bool", [&] {
                         build.line("return getCategory() == Category::" + category->getName());
                     })
@@ -397,9 +402,9 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
     build
         .doc("Support hashing TokenKind")
         .line("template <>", "")
-        .block("struct std::hash<lbc::lexer::TokenKind> final", true, [&] {
-            build.block("[[nodiscard]] auto operator()(const lbc::lexer::TokenKind& value) const noexcept -> std::size_t", [&] {
-                build.line("return std::hash<std::underlying_type_t<lbc::lexer::TokenKind::Value>> {}(value.value())");
+        .block("struct std::hash<lbc::TokenKind> final", true, [&] {
+            build.block("[[nodiscard]] auto operator()(const lbc::TokenKind& value) const noexcept -> std::size_t", [&] {
+                build.line("return std::hash<std::underlying_type_t<lbc::TokenKind::Value>> {}(value.value())");
             });
         })
         .newline();
@@ -410,7 +415,7 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
     build
         .doc("Support using TokenKind with std::print and std::format")
         .line("template <>", "")
-        .block("struct std::formatter<lbc::lexer::TokenKind, char> final", true, [&] {
+        .block("struct std::formatter<lbc::TokenKind, char> final", true, [&] {
             // parse
             build
                 .block("constexpr static auto parse(std::format_parse_context& ctx)", [&] {
@@ -418,11 +423,10 @@ auto emitTokens(raw_ostream& os, const RecordKeeper& records) -> bool {
                 })
                 .newline();
 
-            build.block("auto format(const lbc::lexer::TokenKind& value, auto& ctx) const", [&] {
+            build.block("auto format(const lbc::TokenKind& value, auto& ctx) const", [&] {
                 build.line("return std::format_to(ctx.out(), \"{}\", value.string())");
             });
-        })
-        .newline();
+        });
 
     return false;
 }

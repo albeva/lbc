@@ -1,2 +1,2 @@
 #include "Token.hpp"
-using namespace lbc::lexer;
+using namespace lbc;

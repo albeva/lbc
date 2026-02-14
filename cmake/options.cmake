@@ -5,3 +5,7 @@ if(MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 else()
     target_compile_options(compiler_options INTERFACE -fno-exceptions -fno-rtti)
 endif()
+
+target_compile_definitions(compiler_options INTERFACE
+    $<$<CONFIG:Debug>:LBC_DEBUG_BUILD>
+)

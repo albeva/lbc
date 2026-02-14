@@ -9,8 +9,8 @@
 using namespace llvm;
 
 template <typename T>
-concept Streamable = requires(raw_ostream& os, T t) {
-    os << t;
+concept Streamable = requires(raw_ostream& os, T val) {
+    os << val;
 };
 
 /// Simple abstraction to generate C++ code
@@ -18,7 +18,7 @@ class Builder final { // NOLINT(*-special-member-functions)
 public:
     explicit Builder(
         raw_ostream& os,
-        const StringRef file,
+        const StringRef file, // NOLINT(*-easily-swappable-parameters)
         const StringRef ns,
         std::vector<StringRef> includes = {}
     )
@@ -65,8 +65,8 @@ public:
     static auto quoted(const StringRef line) -> std::string {
         std::string result { "\"" };
         result.reserve(line.size() + 2);
-        for (const auto& c : line) {
-            switch (c) {
+        for (const auto& ch : line) {
+            switch (ch) {
             case '"':
                 result += "\\\"";
                 break;
@@ -86,11 +86,19 @@ public:
                 result += "\\0";
                 break;
             default:
-                result += c;
+                result += ch;
             }
         }
         result += '"';
         return result;
+    }
+
+    static auto articulate(const StringRef word) -> std::string {
+        return StringRef("aeiouAEIOU").contains(word.front()) ? "an " : "a ";
+    }
+
+    static auto pluralize(const StringRef word) -> std::string {
+        return (word.str() + "s");
     }
 
     auto newline() -> Builder& {

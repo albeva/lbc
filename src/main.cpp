@@ -1,13 +1,23 @@
 #include "pch.hpp"
 #include <llvm/Support/InitLLVM.h>
-#include "Lexer/Token.hpp"
-using namespace lbc::lexer;
+
+#include "../build/claude/generated/Lexer/Tokens.inc"
+#include "Driver/Context.hpp"
+#include "Lexer/Lexer.hpp"
 
 auto main(int argc, const char* argv[]) -> int {
     llvm::InitLLVM const init { argc, argv };
 
-    constexpr TokenKind kind = TokenKind::StringLiteral;
-    constexpr TokenKind second { kind };
+    lbc::Context context;
+    std::string included;
+    auto id = context.getSourceMgr().AddIncludeFile("samples/hello.bas", {}, included);
 
-    std::print("kind = {}", second);
+    lbc::Lexer lexer { context, id };
+    while (true) {
+        auto token = lexer.next();
+        std::println("token = {}", token.kind());
+        if (token.kind() == lbc::TokenKind::EndOfFile) {
+            break;
+        }
+    }
 }
