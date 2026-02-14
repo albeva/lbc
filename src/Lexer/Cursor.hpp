@@ -61,7 +61,7 @@ public:
             assert(m_ptr[idx] != '\0' && "Advancing past \0 terminator"); // NOLINT(*-pro-bounds-pointer-arithmetic)
         }
 #endif
-        std::advance(m_ptr, amount);
+        m_ptr += amount; // NOLINT(*-pro-bounds-pointer-arithmetic)
     }
 
     /**
