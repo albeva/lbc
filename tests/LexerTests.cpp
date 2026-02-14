@@ -1,6 +1,8 @@
+#include "pch.hpp"
 #include <gtest/gtest.h>
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
+#include "Lexer/TokenKind.inc"
 using namespace lbc;
 
 namespace {
@@ -20,66 +22,34 @@ auto makeLexer(Context& context, llvm::StringRef source) -> Lexer {
 // Comments
 // ------------------------------------
 
-TEST(LexerTests, SingleLineComment) {
+TEST(LexerTests, Comments) {
     Context context;
-    auto lexer = makeLexer(context, "' this is a comment\n42");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::IntegerLiteral);
-}
-
-TEST(LexerTests, MultilineComment) {
-    Context context;
-    auto lexer = makeLexer(context, "/' comment '/ 42");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::IntegerLiteral);
-}
-
-TEST(LexerTests, NestedMultilineComment) {
-    Context context;
-    auto lexer = makeLexer(context, "/' outer\n/'\ninner\n'/\nstill outer '/ 42");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::IntegerLiteral);
-}
-
-TEST(LexerTests, UnclosedMultilineCommentReachesEof) {
-    Context context;
-    auto lexer = makeLexer(context, "/' unclosed comment");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::EndOfFile);
+    // single-line
+    EXPECT_EQ(makeLexer(context, "' comment\n42").next().kind(), TokenKind::IntegerLiteral);
+    // multiline (nested)
+    EXPECT_EQ(makeLexer(context, "/' outer /' inner '/ '/ 42").next().kind(), TokenKind::IntegerLiteral);
+    // unclosed multiline reaches EOF
+    EXPECT_EQ(makeLexer(context, "/' unclosed").next().kind(), TokenKind::EndOfFile);
 }
 
 // ------------------------------------
 // Newlines and statements
 // ------------------------------------
 
-TEST(LexerTests, NewlineProducesEndOfStmt) {
+TEST(LexerTests, NewlinesAndStatements) {
     Context context;
-    auto lexer = makeLexer(context, "42\n43");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
-    EXPECT_EQ(lexer.next().kind(), TokenKind::EndOfStmt);
-    EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
-}
-
-TEST(LexerTests, LeadingNewlinesAreSkipped) {
-    Context context;
-    auto lexer = makeLexer(context, "\n\n\n42");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
-}
-
-TEST(LexerTests, ConsecutiveNewlinesProduceSingleEndOfStmt) {
-    Context context;
+    // leading newlines are skipped
+    EXPECT_EQ(makeLexer(context, "\n\n\n42").next().kind(), TokenKind::IntegerLiteral);
+    // newline produces EndOfStmt, consecutive newlines produce only one
     auto lexer = makeLexer(context, "42\n\n\n43");
     EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
     EXPECT_EQ(lexer.next().kind(), TokenKind::EndOfStmt);
     EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
-}
-
-TEST(LexerTests, CarriageReturnLineFeed) {
-    Context context;
-    auto lexer = makeLexer(context, "42\r\n43");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
-    EXPECT_EQ(lexer.next().kind(), TokenKind::EndOfStmt);
-    EXPECT_EQ(lexer.next().kind(), TokenKind::IntegerLiteral);
+    // CRLF
+    auto lexer2 = makeLexer(context, "42\r\n43");
+    EXPECT_EQ(lexer2.next().kind(), TokenKind::IntegerLiteral);
+    EXPECT_EQ(lexer2.next().kind(), TokenKind::EndOfStmt);
+    EXPECT_EQ(lexer2.next().kind(), TokenKind::IntegerLiteral);
 }
 
 TEST(LexerTests, LineContinuation) {
@@ -94,220 +64,143 @@ TEST(LexerTests, LineContinuation) {
 // Literals
 // ------------------------------------
 
-TEST(LexerTests, BooleanLiteralTrue) {
+TEST(LexerTests, BooleanAndNullLiterals) {
     Context context;
-    auto lexer = makeLexer(context, "True");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::BooleanLiteral);
-    EXPECT_EQ(std::get<bool>(tok.getValue()), true);
+    auto tr = makeLexer(context, "True").next();
+    EXPECT_EQ(tr.kind(), TokenKind::BooleanLiteral);
+    EXPECT_EQ(std::get<bool>(tr.getValue()), true);
+    auto fl = makeLexer(context, "FALSE").next();
+    EXPECT_EQ(fl.kind(), TokenKind::BooleanLiteral);
+    EXPECT_EQ(std::get<bool>(fl.getValue()), false);
+    EXPECT_EQ(makeLexer(context, "Null").next().kind(), TokenKind::NullLiteral);
 }
 
-TEST(LexerTests, BooleanLiteralFalse) {
+TEST(LexerTests, StringLiterals) {
     Context context;
-    auto lexer = makeLexer(context, "FALSE");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::BooleanLiteral);
-    EXPECT_EQ(std::get<bool>(tok.getValue()), false);
-}
-
-TEST(LexerTests, NullLiteral) {
-    Context context;
-    auto lexer = makeLexer(context, "Null");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::NullLiteral);
-}
-
-TEST(LexerTests, StringLiteral) {
-    Context context;
-    auto lexer = makeLexer(context, "\"hello world\"");
-    auto tok = lexer.next();
+    // basic string
+    auto tok = makeLexer(context, "\"hello world\"").next();
     EXPECT_EQ(tok.kind(), TokenKind::StringLiteral);
     EXPECT_EQ(std::get<llvm::StringRef>(tok.getValue()), "hello world");
+    // unclosed
+    EXPECT_EQ(makeLexer(context, "\"unclosed").next().kind(), TokenKind::Invalid);
 }
 
-TEST(LexerTests, UnclosedStringLiteral) {
+TEST(LexerTests, StringEscapeSequences) {
     Context context;
-    auto lexer = makeLexer(context, "\"unclosed");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::Invalid);
+    // all valid escapes
+    auto tok = makeLexer(context, R"("\a\b\f\n\r\t\v\\\'\"\0")").next();
+    EXPECT_EQ(tok.kind(), TokenKind::StringLiteral);
+    EXPECT_EQ(std::get<llvm::StringRef>(tok.getValue()), R"(\a\b\f\n\r\t\v\\\'\"\0)");
+    // escaped quote doesn't terminate
+    EXPECT_EQ(makeLexer(context, R"("say \"hi\"")").next().kind(), TokenKind::StringLiteral);
+    // invalid escapes
+    EXPECT_EQ(makeLexer(context, R"("bad\x")").next().kind(), TokenKind::Invalid);
+    EXPECT_EQ(makeLexer(context, "\"trailing\\").next().kind(), TokenKind::Invalid);
 }
 
-TEST(LexerTests, IntegerLiteral) {
+TEST(LexerTests, StringWithInvisibleChars) {
     Context context;
-    auto lexer = makeLexer(context, "12345");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::IntegerLiteral);
-    EXPECT_EQ(std::get<std::uint64_t>(tok.getValue()), 12345U);
+    EXPECT_EQ(makeLexer(context, std::string("\"a\x01z\"")).next().kind(), TokenKind::Invalid);
+    EXPECT_EQ(makeLexer(context, std::string("\"a\tz\"")).next().kind(), TokenKind::Invalid);
 }
 
-TEST(LexerTests, FloatLiteral) {
+TEST(LexerTests, NumberLiterals) {
     Context context;
-    auto lexer = makeLexer(context, "3.14");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::FloatLiteral);
-    EXPECT_DOUBLE_EQ(std::get<double>(tok.getValue()), 3.14);
-}
-
-TEST(LexerTests, FloatLiteralStartingWithDot) {
-    Context context;
-    auto lexer = makeLexer(context, ".5");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::FloatLiteral);
-    EXPECT_DOUBLE_EQ(std::get<double>(tok.getValue()), 0.5);
-}
-
-TEST(LexerTests, InvalidNumberWithTrailingAlpha) {
-    Context context;
-    auto lexer = makeLexer(context, "123abc");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::Invalid);
+    // integer
+    auto integer = makeLexer(context, "12345").next();
+    EXPECT_EQ(integer.kind(), TokenKind::IntegerLiteral);
+    EXPECT_EQ(std::get<std::uint64_t>(integer.getValue()), 12345U);
+    // float
+    auto fp = makeLexer(context, "3.14").next();
+    EXPECT_EQ(fp.kind(), TokenKind::FloatLiteral);
+    EXPECT_DOUBLE_EQ(std::get<double>(fp.getValue()), 3.14);
+    // float starting with dot
+    auto dot = makeLexer(context, ".5").next();
+    EXPECT_EQ(dot.kind(), TokenKind::FloatLiteral);
+    EXPECT_DOUBLE_EQ(std::get<double>(dot.getValue()), 0.5);
+    // trailing alpha is invalid
+    EXPECT_EQ(makeLexer(context, "123abc").next().kind(), TokenKind::Invalid);
 }
 
 // ------------------------------------
 // Operators and symbols
 // ------------------------------------
 
-TEST(LexerTests, AssignOperator) {
+TEST(LexerTests, SingleCharOperators) {
     Context context;
-    auto lexer = makeLexer(context, "=");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::Assign);
+    EXPECT_EQ(makeLexer(context, "=").next().kind(), TokenKind::Assign);
+    EXPECT_EQ(makeLexer(context, "+").next().kind(), TokenKind::Plus);
+    EXPECT_EQ(makeLexer(context, "*").next().kind(), TokenKind::Multiply);
+    EXPECT_EQ(makeLexer(context, "@").next().kind(), TokenKind::AddressOf);
+    EXPECT_EQ(makeLexer(context, ",").next().kind(), TokenKind::Comma);
+    EXPECT_EQ(makeLexer(context, "(").next().kind(), TokenKind::ParenOpen);
+    EXPECT_EQ(makeLexer(context, ")").next().kind(), TokenKind::ParenClose);
+    EXPECT_EQ(makeLexer(context, "[").next().kind(), TokenKind::BracketOpen);
+    EXPECT_EQ(makeLexer(context, "]").next().kind(), TokenKind::BracketClose);
 }
 
-TEST(LexerTests, LessGreaterIsNotEqual) {
+TEST(LexerTests, MultiCharOperators) {
     Context context;
-    auto lexer = makeLexer(context, "<>");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::NotEqual);
+    EXPECT_EQ(makeLexer(context, "<>").next().kind(), TokenKind::NotEqual);
+    EXPECT_EQ(makeLexer(context, "<=").next().kind(), TokenKind::LessOrEqual);
+    EXPECT_EQ(makeLexer(context, ">=").next().kind(), TokenKind::GreaterOrEqual);
+    EXPECT_EQ(makeLexer(context, "->").next().kind(), TokenKind::PointerAccess);
+    EXPECT_EQ(makeLexer(context, "...").next().kind(), TokenKind::Ellipsis);
+    // single < and > when not followed by matching char
+    EXPECT_EQ(makeLexer(context, "< 1").next().kind(), TokenKind::LessThan);
+    EXPECT_EQ(makeLexer(context, "> 1").next().kind(), TokenKind::GreaterThan);
+    EXPECT_EQ(makeLexer(context, "- 1").next().kind(), TokenKind::Minus);
 }
 
-TEST(LexerTests, LessOrEqual) {
+TEST(LexerTests, DotVariants) {
     Context context;
-    auto lexer = makeLexer(context, "<=");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::LessOrEqual);
-}
-
-TEST(LexerTests, GreaterOrEqual) {
-    Context context;
-    auto lexer = makeLexer(context, ">=");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::GreaterOrEqual);
-}
-
-TEST(LexerTests, LessThanAlone) {
-    Context context;
-    auto lexer = makeLexer(context, "< 1");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::LessThan);
-}
-
-TEST(LexerTests, MemberAccessDot) {
-    Context context;
+    // member access
     auto lexer = makeLexer(context, "a.b");
     EXPECT_EQ(lexer.next().kind(), TokenKind::Identifier);
     EXPECT_EQ(lexer.next().kind(), TokenKind::MemberAccess);
     EXPECT_EQ(lexer.next().kind(), TokenKind::Identifier);
-}
-
-TEST(LexerTests, Ellipsis) {
-    Context context;
-    auto lexer = makeLexer(context, "...");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::Ellipsis);
-}
-
-TEST(LexerTests, DotFollowedByDigitIsFloat) {
-    Context context;
-    auto lexer = makeLexer(context, ".5");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::FloatLiteral);
-}
-
-TEST(LexerTests, TwoDotsIsInvalid) {
-    Context context;
-    auto lexer = makeLexer(context, "..");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::Invalid);
-}
-
-TEST(LexerTests, PointerAccess) {
-    Context context;
-    auto lexer = makeLexer(context, "->");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::PointerAccess);
-}
-
-TEST(LexerTests, MinusAlone) {
-    Context context;
-    auto lexer = makeLexer(context, "- 1");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::Minus);
+    // two dots is invalid
+    EXPECT_EQ(makeLexer(context, "..").next().kind(), TokenKind::Invalid);
 }
 
 // ------------------------------------
-// Token range, string, and lexeme
+// Token string and lexeme
 // ------------------------------------
 
-TEST(LexerTests, TokenRangeCoversLexeme) {
+TEST(LexerTests, TokenStringAndLexeme) {
     Context context;
-    auto lexer = makeLexer(context, "  hello  ");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.kind(), TokenKind::Identifier);
-    EXPECT_EQ(tok.lexeme(), "hello");
-}
-
-TEST(LexerTests, TokenRangeForMultiCharOperator) {
-    Context context;
-    auto lexer = makeLexer(context, "<=");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.lexeme(), "<=");
-}
-
-TEST(LexerTests, StringMethodForIdentifier) {
-    Context context;
-    auto lexer = makeLexer(context, "myVar");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.string(), "MYVAR");
-}
-
-TEST(LexerTests, StringMethodForStringLiteral) {
-    Context context;
-    auto lexer = makeLexer(context, "\"test\"");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.string(), "test");
-}
-
-TEST(LexerTests, StringMethodForKeyword) {
-    Context context;
-    auto lexer = makeLexer(context, "IF");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.string(), "IF");
-}
-
-TEST(LexerTests, StringMethodForIntegerReturnsLexeme) {
-    Context context;
-    auto lexer = makeLexer(context, "42");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.string(), "42");
-}
-
-TEST(LexerTests, LexemeForStringLiteralIncludesQuotes) {
-    Context context;
-    auto lexer = makeLexer(context, "\"hello\"");
-    auto tok = lexer.next();
-    EXPECT_EQ(tok.lexeme(), "\"hello\"");
-    EXPECT_EQ(tok.string(), "hello");
+    // identifier: string() uppercases, lexeme() preserves source
+    auto id = makeLexer(context, "  myVar  ").next();
+    EXPECT_EQ(id.string(), "MYVAR");
+    EXPECT_EQ(id.lexeme(), "myVar");
+    // string literal: string() returns content, lexeme() includes quotes
+    auto str = makeLexer(context, "\"hello\"").next();
+    EXPECT_EQ(str.string(), "hello");
+    EXPECT_EQ(str.lexeme(), "\"hello\"");
+    // keyword: string() returns kind name
+    EXPECT_EQ(makeLexer(context, "IF").next().string(), "IF");
+    // number: string() returns lexeme
+    EXPECT_EQ(makeLexer(context, "42").next().string(), "42");
+    // multi-char operator lexeme
+    EXPECT_EQ(makeLexer(context, "<=").next().lexeme(), "<=");
 }
 
 // ------------------------------------
 // Identifiers and keywords
 // ------------------------------------
 
-TEST(LexerTests, IdentifierIsCaseInsensitive) {
+TEST(LexerTests, Identifiers) {
     Context context;
-    auto lexer = makeLexer(context, "iF");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::If);
-}
-
-TEST(LexerTests, UnderscorePrefixedIdentifier) {
-    Context context;
-    auto lexer = makeLexer(context, "_foo");
-    auto tok = lexer.next();
+    // case insensitive keyword match
+    EXPECT_EQ(makeLexer(context, "iF").next().kind(), TokenKind::If);
+    // underscore-prefixed identifier
+    auto tok = makeLexer(context, "_foo").next();
     EXPECT_EQ(tok.kind(), TokenKind::Identifier);
     EXPECT_EQ(tok.string(), "_FOO");
 }
 
 // ------------------------------------
-// Peek
+// Peek and EOF
 // ------------------------------------
 
 TEST(LexerTests, PeekDoesNotConsumeToken) {
@@ -319,12 +212,7 @@ TEST(LexerTests, PeekDoesNotConsumeToken) {
     EXPECT_EQ(peeked.kind(), TokenKind::IntegerLiteral);
 }
 
-// ------------------------------------
-// End of file
-// ------------------------------------
-
 TEST(LexerTests, EmptyInputProducesEndOfFile) {
     Context context;
-    auto lexer = makeLexer(context, "");
-    EXPECT_EQ(lexer.next().kind(), TokenKind::EndOfFile);
+    EXPECT_EQ(makeLexer(context, "").next().kind(), TokenKind::EndOfFile);
 }

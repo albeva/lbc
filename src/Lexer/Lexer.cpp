@@ -290,7 +290,7 @@ auto Lexer::stringLiteral() -> Token {
     m_input.advance();
 
     bool hasError = false;
-    m_input.advanceWhile([&](const auto ch) {
+    m_input.advanceWhile([&](const Character ch) {
         if (ch == '\\') {
             if (m_input.peek().isValidEscape()) {
                 m_input.advance();
