@@ -5,13 +5,6 @@ function(configure_llvm project_name)
         llvm_libs
         core
         support
-        bitwriter
-        transformUtils
-        native
-        AllTargetsCodeGens
-        AllTargetsDescs
-        AllTargetsInfos
-        TargetParser
     )
     target_include_directories(${project_name} SYSTEM PUBLIC ${LLVM_INCLUDE_DIRS})
     target_compile_definitions(${project_name} PUBLIC ${LLVM_DEFINITIONS})
