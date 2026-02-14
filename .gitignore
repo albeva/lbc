@@ -5,8 +5,8 @@
 .vs/
 .vscode/
 .idea/
-.vs/
 .zed/
+.cache/
 
 # AIs
 .claude/
