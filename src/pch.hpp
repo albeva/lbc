@@ -28,6 +28,7 @@
 
 // LBC utilities
 #include "Utilities/NoCopy.hpp"
+#include "Utilities/Try.hpp"
 #include "Utilities/ValueRestorer.hpp"
 
 namespace lbc {

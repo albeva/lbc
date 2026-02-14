@@ -2,6 +2,7 @@
 #include <llvm/Support/InitLLVM.h>
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
+#include "Parser/Parser.hpp"
 
 auto main(int argc, const char* argv[]) -> int {
     llvm::InitLLVM const init { argc, argv };
@@ -9,14 +10,6 @@ auto main(int argc, const char* argv[]) -> int {
     lbc::Context context;
     std::string included;
     auto id = context.getSourceMgr().AddIncludeFile("samples/hello.bas", {}, included);
-
-    lbc::Lexer lexer { context, id };
-    while (true) {
-        auto token = lexer.next();
-        std::println("'{}'", token);
-
-        if (token.kind() == lbc::TokenKind::EndOfFile) {
-            break;
-        }
-    }
+    lbc::Parser parser { context, id };
+    parser.parse();
 }

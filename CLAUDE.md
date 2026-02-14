@@ -102,5 +102,9 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 
 ## Important Patterns
 
-- Error handling: prefer `std::expected` for returning errors (no exceptions)
+- Error handling: `std::expected<T, DiagMessage>` for fallible operations. Lightweight error type — rich diagnostics
+  are accumulated separately. `TRY`/`TRY_ASSIGN`/`TRY_DECL`/`MUST` macros (inspired by SerenityOS/Ladybird) for
+  ergonomic error propagation.
 - Memory: RAII everywhere, no manual new/delete
+- Parser: single `Parser` class with implementation split across multiple `.cpp` files by concern
+  (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utilities).

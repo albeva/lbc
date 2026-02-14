@@ -7,6 +7,10 @@ target_sources(lbc_lib
     Driver/Context.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
+    Parser/ParseDecl.cpp
+    Parser/ParseExpr.cpp
+    Parser/ParseStmt.cpp
+    Parser/ParseType.cpp
     Parser/Parser.cpp
 
     PUBLIC FILE_SET HEADERS
