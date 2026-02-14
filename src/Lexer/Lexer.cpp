@@ -159,10 +159,14 @@ auto Lexer::invalid() -> Token {
 }
 
 auto Lexer::endOfFile() -> Token {
+    if (m_hasStatement) {
+        return endOfStmt();
+    }
     return Token { TokenKind::EndOfFile, range() };
 }
 
 auto Lexer::endOfStmt() -> Token {
+    m_hasStatement = false;
     return Token { TokenKind::EndOfStmt, range() };
 }
 

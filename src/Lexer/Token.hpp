@@ -16,11 +16,14 @@ public:
     )
     : m_kind(kind)
     , m_range(range)
-    , m_value(value) { }
+    , m_value(value) {
+        assert(range.Start.isValid() && range.End.isValid() && "Token should be created from a valid range");
+    }
 
     [[nodiscard]] constexpr auto kind() const -> TokenKind { return m_kind; }
     [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange { return m_range; }
     [[nodiscard]] constexpr auto getValue() const -> LiteralValue { return m_value; }
+
     /**
      * Return a display string for this token. For identifiers and string
      * literals returns the stored value; for numbers returns the raw

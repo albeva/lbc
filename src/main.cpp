@@ -1,7 +1,5 @@
 #include "pch.hpp"
 #include <llvm/Support/InitLLVM.h>
-
-#include "../build/claude/generated/Lexer/Tokens.inc"
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
 
