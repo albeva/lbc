@@ -80,11 +80,11 @@ void AstVisitorGen::visitorClass(const AstClass* ast) {
         docStr = "Visitor that dispatches over all concrete AST nodes.";
     } else {
         docStr = "Visitor for " + ast->getRecord()->getValueAsString("desc").str()
-            + " nodes under " + ast->getClassName() + ".";
+               + " nodes under " + ast->getClassName() + ".";
     }
     docStr += "\n\n"
-        "Inherit privately, friend the visitor, and implement accept() handlers.\n"
-        "A generic accept(const auto&) catch-all can handle unimplemented nodes.\n\n";
+              "Inherit privately, friend the visitor, and implement accept() handlers.\n"
+              "A generic accept(const auto&) catch-all can handle unimplemented nodes.\n\n";
     docStr += visitorSample(ast);
     doc(docStr);
     line("template <typename ReturnType = void>", "");

@@ -4,10 +4,12 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <llvm/ADT/StringRef.h>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "AstArg.hpp"
 
 class AstGen;
@@ -77,6 +79,8 @@ public:
     }
 
 private:
+    [[nodiscard]] static auto unindent(llvm::StringRef code) -> std::string;
+
     AstClass* m_parent;
     const llvm::Record* m_record;
     /// C++ class name (e.g., "AstModule")
@@ -85,5 +89,6 @@ private:
     std::string m_enumName;
     std::vector<std::unique_ptr<AstClass>> m_children;
     std::vector<std::unique_ptr<AstArg>> m_args;
+    std::vector<std::string> m_functions;
     Kind m_kind;
 };

@@ -35,6 +35,8 @@ public:
     [[nodiscard]] auto getNodeClass() const -> const Record* { return m_nodeClass; }
     [[nodiscard]] auto getLeafClass() const -> const Record* { return m_leafClass; }
     [[nodiscard]] auto getGroupClass() const -> const Record* { return m_groupClass; }
+    [[nodiscard]] auto getArgClass() const -> const Record* { return m_argClass; }
+    [[nodiscard]] auto getFuncClass() const -> const Record* { return m_funcClass; }
 
 private:
     void forwardDecls();
@@ -54,4 +56,6 @@ private:
     const Record* m_nodeClass;
     const Record* m_leafClass;
     const Record* m_groupClass;
+    const Record* m_argClass;
+    const Record* m_funcClass;
 };

@@ -1,26 +1,44 @@
 // AST node definitions for lbc
 // Processed by lbc-tblgen to generate Ast.hpp and AstVisitor.hpp
 
+// =============================================================================
+// Class members
+// =============================================================================
+
+// base class for ast class data
+class Member;
+
 // -----------------------------------------------------------------------------
-// Arg field on a node.
+// Data field, has setter and getter, passed through ctor (if no default value)
 // -----------------------------------------------------------------------------
-class Arg<string type_, string name_, bit mutable_ = false, string default_ = ""> {
+class Arg<string type_, string name_, bit mutable_ = false, string default_ = "">: Member {
     string type = type_;
     string name = name_;
     bit mutable = mutable_;
     string default = default_;
 }
 
-// Forward declare Group
+// -----------------------------------------------------------------------------
+// Function allows specifying custom code that gets emitted into generated ast
+// -----------------------------------------------------------------------------
+class Func<code func_>: Member {
+    code func = func_;
+}
+
+// =============================================================================
+// Ast structure
+// =============================================================================
+
+// Group node
 class Group;
 
 // -----------------------------------------------------------------------------
 // Base AST node. All nodes carry a source range.
 // -----------------------------------------------------------------------------
-class Node<string desc_ = "", Group parent_, list<Arg> args_ = []> {
+class Node<string desc_ = "", Group parent_, list<Member> members_ = []> {
     string desc = desc_;
     Group parent = parent_;
-    list<Arg> args = args_;
+    list<Member> members = members_;
 }
 
 // -----------------------------------------------------------------------------
@@ -30,8 +48,8 @@ class Node<string desc_ = "", Group parent_, list<Arg> args_ = []> {
 class Group<
     string desc_ = "",
     Group parent_,
-    list<Arg> args_ = []
-> : Node<desc_, parent_, args_>;
+    list<Member> members_ = []
+> : Node<desc_, parent_, members_>;
 
 // -----------------------------------------------------------------------------
 // Leaf node — a concrete, instantiable AST node belonging to a parent.
@@ -39,8 +57,8 @@ class Group<
 class Leaf<
     string desc_ = "",
     Group parent_,
-    list<Arg> args_ = []
-> : Node<desc_, parent_, args_>;
+    list<Member> members_ = []
+> : Node<desc_, parent_, members_>;
 
 // ============================================================================
 // Root
@@ -48,7 +66,15 @@ class Leaf<
 
 def Root : Group<"The root AST node", ?, [
     Arg<"llvm::SMRange", "range">,
-    Arg<"AstRoot*", "next", true, "nullptr">
+    Arg<"AstRoot*", "next", true, "nullptr">,
+    Func<[{
+        /**
+         * Test function
+         */
+         [[nodiscard]] auto hasNextSet() const -> bool {
+             return m_next != nullptr;
+         }
+    }]>
 ]>;
 
 def Module : Leaf<"Program module node", Root, [

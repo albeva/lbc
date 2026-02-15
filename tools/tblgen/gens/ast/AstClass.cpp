@@ -35,9 +35,56 @@ AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
     }
 
     // class args
-    for (const auto& arg : record->getValueAsListOfDefs("args")) {
-        m_args.emplace_back(std::make_unique<AstArg>(arg));
+    for (const auto& member : record->getValueAsListOfDefs("members")) {
+        if (member->hasDirectSuperClass(gen.getArgClass())) {
+            m_args.emplace_back(std::make_unique<AstArg>(member));
+        } else if (member->hasDirectSuperClass(gen.getFuncClass())) {
+            m_functions.emplace_back(unindent(member->getValueAsString("func")));
+        }
     }
+}
+
+/**
+ * In .td file, code may be too indented. Remove outermost
+ * indentation along with leading and trailing blank lines.
+ */
+auto AstClass::unindent(llvm::StringRef code) -> std::string {
+    SmallVector<StringRef, 16> lines;
+    code.split(lines, '\n');
+
+    // Strip leading and trailing blank lines
+    while (!lines.empty() && lines.front().ltrim().empty()) {
+        lines.erase(lines.begin());
+    }
+    while (!lines.empty() && lines.back().ltrim().empty()) {
+        lines.pop_back();
+    }
+
+    if (lines.empty()) {
+        return {};
+    }
+
+    // Find minimum indentation across non-empty lines
+    auto minIndent = std::numeric_limits<std::size_t>::max();
+    for (const auto& line : lines) {
+        if (line.ltrim().empty()) {
+            continue;
+        }
+        minIndent = std::min(minIndent, line.size() - line.ltrim().size());
+    }
+
+    // Remove common indentation and rejoin
+    std::string result;
+    for (std::size_t i = 0; i < lines.size(); i++) {
+        if (i > 0) {
+            result += '\n';
+        }
+        if (lines[i].ltrim().empty()) {
+            continue;
+        }
+        result += lines[i].drop_front(minIndent);
+    }
+    return result;
 }
 
 auto AstClass::ctorParams() const -> std::vector<std::string> {
@@ -110,7 +157,7 @@ auto AstClass::classArgs() const -> std::vector<std::string> {
 
 auto AstClass::classFunctions() const -> std::vector<std::string> {
     std::vector<std::string> funcs;
-    funcs.reserve(m_args.size());
+    funcs.reserve((m_args.size() * 2) + m_functions.size());
 
     constexpr auto capitalizeFirst = [](const std::string& str) -> std::string {
         if (str.empty()) {
@@ -146,6 +193,10 @@ auto AstClass::classFunctions() const -> std::vector<std::string> {
                 + "}"
             );
         }
+    }
+
+    for (const auto& func : m_functions) {
+        funcs.emplace_back(func);
     }
 
     return funcs;

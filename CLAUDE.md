@@ -66,7 +66,7 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
   `GeneratorBase` extends it with `RecordKeeper` access and common utilities (`sortedByDef`,
   `findRange`, `collect`, `contains`). Concrete generators live in `gens/` and extend
   `GeneratorBase`. Complex generators may use subdirectories (e.g., `gens/ast/` splits
-  `AstGen`, `AstClass`, and `AstMember` into separate files). Generated `.hpp` files are
+  `AstGen`, `AstClass`, and `AstArg` into separate files). Generated `.hpp` files are
   emitted alongside their source `.td` files in the source tree (e.g.,
   `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`) and are git-tracked.
 - `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
@@ -114,9 +114,12 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
   (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utilities).
 - AST: node classes are generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. The TableGen schema
   uses three class types: `Node` (base), `Group` (abstract intermediate — types, statements, declarations,
-  expressions), and `Leaf` (concrete instantiable nodes). Each node has `Member` fields; members without a default
-  become constructor parameters, members with a default are initialized fields. The `mutable` bit controls whether a
-  setter is generated. `AstKind` enum values are grouped by parent so range checks can determine group membership.
+  expressions), and `Leaf` (concrete instantiable nodes). Each node has a `list<Member>` with two subtypes:
+  `Arg` (data fields — type, name, optional default and mutable flag) and `Func` (custom code blocks emitted
+  verbatim into the generated class). `Arg` fields without a default become constructor parameters; those with a
+  default are initialized fields. The `mutable` bit controls whether a setter is generated. `Func` blocks are
+  auto-dedented via `unindent()` so `.td` indentation doesn't leak into generated code. `AstKind` enum values are
+  grouped by parent so range checks can determine group membership.
   All nodes inherit `llvm::SMRange` and a `next` pointer from `AstRoot`; the `next` pointer serves as an intrusive
   linked list during parsing for collecting nodes before bulk-allocating into `std::span`.
 - AST Visitor: generated from `Ast.td` via `lbc-tblgen --gen=lbc-ast-visitor` into `src/Ast/AstVisitor.hpp`.

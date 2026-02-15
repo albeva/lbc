@@ -19,7 +19,9 @@ AstGen::AstGen(
 , nodeRecords(sortedByDef(records.getAllDerivedDefinitions("Node")))
 , m_nodeClass(records.getClass("Node"))
 , m_leafClass(records.getClass("Leaf"))
-, m_groupClass(records.getClass("Group")) {
+, m_groupClass(records.getClass("Group"))
+, m_argClass(records.getClass("Arg"))
+, m_funcClass(records.getClass("Func")) {
     m_root = std::make_unique<AstClass>(nullptr, *this, records.getDef("Root"));
 }
 

@@ -1,8 +1,8 @@
 //
 // Created by Albert Varaksin on 15/02/2026.
 //
-#include <llvm/TableGen/Record.h>
 #include "AstArg.hpp"
+#include <llvm/TableGen/Record.h>
 using namespace llvm;
 
 AstArg::AstArg(const Record* record)
