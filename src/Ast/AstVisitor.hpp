@@ -246,14 +246,14 @@ public:
                 std::unreachable();
         }
     }
-
-    constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
-        if constexpr (std::is_const_v<decltype(ast)>) {
-            return self.visit(static_cast<const AstExpr&>(ast));
-        } else {
-            return self.visit(static_cast<AstExpr&>(ast));
-        }
-    }
+    //
+    // constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
+    //     if constexpr (std::is_const_v<decltype(ast)>) {
+    //         return self.visit(static_cast<const AstExpr&>(ast));
+    //     } else {
+    //         return self.visit(static_cast<AstExpr&>(ast));
+    //     }
+    // }
 };
 
 template <typename ReturnType = void>
