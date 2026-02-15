@@ -2,8 +2,8 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/TableGen/Main.h>
 #include <llvm/TableGen/Record.h>
-#include "gens/ast/AstGen.hpp"
 #include "gens/TokensGen.hpp"
+#include "gens/ast/AstGen.hpp"
 using namespace llvm;
 
 namespace {

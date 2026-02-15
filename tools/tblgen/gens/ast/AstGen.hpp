@@ -58,4 +58,5 @@ private:
     const Record* m_groupClass;
     /// Maps each Group record to its direct children (both Groups and Leaves)
     std::unordered_map<const Record*, std::vector<const Record*>> m_map;
+    std::vector<std::string> m_classNames;
 };

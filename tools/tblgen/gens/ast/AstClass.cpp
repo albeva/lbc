@@ -2,9 +2,9 @@
 // Created by Albert Varaksin on 15/02/2026.
 //
 #include "AstClass.hpp"
-#include "AstGen.hpp"
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/TableGen/Record.h>
+#include "AstGen.hpp"
 using namespace llvm;
 
 AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
@@ -112,11 +112,9 @@ auto AstClass::functions() const -> std::vector<std::string> {
     for (const auto& member : m_members) {
         // getter
         funcs.emplace_back(
-            "/**\n"
-            " * Get "
+            "/// Get the "
             + (member->getName() + "\n")
-            + " */\n"
-              "[[nodiscard]] constexpr auto get"
+            + "[[nodiscard]] constexpr auto get"
             + capitalizeFirst(member->getName())
             + "() const -> " + member->getType() + " {\n"
             + "    return m_" + member->getName() + ";\n"
@@ -126,11 +124,9 @@ auto AstClass::functions() const -> std::vector<std::string> {
         // setter
         if (member->hasSetter()) {
             funcs.emplace_back(
-                "/**\n"
-                " * Set "
+                "/// Set the "
                 + (member->getName() + "\n")
-                + " */\n"
-                  "void set"
+                + "void set"
                 + capitalizeFirst(member->getName()) + "("
                 + (member->passAsConst() ? "const " : "") + member->getType() + " " + member->getName() + ") {\n"
                 + "    m_" + member->getName() + " = " + member->getName() + ";\n"

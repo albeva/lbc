@@ -6,7 +6,7 @@ Design notes for lbc — a BASIC compiler with full C ABI compatibility and an L
 
 - Fully functional BASIC compiler, not a toy
 - Full C ABI compatibility: data types, bitfields, packed structs, calling conventions
-- Direct interop with C libraries without wrapper code
+- Interop with C libraries via simple declarations (liek header files)
 - Module system (`import module`)
 - Compile-time evaluation (comptime functions, type construction)
 - Simplified C++-style templates

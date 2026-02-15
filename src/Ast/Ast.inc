@@ -14,7 +14,8 @@ enum class TokenKind: std::uint8_t;
 class Type;
 
 /**
- * Enumrate all ast leaf nodes
+ * Enumerates all concrete AST node kinds.
+ * Values are ordered by group for efficient range-based membership checks.
  */
 enum class AstKind : std::uint8_t {
     Module,
@@ -96,7 +97,7 @@ public:
 
 protected:
     /**
-     * Create AstRoot ast node
+     * Construct an AstRoot node
      */
     constexpr AstRoot(
         const AstKind kind,
@@ -106,37 +107,33 @@ protected:
     , m_range(range) {}
 
 public:
-    /**
-     * LLVM RTTI support to check if given node is a AstRoot
-     */
+    /// LLVM RTTI support to check if given node is an AstRoot
     [[nodiscard]] static constexpr auto classof(const AstRoot* /* ast */) -> bool {
-        return true;;
+        return true;
     }
 
-    /**
-     * Get ast node kind value
-     */
+    /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
         return m_kind;
     }
 
-    /**
-     * Get range
-     */
+    /// Get ast node class name
+    [[nodiscard]] constexpr auto getClassName() const -> llvm::StringRef {
+        const auto index = static_cast<std::size_t>(m_kind);
+        return kClassNames.at(index);
+    }
+
+    /// Get the range
     [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange {
         return m_range;
     }
 
-    /**
-     * Get next
-     */
+    /// Get the next
     [[nodiscard]] constexpr auto getNext() const -> AstRoot* {
         return m_next;
     }
 
-    /**
-     * Set next
-     */
+    /// Set the next
     void setNext(AstRoot* next) {
         m_next = next;
     }
@@ -145,6 +142,35 @@ private:
     AstKind m_kind;
     llvm::SMRange m_range;
     AstRoot* m_next = nullptr;
+    static constexpr std::array<llvm::StringRef, 27> kClassNames {
+        "AstModule",
+        "AstBuiltInType",
+        "AstPointerType",
+        "AstReferenceType",
+        "AstStmtList",
+        "AstEmptyStmt",
+        "AstDimStmt",
+        "AstExprStmt",
+        "AstDeclareStmt",
+        "AstExternStmt",
+        "AstAssignStmt",
+        "AstFuncStmt",
+        "AstReturnStmt",
+        "AstIfStmt",
+        "AstImportDecl",
+        "AstVarDecl",
+        "AstFuncDecl",
+        "AstFuncParamDecl",
+        "AstVariableExpr",
+        "AstCallExpr",
+        "AstLiteralExpr",
+        "AstUnaryExpr",
+        "AstBinaryExpr",
+        "AstCastExpr",
+        "AstDereferenceExpr",
+        "AstAddressOfExpr",
+        "AstMemberExpr"
+    };
 };
 
 /**
@@ -153,7 +179,7 @@ private:
 class [[nodiscard]] AstModule final : public AstRoot {
 public:
     /**
-     * Create AstModule ast node
+     * Construct an AstModule node
      */
     constexpr AstModule(
         const llvm::SMRange range,
@@ -164,37 +190,27 @@ public:
     , m_imports(imports)
     , m_stmtList(stmtList) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstModule
-     */
+    /// LLVM RTTI support to check if given node is an AstModule
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::Module;
     }
 
-    /**
-     * Get imports
-     */
+    /// Get the imports
     [[nodiscard]] constexpr auto getImports() const -> std::span<AstImportDecl*> {
         return m_imports;
     }
 
-    /**
-     * Get stmtList
-     */
+    /// Get the stmtList
     [[nodiscard]] constexpr auto getStmtList() const -> AstStmtList* {
         return m_stmtList;
     }
 
-    /**
-     * Get implicitMain
-     */
+    /// Get the implicitMain
     [[nodiscard]] constexpr auto getImplicitMain() const -> bool {
         return m_implicitMain;
     }
 
-    /**
-     * Set implicitMain
-     */
+    /// Set the implicitMain
     void setImplicitMain(const bool implicitMain) {
         m_implicitMain = implicitMain;
     }
@@ -210,30 +226,24 @@ private:
 // -----------------------------------------------------------------------------
 
 /**
- * Types
+ * Abstract base for all type expression nodes
  */
 class [[nodiscard]] AstType : public AstRoot {
 protected:
     using AstRoot::AstRoot;
 
 public:
-    /**
-     * LLVM RTTI support to check if given node is a AstType
-     */
+    /// LLVM RTTI support to check if given node is an AstType
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() >= AstKind::BuiltInType && ast->getKind() <= AstKind::ReferenceType;
     }
 
-    /**
-     * Get type
-     */
+    /// Get the type
     [[nodiscard]] constexpr auto getType() const -> const Type* {
         return m_type;
     }
 
-    /**
-     * Set type
-     */
+    /// Set the type
     void setType(const Type* type) {
         m_type = type;
     }
@@ -248,7 +258,7 @@ private:
 class [[nodiscard]] AstBuiltInType final : public AstType {
 public:
     /**
-     * Create AstBuiltInType ast node
+     * Construct an AstBuiltInType node
      */
     constexpr AstBuiltInType(
         const llvm::SMRange range,
@@ -257,16 +267,12 @@ public:
     : AstType(AstKind::BuiltInType, range)
     , m_tokenKind(tokenKind) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstBuiltInType
-     */
+    /// LLVM RTTI support to check if given node is an AstBuiltInType
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::BuiltInType;
     }
 
-    /**
-     * Get tokenKind
-     */
+    /// Get the tokenKind
     [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
         return m_tokenKind;
     }
@@ -281,7 +287,7 @@ private:
 class [[nodiscard]] AstPointerType final : public AstType {
 public:
     /**
-     * Create AstPointerType ast node
+     * Construct an AstPointerType node
      */
     constexpr AstPointerType(
         const llvm::SMRange range,
@@ -290,16 +296,12 @@ public:
     : AstType(AstKind::PointerType, range)
     , m_typeExpr(typeExpr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstPointerType
-     */
+    /// LLVM RTTI support to check if given node is an AstPointerType
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::PointerType;
     }
 
-    /**
-     * Get typeExpr
-     */
+    /// Get the typeExpr
     [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
@@ -314,7 +316,7 @@ private:
 class [[nodiscard]] AstReferenceType final : public AstType {
 public:
     /**
-     * Create AstReferenceType ast node
+     * Construct an AstReferenceType node
      */
     constexpr AstReferenceType(
         const llvm::SMRange range,
@@ -323,16 +325,12 @@ public:
     : AstType(AstKind::ReferenceType, range)
     , m_typeExpr(typeExpr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstReferenceType
-     */
+    /// LLVM RTTI support to check if given node is an AstReferenceType
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::ReferenceType;
     }
 
-    /**
-     * Get typeExpr
-     */
+    /// Get the typeExpr
     [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
@@ -346,16 +344,14 @@ private:
 // -----------------------------------------------------------------------------
 
 /**
- * Statements
+ * Abstract base for all statement nodes
  */
 class [[nodiscard]] AstStmt : public AstRoot {
 protected:
     using AstRoot::AstRoot;
 
 public:
-    /**
-     * LLVM RTTI support to check if given node is a AstStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() >= AstKind::StmtList && ast->getKind() <= AstKind::IfStmt;
     }
@@ -368,7 +364,7 @@ public:
 class [[nodiscard]] AstStmtList final : public AstStmt {
 public:
     /**
-     * Create AstStmtList ast node
+     * Construct an AstStmtList node
      */
     constexpr AstStmtList(
         const llvm::SMRange range,
@@ -379,23 +375,17 @@ public:
     , m_stmts(stmts)
     , m_decls(decls) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstStmtList
-     */
+    /// LLVM RTTI support to check if given node is an AstStmtList
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::StmtList;
     }
 
-    /**
-     * Get stmts
-     */
+    /// Get the stmts
     [[nodiscard]] constexpr auto getStmts() const -> std::span<AstStmt*> {
         return m_stmts;
     }
 
-    /**
-     * Get decls
-     */
+    /// Get the decls
     [[nodiscard]] constexpr auto getDecls() const -> std::span<AstDecl*> {
         return m_decls;
     }
@@ -411,16 +401,14 @@ private:
 class [[nodiscard]] AstEmptyStmt final : public AstStmt {
 public:
     /**
-     * Create AstEmptyStmt ast node
+     * Construct an AstEmptyStmt node
      */
     constexpr explicit AstEmptyStmt(
         const llvm::SMRange range
     )
     : AstStmt(AstKind::EmptyStmt, range) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstEmptyStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstEmptyStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::EmptyStmt;
     }
@@ -428,12 +416,12 @@ public:
 };
 
 /**
- * DIM keyword
+ * DIM variable declaration statement
  */
 class [[nodiscard]] AstDimStmt final : public AstStmt {
 public:
     /**
-     * Create AstDimStmt ast node
+     * Construct an AstDimStmt node
      */
     constexpr AstDimStmt(
         const llvm::SMRange range,
@@ -442,16 +430,12 @@ public:
     : AstStmt(AstKind::DimStmt, range)
     , m_decls(decls) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstDimStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstDimStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::DimStmt;
     }
 
-    /**
-     * Get decls
-     */
+    /// Get the decls
     [[nodiscard]] constexpr auto getDecls() const -> std::span<AstVarDecl*> {
         return m_decls;
     }
@@ -461,12 +445,12 @@ private:
 };
 
 /**
- * Encapsulate expression
+ * Expression statement
  */
 class [[nodiscard]] AstExprStmt final : public AstStmt {
 public:
     /**
-     * Create AstExprStmt ast node
+     * Construct an AstExprStmt node
      */
     constexpr AstExprStmt(
         const llvm::SMRange range,
@@ -475,16 +459,12 @@ public:
     : AstStmt(AstKind::ExprStmt, range)
     , m_expr(expr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstExprStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstExprStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::ExprStmt;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
@@ -494,12 +474,12 @@ private:
 };
 
 /**
- * DECLARE keyword
+ * Forward declaration statement
  */
 class [[nodiscard]] AstDeclareStmt final : public AstStmt {
 public:
     /**
-     * Create AstDeclareStmt ast node
+     * Construct an AstDeclareStmt node
      */
     constexpr AstDeclareStmt(
         const llvm::SMRange range,
@@ -508,16 +488,12 @@ public:
     : AstStmt(AstKind::DeclareStmt, range)
     , m_decl(decl) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstDeclareStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstDeclareStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::DeclareStmt;
     }
 
-    /**
-     * Get decl
-     */
+    /// Get the decl
     [[nodiscard]] constexpr auto getDecl() const -> AstFuncDecl* {
         return m_decl;
     }
@@ -527,12 +503,12 @@ private:
 };
 
 /**
- * EXTERN keyword
+ * External linkage block
  */
 class [[nodiscard]] AstExternStmt final : public AstStmt {
 public:
     /**
-     * Create AstExternStmt ast node
+     * Construct an AstExternStmt node
      */
     constexpr AstExternStmt(
         const llvm::SMRange range,
@@ -541,16 +517,12 @@ public:
     : AstStmt(AstKind::ExternStmt, range)
     , m_stmtList(stmtList) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstExternStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstExternStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::ExternStmt;
     }
 
-    /**
-     * Get stmtList
-     */
+    /// Get the stmtList
     [[nodiscard]] constexpr auto getStmtList() const -> AstStmtList* {
         return m_stmtList;
     }
@@ -565,7 +537,7 @@ private:
 class [[nodiscard]] AstAssignStmt final : public AstStmt {
 public:
     /**
-     * Create AstAssignStmt ast node
+     * Construct an AstAssignStmt node
      */
     constexpr AstAssignStmt(
         const llvm::SMRange range,
@@ -576,23 +548,17 @@ public:
     , m_assignee(assignee)
     , m_expr(expr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstAssignStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstAssignStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::AssignStmt;
     }
 
-    /**
-     * Get assignee
-     */
+    /// Get the assignee
     [[nodiscard]] constexpr auto getAssignee() const -> AstExpr* {
         return m_assignee;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
@@ -603,12 +569,12 @@ private:
 };
 
 /**
- * FUNCTION or SUB
+ * Function or subroutine definition
  */
 class [[nodiscard]] AstFuncStmt final : public AstStmt {
 public:
     /**
-     * Create AstFuncStmt ast node
+     * Construct an AstFuncStmt node
      */
     constexpr AstFuncStmt(
         const llvm::SMRange range,
@@ -619,23 +585,17 @@ public:
     , m_decl(decl)
     , m_stmtList(stmtList) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstFuncStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstFuncStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::FuncStmt;
     }
 
-    /**
-     * Get decl
-     */
+    /// Get the decl
     [[nodiscard]] constexpr auto getDecl() const -> AstFuncDecl* {
         return m_decl;
     }
 
-    /**
-     * Get stmtList
-     */
+    /// Get the stmtList
     [[nodiscard]] constexpr auto getStmtList() const -> AstStmtList* {
         return m_stmtList;
     }
@@ -646,12 +606,12 @@ private:
 };
 
 /**
- * RETURN keyword
+ * Return statement
  */
 class [[nodiscard]] AstReturnStmt final : public AstStmt {
 public:
     /**
-     * Create AstReturnStmt ast node
+     * Construct an AstReturnStmt node
      */
     constexpr AstReturnStmt(
         const llvm::SMRange range,
@@ -660,16 +620,12 @@ public:
     : AstStmt(AstKind::ReturnStmt, range)
     , m_expr(expr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstReturnStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstReturnStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::ReturnStmt;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
@@ -684,7 +640,7 @@ private:
 class [[nodiscard]] AstIfStmt final : public AstStmt {
 public:
     /**
-     * Create AstIfStmt ast node
+     * Construct an AstIfStmt node
      */
     constexpr AstIfStmt(
         const llvm::SMRange range,
@@ -697,30 +653,22 @@ public:
     , m_thenStmt(thenStmt)
     , m_elseStmt(elseStmt) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstIfStmt
-     */
+    /// LLVM RTTI support to check if given node is an AstIfStmt
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::IfStmt;
     }
 
-    /**
-     * Get condition
-     */
+    /// Get the condition
     [[nodiscard]] constexpr auto getCondition() const -> AstExpr* {
         return m_condition;
     }
 
-    /**
-     * Get thenStmt
-     */
+    /// Get the thenStmt
     [[nodiscard]] constexpr auto getThenStmt() const -> AstStmt* {
         return m_thenStmt;
     }
 
-    /**
-     * Get elseStmt
-     */
+    /// Get the elseStmt
     [[nodiscard]] constexpr auto getElseStmt() const -> AstStmt* {
         return m_elseStmt;
     }
@@ -736,12 +684,12 @@ private:
 // -----------------------------------------------------------------------------
 
 /**
- * Declarations
+ * Abstract base for all declaration nodes
  */
 class [[nodiscard]] AstDecl : public AstRoot {
 protected:
     /**
-     * Create AstDecl ast node
+     * Construct an AstDecl node
      */
     constexpr AstDecl(
         const AstKind kind,
@@ -752,30 +700,22 @@ protected:
     , m_name(name) {}
 
 public:
-    /**
-     * LLVM RTTI support to check if given node is a AstDecl
-     */
+    /// LLVM RTTI support to check if given node is an AstDecl
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() >= AstKind::ImportDecl && ast->getKind() <= AstKind::FuncParamDecl;
     }
 
-    /**
-     * Get name
-     */
+    /// Get the name
     [[nodiscard]] constexpr auto getName() const -> llvm::StringRef {
         return m_name;
     }
 
-    /**
-     * Get type
-     */
+    /// Get the type
     [[nodiscard]] constexpr auto getType() const -> const Type* {
         return m_type;
     }
 
-    /**
-     * Set type
-     */
+    /// Set the type
     void setType(const Type* type) {
         m_type = type;
     }
@@ -786,12 +726,12 @@ private:
 };
 
 /**
- * IMPORT keyword
+ * Import declaration
  */
 class [[nodiscard]] AstImportDecl final : public AstDecl {
 public:
     /**
-     * Create AstImportDecl ast node
+     * Construct an AstImportDecl node
      */
     constexpr AstImportDecl(
         const llvm::SMRange range,
@@ -799,9 +739,7 @@ public:
     )
     : AstDecl(AstKind::ImportDecl, range, name) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstImportDecl
-     */
+    /// LLVM RTTI support to check if given node is an AstImportDecl
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::ImportDecl;
     }
@@ -809,12 +747,12 @@ public:
 };
 
 /**
- * VAR keyword
+ * Variable declaration
  */
 class [[nodiscard]] AstVarDecl final : public AstDecl {
 public:
     /**
-     * Create AstVarDecl ast node
+     * Construct an AstVarDecl node
      */
     constexpr AstVarDecl(
         const llvm::SMRange range,
@@ -826,23 +764,17 @@ public:
     , m_typeExpr(typeExpr)
     , m_expr(expr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstVarDecl
-     */
+    /// LLVM RTTI support to check if given node is an AstVarDecl
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::VarDecl;
     }
 
-    /**
-     * Get typeExpr
-     */
+    /// Get the typeExpr
     [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
@@ -853,12 +785,12 @@ private:
 };
 
 /**
- * FUNCTION or SUB
+ * Function or subroutine declaration
  */
 class [[nodiscard]] AstFuncDecl final : public AstDecl {
 public:
     /**
-     * Create AstFuncDecl ast node
+     * Construct an AstFuncDecl node
      */
     constexpr AstFuncDecl(
         const llvm::SMRange range,
@@ -870,37 +802,27 @@ public:
     , m_params(params)
     , m_retTypeExpr(retTypeExpr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstFuncDecl
-     */
+    /// LLVM RTTI support to check if given node is an AstFuncDecl
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::FuncDecl;
     }
 
-    /**
-     * Get params
-     */
+    /// Get the params
     [[nodiscard]] constexpr auto getParams() const -> std::span<AstFuncParamDecl*> {
         return m_params;
     }
 
-    /**
-     * Get retTypeExpr
-     */
+    /// Get the retTypeExpr
     [[nodiscard]] constexpr auto getRetTypeExpr() const -> AstType* {
         return m_retTypeExpr;
     }
 
-    /**
-     * Get impl
-     */
+    /// Get the impl
     [[nodiscard]] constexpr auto getImpl() const -> AstFuncStmt* {
         return m_impl;
     }
 
-    /**
-     * Set impl
-     */
+    /// Set the impl
     void setImpl(AstFuncStmt* impl) {
         m_impl = impl;
     }
@@ -912,12 +834,12 @@ private:
 };
 
 /**
- * FUNCTION parameter
+ * Function parameter declaration
  */
 class [[nodiscard]] AstFuncParamDecl final : public AstDecl {
 public:
     /**
-     * Create AstFuncParamDecl ast node
+     * Construct an AstFuncParamDecl node
      */
     constexpr AstFuncParamDecl(
         const llvm::SMRange range,
@@ -929,23 +851,17 @@ public:
     , m_typeExpr(typeExpr)
     , m_isVarArg(isVarArg) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstFuncParamDecl
-     */
+    /// LLVM RTTI support to check if given node is an AstFuncParamDecl
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::FuncParamDecl;
     }
 
-    /**
-     * Get typeExpr
-     */
+    /// Get the typeExpr
     [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
 
-    /**
-     * Get isVarArg
-     */
+    /// Get the isVarArg
     [[nodiscard]] constexpr auto getIsVarArg() const -> bool {
         return m_isVarArg;
     }
@@ -960,30 +876,24 @@ private:
 // -----------------------------------------------------------------------------
 
 /**
- * Expressions
+ * Abstract base for all expression nodes
  */
 class [[nodiscard]] AstExpr : public AstRoot {
 protected:
     using AstRoot::AstRoot;
 
 public:
-    /**
-     * LLVM RTTI support to check if given node is a AstExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() >= AstKind::VariableExpr && ast->getKind() <= AstKind::MemberExpr;
     }
 
-    /**
-     * Get type
-     */
+    /// Get the type
     [[nodiscard]] constexpr auto getType() const -> const Type* {
         return m_type;
     }
 
-    /**
-     * Set type
-     */
+    /// Set the type
     void setType(const Type* type) {
         m_type = type;
     }
@@ -998,7 +908,7 @@ private:
 class [[nodiscard]] AstVariableExpr final : public AstExpr {
 public:
     /**
-     * Create AstVariableExpr ast node
+     * Construct an AstVariableExpr node
      */
     constexpr AstVariableExpr(
         const llvm::SMRange range,
@@ -1007,16 +917,12 @@ public:
     : AstExpr(AstKind::VariableExpr, range)
     , m_name(name) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstVariableExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstVariableExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::VariableExpr;
     }
 
-    /**
-     * Get name
-     */
+    /// Get the name
     [[nodiscard]] constexpr auto getName() const -> llvm::StringRef {
         return m_name;
     }
@@ -1031,7 +937,7 @@ private:
 class [[nodiscard]] AstCallExpr final : public AstExpr {
 public:
     /**
-     * Create AstCallExpr ast node
+     * Construct an AstCallExpr node
      */
     constexpr AstCallExpr(
         const llvm::SMRange range,
@@ -1042,23 +948,17 @@ public:
     , m_callee(callee)
     , m_args(args) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstCallExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstCallExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::CallExpr;
     }
 
-    /**
-     * Get callee
-     */
+    /// Get the callee
     [[nodiscard]] constexpr auto getCallee() const -> AstExpr* {
         return m_callee;
     }
 
-    /**
-     * Get args
-     */
+    /// Get the args
     [[nodiscard]] constexpr auto getArgs() const -> std::span<AstExpr*> {
         return m_args;
     }
@@ -1074,7 +974,7 @@ private:
 class [[nodiscard]] AstLiteralExpr final : public AstExpr {
 public:
     /**
-     * Create AstLiteralExpr ast node
+     * Construct an AstLiteralExpr node
      */
     constexpr AstLiteralExpr(
         const llvm::SMRange range,
@@ -1083,16 +983,12 @@ public:
     : AstExpr(AstKind::LiteralExpr, range)
     , m_value(value) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstLiteralExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstLiteralExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::LiteralExpr;
     }
 
-    /**
-     * Get value
-     */
+    /// Get the value
     [[nodiscard]] constexpr auto getValue() const -> LiteralValue {
         return m_value;
     }
@@ -1107,7 +1003,7 @@ private:
 class [[nodiscard]] AstUnaryExpr final : public AstExpr {
 public:
     /**
-     * Create AstUnaryExpr ast node
+     * Construct an AstUnaryExpr node
      */
     constexpr AstUnaryExpr(
         const llvm::SMRange range,
@@ -1118,23 +1014,17 @@ public:
     , m_expr(expr)
     , m_tokenKind(tokenKind) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstUnaryExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstUnaryExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::UnaryExpr;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
 
-    /**
-     * Get tokenKind
-     */
+    /// Get the tokenKind
     [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
         return m_tokenKind;
     }
@@ -1150,7 +1040,7 @@ private:
 class [[nodiscard]] AstBinaryExpr final : public AstExpr {
 public:
     /**
-     * Create AstBinaryExpr ast node
+     * Construct an AstBinaryExpr node
      */
     constexpr AstBinaryExpr(
         const llvm::SMRange range,
@@ -1163,30 +1053,22 @@ public:
     , m_right(right)
     , m_tokenKind(tokenKind) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstBinaryExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstBinaryExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::BinaryExpr;
     }
 
-    /**
-     * Get left
-     */
+    /// Get the left
     [[nodiscard]] constexpr auto getLeft() const -> AstExpr* {
         return m_left;
     }
 
-    /**
-     * Get right
-     */
+    /// Get the right
     [[nodiscard]] constexpr auto getRight() const -> AstExpr* {
         return m_right;
     }
 
-    /**
-     * Get tokenKind
-     */
+    /// Get the tokenKind
     [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
         return m_tokenKind;
     }
@@ -1203,7 +1085,7 @@ private:
 class [[nodiscard]] AstCastExpr final : public AstExpr {
 public:
     /**
-     * Create AstCastExpr ast node
+     * Construct an AstCastExpr node
      */
     constexpr AstCastExpr(
         const llvm::SMRange range,
@@ -1216,30 +1098,22 @@ public:
     , m_typeExpr(typeExpr)
     , m_isImplicit(isImplicit) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstCastExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstCastExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::CastExpr;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
 
-    /**
-     * Get typeExpr
-     */
+    /// Get the typeExpr
     [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
 
-    /**
-     * Get isImplicit
-     */
+    /// Get the isImplicit
     [[nodiscard]] constexpr auto getIsImplicit() const -> bool {
         return m_isImplicit;
     }
@@ -1256,7 +1130,7 @@ private:
 class [[nodiscard]] AstDereferenceExpr final : public AstExpr {
 public:
     /**
-     * Create AstDereferenceExpr ast node
+     * Construct an AstDereferenceExpr node
      */
     constexpr AstDereferenceExpr(
         const llvm::SMRange range,
@@ -1265,16 +1139,12 @@ public:
     : AstExpr(AstKind::DereferenceExpr, range)
     , m_expr(expr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstDereferenceExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstDereferenceExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::DereferenceExpr;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
@@ -1289,7 +1159,7 @@ private:
 class [[nodiscard]] AstAddressOfExpr final : public AstExpr {
 public:
     /**
-     * Create AstAddressOfExpr ast node
+     * Construct an AstAddressOfExpr node
      */
     constexpr AstAddressOfExpr(
         const llvm::SMRange range,
@@ -1298,16 +1168,12 @@ public:
     : AstExpr(AstKind::AddressOfExpr, range)
     , m_expr(expr) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstAddressOfExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstAddressOfExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::AddressOfExpr;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
@@ -1322,7 +1188,7 @@ private:
 class [[nodiscard]] AstMemberExpr final : public AstExpr {
 public:
     /**
-     * Create AstMemberExpr ast node
+     * Construct an AstMemberExpr node
      */
     constexpr AstMemberExpr(
         const llvm::SMRange range,
@@ -1335,30 +1201,22 @@ public:
     , m_member(member)
     , m_tokenKind(tokenKind) {}
 
-    /**
-     * LLVM RTTI support to check if given node is a AstMemberExpr
-     */
+    /// LLVM RTTI support to check if given node is an AstMemberExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot*  ast) -> bool {
         return ast->getKind() == AstKind::MemberExpr;
     }
 
-    /**
-     * Get expr
-     */
+    /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
     }
 
-    /**
-     * Get member
-     */
+    /// Get the member
     [[nodiscard]] constexpr auto getMember() const -> AstExpr* {
         return m_member;
     }
 
-    /**
-     * Get tokenKind
-     */
+    /// Get the tokenKind
     [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
         return m_tokenKind;
     }

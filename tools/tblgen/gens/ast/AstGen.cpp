@@ -55,13 +55,18 @@ void AstGen::forwardDecls() {
  * This finds enums recursievly to ensure that enums are defined
  * in exact order and grouped together, so we can use range checks
  * if a node belongs in a group.
+ *
+ * This also generates m_classNames, ensuring names are in matching order
  */
 void AstGen::astNodesEnum() {
-    doc("Enumrate all ast leaf nodes");
+    m_classNames.reserve(m_leaves.size());
+
+    doc("Enumerates all concrete AST node kinds.\nValues are ordered by group for efficient range-based membership checks.");
     block("enum class AstKind : std::uint8_t", true, [&] {
         const auto recurse = [&](this auto&& self, const AstClass* cls) -> void {
             if (cls->isLeaf()) {
                 line(cls->getEnumName(), ",");
+                m_classNames.emplace_back(cls->getClassName());
             } else {
                 for (const auto& child : cls->getChildren()) {
                     self(child.get());
@@ -106,7 +111,11 @@ void AstGen::astClass(AstClass* cls) {
     const auto base = cls->isRoot() ? "" : " : public " + cls->getParent()->getClassName();
     const auto* const final = cls->isLeaf() ? " final" : "";
 
-    doc(cls->getRecord()->getValueAsString("desc"));
+    if (cls->isGroup()) {
+        doc("Abstract base for all "s + cls->getRecord()->getValueAsString("desc").str() + " nodes");
+    } else {
+        doc(cls->getRecord()->getValueAsString("desc"));
+    }
     block("class [[nodiscard]] " + cls->getClassName() + final + base, true, [&] {
         m_scope = Scope::Private;
         if (cls->isRoot()) {
@@ -137,7 +146,7 @@ void AstGen::constructor(AstClass* cls) {
     if (cls->isLeaf() || cls->hasOwnCtorParams()) {
         const auto params = cls->ctorParams();
         const bool isExplicit = cls->isLeaf() && params.size() == 1;
-        doc("Create " + cls->getClassName() + " ast node");
+        doc("Construct "s + articulate(cls->getClassName()) + cls->getClassName() + " node");
         line("constexpr "s + (isExplicit ? "explicit " : "") + cls->getClassName() + "(", "");
         indent(false, [&] {
             if (cls->isRoot() || cls->isGroup()) {
@@ -166,10 +175,10 @@ void AstGen::constructor(AstClass* cls) {
  */
 void AstGen::classof(AstClass* cls) {
     scope(Scope::Public);
-    doc("LLVM RTTI support to check if given node is a " + cls->getClassName());
-    block("[[nodiscard]] static constexpr auto classof(const "s + m_root->getClassName() + "* " + (cls->isRoot() ? "/* ast */" : " ast") + ") -> bool", [&]{
+    comment("LLVM RTTI support to check if given node is "s + articulate(cls->getClassName()) + cls->getClassName());
+    block("[[nodiscard]] static constexpr auto classof(const "s + m_root->getClassName() + "* " + (cls->isRoot() ? "/* ast */" : " ast") + ") -> bool", [&] {
         if (cls->isRoot()) {
-            line("return true;");
+            line("return true");
         } else if (cls->isLeaf()) {
             line("return ast->getKind() == AstKind::" + cls->getEnumName());
         } else {
@@ -190,9 +199,16 @@ void AstGen::functions(AstClass* cls) {
     scope(Scope::Public);
 
     if (cls->isRoot()) {
-        doc("Get ast node kind value");
+        comment("Get the kind discriminator for this node");
         block("[[nodiscard]] constexpr auto getKind() const -> AstKind", [&] {
             line("return m_kind");
+        });
+        newline();
+
+        comment("Get ast node class name");
+        block("[[nodiscard]] constexpr auto getClassName() const -> llvm::StringRef", [&] {
+            line("const auto index = static_cast<std::size_t>(m_kind)");
+            line("return kClassNames.at(index)");
         });
         newline();
     }
@@ -217,4 +233,10 @@ void AstGen::members(AstClass* cls) {
         line("AstKind m_kind");
     }
     list(members, {});
+
+    if (cls->isRoot()) {
+        block("static constexpr std::array<llvm::StringRef, " + std::to_string(m_classNames.size()) + "> kClassNames", true, [&] {
+            list(m_classNames, { .suffix = ",", .quote = true });
+        });
+    }
 }

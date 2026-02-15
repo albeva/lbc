@@ -58,7 +58,7 @@ def Module : Leaf<"Program module node", Root, [
 // Types
 // ============================================================================
 
-def Type : Group<"Types", Root, [
+def Type : Group<"type expression", Root, [
     Member<"const Type*", "type", true, "nullptr">
 ]>;
 def BuiltInType   : Leaf<"Built-in primitive type", Type, [
@@ -75,7 +75,7 @@ def ReferenceType : Leaf<"Reference type", Type, [
 // Statements
 // ============================================================================
 
-def Stmt : Group<"Statements", Root>;
+def Stmt : Group<"statement", Root>;
 
 def StmtList : Leaf<"List of statements", Stmt, [
     Member<"std::span<AstStmt*>", "stmts">,
@@ -85,19 +85,19 @@ def StmtList : Leaf<"List of statements", Stmt, [
 
 def EmptyStmt : Leaf<"Empty statement", Stmt>;
 
-def DimStmt : Leaf<"DIM keyword", Stmt, [
+def DimStmt : Leaf<"DIM variable declaration statement", Stmt, [
     Member<"std::span<AstVarDecl*>", "decls">
 ]>;
 
-def ExprStmt : Leaf<"Encapsulate expression", Stmt, [
+def ExprStmt : Leaf<"Expression statement", Stmt, [
     Member<"AstExpr*", "expr">
 ]>;
 
-def DeclareStmt : Leaf<"DECLARE keyword", Stmt, [
+def DeclareStmt : Leaf<"Forward declaration statement", Stmt, [
     Member<"AstFuncDecl*", "decl">
 ]>;
 
-def ExternStmt : Leaf<"EXTERN keyword", Stmt, [
+def ExternStmt : Leaf<"External linkage block", Stmt, [
     Member<"AstStmtList*", "stmtList">,
 //    Member<"CallingConvention", "callingConv">,
 ]>;
@@ -107,12 +107,12 @@ def AssignStmt : Leaf<"Assignment statement", Stmt, [
     Member<"AstExpr*", "expr">,
 ]>;
 
-def FuncStmt : Leaf<"FUNCTION or SUB", Stmt, [
+def FuncStmt : Leaf<"Function or subroutine definition", Stmt, [
     Member<"AstFuncDecl*", "decl">,
     Member<"AstStmtList*", "stmtList">,
 ]>;
 
-def ReturnStmt : Leaf<"RETURN keyword", Stmt, [
+def ReturnStmt : Leaf<"Return statement", Stmt, [
     Member<"AstExpr*", "expr">
 ]>;
 
@@ -126,7 +126,7 @@ def IfStmt : Leaf<"IF statement", Stmt, [
 // Declarations
 // ============================================================================
 
-def Decl : Group<"Declarations", Root, [
+def Decl : Group<"declaration", Root, [
     Member<"llvm::StringRef", "name">,
 //    Member<"CallingConvention", "callingConv">,
 //    Member<"SymbolVisibility", "visibility">,
@@ -134,20 +134,20 @@ def Decl : Group<"Declarations", Root, [
 //    Member<"Symbol*", "symbol", true, "nullptr">,
 ]>;
 
-def ImportDecl : Leaf<"IMPORT keyword", Decl>;
+def ImportDecl : Leaf<"Import declaration", Decl>;
 
-def VarDecl : Leaf<"VAR keyword", Decl, [
+def VarDecl : Leaf<"Variable declaration", Decl, [
     Member<"AstType*", "typeExpr">,
     Member<"AstExpr*", "expr">,
 ]>;
 
-def FuncDecl : Leaf<"FUNCTION or SUB", Decl, [
+def FuncDecl : Leaf<"Function or subroutine declaration", Decl, [
     Member<"std::span<AstFuncParamDecl*>", "params">,
     Member<"AstType*", "retTypeExpr">,
     Member<"AstFuncStmt*", "impl", true, "nullptr">,
 ]>;
 
-def FuncParamDecl : Leaf<"FUNCTION parameter", Decl, [
+def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [
     Member<"AstType*", "typeExpr">,
     Member<"bool", "isVarArg">,
 ]>;
@@ -156,7 +156,7 @@ def FuncParamDecl : Leaf<"FUNCTION parameter", Decl, [
 // Expressions
 // ============================================================================
 
-def Expr : Group<"Expressions", Root, [
+def Expr : Group<"expression", Root, [
     Member<"const Type*", "type", true, "nullptr">
 ]>;
 

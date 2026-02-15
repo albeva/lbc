@@ -104,6 +104,7 @@ public:
         StringRef prefix = "";
         StringRef suffix = "";
         StringRef lastSuffix = "";
+        bool quote = false;
     };
 
     auto list(const std::vector<std::string>& items, const ListOptions options) {
@@ -117,7 +118,12 @@ public:
                 m_os << options.firstPrefix;
             }
             // item
-            m_os << items[idx]; // NOLINT(*-pro-bounds-avoid-unchecked-container-access)
+            const auto& item = items[idx]; // NOLINT(*-pro-bounds-avoid-unchecked-container-access)
+            if (options.quote) {
+                m_os << quoted(item);
+            } else {
+                m_os << item;
+            }
             // suffix
             if (idx < (items.size() - 1)) {
                 m_os << options.suffix;
