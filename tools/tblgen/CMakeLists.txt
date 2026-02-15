@@ -5,6 +5,8 @@ add_executable(lbc-tblgen
     gens/ast/AstClass.hpp
     gens/ast/AstArg.cpp
     gens/ast/AstArg.hpp
+    gens/ast/AstFwdDeclGen.cpp
+    gens/ast/AstFwdDeclGen.hpp
     gens/ast/AstGen.cpp
     gens/ast/AstGen.hpp
     gens/ast/AstVisitorGen.cpp

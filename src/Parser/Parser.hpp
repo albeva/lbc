@@ -5,6 +5,7 @@
 #include "pch.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
+#include "Ast/AstFwdDecl.hpp"
 namespace lbc {
 class Context;
 
@@ -50,7 +51,7 @@ public:
     /**
      * Run the parser over the source buffer.
      */
-    void parse();
+    auto parse() -> Result<AstModule*>;
 
 private:
     // --------------------------------

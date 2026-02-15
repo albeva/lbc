@@ -40,6 +40,7 @@ add_tblgen(lbc_lib lbc-tblgen
     GENERATOR lbc-tokens-def INPUT Lexer/TokenKind.td
     GENERATOR lbc-ast-def INPUT Ast/Ast.td
     GENERATOR lbc-ast-visitor INPUT Ast/Ast.td OUTPUT AstVisitor.hpp
+    GENERATOR lbc-ast-fwd-decl INPUT Ast/Ast.td OUTPUT AstFwdDecl.hpp
 )
 
 # target settings

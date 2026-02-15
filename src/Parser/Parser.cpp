@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 12/02/2026.
 //
 #include "Parser.hpp"
+#include "Ast/Ast.hpp"
 using namespace lbc;
 
 Parser::Parser(Context& context, unsigned id)
@@ -11,7 +12,7 @@ Parser::Parser(Context& context, unsigned id)
 
 Parser::~Parser() = default;
 
-void Parser::parse() {
+auto Parser::parse() -> Result<AstModule*> {
     while (true) {
         std::println("'{}'", m_token);
         m_token = m_lexer.next();
@@ -19,6 +20,7 @@ void Parser::parse() {
             break;
         }
     }
+    return nullptr;
 }
 
 void Parser::panic(const DiagMessage message) {
