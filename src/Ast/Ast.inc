@@ -356,7 +356,7 @@ public:
     /**
      * Create AstEmptyStmt ast node
      */
-    constexpr AstEmptyStmt(
+    constexpr explicit AstEmptyStmt(
         const llvm::SMRange range
     )
     : AstStmt(AstKind::EmptyStmt, range) {}
