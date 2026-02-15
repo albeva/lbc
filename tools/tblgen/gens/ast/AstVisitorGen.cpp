@@ -75,16 +75,18 @@ void AstVisitorGen::visitorClasses() {
  * Generate visitor class for given group
  */
 void AstVisitorGen::visitorClass(const AstClass* ast) {
+    std::string docStr;
     if (ast->isRoot()) {
-        doc("Visitor that dispatches over all concrete AST nodes.\n\n"
-            "Inherit privately, friend the visitor, and implement accept() handlers.\n"
-            "A generic accept(const auto&) catch-all can handle unimplemented nodes.");
+        docStr = "Visitor that dispatches over all concrete AST nodes.";
     } else {
-        doc("Visitor for " + ast->getRecord()->getValueAsString("desc").str()
-            + " nodes under " + ast->getClassName()
-            + ".\n\nInherit privately, friend the visitor, and implement accept() handlers.\n"
-              "A generic accept(const auto&) catch-all can handle unimplemented nodes.");
+        docStr = "Visitor for " + ast->getRecord()->getValueAsString("desc").str()
+            + " nodes under " + ast->getClassName() + ".";
     }
+    docStr += "\n\n"
+        "Inherit privately, friend the visitor, and implement accept() handlers.\n"
+        "A generic accept(const auto&) catch-all can handle unimplemented nodes.\n\n";
+    docStr += visitorSample(ast);
+    doc(docStr);
     line("template <typename ReturnType = void>", "");
     block("class " + ast->getVisitorName() + " : AstVisitorBase", true, [&] {
         visit(ast);
@@ -106,6 +108,39 @@ void AstVisitorGen::visit(const AstClass* klass) {
             defaultCase();
         });
     });
+}
+
+/**
+ * Generate sample visitor code for use in the class documentation
+ */
+auto AstVisitorGen::visitorSample(const AstClass* klass) -> std::string {
+    const auto sampleName = "Sample" + klass->getVisitorName().substr(3);
+    const auto& visitorName = klass->getVisitorName();
+    const auto& className = klass->getClassName();
+
+    std::string sample;
+    sample += "@code\n";
+    sample += "class " + sampleName + " : " + visitorName + "<> {\n";
+    sample += "public:\n";
+    sample += "    auto process(const " + className + "& ast) const {\n";
+    sample += "        visit(ast);\n";
+    sample += "    }\n";
+    sample += "\n";
+    sample += "private:\n";
+    sample += "    friend " + visitorName + ";\n";
+    sample += "\n";
+    sample += "    void accept(const auto& ast) const {\n";
+    sample += "        unhandled(ast);\n";
+    sample += "    }\n";
+
+    klass->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+        sample += "\n    // void accept(const " + node->getClassName() + "& ast) const;";
+    });
+
+    sample += "\n};\n";
+    sample += "@endcode";
+
+    return sample;
 }
 
 /**

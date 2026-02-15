@@ -26,6 +26,7 @@ private:
     void visitorClasses();
     void visitorClass(const AstClass* ast);
     void visit(const AstClass* klass);
+    [[nodiscard]] static auto visitorSample(const AstClass* klass) -> std::string;
     void caseAccept(const AstClass* klass);
     void defaultCase();
 };

@@ -50,9 +50,54 @@ protected:
 
 /**
  * Visitor that dispatches over all concrete AST nodes.
- * 
+ *
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
+ *
+ * @code
+ * class SampleVisitor : AstVisitor<> {
+ * public:
+ *     auto process(const AstRoot& ast) const {
+ *         visit(ast);
+ *     }
+ *
+ * private:
+ *     friend AstVisitor;
+ *
+ *     void accept(const auto& ast) const {
+ *         unhandled(ast);
+ *     }
+ *
+ *     // void accept(const AstModule& ast) const;
+ *     // void accept(const AstBuiltInType& ast) const;
+ *     // void accept(const AstPointerType& ast) const;
+ *     // void accept(const AstReferenceType& ast) const;
+ *     // void accept(const AstStmtList& ast) const;
+ *     // void accept(const AstEmptyStmt& ast) const;
+ *     // void accept(const AstDimStmt& ast) const;
+ *     // void accept(const AstExprStmt& ast) const;
+ *     // void accept(const AstDeclareStmt& ast) const;
+ *     // void accept(const AstExternStmt& ast) const;
+ *     // void accept(const AstAssignStmt& ast) const;
+ *     // void accept(const AstFuncStmt& ast) const;
+ *     // void accept(const AstReturnStmt& ast) const;
+ *     // void accept(const AstIfStmt& ast) const;
+ *     // void accept(const AstImportDecl& ast) const;
+ *     // void accept(const AstVarDecl& ast) const;
+ *     // void accept(const AstFuncDecl& ast) const;
+ *     // void accept(const AstFuncParamDecl& ast) const;
+ *     // void accept(const AstVariableExpr& ast) const;
+ *     // void accept(const AstCallExpr& ast) const;
+ *     // void accept(const AstLiteralExpr& ast) const;
+ *     // void accept(const AstUnaryExpr& ast) const;
+ *     // void accept(const AstBinaryExpr& ast) const;
+ *     // void accept(const AstCastExpr& ast) const;
+ *     // void accept(const AstDereferenceExpr& ast) const;
+ *     // void accept(const AstAddressOfExpr& ast) const;
+ *     // void accept(const AstMemberExpr& ast) const;
+ *     // void accept(const AstExrSubLeaf& ast) const;
+ * };
+ * @endcode
  */
 template <typename ReturnType = void>
 class AstVisitor : AstVisitorBase {
@@ -126,9 +171,29 @@ public:
 
 /**
  * Visitor for type expression nodes under AstType.
- * 
+ *
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
+ *
+ * @code
+ * class SampleTypeVisitor : AstTypeVisitor<> {
+ * public:
+ *     auto process(const AstType& ast) const {
+ *         visit(ast);
+ *     }
+ *
+ * private:
+ *     friend AstTypeVisitor;
+ *
+ *     void accept(const auto& ast) const {
+ *         unhandled(ast);
+ *     }
+ *
+ *     // void accept(const AstBuiltInType& ast) const;
+ *     // void accept(const AstPointerType& ast) const;
+ *     // void accept(const AstReferenceType& ast) const;
+ * };
+ * @endcode
  */
 template <typename ReturnType = void>
 class AstTypeVisitor : AstVisitorBase {
@@ -152,9 +217,36 @@ public:
 
 /**
  * Visitor for statement nodes under AstStmt.
- * 
+ *
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
+ *
+ * @code
+ * class SampleStmtVisitor : AstStmtVisitor<> {
+ * public:
+ *     auto process(const AstStmt& ast) const {
+ *         visit(ast);
+ *     }
+ *
+ * private:
+ *     friend AstStmtVisitor;
+ *
+ *     void accept(const auto& ast) const {
+ *         unhandled(ast);
+ *     }
+ *
+ *     // void accept(const AstStmtList& ast) const;
+ *     // void accept(const AstEmptyStmt& ast) const;
+ *     // void accept(const AstDimStmt& ast) const;
+ *     // void accept(const AstExprStmt& ast) const;
+ *     // void accept(const AstDeclareStmt& ast) const;
+ *     // void accept(const AstExternStmt& ast) const;
+ *     // void accept(const AstAssignStmt& ast) const;
+ *     // void accept(const AstFuncStmt& ast) const;
+ *     // void accept(const AstReturnStmt& ast) const;
+ *     // void accept(const AstIfStmt& ast) const;
+ * };
+ * @endcode
  */
 template <typename ReturnType = void>
 class AstStmtVisitor : AstVisitorBase {
@@ -192,9 +284,30 @@ public:
 
 /**
  * Visitor for declaration nodes under AstDecl.
- * 
+ *
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
+ *
+ * @code
+ * class SampleDeclVisitor : AstDeclVisitor<> {
+ * public:
+ *     auto process(const AstDecl& ast) const {
+ *         visit(ast);
+ *     }
+ *
+ * private:
+ *     friend AstDeclVisitor;
+ *
+ *     void accept(const auto& ast) const {
+ *         unhandled(ast);
+ *     }
+ *
+ *     // void accept(const AstImportDecl& ast) const;
+ *     // void accept(const AstVarDecl& ast) const;
+ *     // void accept(const AstFuncDecl& ast) const;
+ *     // void accept(const AstFuncParamDecl& ast) const;
+ * };
+ * @endcode
  */
 template <typename ReturnType = void>
 class AstDeclVisitor : AstVisitorBase {
@@ -220,9 +333,36 @@ public:
 
 /**
  * Visitor for expression nodes under AstExpr.
- * 
+ *
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
+ *
+ * @code
+ * class SampleExprVisitor : AstExprVisitor<> {
+ * public:
+ *     auto process(const AstExpr& ast) const {
+ *         visit(ast);
+ *     }
+ *
+ * private:
+ *     friend AstExprVisitor;
+ *
+ *     void accept(const auto& ast) const {
+ *         unhandled(ast);
+ *     }
+ *
+ *     // void accept(const AstVariableExpr& ast) const;
+ *     // void accept(const AstCallExpr& ast) const;
+ *     // void accept(const AstLiteralExpr& ast) const;
+ *     // void accept(const AstUnaryExpr& ast) const;
+ *     // void accept(const AstBinaryExpr& ast) const;
+ *     // void accept(const AstCastExpr& ast) const;
+ *     // void accept(const AstDereferenceExpr& ast) const;
+ *     // void accept(const AstAddressOfExpr& ast) const;
+ *     // void accept(const AstMemberExpr& ast) const;
+ *     // void accept(const AstExrSubLeaf& ast) const;
+ * };
+ * @endcode
  */
 template <typename ReturnType = void>
 class AstExprVisitor : AstVisitorBase {
@@ -260,9 +400,27 @@ public:
 
 /**
  * Visitor for expression nodes under AstExprSubGroup.
- * 
+ *
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
+ *
+ * @code
+ * class SampleExprSubGroupVisitor : AstExprSubGroupVisitor<> {
+ * public:
+ *     auto process(const AstExprSubGroup& ast) const {
+ *         visit(ast);
+ *     }
+ *
+ * private:
+ *     friend AstExprSubGroupVisitor;
+ *
+ *     void accept(const auto& ast) const {
+ *         unhandled(ast);
+ *     }
+ *
+ *     // void accept(const AstExrSubLeaf& ast) const;
+ * };
+ * @endcode
  */
 template <typename ReturnType = void>
 class AstExprSubGroupVisitor : AstVisitorBase {
