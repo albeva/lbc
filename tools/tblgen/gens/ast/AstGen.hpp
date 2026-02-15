@@ -26,6 +26,7 @@ public:
     );
 
     [[nodiscard]] auto run() -> bool final;
+    void forwardDecls();
 
     [[nodiscard]] auto getNodes() const -> std::vector<const Record*> { return m_nodes; }
     [[nodiscard]] auto getLeaves() const -> std::vector<const Record*> { return m_leaves; }
@@ -41,12 +42,13 @@ private:
     std::unique_ptr<AstClass> m_root;
 
     void astNodesEnum();
-    void forwardDecls();
-    void classGroup(AstClass* cls);
-    void makeClass(AstClass* cls);
+    void astForwardDecls();
+    void astGroup(AstClass* cls);
+    void astClass(AstClass* cls);
     void constructor(AstClass* cls);
+    void classof(AstClass* cls);
     void functions(AstClass* cls);
-    void classMembers(AstClass* cls);
+    void members(AstClass* cls);
 
     std::vector<const Record*> m_nodes;
     std::vector<const Record*> m_leaves;

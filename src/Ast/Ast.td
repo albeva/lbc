@@ -61,7 +61,7 @@ def Module : Leaf<"Program module node", Root, [
 def Type : Group<"Types", Root, [
     Member<"const Type*", "type", true, "nullptr">
 ]>;
-def BuiltinType   : Leaf<"Built-in primitive type", Type, [
+def BuiltInType   : Leaf<"Built-in primitive type", Type, [
     Member<"TokenKind", "tokenKind">
 ]>;
 def PointerType   : Leaf<"Pointer type", Type, [

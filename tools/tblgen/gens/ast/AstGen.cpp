@@ -33,20 +33,30 @@ AstGen::AstGen(
 }
 
 auto AstGen::run() -> bool {
-    // forward declare
-    line("enum class TokenKind: std::uint8_t");
-    line("class Type").newline();
-
-    astNodesEnum();
     forwardDecls();
-    classGroup(m_root.get());
+    astNodesEnum();
+    astForwardDecls();
+    astGroup(m_root.get());
     return false;
 }
 
+/**
+ * Generate forward declarations of types required by ast
+ */
+void AstGen::forwardDecls() {
+    line("enum class TokenKind: std::uint8_t");
+    line("class Type");
+    newline();
+}
+
+/**
+ * Generate AstKind enum type
+ *
+ * This finds enums recursievly to ensure that enums are defined
+ * in exact order and grouped together, so we can use range checks
+ * if a node belongs in a group.
+ */
 void AstGen::astNodesEnum() {
-    // This finds enums recursievly to ensure that enums are defined
-    // in exact order and grouped together, so we can use range checks
-    // if a node belongs in a group.
     doc("Enumrate all ast leaf nodes");
     block("enum class AstKind : std::uint8_t", true, [&] {
         const auto recurse = [&](this auto&& self, const AstClass* cls) -> void {
@@ -63,7 +73,10 @@ void AstGen::astNodesEnum() {
     newline();
 }
 
-void AstGen::forwardDecls() {
+/**
+ * Emit ast class forward declarations
+ */
+void AstGen::astForwardDecls() {
     section("Forward Declarations");
     for (const Record* node : m_nodes) {
         line("class Ast" + node->getName());
@@ -71,23 +84,25 @@ void AstGen::forwardDecls() {
     newline();
 }
 
-void AstGen::classGroup(AstClass* cls) {
-    switch (cls->getKind()) {
-    case AstClass::Kind::Root:
-    case AstClass::Kind::Group:
+/**
+ * Generate given class and all child classes.
+ */
+void AstGen::astGroup(AstClass* cls) {
+    if (cls->isLeaf()) {
+        astClass(cls);
+    } else {
         section((cls->getRecord()->getName() + " nodes").str());
-        makeClass(cls);
+        astClass(cls);
         for (const auto& child : cls->getChildren()) {
-            classGroup(child.get());
+            astGroup(child.get());
         }
-        return;
-    case AstClass::Kind::Leaf:
-        makeClass(cls);
-        return;
     }
 }
 
-void AstGen::makeClass(AstClass* cls) {
+/**
+ * Generate Ast class
+ */
+void AstGen::astClass(AstClass* cls) {
     const auto base = cls->isRoot() ? "" : " : public " + cls->getParent()->getClassName();
     const auto* const final = cls->isLeaf() ? " final" : "";
 
@@ -101,12 +116,16 @@ void AstGen::makeClass(AstClass* cls) {
         }
 
         constructor(cls);
+        classof(cls);
         functions(cls);
-        classMembers(cls);
+        members(cls);
     });
     newline();
 }
 
+/**
+ * Generate class constructor
+ */
 void AstGen::constructor(AstClass* cls) {
     if (cls->isLeaf()) {
         scope(Scope::Public);
@@ -142,6 +161,27 @@ void AstGen::constructor(AstClass* cls) {
     newline();
 }
 
+/**
+ * Generate classof method for llvm rtti support
+ */
+void AstGen::classof(AstClass* cls) {
+    scope(Scope::Public);
+    doc("LLVM RTTI support to check if given node is a " + cls->getClassName());
+    block("[[nodiscard]] static constexpr auto classof(const "s + m_root->getClassName() + "* " + (cls->isRoot() ? "/* ast */" : " ast") + ") -> bool", [&]{
+        if (cls->isRoot()) {
+            line("return true;");
+        } else if (cls->isLeaf()) {
+            line("return ast->getKind() == AstKind::" + cls->getEnumName());
+        } else {
+            line("return ast->getKind() >= AstKind::" + cls->getChildren().front()->getEnumName() + " && ast->getKind() <= AstKind::" + cls->getChildren().back()->getEnumName());
+        }
+    });
+    newline();
+}
+
+/**
+ * Generate class methods
+ */
 void AstGen::functions(AstClass* cls) {
     const auto functions = cls->functions();
     if (functions.empty() && !cls->isRoot()) {
@@ -163,7 +203,10 @@ void AstGen::functions(AstClass* cls) {
     }
 }
 
-void AstGen::classMembers(AstClass* cls) {
+/**
+ * Generate class data members
+ */
+void AstGen::members(AstClass* cls) {
     const auto members = cls->dataMembers();
     if (members.empty() && !cls->isRoot()) {
         return;
