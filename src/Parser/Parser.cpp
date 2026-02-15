@@ -4,7 +4,7 @@
 #include "Parser.hpp"
 using namespace lbc;
 
-Parser::Parser(Context& context, unsigned id)
+Parser::Parser(Context& context, const unsigned id)
 : m_context(context)
 , m_lexer(context, id)
 , m_token(m_lexer.next()) { }
@@ -34,12 +34,12 @@ void Parser::panic(const DiagMessage message) {
     std::exit(EXIT_FAILURE);
 }
 
-auto Parser::unexpected() -> Error {
+auto Parser::unexpected()const -> Error {
     (void)this;
     return Error(DiagMessage::Unexpected);
 }
 
-auto Parser::notImplemented() -> Error {
+auto Parser::notImplemented()const -> Error {
     (void)this;
     return Error(DiagMessage::NotImplemented);
 }
@@ -56,7 +56,7 @@ auto Parser::accept(const TokenKind kind) -> bool {
     return false;
 }
 
-auto Parser::expect(const TokenKind kind) -> Result<void> {
+auto Parser::expect(const TokenKind kind)const -> Result<void> {
     if (m_token.kind() != kind) {
         return unexpected();
     }

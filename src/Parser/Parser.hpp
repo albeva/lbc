@@ -65,12 +65,12 @@ private:
     /**
      * Create an error indicating the current token was unexpected.
      */
-    [[nodiscard]] auto unexpected() -> Error;
+    [[nodiscard]] auto unexpected()const -> Error;
 
     /**
      * Create an error indicating unimplemented functionality.
      */
-    [[nodiscard]] auto notImplemented() -> Error;
+    [[nodiscard]] auto notImplemented()const -> Error;
 
     /**
      * Consume the current token and advance to the next one.
@@ -87,7 +87,7 @@ private:
      * Assert that the current token is of the given kind.
      * Returns an error if it does not match.
      */
-    [[nodiscard]] auto expect(TokenKind kind) -> Result<void>;
+    [[nodiscard]] auto expect(TokenKind kind)const -> Result<void>;
 
     /**
      * Expect the current token to match the given kind, then advance.
