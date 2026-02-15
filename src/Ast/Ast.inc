@@ -112,6 +112,9 @@ public:
         return true;
     }
 
+    /// Number of AST leaf nodes
+    static constexpr std::size_t NODE_COUNT = 27;
+
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
         return m_kind;
@@ -142,7 +145,7 @@ private:
     AstKind m_kind;
     llvm::SMRange m_range;
     AstRoot* m_next = nullptr;
-    static constexpr std::array<llvm::StringRef, 27> kClassNames {
+    static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames {
         "AstModule",
         "AstBuiltInType",
         "AstPointerType",

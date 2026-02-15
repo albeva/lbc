@@ -199,6 +199,10 @@ void AstGen::functions(AstClass* cls) {
     scope(Scope::Public);
 
     if (cls->isRoot()) {
+        comment("Number of AST leaf nodes");
+        line("static constexpr std::size_t NODE_COUNT = " + std::to_string(m_classNames.size()));
+        newline();
+
         comment("Get the kind discriminator for this node");
         block("[[nodiscard]] constexpr auto getKind() const -> AstKind", [&] {
             line("return m_kind");
@@ -235,7 +239,7 @@ void AstGen::members(AstClass* cls) {
     list(members, {});
 
     if (cls->isRoot()) {
-        block("static constexpr std::array<llvm::StringRef, " + std::to_string(m_classNames.size()) + "> kClassNames", true, [&] {
+        block("static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames", true, [&] {
             list(m_classNames, { .suffix = ",", .quote = true });
         });
     }
