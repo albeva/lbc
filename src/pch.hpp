@@ -21,12 +21,19 @@
 #include <variant>
 
 // LLVM
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/StringSet.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/SMLoc.h>
 #include <llvm/Support/SourceMgr.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 // LBC utilities
 #include "Utilities/NoCopy.hpp"

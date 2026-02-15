@@ -123,14 +123,14 @@ public:
     /**
      * Return the current position as an LLVM source location.
      */
-    [[nodiscard]] constexpr auto loc() const -> llvm::SMLoc {
+    [[nodiscard]] auto loc() const -> llvm::SMLoc {
         return llvm::SMLoc::getFromPointer(m_ptr);
     }
 
     /**
      * Return the source range from this cursor to other.
      */
-    [[nodiscard]] constexpr auto rangeTo(const Cursor& other) const -> llvm::SMRange {
+    [[nodiscard]] auto rangeTo(const Cursor& other) const -> llvm::SMRange {
         assert(m_ptr <= other.m_ptr && "Current cursor should be before other");
 #if LBC_DEBUG_BUILD
         for (const auto* ptr = m_ptr; ptr != other.m_ptr; ++ptr) { // NOLINT(*-pro-bounds-pointer-arithmetic)

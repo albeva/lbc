@@ -4,6 +4,9 @@
 // This is inspired by SerenityOS / Ladybird browser
 #pragma once
 
+#ifdef _MSC_VER
+#define LBC_IGNORE_DIAGNOSTIC(name, statement) statement
+#else
 // Needed to turn the 'name' token and the preceding 'GCC diagnostic ignored'
 // into a single string literal, it won't accept "foo"#bar concatenation.
 #define LBC_PRAGMA_IMPL(x) _Pragma(#x)
@@ -18,3 +21,4 @@
     LBC_PRAGMA(GCC diagnostic ignored name);   \
     statement;                                 \
     LBC_PRAGMA(GCC diagnostic pop);
+#endif

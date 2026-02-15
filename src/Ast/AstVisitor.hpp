@@ -23,7 +23,7 @@ public:
 
 protected:
     /// Print out information about unhandled node and terminate
-    [[noreturn]] constexpr static void unhandled(const AstRoot& ast, const std::source_location loc = std::source_location::current()) {
+    [[noreturn]] static void unhandled(const AstRoot& ast, const std::source_location loc = std::source_location::current()) {
         std::println(
             stderr,
             "Unhandled {} at {}:{}:{} in {}",
@@ -37,7 +37,7 @@ protected:
     }
 
     /// Print out information about unhandled node and terminate
-    [[noreturn]] constexpr static void unhandled(const AstRoot* ast, const std::source_location loc = std::source_location::current()) {
+    [[noreturn]] static void unhandled(const AstRoot* ast, const std::source_location loc = std::source_location::current()) {
         assert(ast != nullptr);
         unhandled(*ast, loc);
     }
