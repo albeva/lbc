@@ -66,9 +66,9 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
   `GeneratorBase` extends it with `RecordKeeper` access and common utilities (`sortedByDef`,
   `findRange`, `collect`, `contains`). Concrete generators live in `gens/` and extend
   `GeneratorBase`. Complex generators may use subdirectories (e.g., `gens/ast/` splits
-  `AstGen`, `AstClass`, and `AstMember` into separate files). Generated `.inc` files are
+  `AstGen`, `AstClass`, and `AstMember` into separate files). Generated `.hpp` files are
   emitted alongside their source `.td` files in the source tree (e.g.,
-  `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.inc`) and are git-tracked.
+  `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`) and are git-tracked.
 - `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
   `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).

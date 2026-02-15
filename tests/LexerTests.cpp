@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
-#include "Lexer/TokenKind.inc"
+#include "Lexer/TokenKind.hpp"
 using namespace lbc;
 
 namespace {

@@ -1,5 +1,5 @@
 // Custom TableGen backend for generating AST node definitions.
-// Reads Ast.td and emits Ast.inc
+// Reads Ast.td and emits Ast.hpp
 #include "AstGen.hpp"
 using namespace std::string_literals;
 

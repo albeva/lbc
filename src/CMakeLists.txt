@@ -18,7 +18,6 @@ target_sources(lbc_lib
     PUBLIC FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
-    Ast/Ast.hpp
     Driver/Context.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
@@ -37,6 +36,7 @@ target_sources(lbc_lib
 add_tblgen(lbc_lib lbc-tblgen
     GENERATOR lbc-tokens-def INPUT Lexer/TokenKind.td
     GENERATOR lbc-ast-def INPUT Ast/Ast.td
+    GENERATOR lbc-ast-visitor INPUT Ast/Ast.td OUTPUT AstVisitor.hpp
 )
 
 # target settings

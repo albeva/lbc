@@ -1,5 +1,5 @@
 // AST node definitions for lbc
-// Processed by lbc-tblgen to generate Ast.inc
+// Processed by lbc-tblgen to generate Ast.hpp and AstVisitor.hpp
 
 // Member field on a node.
 class Member<string type_, string name_, bit mutable_ = false, string default_ = ""> {

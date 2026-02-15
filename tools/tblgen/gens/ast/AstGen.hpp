@@ -11,7 +11,7 @@
 // -----------------------------------------------------------------------------
 
 /**
- * TableGen backend that reads Ast.td and emits Ast.inc. Builds an in-memory
+ * TableGen backend that reads Ast.td and emits Ast.hpp. Builds an in-memory
  * AstClass tree mirroring the Node/Group/Leaf hierarchy, then walks it to
  * generate: AstKind enum, forward declarations, and complete C++ class
  * definitions with constructors, accessors, and data members.

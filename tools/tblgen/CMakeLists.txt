@@ -7,6 +7,8 @@ add_executable(lbc-tblgen
     gens/ast/AstMember.hpp
     gens/ast/AstGen.cpp
     gens/ast/AstGen.hpp
+    gens/ast/AstVisitorGen.cpp
+    gens/ast/AstVisitorGen.hpp
     gens/TokensGen.cpp
     gens/TokensGen.hpp
     main.cpp
