@@ -9,7 +9,7 @@ namespace lbc {
 #define CONST_PARAM
 #define CONST_FUNC
 
-class AstExprPrinter : private AstExprVisitor<> {
+class AstExprPrinter : AstExprVisitor<> {
 public:
     auto print(CONST_PARAM AstExpr&) CONST_FUNC -> std::string;
 

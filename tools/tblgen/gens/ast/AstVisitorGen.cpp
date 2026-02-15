@@ -10,6 +10,8 @@ AstVisitorGen::AstVisitorGen(
 : AstGen(os, records, genName, "lbc", { "Ast/Ast.hpp" }) { }
 
 auto AstVisitorGen::run() -> bool {
+    doc("Constrains a visitor parameter to match the exact node type,\n"
+        "stripping cv-ref qualifiers before comparison.");
     m_os << "template<typename T, typename U>\n"
             "concept IsNode = std::same_as<std::remove_cvref_t<T>, U>;\n\n";
 
@@ -22,7 +24,8 @@ auto AstVisitorGen::run() -> bool {
  * Generate AstVisitorBase class
  */
 void AstVisitorGen::visitorBaseClass() {
-    doc("This is a base class for all Ast Visitors");
+    doc("Common base for all AST visitors.\n"
+        "Provides unhandled() helpers for reporting missing accept() overloads during development.");
     block("class AstVisitorBase", true, [&] {
         scope(Scope::Public, true);
         line("virtual ~AstVisitorBase() = default");
@@ -30,8 +33,8 @@ void AstVisitorGen::visitorBaseClass() {
         scope(Scope::Protected);
 
         // by reference
-        comment("Print out information about unhandled node and terminate");
-        block("[[noreturn]] constexpr static void unhandled(const AstRoot& ast, const std::source_location loc = std::source_location::current())", [&] {
+        comment("Report an unhandled node and terminate. Call from a catch-all accept() to flag missing overloads.");
+        block("[[noreturn]] static void unhandled(const AstRoot& ast, const std::source_location loc = std::source_location::current())", [&] {
             lines(
                 "std::println(\n"
                 "    stderr,\n"
@@ -48,8 +51,8 @@ void AstVisitorGen::visitorBaseClass() {
         newline();
 
         // by pointer
-        comment("Print out information about unhandled node and terminate");
-        block("[[noreturn]] constexpr static void unhandled(const AstRoot* ast, const std::source_location loc = std::source_location::current())", [&] {
+        comment("Pointer overload - asserts non-null, then delegates to the reference version.");
+        block("[[noreturn]] static void unhandled(const AstRoot* ast, const std::source_location loc = std::source_location::current())", [&] {
             line("assert(ast != nullptr)");
             line("unhandled(*ast, loc)");
         });
@@ -61,37 +64,30 @@ void AstVisitorGen::visitorBaseClass() {
  * Emit visitors for all ast groups
  */
 void AstVisitorGen::visitorClasses() {
-    const auto recurse = [&](this auto&& self, const AstClass* klass) -> void {
-        if (klass->isLeaf()) {
-            return;
+    getRoot()->visit([&](const AstClass* klass) {
+        if (not klass->isLeaf()) {
+            visitorClass(klass);
         }
-        visitorClass(klass);
-        for (const auto& child : klass->getChildren()) {
-            self(child.get());
-        }
-    };
-    recurse(getRoot());
+    });
 }
 
 /**
  * Generate visitor class for given group
  */
 void AstVisitorGen::visitorClass(const AstClass* ast) {
+    if (ast->isRoot()) {
+        doc("Visitor that dispatches over all concrete AST nodes.\n\n"
+            "Inherit privately, friend the visitor, and implement accept() handlers.\n"
+            "A generic accept(const auto&) catch-all can handle unimplemented nodes.");
+    } else {
+        doc("Visitor for " + ast->getRecord()->getValueAsString("desc").str()
+            + " nodes under " + ast->getClassName()
+            + ".\n\nInherit privately, friend the visitor, and implement accept() handlers.\n"
+              "A generic accept(const auto&) catch-all can handle unimplemented nodes.");
+    }
     line("template <typename ReturnType = void>", "");
     block("class " + ast->getVisitorName() + " : AstVisitorBase", true, [&] {
         visit(ast);
-
-        const auto recurse = [&](this auto&& self, const AstClass* node) -> void {
-            for (const auto& child : node->getChildren()) {
-                if (not child->isGroup()) {
-                    continue;
-                }
-                newline();
-                // forward(child.get(), ast); // NOLINT(*-suspicious-call-argument)
-                self(child.get());
-            }
-        };
-        recurse(ast);
     });
     newline();
 }
@@ -101,6 +97,7 @@ void AstVisitorGen::visit(const AstClass* klass) {
         return;
     }
     scope(Scope::Public, true);
+    doc("Dispatch to the appropriate accept() handler based on the node's AstKind.");
     block("constexpr auto visit(this auto& self, IsNode<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
         block("switch (ast.getKind())", [&] {
             klass->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
@@ -110,16 +107,6 @@ void AstVisitorGen::visit(const AstClass* klass) {
         });
     });
 }
-
-// void AstVisitorGen::forward(const AstClass* klass, const AstClass* base) {
-//     block("constexpr auto visit(this auto& self, IsNode<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
-//         line("if constexpr (std::is_const_v<decltype(ast)>) {", "");
-//         line("    return self.visit(static_cast<const " + base->getClassName() + "&>(ast))");
-//         line("} else {", "");
-//         line("    return self.visit(static_cast<" + base->getClassName() + "&>(ast))");
-//         line("}", "");
-//     });
-// }
 
 /**
  * Generate case statement for given node
