@@ -109,45 +109,10 @@ public:
         }
     }
 
-    constexpr auto visit(this auto& self, IsNode<AstType> auto& ast) -> ReturnType {
-        if constexpr (std::is_const_v<decltype(ast)>) {
-            return self.visit(static_cast<const AstRoot&>(ast));
-        } else {
-            return self.visit(static_cast<AstRoot&>(ast));
-        }
-    }
 
-    constexpr auto visit(this auto& self, IsNode<AstStmt> auto& ast) -> ReturnType {
-        if constexpr (std::is_const_v<decltype(ast)>) {
-            return self.visit(static_cast<const AstRoot&>(ast));
-        } else {
-            return self.visit(static_cast<AstRoot&>(ast));
-        }
-    }
 
-    constexpr auto visit(this auto& self, IsNode<AstDecl> auto& ast) -> ReturnType {
-        if constexpr (std::is_const_v<decltype(ast)>) {
-            return self.visit(static_cast<const AstRoot&>(ast));
-        } else {
-            return self.visit(static_cast<AstRoot&>(ast));
-        }
-    }
 
-    constexpr auto visit(this auto& self, IsNode<AstExpr> auto& ast) -> ReturnType {
-        if constexpr (std::is_const_v<decltype(ast)>) {
-            return self.visit(static_cast<const AstRoot&>(ast));
-        } else {
-            return self.visit(static_cast<AstRoot&>(ast));
-        }
-    }
 
-    constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
-        if constexpr (std::is_const_v<decltype(ast)>) {
-            return self.visit(static_cast<const AstRoot&>(ast));
-        } else {
-            return self.visit(static_cast<AstRoot&>(ast));
-        }
-    }
 };
 
 template <typename ReturnType = void>
@@ -246,14 +211,7 @@ public:
                 std::unreachable();
         }
     }
-    //
-    // constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
-    //     if constexpr (std::is_const_v<decltype(ast)>) {
-    //         return self.visit(static_cast<const AstExpr&>(ast));
-    //     } else {
-    //         return self.visit(static_cast<AstExpr&>(ast));
-    //     }
-    // }
+
 };
 
 template <typename ReturnType = void>

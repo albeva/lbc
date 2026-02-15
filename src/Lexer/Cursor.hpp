@@ -131,7 +131,12 @@ public:
      * Return the source range from this cursor to other.
      */
     [[nodiscard]] constexpr auto rangeTo(const Cursor& other) const -> llvm::SMRange {
-        assert(distanceTo(other) >= 0 && "rangeTo must form a valid source range");
+        assert(m_ptr <= other.m_ptr && "Current cursor should be before other");
+#if LBC_DEBUG_BUILD
+        for (const auto* ptr = m_ptr; ptr != other.m_ptr; ++ptr) { // NOLINT(*-pro-bounds-pointer-arithmetic)
+            assert(*ptr != '\0' && "distance should not cover \0 terminator");
+        }
+#endif
         return { loc(), other.loc() };
     }
 

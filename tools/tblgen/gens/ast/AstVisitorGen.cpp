@@ -76,10 +76,10 @@ void AstVisitorGen::visitorClasses() {
 /**
  * Generate visitor class for given group
  */
-void AstVisitorGen::visitorClass(const AstClass* klass) {
+void AstVisitorGen::visitorClass(const AstClass* ast) {
     line("template <typename ReturnType = void>", "");
-    block("class " + klass->getVisitorName() + " : AstVisitorBase", true, [&] {
-        visit(klass);
+    block("class " + ast->getVisitorName() + " : AstVisitorBase", true, [&] {
+        visit(ast);
 
         const auto recurse = [&](this auto&& self, const AstClass* node) -> void {
             for (const auto& child : node->getChildren()) {
@@ -87,11 +87,11 @@ void AstVisitorGen::visitorClass(const AstClass* klass) {
                     continue;
                 }
                 newline();
-                forward(child.get(), klass); // NOLINT(*-suspicious-call-argument)
+                // forward(child.get(), ast); // NOLINT(*-suspicious-call-argument)
                 self(child.get());
             }
         };
-        recurse(klass);
+        recurse(ast);
     });
     newline();
 }
@@ -111,15 +111,15 @@ void AstVisitorGen::visit(const AstClass* klass) {
     });
 }
 
-void AstVisitorGen::forward(const AstClass* klass, const AstClass* base) {
-    block("constexpr auto visit(this auto& self, IsNode<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
-        line("if constexpr (std::is_const_v<decltype(ast)>) {", "");
-        line("    return self.visit(static_cast<const " + base->getClassName() + "&>(ast))");
-        line("} else {", "");
-        line("    return self.visit(static_cast<" + base->getClassName() + "&>(ast))");
-        line("}", "");
-    });
-}
+// void AstVisitorGen::forward(const AstClass* klass, const AstClass* base) {
+//     block("constexpr auto visit(this auto& self, IsNode<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
+//         line("if constexpr (std::is_const_v<decltype(ast)>) {", "");
+//         line("    return self.visit(static_cast<const " + base->getClassName() + "&>(ast))");
+//         line("} else {", "");
+//         line("    return self.visit(static_cast<" + base->getClassName() + "&>(ast))");
+//         line("}", "");
+//     });
+// }
 
 /**
  * Generate case statement for given node

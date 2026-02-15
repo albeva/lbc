@@ -26,7 +26,7 @@ private:
     void visitorClasses();
     void visitorClass(const AstClass* ast);
     void visit(const AstClass* klass);
-    void forward(const AstClass* klass, const AstClass* base);
+    // void forward(const AstClass* klass, const AstClass* base);
     void caseAccept(const AstClass* klass);
     void defaultCase();
 };

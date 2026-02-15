@@ -226,8 +226,8 @@ void AstGen::members(AstClass* cls) {
     list(members, {});
 
     std::vector<std::string> m_classes;
-    m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* cls) {
-        m_classes.push_back(cls->getClassName());
+    m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+        m_classes.push_back(node->getClassName());
     });
 
     if (cls->isRoot()) {
