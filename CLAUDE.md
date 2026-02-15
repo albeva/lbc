@@ -119,3 +119,9 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
   setter is generated. `AstKind` enum values are grouped by parent so range checks can determine group membership.
   All nodes inherit `llvm::SMRange` and a `next` pointer from `AstRoot`; the `next` pointer serves as an intrusive
   linked list during parsing for collecting nodes before bulk-allocating into `std::span`.
+- AST Visitor: generated from `Ast.td` via `lbc-tblgen --gen=lbc-ast-visitor` into `src/Ast/AstVisitor.hpp`.
+  Uses C++23 deducing this (`this auto&`) for static dispatch — no CRTP needed. Generates a top-level `AstVisitor`
+  and per-group visitors (`AstExprVisitor`, `AstStmtVisitor`, `AstDeclVisitor`, `AstTypeVisitor`). Dispatch method
+  is `visit()` (switch on `AstKind`), handler methods are `accept()` (implemented by the derived class). Const
+  propagation is automatic through `auto&` parameters and `llvm::cast`. A generic `accept(const auto&)` catch-all
+  can handle unimplemented nodes. `AstVisitorGen` inherits from `AstGen` to reuse the AST class hierarchy.

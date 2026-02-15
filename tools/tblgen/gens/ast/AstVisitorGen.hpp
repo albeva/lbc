@@ -3,13 +3,14 @@
 //
 #pragma once
 #include "../../GeneratorBase.hpp"
+#include "AstGen.hpp"
 
 /**
- * TableGen backend that reads Ast.td and emits AstVisitor.inc.
+ * TableGen backend that reads Ast.td and emits AstVisitor.hpp.
  * Generates a CRTP-free visitor base class using C++23 deducing this,
  * with a switch-based dispatch method and per-node accept handlers.
  */
-class AstVisitorGen final : public GeneratorBase {
+class AstVisitorGen final : public AstGen {
 public:
     static constexpr auto genName = "lbc-ast-visitor";
 
@@ -19,4 +20,13 @@ public:
     );
 
     [[nodiscard]] auto run() -> bool final;
+
+private:
+    void visitorBaseClass();
+    void visitorClasses();
+    void visitorClass(const AstClass* ast);
+    void visit(const AstClass* klass);
+    void forward(const AstClass* klass, const AstClass* base);
+    void caseAccept(const AstClass* klass);
+    void defaultCase();
 };

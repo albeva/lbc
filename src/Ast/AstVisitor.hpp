@@ -11,4 +11,262 @@
 
 namespace lbc {
 
+template<typename T, typename U>
+concept IsNode = std::same_as<std::remove_cvref_t<T>, U>;
+
+/**
+ * This is a base class for all Ast Visitors
+ */
+class AstVisitorBase {
+public:
+    virtual ~AstVisitorBase() = default;
+
+protected:
+    /// Print out information about unhandled node and terminate
+    [[noreturn]] constexpr static void unhandled(const AstRoot& ast, const std::source_location loc = std::source_location::current()) {
+        std::println(
+            stderr,
+            "Unhandled {} at {}:{}:{} in {}",
+            std::string_view(ast.getClassName()),
+            loc.file_name(),
+            loc.line(),
+            loc.column(),
+            loc.function_name()
+        );
+        std::exit(EXIT_FAILURE);
+    }
+
+    /// Print out information about unhandled node and terminate
+    [[noreturn]] constexpr static void unhandled(const AstRoot* ast, const std::source_location loc = std::source_location::current()) {
+        assert(ast != nullptr);
+        unhandled(*ast, loc);
+    }
+};
+
+template <typename ReturnType = void>
+class AstVisitor : AstVisitorBase {
+public:
+    constexpr auto visit(this auto& self, IsNode<AstRoot> auto& ast) -> ReturnType {
+        switch (ast.getKind()) {
+            case AstKind::Module:
+                return self.accept(llvm::cast<AstModule>(ast));
+            case AstKind::BuiltInType:
+                return self.accept(llvm::cast<AstBuiltInType>(ast));
+            case AstKind::PointerType:
+                return self.accept(llvm::cast<AstPointerType>(ast));
+            case AstKind::ReferenceType:
+                return self.accept(llvm::cast<AstReferenceType>(ast));
+            case AstKind::StmtList:
+                return self.accept(llvm::cast<AstStmtList>(ast));
+            case AstKind::EmptyStmt:
+                return self.accept(llvm::cast<AstEmptyStmt>(ast));
+            case AstKind::DimStmt:
+                return self.accept(llvm::cast<AstDimStmt>(ast));
+            case AstKind::ExprStmt:
+                return self.accept(llvm::cast<AstExprStmt>(ast));
+            case AstKind::DeclareStmt:
+                return self.accept(llvm::cast<AstDeclareStmt>(ast));
+            case AstKind::ExternStmt:
+                return self.accept(llvm::cast<AstExternStmt>(ast));
+            case AstKind::AssignStmt:
+                return self.accept(llvm::cast<AstAssignStmt>(ast));
+            case AstKind::FuncStmt:
+                return self.accept(llvm::cast<AstFuncStmt>(ast));
+            case AstKind::ReturnStmt:
+                return self.accept(llvm::cast<AstReturnStmt>(ast));
+            case AstKind::IfStmt:
+                return self.accept(llvm::cast<AstIfStmt>(ast));
+            case AstKind::ImportDecl:
+                return self.accept(llvm::cast<AstImportDecl>(ast));
+            case AstKind::VarDecl:
+                return self.accept(llvm::cast<AstVarDecl>(ast));
+            case AstKind::FuncDecl:
+                return self.accept(llvm::cast<AstFuncDecl>(ast));
+            case AstKind::FuncParamDecl:
+                return self.accept(llvm::cast<AstFuncParamDecl>(ast));
+            case AstKind::VariableExpr:
+                return self.accept(llvm::cast<AstVariableExpr>(ast));
+            case AstKind::CallExpr:
+                return self.accept(llvm::cast<AstCallExpr>(ast));
+            case AstKind::LiteralExpr:
+                return self.accept(llvm::cast<AstLiteralExpr>(ast));
+            case AstKind::UnaryExpr:
+                return self.accept(llvm::cast<AstUnaryExpr>(ast));
+            case AstKind::BinaryExpr:
+                return self.accept(llvm::cast<AstBinaryExpr>(ast));
+            case AstKind::CastExpr:
+                return self.accept(llvm::cast<AstCastExpr>(ast));
+            case AstKind::DereferenceExpr:
+                return self.accept(llvm::cast<AstDereferenceExpr>(ast));
+            case AstKind::AddressOfExpr:
+                return self.accept(llvm::cast<AstAddressOfExpr>(ast));
+            case AstKind::MemberExpr:
+                return self.accept(llvm::cast<AstMemberExpr>(ast));
+            case AstKind::ExrSubLeaf:
+                return self.accept(llvm::cast<AstExrSubLeaf>(ast));
+            default:
+                std::unreachable();
+        }
+    }
+
+    constexpr auto visit(this auto& self, IsNode<AstType> auto& ast) -> ReturnType {
+        if constexpr (std::is_const_v<decltype(ast)>) {
+            return self.visit(static_cast<const AstRoot&>(ast));
+        } else {
+            return self.visit(static_cast<AstRoot&>(ast));
+        }
+    }
+
+    constexpr auto visit(this auto& self, IsNode<AstStmt> auto& ast) -> ReturnType {
+        if constexpr (std::is_const_v<decltype(ast)>) {
+            return self.visit(static_cast<const AstRoot&>(ast));
+        } else {
+            return self.visit(static_cast<AstRoot&>(ast));
+        }
+    }
+
+    constexpr auto visit(this auto& self, IsNode<AstDecl> auto& ast) -> ReturnType {
+        if constexpr (std::is_const_v<decltype(ast)>) {
+            return self.visit(static_cast<const AstRoot&>(ast));
+        } else {
+            return self.visit(static_cast<AstRoot&>(ast));
+        }
+    }
+
+    constexpr auto visit(this auto& self, IsNode<AstExpr> auto& ast) -> ReturnType {
+        if constexpr (std::is_const_v<decltype(ast)>) {
+            return self.visit(static_cast<const AstRoot&>(ast));
+        } else {
+            return self.visit(static_cast<AstRoot&>(ast));
+        }
+    }
+
+    constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
+        if constexpr (std::is_const_v<decltype(ast)>) {
+            return self.visit(static_cast<const AstRoot&>(ast));
+        } else {
+            return self.visit(static_cast<AstRoot&>(ast));
+        }
+    }
+};
+
+template <typename ReturnType = void>
+class AstTypeVisitor : AstVisitorBase {
+public:
+    constexpr auto visit(this auto& self, IsNode<AstType> auto& ast) -> ReturnType {
+        switch (ast.getKind()) {
+            case AstKind::BuiltInType:
+                return self.accept(llvm::cast<AstBuiltInType>(ast));
+            case AstKind::PointerType:
+                return self.accept(llvm::cast<AstPointerType>(ast));
+            case AstKind::ReferenceType:
+                return self.accept(llvm::cast<AstReferenceType>(ast));
+            default:
+                std::unreachable();
+        }
+    }
+};
+
+template <typename ReturnType = void>
+class AstStmtVisitor : AstVisitorBase {
+public:
+    constexpr auto visit(this auto& self, IsNode<AstStmt> auto& ast) -> ReturnType {
+        switch (ast.getKind()) {
+            case AstKind::StmtList:
+                return self.accept(llvm::cast<AstStmtList>(ast));
+            case AstKind::EmptyStmt:
+                return self.accept(llvm::cast<AstEmptyStmt>(ast));
+            case AstKind::DimStmt:
+                return self.accept(llvm::cast<AstDimStmt>(ast));
+            case AstKind::ExprStmt:
+                return self.accept(llvm::cast<AstExprStmt>(ast));
+            case AstKind::DeclareStmt:
+                return self.accept(llvm::cast<AstDeclareStmt>(ast));
+            case AstKind::ExternStmt:
+                return self.accept(llvm::cast<AstExternStmt>(ast));
+            case AstKind::AssignStmt:
+                return self.accept(llvm::cast<AstAssignStmt>(ast));
+            case AstKind::FuncStmt:
+                return self.accept(llvm::cast<AstFuncStmt>(ast));
+            case AstKind::ReturnStmt:
+                return self.accept(llvm::cast<AstReturnStmt>(ast));
+            case AstKind::IfStmt:
+                return self.accept(llvm::cast<AstIfStmt>(ast));
+            default:
+                std::unreachable();
+        }
+    }
+};
+
+template <typename ReturnType = void>
+class AstDeclVisitor : AstVisitorBase {
+public:
+    constexpr auto visit(this auto& self, IsNode<AstDecl> auto& ast) -> ReturnType {
+        switch (ast.getKind()) {
+            case AstKind::ImportDecl:
+                return self.accept(llvm::cast<AstImportDecl>(ast));
+            case AstKind::VarDecl:
+                return self.accept(llvm::cast<AstVarDecl>(ast));
+            case AstKind::FuncDecl:
+                return self.accept(llvm::cast<AstFuncDecl>(ast));
+            case AstKind::FuncParamDecl:
+                return self.accept(llvm::cast<AstFuncParamDecl>(ast));
+            default:
+                std::unreachable();
+        }
+    }
+};
+
+template <typename ReturnType = void>
+class AstExprVisitor : AstVisitorBase {
+public:
+    constexpr auto visit(this auto& self, IsNode<AstExpr> auto& ast) -> ReturnType {
+        switch (ast.getKind()) {
+            case AstKind::VariableExpr:
+                return self.accept(llvm::cast<AstVariableExpr>(ast));
+            case AstKind::CallExpr:
+                return self.accept(llvm::cast<AstCallExpr>(ast));
+            case AstKind::LiteralExpr:
+                return self.accept(llvm::cast<AstLiteralExpr>(ast));
+            case AstKind::UnaryExpr:
+                return self.accept(llvm::cast<AstUnaryExpr>(ast));
+            case AstKind::BinaryExpr:
+                return self.accept(llvm::cast<AstBinaryExpr>(ast));
+            case AstKind::CastExpr:
+                return self.accept(llvm::cast<AstCastExpr>(ast));
+            case AstKind::DereferenceExpr:
+                return self.accept(llvm::cast<AstDereferenceExpr>(ast));
+            case AstKind::AddressOfExpr:
+                return self.accept(llvm::cast<AstAddressOfExpr>(ast));
+            case AstKind::MemberExpr:
+                return self.accept(llvm::cast<AstMemberExpr>(ast));
+            case AstKind::ExrSubLeaf:
+                return self.accept(llvm::cast<AstExrSubLeaf>(ast));
+            default:
+                std::unreachable();
+        }
+    }
+
+    constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
+        if constexpr (std::is_const_v<decltype(ast)>) {
+            return self.visit(static_cast<const AstExpr&>(ast));
+        } else {
+            return self.visit(static_cast<AstExpr&>(ast));
+        }
+    }
+};
+
+template <typename ReturnType = void>
+class AstExprSubGroupVisitor : AstVisitorBase {
+public:
+    constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
+        switch (ast.getKind()) {
+            case AstKind::ExrSubLeaf:
+                return self.accept(llvm::cast<AstExrSubLeaf>(ast));
+            default:
+                std::unreachable();
+        }
+    }
+};
+
 } // namespace lbc

@@ -22,7 +22,6 @@ public:
 
     [[nodiscard]] virtual auto run() -> bool = 0;
 
-protected:
     /**
      * Sort records by their definition order.
      */
@@ -97,5 +96,6 @@ protected:
         return std::ranges::find_if(records, pred) != records.end();
     }
 
+protected:
     const RecordKeeper& m_records; // NOLINT(*-avoid-const-or-ref-data-members, *-non-private-member-variables-in-classes)
 };

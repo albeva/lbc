@@ -13,15 +13,28 @@ AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
     m_className = std::string("Ast").append(record->getName());
     m_enumName = record->getName();
 
+    // class children
     if (record->hasDirectSuperClass(gen.getGroupClass())) {
-        if (const auto children = gen.getMap().find(record); children != gen.getMap().end()) {
-            m_children.reserve(children->second.size());
-            for (const Record* child : children->second) {
-                m_children.emplace_back(std::make_unique<AstClass>(this, gen, child));
-            }
+        m_kind = parent == nullptr ? Kind::Root : Kind::Group;
+
+        // child records
+        auto children = AstGen::collect(gen.getNodeRecords(), "parent", record);
+
+        // add to children
+        m_children.reserve(children.size());
+        for (const auto& child : children) {
+            m_children.emplace_back(std::make_unique<AstClass>(this, gen, child));
         }
+
+        // pull leaves to top
+        std::ranges::stable_partition(m_children, [&](const std::unique_ptr<AstClass>& item) {
+            return item->isLeaf();
+        });
+    } else {
+        m_kind = Kind::Leaf;
     }
 
+    // class members
     for (const auto& member : record->getValueAsListOfDefs("members")) {
         m_members.emplace_back(std::make_unique<AstMember>(member));
     }
@@ -145,4 +158,28 @@ auto AstClass::hasOwnCtorParams() -> bool {
         }
     }
     return false;
+}
+
+auto AstClass::getVisitorName() const -> std::string {
+    if (isRoot()) {
+        return "AstVisitor";
+    }
+    return m_className + "Visitor";
+}
+
+auto AstClass::getLeafRange() const -> std::optional<std::pair<const AstClass*, const AstClass*>> {
+    const AstClass* first = nullptr;
+    const AstClass* last = nullptr;
+
+    visit(Kind::Leaf, [&](const AstClass* node) -> void {
+        if (first == nullptr) {
+            first = node;
+        }
+        last = node;
+    });
+
+    if (first == nullptr) {
+        return std::nullopt;
+    }
+    return std::pair { first, last };
 }

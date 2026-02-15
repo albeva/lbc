@@ -44,6 +44,29 @@ def Root : Group<"The root AST node", ?, [
 ]>;
 
 // ============================================================================
+// This is just to test subgroup handling
+// We may have ast groups that derive from a group in the future
+// ============================================================================
+
+//def TestGroup : Group<"Test group", Root, [
+//    Member<"bool", "testValue">,
+//]>;
+//
+//def TestLeaf : Leaf<"Test group", TestGroup, [
+//    Member<"bool", "subLeafValue">,
+//]>;
+//
+//def TestSubGroup : Group<"Test group", TestGroup, [
+//    Member<"bool", "subTestValue">,
+//]>;
+//
+//def TestSubLeaf : Leaf<"Test group", TestSubGroup, [
+//    Member<"bool", "subLeafValue">,
+//]>;
+//
+//def EmptyGroup : Group<"Test group without leaves", TestGroup>;
+
+// ============================================================================
 // Module
 // ============================================================================
 
@@ -159,6 +182,11 @@ def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [
 def Expr : Group<"expression", Root, [
     Member<"const Type*", "type", true, "nullptr">
 ]>;
+
+def ExprSubGroup : Group<"expression", Expr, [
+]>;
+
+def ExrSubLeaf: Leaf<"Test subgroup expr", ExprSubGroup>;
 
 def VariableExpr : Leaf<"Variable expression", Expr, [
     Member<"llvm::StringRef", "name">,

@@ -12,6 +12,7 @@
 #include <format>
 #include <optional>
 #include <print>
+#include <source_location>
 #include <span>
 #include <string>
 #include <string_view>
@@ -31,6 +32,7 @@
 #include "Utilities/NoCopy.hpp"
 #include "Utilities/Try.hpp"
 #include "Utilities/ValueRestorer.hpp"
+#include "Utilities/Visitor.hpp"
 
 namespace lbc {
 using namespace std::string_view_literals;

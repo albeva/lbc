@@ -7,7 +7,6 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
-
 #include "../../src/Utilities/NoCopy.hpp"
 
 using namespace llvm;
@@ -49,36 +48,32 @@ public:
         footer();
     }
 
-    auto closeNamespace() -> Builder& {
+    void closeNamespace() {
         footer();
-        return *this;
     }
 
     template <std::invocable Func>
-    auto block(const Streamable auto& line, Func&& func, const StringRef nolint = {}) -> Builder& {
+    void block(const Streamable auto& line, Func&& func, const StringRef nolint = {}) {
         m_os << m_space << line << " ";
         indent(true, std::forward<Func>(func), nolint);
         m_os << "\n";
-        return *this;
     }
 
     template <std::invocable Func>
-    auto block(const Streamable auto& line, const bool terminate, Func&& func, const StringRef nolint = {}) -> Builder& {
+    void block(const Streamable auto& line, const bool terminate, Func&& func, const StringRef nolint = {}) {
         m_os << m_space << line << " ";
         indent(true, std::forward<Func>(func), nolint);
         if (terminate) {
             m_os << ";";
         }
         m_os << "\n";
-        return *this;
     }
 
-    auto line(const Streamable auto& line, const StringRef terminator = ";") -> Builder& {
-        m_os << m_space << line << terminator << "\n"; // NOLINT(*-pro-bounds-array-to-pointer-decay)
-        return *this;
+    void line(const Streamable auto& line, const StringRef terminator = ";") {
+        m_os << m_space << line << terminator << "\n"; // NOLINT(*-pro-bounds-array-to-pointer-decay, *-no-array-decay)
     }
 
-    auto lines(const std::string& lines, const StringRef sep = "\n") -> Builder& {
+    void lines(const std::string& lines, const StringRef sep = "\n") {
         if (not lines.empty()) {
             space();
             for (const auto& ch : lines) {
@@ -96,7 +91,6 @@ public:
             }
             m_os << sep;
         }
-        return *this;
     }
 
     struct ListOptions final {
@@ -107,7 +101,7 @@ public:
         bool quote = false;
     };
 
-    auto list(const std::vector<std::string>& items, const ListOptions options) {
+    void list(const std::vector<std::string>& items, const ListOptions options) {
         for (std::size_t idx = 0; idx < items.size(); ++idx) {
             // indent
             space();
@@ -174,18 +168,16 @@ public:
         return (word.str() + "s");
     }
 
-    auto newline() -> Builder& {
+    void newline() {
         m_os << "\n";
-        return *this;
     }
 
-    auto add(const Streamable auto& content) -> Builder& {
+    void add(const Streamable auto& content) {
         m_os << content;
-        return *this;
     }
 
     template <std::invocable Func>
-    auto indent(const bool scoped, Func&& func, const StringRef nolint = {}) -> Builder& {
+    void indent(const bool scoped, Func&& func, const StringRef nolint = {}) {
         if (scoped) {
             if (nolint.empty()) {
                 m_os << "{\n";
@@ -203,16 +195,13 @@ public:
         if (scoped) {
             m_os << m_space << "}";
         }
-
-        return *this;
     }
 
-    auto comment(const Streamable auto& comment) -> Builder& {
+    void comment(const Streamable auto& comment) {
         m_os << m_space << "/// " << comment << "\n";
-        return *this;
     }
 
-    auto doc(const StringRef comment) -> Builder& {
+    void doc(const StringRef comment) {
         m_os << m_space << "/**\n";
         m_os << m_space << " * ";
         for (const auto& ch : comment) {
@@ -231,10 +220,9 @@ public:
         }
         m_os << '\n'
              << m_space << " */\n";
-        return *this;
     }
 
-    auto section(const StringRef comment) -> Builder& {
+    void section(const StringRef comment) {
         const std::size_t dashes = COLUMNS - 3 - (m_indent * 4);
 
         m_os << m_space << "// " << std::string(dashes, '-') << "\n";
@@ -255,16 +243,14 @@ public:
         }
         m_os << '\n'
              << m_space << "// " << std::string(dashes, '-') << "\n\n";
-        return *this;
     }
 
-    auto space() -> Builder& {
+    void space() {
         m_os << m_space;
-        return *this;
     }
 
-    auto scope(Scope sc) -> Builder& {
-        if (m_scope != sc) {
+    void scope(Scope sc, const bool force = false) {
+        if (force || m_scope != sc) {
             m_scope = sc;
             const auto tmp = m_indent;
             if (m_indent > 0) {
@@ -285,7 +271,6 @@ public:
             m_indent = tmp;
             updateSpace();
         }
-        return *this;
     }
 
 protected:
@@ -310,7 +295,11 @@ private:
         m_os << "#pragma once\n";
 
         for (const auto& include : m_includes) {
-            m_os << "#include " << include << "\n";
+            if (include.front() == '<' || include.front() == '"') {
+                m_os << "#include " << include << "\n";
+            } else {
+                m_os << "#include \"" << include << "\"\n";
+            }
         }
 
         m_os << "\n";

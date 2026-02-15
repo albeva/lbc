@@ -6,11 +6,12 @@ FetchContent_Declare(
 )
 if (MSVC)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-endif()
+endif ()
 FetchContent_MakeAvailable(googletest)
 
 # Tests
 add_executable(tests
+    AstVisitorTests.cpp
     BasicTests.cpp
     LexerTests.cpp
 )

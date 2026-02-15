@@ -9,27 +9,18 @@ using namespace std::string_literals;
 
 AstGen::AstGen(
     raw_ostream& os,
-    const RecordKeeper& records
+    const RecordKeeper& records,
+    StringRef generator,
+    StringRef ns,
+    std::vector<StringRef> includes
 )
-: GeneratorBase(os, records, genName, "lbc", { "\"pch.hpp\"", "\"Utilities/LiteralValue.hpp\"" })
+: GeneratorBase(os, records, generator, ns, std::move(includes))
 , m_root(nullptr)
+, nodeRecords(sortedByDef(records.getAllDerivedDefinitions("Node")))
 , m_nodeClass(records.getClass("Node"))
 , m_leafClass(records.getClass("Leaf"))
 , m_groupClass(records.getClass("Group")) {
-    // nodes
-    m_nodes = sortedByDef(records.getAllDerivedDefinitions("Node"));
-    m_leaves = sortedByDef(records.getAllDerivedDefinitions("Leaf"));
-    m_groups = sortedByDef(records.getAllDerivedDefinitions("Group"));
-
-    // build up relations map
-    for (const Record* group : m_groups) {
-        auto children = collect(m_nodes, "parent", group);
-        m_map.try_emplace(group, std::move(children));
-    }
-
-    // build class graph
-    const auto* root = records.getDef("Root");
-    m_root = std::make_unique<AstClass>(nullptr, *this, root);
+    m_root = std::make_unique<AstClass>(nullptr, *this, records.getDef("Root"));
 }
 
 auto AstGen::run() -> bool {
@@ -44,36 +35,19 @@ auto AstGen::run() -> bool {
  * Generate forward declarations of types required by ast
  */
 void AstGen::forwardDecls() {
-    line("enum class TokenKind: std::uint8_t");
     line("class Type");
     newline();
 }
 
 /**
  * Generate AstKind enum type
- *
- * This finds enums recursievly to ensure that enums are defined
- * in exact order and grouped together, so we can use range checks
- * if a node belongs in a group.
- *
- * This also generates m_classNames, ensuring names are in matching order
  */
 void AstGen::astNodesEnum() {
-    m_classNames.reserve(m_leaves.size());
-
     doc("Enumerates all concrete AST node kinds.\nValues are ordered by group for efficient range-based membership checks.");
     block("enum class AstKind : std::uint8_t", true, [&] {
-        const auto recurse = [&](this auto&& self, const AstClass* cls) -> void {
-            if (cls->isLeaf()) {
-                line(cls->getEnumName(), ",");
-                m_classNames.emplace_back(cls->getClassName());
-            } else {
-                for (const auto& child : cls->getChildren()) {
-                    self(child.get());
-                }
-            }
-        };
-        recurse(m_root.get());
+        m_root->visit(AstClass::Kind::Leaf, [&](const auto* node) {
+            line(node->getEnumName(), ",");
+        });
     });
     newline();
 }
@@ -83,9 +57,9 @@ void AstGen::astNodesEnum() {
  */
 void AstGen::astForwardDecls() {
     section("Forward Declarations");
-    for (const Record* node : m_nodes) {
-        line("class Ast" + node->getName());
-    }
+    m_root->visit([&](const auto* node) {
+        line("class " + node->getClassName());
+    });
     newline();
 }
 
@@ -175,14 +149,22 @@ void AstGen::constructor(AstClass* cls) {
  */
 void AstGen::classof(AstClass* cls) {
     scope(Scope::Public);
+
+    const auto range = cls->getLeafRange();
+    const bool hideParam = cls->isRoot() || !range.has_value();
+
     comment("LLVM RTTI support to check if given node is "s + articulate(cls->getClassName()) + cls->getClassName());
-    block("[[nodiscard]] static constexpr auto classof(const "s + m_root->getClassName() + "* " + (cls->isRoot() ? "/* ast */" : " ast") + ") -> bool", [&] {
+    block("[[nodiscard]] static constexpr auto classof(const "s + m_root->getClassName() + "* " + (hideParam ? "/* ast */" : "ast") + ") -> bool", [&] {
         if (cls->isRoot()) {
             line("return true");
-        } else if (cls->isLeaf()) {
-            line("return ast->getKind() == AstKind::" + cls->getEnumName());
+        } else if (range) {
+            if (range->first == range->second) {
+                line("return ast->getKind() == AstKind::" + range->first->getEnumName());
+            } else {
+                line("return ast->getKind() >= AstKind::" + range->first->getEnumName() + " && ast->getKind() <= AstKind::" + range->second->getEnumName());
+            }
         } else {
-            line("return ast->getKind() >= AstKind::" + cls->getChildren().front()->getEnumName() + " && ast->getKind() <= AstKind::" + cls->getChildren().back()->getEnumName());
+            line("return false");
         }
     });
     newline();
@@ -198,9 +180,14 @@ void AstGen::functions(AstClass* cls) {
     }
     scope(Scope::Public);
 
+    std::size_t count = 0;
+    m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* /* cls */) {
+        count++;
+    });
+
     if (cls->isRoot()) {
         comment("Number of AST leaf nodes");
-        line("static constexpr std::size_t NODE_COUNT = " + std::to_string(m_classNames.size()));
+        line("static constexpr std::size_t NODE_COUNT = " + std::to_string(count));
         newline();
 
         comment("Get the kind discriminator for this node");
@@ -238,9 +225,14 @@ void AstGen::members(AstClass* cls) {
     }
     list(members, {});
 
+    std::vector<std::string> m_classes;
+    m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* cls) {
+        m_classes.push_back(cls->getClassName());
+    });
+
     if (cls->isRoot()) {
         block("static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames", true, [&] {
-            list(m_classNames, { .suffix = ",", .quote = true });
+            list(m_classes, { .suffix = ",", .quote = true });
         });
     }
 }
