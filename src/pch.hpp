@@ -12,6 +12,7 @@
 #include <format>
 #include <optional>
 #include <print>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>

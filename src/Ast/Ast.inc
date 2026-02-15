@@ -6,7 +6,1142 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
+#include "Utilities/LiteralValue.hpp"
 
 namespace lbc {
+
+enum class TokenKind: std::uint8_t;
+class Type;
+
+/**
+ * Enumrate all ast leaf nodes
+ */
+enum class AstKind : std::uint8_t {
+    Module,
+    BuiltinType,
+    PointerType,
+    ReferenceType,
+    StmtList,
+    EmptyStmt,
+    DimStmt,
+    ExprStmt,
+    DeclareStmt,
+    ExternStmt,
+    AssignStmt,
+    FuncStmt,
+    ReturnStmt,
+    IfStmt,
+    ImportDecl,
+    VarDecl,
+    FuncDecl,
+    FuncParamDecl,
+    VariableExpr,
+    CallExpr,
+    LiteralExpr,
+    UnaryExpr,
+    BinaryExpr,
+    CastExpr,
+    DereferenceExpr,
+    AddressOfExpr,
+    MemberExpr,
+};
+
+// -----------------------------------------------------------------------------
+// Forward Declarations
+// -----------------------------------------------------------------------------
+
+class AstRoot;
+class AstModule;
+class AstType;
+class AstBuiltinType;
+class AstPointerType;
+class AstReferenceType;
+class AstStmt;
+class AstStmtList;
+class AstEmptyStmt;
+class AstDimStmt;
+class AstExprStmt;
+class AstDeclareStmt;
+class AstExternStmt;
+class AstAssignStmt;
+class AstFuncStmt;
+class AstReturnStmt;
+class AstIfStmt;
+class AstDecl;
+class AstImportDecl;
+class AstVarDecl;
+class AstFuncDecl;
+class AstFuncParamDecl;
+class AstExpr;
+class AstVariableExpr;
+class AstCallExpr;
+class AstLiteralExpr;
+class AstUnaryExpr;
+class AstBinaryExpr;
+class AstCastExpr;
+class AstDereferenceExpr;
+class AstAddressOfExpr;
+class AstMemberExpr;
+
+// -----------------------------------------------------------------------------
+// Root nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * The root AST node
+ */
+class [[nodiscard]] AstRoot {
+public:
+    NO_COPY_AND_MOVE(AstRoot)
+
+protected:
+    /**
+     * Create AstRoot ast node
+     */
+    constexpr AstRoot(
+        const AstKind kind,
+        const llvm::SMRange range
+    )
+    : m_kind(kind)
+    , m_range(range) {}
+
+public:
+    /**
+     * Get ast node kind value
+     */
+    [[nodiscard]] constexpr auto getKind() const -> AstKind {
+        return m_kind;
+    }
+
+    /**
+     * Get range
+     */
+    [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange {
+        return m_range;
+    }
+
+    /**
+     * Get next
+     */
+    [[nodiscard]] constexpr auto getNext() const -> AstRoot* {
+        return m_next;
+    }
+
+    /**
+     * Set next
+     */
+    void setNext(AstRoot* next) {
+        m_next = next;
+    }
+
+private:
+    AstKind m_kind;
+    llvm::SMRange m_range;
+    AstRoot* m_next = nullptr;
+};
+
+/**
+ * Program module node
+ */
+class [[nodiscard]] AstModule final : public AstRoot {
+public:
+    /**
+     * Create AstModule ast node
+     */
+    constexpr AstModule(
+        const llvm::SMRange range,
+        const std::span<AstImportDecl*> imports,
+        AstStmtList* stmtList
+    )
+    : AstRoot(AstKind::Module, range)
+    , m_imports(imports)
+    , m_stmtList(stmtList) {}
+
+    /**
+     * Get imports
+     */
+    [[nodiscard]] constexpr auto getImports() const -> std::span<AstImportDecl*> {
+        return m_imports;
+    }
+
+    /**
+     * Get stmtList
+     */
+    [[nodiscard]] constexpr auto getStmtList() const -> AstStmtList* {
+        return m_stmtList;
+    }
+
+    /**
+     * Get implicitMain
+     */
+    [[nodiscard]] constexpr auto getImplicitMain() const -> bool {
+        return m_implicitMain;
+    }
+
+    /**
+     * Set implicitMain
+     */
+    void setImplicitMain(const bool implicitMain) {
+        m_implicitMain = implicitMain;
+    }
+
+private:
+    std::span<AstImportDecl*> m_imports;
+    AstStmtList* m_stmtList;
+    bool m_implicitMain = false;
+};
+
+// -----------------------------------------------------------------------------
+// Type nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Types
+ */
+class [[nodiscard]] AstType : public AstRoot {
+protected:
+    using AstRoot::AstRoot;
+
+public:
+    /**
+     * Get type
+     */
+    [[nodiscard]] constexpr auto getType() const -> const Type* {
+        return m_type;
+    }
+
+    /**
+     * Set type
+     */
+    void setType(const Type* type) {
+        m_type = type;
+    }
+
+private:
+    const Type* m_type = nullptr;
+};
+
+/**
+ * Built-in primitive type
+ */
+class [[nodiscard]] AstBuiltinType final : public AstType {
+public:
+    /**
+     * Create AstBuiltinType ast node
+     */
+    constexpr AstBuiltinType(
+        const llvm::SMRange range,
+        const TokenKind tokenKind
+    )
+    : AstType(AstKind::BuiltinType, range)
+    , m_tokenKind(tokenKind) {}
+
+    /**
+     * Get tokenKind
+     */
+    [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
+        return m_tokenKind;
+    }
+
+private:
+    TokenKind m_tokenKind;
+};
+
+/**
+ * Pointer type
+ */
+class [[nodiscard]] AstPointerType final : public AstType {
+public:
+    /**
+     * Create AstPointerType ast node
+     */
+    constexpr AstPointerType(
+        const llvm::SMRange range,
+        AstType* typeExpr
+    )
+    : AstType(AstKind::PointerType, range)
+    , m_typeExpr(typeExpr) {}
+
+    /**
+     * Get typeExpr
+     */
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+private:
+    AstType* m_typeExpr;
+};
+
+/**
+ * Reference type
+ */
+class [[nodiscard]] AstReferenceType final : public AstType {
+public:
+    /**
+     * Create AstReferenceType ast node
+     */
+    constexpr AstReferenceType(
+        const llvm::SMRange range,
+        AstType* typeExpr
+    )
+    : AstType(AstKind::ReferenceType, range)
+    , m_typeExpr(typeExpr) {}
+
+    /**
+     * Get typeExpr
+     */
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+private:
+    AstType* m_typeExpr;
+};
+
+// -----------------------------------------------------------------------------
+// Stmt nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Statements
+ */
+class [[nodiscard]] AstStmt : public AstRoot {
+protected:
+    using AstRoot::AstRoot;
+
+};
+
+/**
+ * List of statements
+ */
+class [[nodiscard]] AstStmtList final : public AstStmt {
+public:
+    /**
+     * Create AstStmtList ast node
+     */
+    constexpr AstStmtList(
+        const llvm::SMRange range,
+        const std::span<AstStmt*> stmts,
+        const std::span<AstDecl*> decls
+    )
+    : AstStmt(AstKind::StmtList, range)
+    , m_stmts(stmts)
+    , m_decls(decls) {}
+
+    /**
+     * Get stmts
+     */
+    [[nodiscard]] constexpr auto getStmts() const -> std::span<AstStmt*> {
+        return m_stmts;
+    }
+
+    /**
+     * Get decls
+     */
+    [[nodiscard]] constexpr auto getDecls() const -> std::span<AstDecl*> {
+        return m_decls;
+    }
+
+private:
+    std::span<AstStmt*> m_stmts;
+    std::span<AstDecl*> m_decls;
+};
+
+/**
+ * Empty statement
+ */
+class [[nodiscard]] AstEmptyStmt final : public AstStmt {
+public:
+    /**
+     * Create AstEmptyStmt ast node
+     */
+    constexpr AstEmptyStmt(
+        const llvm::SMRange range
+    )
+    : AstStmt(AstKind::EmptyStmt, range) {}
+
+};
+
+/**
+ * DIM keyword
+ */
+class [[nodiscard]] AstDimStmt final : public AstStmt {
+public:
+    /**
+     * Create AstDimStmt ast node
+     */
+    constexpr AstDimStmt(
+        const llvm::SMRange range,
+        const std::span<AstVarDecl*> decls
+    )
+    : AstStmt(AstKind::DimStmt, range)
+    , m_decls(decls) {}
+
+    /**
+     * Get decls
+     */
+    [[nodiscard]] constexpr auto getDecls() const -> std::span<AstVarDecl*> {
+        return m_decls;
+    }
+
+private:
+    std::span<AstVarDecl*> m_decls;
+};
+
+/**
+ * Encapsulate expression
+ */
+class [[nodiscard]] AstExprStmt final : public AstStmt {
+public:
+    /**
+     * Create AstExprStmt ast node
+     */
+    constexpr AstExprStmt(
+        const llvm::SMRange range,
+        AstExpr* expr
+    )
+    : AstStmt(AstKind::ExprStmt, range)
+    , m_expr(expr) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+private:
+    AstExpr* m_expr;
+};
+
+/**
+ * DECLARE keyword
+ */
+class [[nodiscard]] AstDeclareStmt final : public AstStmt {
+public:
+    /**
+     * Create AstDeclareStmt ast node
+     */
+    constexpr AstDeclareStmt(
+        const llvm::SMRange range,
+        AstFuncDecl* decl
+    )
+    : AstStmt(AstKind::DeclareStmt, range)
+    , m_decl(decl) {}
+
+    /**
+     * Get decl
+     */
+    [[nodiscard]] constexpr auto getDecl() const -> AstFuncDecl* {
+        return m_decl;
+    }
+
+private:
+    AstFuncDecl* m_decl;
+};
+
+/**
+ * EXTERN keyword
+ */
+class [[nodiscard]] AstExternStmt final : public AstStmt {
+public:
+    /**
+     * Create AstExternStmt ast node
+     */
+    constexpr AstExternStmt(
+        const llvm::SMRange range,
+        AstStmtList* stmtList
+    )
+    : AstStmt(AstKind::ExternStmt, range)
+    , m_stmtList(stmtList) {}
+
+    /**
+     * Get stmtList
+     */
+    [[nodiscard]] constexpr auto getStmtList() const -> AstStmtList* {
+        return m_stmtList;
+    }
+
+private:
+    AstStmtList* m_stmtList;
+};
+
+/**
+ * Assignment statement
+ */
+class [[nodiscard]] AstAssignStmt final : public AstStmt {
+public:
+    /**
+     * Create AstAssignStmt ast node
+     */
+    constexpr AstAssignStmt(
+        const llvm::SMRange range,
+        AstExpr* assignee,
+        AstExpr* expr
+    )
+    : AstStmt(AstKind::AssignStmt, range)
+    , m_assignee(assignee)
+    , m_expr(expr) {}
+
+    /**
+     * Get assignee
+     */
+    [[nodiscard]] constexpr auto getAssignee() const -> AstExpr* {
+        return m_assignee;
+    }
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+private:
+    AstExpr* m_assignee;
+    AstExpr* m_expr;
+};
+
+/**
+ * FUNCTION or SUB
+ */
+class [[nodiscard]] AstFuncStmt final : public AstStmt {
+public:
+    /**
+     * Create AstFuncStmt ast node
+     */
+    constexpr AstFuncStmt(
+        const llvm::SMRange range,
+        AstFuncDecl* decl,
+        AstStmtList* stmtList
+    )
+    : AstStmt(AstKind::FuncStmt, range)
+    , m_decl(decl)
+    , m_stmtList(stmtList) {}
+
+    /**
+     * Get decl
+     */
+    [[nodiscard]] constexpr auto getDecl() const -> AstFuncDecl* {
+        return m_decl;
+    }
+
+    /**
+     * Get stmtList
+     */
+    [[nodiscard]] constexpr auto getStmtList() const -> AstStmtList* {
+        return m_stmtList;
+    }
+
+private:
+    AstFuncDecl* m_decl;
+    AstStmtList* m_stmtList;
+};
+
+/**
+ * RETURN keyword
+ */
+class [[nodiscard]] AstReturnStmt final : public AstStmt {
+public:
+    /**
+     * Create AstReturnStmt ast node
+     */
+    constexpr AstReturnStmt(
+        const llvm::SMRange range,
+        AstExpr* expr
+    )
+    : AstStmt(AstKind::ReturnStmt, range)
+    , m_expr(expr) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+private:
+    AstExpr* m_expr;
+};
+
+/**
+ * IF statement
+ */
+class [[nodiscard]] AstIfStmt final : public AstStmt {
+public:
+    /**
+     * Create AstIfStmt ast node
+     */
+    constexpr AstIfStmt(
+        const llvm::SMRange range,
+        AstExpr* condition,
+        AstStmt* thenStmt,
+        AstStmt* elseStmt
+    )
+    : AstStmt(AstKind::IfStmt, range)
+    , m_condition(condition)
+    , m_thenStmt(thenStmt)
+    , m_elseStmt(elseStmt) {}
+
+    /**
+     * Get condition
+     */
+    [[nodiscard]] constexpr auto getCondition() const -> AstExpr* {
+        return m_condition;
+    }
+
+    /**
+     * Get thenStmt
+     */
+    [[nodiscard]] constexpr auto getThenStmt() const -> AstStmt* {
+        return m_thenStmt;
+    }
+
+    /**
+     * Get elseStmt
+     */
+    [[nodiscard]] constexpr auto getElseStmt() const -> AstStmt* {
+        return m_elseStmt;
+    }
+
+private:
+    AstExpr* m_condition;
+    AstStmt* m_thenStmt;
+    AstStmt* m_elseStmt;
+};
+
+// -----------------------------------------------------------------------------
+// Decl nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Declarations
+ */
+class [[nodiscard]] AstDecl : public AstRoot {
+protected:
+    /**
+     * Create AstDecl ast node
+     */
+    constexpr AstDecl(
+        const AstKind kind,
+        const llvm::SMRange range,
+        const llvm::StringRef name
+    )
+    : AstRoot(kind, range)
+    , m_name(name) {}
+
+public:
+    /**
+     * Get name
+     */
+    [[nodiscard]] constexpr auto getName() const -> llvm::StringRef {
+        return m_name;
+    }
+
+    /**
+     * Get type
+     */
+    [[nodiscard]] constexpr auto getType() const -> const Type* {
+        return m_type;
+    }
+
+    /**
+     * Set type
+     */
+    void setType(const Type* type) {
+        m_type = type;
+    }
+
+private:
+    llvm::StringRef m_name;
+    const Type* m_type = nullptr;
+};
+
+/**
+ * IMPORT keyword
+ */
+class [[nodiscard]] AstImportDecl final : public AstDecl {
+public:
+    /**
+     * Create AstImportDecl ast node
+     */
+    constexpr AstImportDecl(
+        const llvm::SMRange range,
+        const llvm::StringRef name
+    )
+    : AstDecl(AstKind::ImportDecl, range, name) {}
+
+};
+
+/**
+ * VAR keyword
+ */
+class [[nodiscard]] AstVarDecl final : public AstDecl {
+public:
+    /**
+     * Create AstVarDecl ast node
+     */
+    constexpr AstVarDecl(
+        const llvm::SMRange range,
+        const llvm::StringRef name,
+        AstType* typeExpr,
+        AstExpr* expr
+    )
+    : AstDecl(AstKind::VarDecl, range, name)
+    , m_typeExpr(typeExpr)
+    , m_expr(expr) {}
+
+    /**
+     * Get typeExpr
+     */
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+private:
+    AstType* m_typeExpr;
+    AstExpr* m_expr;
+};
+
+/**
+ * FUNCTION or SUB
+ */
+class [[nodiscard]] AstFuncDecl final : public AstDecl {
+public:
+    /**
+     * Create AstFuncDecl ast node
+     */
+    constexpr AstFuncDecl(
+        const llvm::SMRange range,
+        const llvm::StringRef name,
+        const std::span<AstFuncParamDecl*> params,
+        AstType* retTypeExpr
+    )
+    : AstDecl(AstKind::FuncDecl, range, name)
+    , m_params(params)
+    , m_retTypeExpr(retTypeExpr) {}
+
+    /**
+     * Get params
+     */
+    [[nodiscard]] constexpr auto getParams() const -> std::span<AstFuncParamDecl*> {
+        return m_params;
+    }
+
+    /**
+     * Get retTypeExpr
+     */
+    [[nodiscard]] constexpr auto getRetTypeExpr() const -> AstType* {
+        return m_retTypeExpr;
+    }
+
+    /**
+     * Get impl
+     */
+    [[nodiscard]] constexpr auto getImpl() const -> AstFuncStmt* {
+        return m_impl;
+    }
+
+    /**
+     * Set impl
+     */
+    void setImpl(AstFuncStmt* impl) {
+        m_impl = impl;
+    }
+
+private:
+    std::span<AstFuncParamDecl*> m_params;
+    AstType* m_retTypeExpr;
+    AstFuncStmt* m_impl = nullptr;
+};
+
+/**
+ * FUNCTION parameter
+ */
+class [[nodiscard]] AstFuncParamDecl final : public AstDecl {
+public:
+    /**
+     * Create AstFuncParamDecl ast node
+     */
+    constexpr AstFuncParamDecl(
+        const llvm::SMRange range,
+        const llvm::StringRef name,
+        AstType* typeExpr,
+        const bool isVarArg
+    )
+    : AstDecl(AstKind::FuncParamDecl, range, name)
+    , m_typeExpr(typeExpr)
+    , m_isVarArg(isVarArg) {}
+
+    /**
+     * Get typeExpr
+     */
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+    /**
+     * Get isVarArg
+     */
+    [[nodiscard]] constexpr auto getIsVarArg() const -> bool {
+        return m_isVarArg;
+    }
+
+private:
+    AstType* m_typeExpr;
+    bool m_isVarArg;
+};
+
+// -----------------------------------------------------------------------------
+// Expr nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Expressions
+ */
+class [[nodiscard]] AstExpr : public AstRoot {
+protected:
+    using AstRoot::AstRoot;
+
+public:
+    /**
+     * Get type
+     */
+    [[nodiscard]] constexpr auto getType() const -> const Type* {
+        return m_type;
+    }
+
+    /**
+     * Set type
+     */
+    void setType(const Type* type) {
+        m_type = type;
+    }
+
+private:
+    const Type* m_type = nullptr;
+};
+
+/**
+ * Variable expression
+ */
+class [[nodiscard]] AstVariableExpr final : public AstExpr {
+public:
+    /**
+     * Create AstVariableExpr ast node
+     */
+    constexpr AstVariableExpr(
+        const llvm::SMRange range,
+        const llvm::StringRef name
+    )
+    : AstExpr(AstKind::VariableExpr, range)
+    , m_name(name) {}
+
+    /**
+     * Get name
+     */
+    [[nodiscard]] constexpr auto getName() const -> llvm::StringRef {
+        return m_name;
+    }
+
+private:
+    llvm::StringRef m_name;
+};
+
+/**
+ * CALL expression
+ */
+class [[nodiscard]] AstCallExpr final : public AstExpr {
+public:
+    /**
+     * Create AstCallExpr ast node
+     */
+    constexpr AstCallExpr(
+        const llvm::SMRange range,
+        AstExpr* callee,
+        const std::span<AstExpr*> args
+    )
+    : AstExpr(AstKind::CallExpr, range)
+    , m_callee(callee)
+    , m_args(args) {}
+
+    /**
+     * Get callee
+     */
+    [[nodiscard]] constexpr auto getCallee() const -> AstExpr* {
+        return m_callee;
+    }
+
+    /**
+     * Get args
+     */
+    [[nodiscard]] constexpr auto getArgs() const -> std::span<AstExpr*> {
+        return m_args;
+    }
+
+private:
+    AstExpr* m_callee;
+    std::span<AstExpr*> m_args;
+};
+
+/**
+ * Literal expression
+ */
+class [[nodiscard]] AstLiteralExpr final : public AstExpr {
+public:
+    /**
+     * Create AstLiteralExpr ast node
+     */
+    constexpr AstLiteralExpr(
+        const llvm::SMRange range,
+        const LiteralValue value
+    )
+    : AstExpr(AstKind::LiteralExpr, range)
+    , m_value(value) {}
+
+    /**
+     * Get value
+     */
+    [[nodiscard]] constexpr auto getValue() const -> LiteralValue {
+        return m_value;
+    }
+
+private:
+    LiteralValue m_value;
+};
+
+/**
+ * Unary expression
+ */
+class [[nodiscard]] AstUnaryExpr final : public AstExpr {
+public:
+    /**
+     * Create AstUnaryExpr ast node
+     */
+    constexpr AstUnaryExpr(
+        const llvm::SMRange range,
+        AstExpr* expr,
+        const TokenKind tokenKind
+    )
+    : AstExpr(AstKind::UnaryExpr, range)
+    , m_expr(expr)
+    , m_tokenKind(tokenKind) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+    /**
+     * Get tokenKind
+     */
+    [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
+        return m_tokenKind;
+    }
+
+private:
+    AstExpr* m_expr;
+    TokenKind m_tokenKind;
+};
+
+/**
+ * Binary expression
+ */
+class [[nodiscard]] AstBinaryExpr final : public AstExpr {
+public:
+    /**
+     * Create AstBinaryExpr ast node
+     */
+    constexpr AstBinaryExpr(
+        const llvm::SMRange range,
+        AstExpr* left,
+        AstExpr* right,
+        const TokenKind tokenKind
+    )
+    : AstExpr(AstKind::BinaryExpr, range)
+    , m_left(left)
+    , m_right(right)
+    , m_tokenKind(tokenKind) {}
+
+    /**
+     * Get left
+     */
+    [[nodiscard]] constexpr auto getLeft() const -> AstExpr* {
+        return m_left;
+    }
+
+    /**
+     * Get right
+     */
+    [[nodiscard]] constexpr auto getRight() const -> AstExpr* {
+        return m_right;
+    }
+
+    /**
+     * Get tokenKind
+     */
+    [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
+        return m_tokenKind;
+    }
+
+private:
+    AstExpr* m_left;
+    AstExpr* m_right;
+    TokenKind m_tokenKind;
+};
+
+/**
+ * CAST expression
+ */
+class [[nodiscard]] AstCastExpr final : public AstExpr {
+public:
+    /**
+     * Create AstCastExpr ast node
+     */
+    constexpr AstCastExpr(
+        const llvm::SMRange range,
+        AstExpr* expr,
+        AstType* typeExpr,
+        const bool isImplicit
+    )
+    : AstExpr(AstKind::CastExpr, range)
+    , m_expr(expr)
+    , m_typeExpr(typeExpr)
+    , m_isImplicit(isImplicit) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+    /**
+     * Get typeExpr
+     */
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+    /**
+     * Get isImplicit
+     */
+    [[nodiscard]] constexpr auto getIsImplicit() const -> bool {
+        return m_isImplicit;
+    }
+
+private:
+    AstExpr* m_expr;
+    AstType* m_typeExpr;
+    bool m_isImplicit;
+};
+
+/**
+ * DEREFERENCE expression
+ */
+class [[nodiscard]] AstDereferenceExpr final : public AstExpr {
+public:
+    /**
+     * Create AstDereferenceExpr ast node
+     */
+    constexpr AstDereferenceExpr(
+        const llvm::SMRange range,
+        AstExpr* expr
+    )
+    : AstExpr(AstKind::DereferenceExpr, range)
+    , m_expr(expr) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+private:
+    AstExpr* m_expr;
+};
+
+/**
+ * ADDRESS OF expression
+ */
+class [[nodiscard]] AstAddressOfExpr final : public AstExpr {
+public:
+    /**
+     * Create AstAddressOfExpr ast node
+     */
+    constexpr AstAddressOfExpr(
+        const llvm::SMRange range,
+        AstExpr* expr
+    )
+    : AstExpr(AstKind::AddressOfExpr, range)
+    , m_expr(expr) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+private:
+    AstExpr* m_expr;
+};
+
+/**
+ * Member expression
+ */
+class [[nodiscard]] AstMemberExpr final : public AstExpr {
+public:
+    /**
+     * Create AstMemberExpr ast node
+     */
+    constexpr AstMemberExpr(
+        const llvm::SMRange range,
+        AstExpr* expr,
+        AstExpr* member,
+        const TokenKind tokenKind
+    )
+    : AstExpr(AstKind::MemberExpr, range)
+    , m_expr(expr)
+    , m_member(member)
+    , m_tokenKind(tokenKind) {}
+
+    /**
+     * Get expr
+     */
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+    /**
+     * Get member
+     */
+    [[nodiscard]] constexpr auto getMember() const -> AstExpr* {
+        return m_member;
+    }
+
+    /**
+     * Get tokenKind
+     */
+    [[nodiscard]] constexpr auto getTokenKind() const -> TokenKind {
+        return m_tokenKind;
+    }
+
+private:
+    AstExpr* m_expr;
+    AstExpr* m_member;
+    TokenKind m_tokenKind;
+};
 
 } // namespace lbc

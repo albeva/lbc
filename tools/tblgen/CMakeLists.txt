@@ -1,9 +1,10 @@
 add_executable(lbc-tblgen
     Builder.hpp
     GeneratorBase.hpp
-    gens/Generators.hpp
     gens/AstGen.cpp
+    gens/AstGen.hpp
     gens/TokensGen.cpp
+    gens/TokensGen.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)

@@ -11,6 +11,8 @@ Checks: '-*,
     readability-*,
     -*-function-cognitive-complexity,
     -*-special-member-functions,
+    -*-no-recursion,
+    -*-easily-swappable-parameters,
     '
 WarningsAsErrors: '*'
 CheckOptions:

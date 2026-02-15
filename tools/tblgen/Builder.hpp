@@ -4,6 +4,7 @@
 #pragma once
 #include <concepts>
 #include <format>
+#include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -20,6 +21,14 @@ concept Streamable = requires(raw_ostream& os, T val) {
 class Builder { // NOLINT(*-special-member-functions)
 public:
     NO_COPY_AND_MOVE(Builder)
+
+    enum class Scope : std::uint8_t {
+        Private,
+        Protected,
+        Public
+    };
+
+    static constexpr std::size_t COLUMNS = 80;
 
     explicit Builder(
         raw_ostream& os,
@@ -67,6 +76,57 @@ public:
     auto line(const Streamable auto& line, const StringRef terminator = ";") -> Builder& {
         m_os << m_space << line << terminator << "\n";
         return *this;
+    }
+
+    auto lines(const std::string& lines, const StringRef sep = "\n") -> Builder& {
+        if (not lines.empty()) {
+            space();
+            for (const auto& ch : lines) {
+                switch (ch) {
+                case '\n':
+                    m_os << sep << m_space;
+                    continue;
+                case '\r':
+                case '\v':
+                case '\f':
+                    continue;
+                default:
+                    m_os << ch;
+                }
+            }
+            m_os << sep;
+        }
+        return *this;
+    }
+
+    struct ListOptions final {
+        StringRef firstPrefix = "";
+        StringRef prefix = "";
+        StringRef suffix = "";
+        StringRef lastSuffix = "";
+    };
+
+    auto list(const std::vector<std::string>& items, const ListOptions options) {
+        for (std::size_t idx = 0; idx < items.size(); ++idx) {
+            // indent
+            space();
+            // prefix
+            if (idx > 0) {
+                m_os << options.prefix;
+            } else if (!options.firstPrefix.empty()) {
+                m_os << options.firstPrefix;
+            }
+            // item
+            m_os << items[idx]; // NOLINT(*-pro-bounds-avoid-unchecked-container-access)
+            // suffix
+            if (idx < (items.size() - 1)) {
+                m_os << options.suffix;
+            } else if (not options.lastSuffix.empty()) {
+                m_os << options.lastSuffix;
+            }
+            // line break
+            m_os << '\n';
+        }
     }
 
     static auto quoted(const StringRef line) -> std::string {
@@ -168,13 +228,63 @@ public:
         return *this;
     }
 
+    auto section(const StringRef comment) -> Builder& {
+        const std::size_t dashes = COLUMNS - 3 - (m_indent * 4);
+
+        m_os << m_space << "// " << std::string(dashes, '-') << "\n";
+        m_os << m_space << "// ";
+        for (const auto& ch : comment) {
+            switch (ch) {
+            case '\n':
+                m_os << '\n'
+                     << m_space << "// ";
+                continue;
+            case '\r':
+            case '\v':
+            case '\f':
+                continue;
+            default:
+                m_os << ch;
+            }
+        }
+        m_os << '\n'
+             << m_space << "// " << std::string(dashes, '-') << "\n\n";
+        return *this;
+    }
+
     auto space() -> Builder& {
         m_os << m_space;
         return *this;
     }
 
+    auto scope(Scope sc) -> Builder& {
+        if (m_scope != sc) {
+            m_scope = sc;
+            const auto tmp = m_indent;
+            if (m_indent > 0) {
+                m_indent--;
+                updateSpace();
+            }
+            switch (sc) {
+            case Scope::Private:
+                line("private", ":");
+                break;
+            case Scope::Protected:
+                line("protected", ":");
+                break;
+            case Scope::Public:
+                line("public", ":");
+                break;
+            }
+            m_indent = tmp;
+            updateSpace();
+        }
+        return *this;
+    }
+
 protected:
-    raw_ostream& m_os; // NOLINT(*-avoid-const-or-ref-data-members)
+    raw_ostream& m_os;              // NOLINT(*-avoid-const-or-ref-data-members, *-non-private-member-variables-in-classes)
+    Scope m_scope = Scope::Private; // NOLINT(*-non-private-member-variables-in-classes)
 
 private:
     void updateSpace() {

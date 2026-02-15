@@ -1,11 +1,11 @@
 // Base class for lbc-tblgen generators.
 // Extends Builder with RecordKeeper access and common utility methods.
 #pragma once
-#include "Builder.hpp"
 #include <llvm/TableGen/Record.h>
 #include <optional>
 #include <ranges>
 #include <vector>
+#include "Builder.hpp"
 using namespace llvm;
 
 class GeneratorBase : public Builder {
@@ -65,8 +65,11 @@ protected:
         StringRef field,
         const Record* record
     ) -> std::vector<const Record*> {
-        const auto pred = [&](const auto* token) {
-            const auto* value = token->getValue(field);
+        const auto pred = [&](const Record* rec) {
+            if (rec->isValueUnset(field)) {
+                return false;
+            }
+            const auto* value = rec->getValue(field);
             return value != nullptr && value->getValue() == record->getDefInit();
         };
 

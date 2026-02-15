@@ -1,8 +1,12 @@
 // Custom TableGen backend for generating token definitions.
 // Reads Tokens.td and emits TokenKinds.inc
-#include "Generators.hpp"
+#include "TokensGen.hpp"
 
-auto TokensGenerator::run() -> bool {
+TokensGen::TokensGen(raw_ostream& os, const RecordKeeper& records)
+: GeneratorBase(os, records, genName) {
+}
+
+auto TokensGen::run() -> bool {
     const auto tokens = sortedByDef(m_records.getAllDerivedDefinitions("Token"));
     const auto groups = sortedByDef(m_records.getAllDerivedDefinitions("Group"));
     const auto categories = sortedByDef(m_records.getAllDerivedDefinitions("Category"));
@@ -263,8 +267,7 @@ auto TokensGenerator::run() -> bool {
                     }
                     m_os << token->getName();
                 }
-                m_os << "};\n";
-            }, "*-magic-numbers");
+                m_os << "};\n"; }, "*-magic-numbers");
             newline();
         }
 
@@ -290,8 +293,7 @@ auto TokensGenerator::run() -> bool {
                         }
                         m_os << token->getName();
                     }
-                    m_os << " };\n";
-                }, "*-magic-numbers");
+                    m_os << " };\n"; }, "*-magic-numbers");
                 newline();
             }
         }

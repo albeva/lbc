@@ -111,3 +111,10 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 - Memory: RAII everywhere, no manual new/delete
 - Parser: single `Parser` class with implementation split across multiple `.cpp` files by concern
   (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utilities).
+- AST: node classes are generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. The TableGen schema
+  uses three class types: `Node` (base), `Group` (abstract intermediate — types, statements, declarations,
+  expressions), and `Leaf` (concrete instantiable nodes). Each node has `Member` fields; members without a default
+  become constructor parameters, members with a default are initialized fields. The `mutable` bit controls whether a
+  setter is generated. `AstKind` enum values are grouped by parent so range checks can determine group membership.
+  All nodes inherit `llvm::SMRange` and a `next` pointer from `AstRoot`; the `next` pointer serves as an intrusive
+  linked list during parsing for collecting nodes before bulk-allocating into `std::span`.
