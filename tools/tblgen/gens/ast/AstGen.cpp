@@ -101,7 +101,7 @@ void AstGen::astClass(AstClass* cls) {
         constructor(cls);
         classof(cls);
         functions(cls);
-        members(cls);
+        classArgs(cls);
     });
     newline();
 }
@@ -174,7 +174,7 @@ void AstGen::classof(AstClass* cls) {
  * Generate class methods
  */
 void AstGen::functions(AstClass* cls) {
-    const auto functions = cls->functions();
+    const auto functions = cls->classFunctions();
     if (functions.empty() && !cls->isRoot()) {
         return;
     }
@@ -211,11 +211,11 @@ void AstGen::functions(AstClass* cls) {
 }
 
 /**
- * Generate class data members
+ * Generate class data args
  */
-void AstGen::members(AstClass* cls) {
-    const auto members = cls->dataMembers();
-    if (members.empty() && !cls->isRoot()) {
+void AstGen::classArgs(AstClass* cls) {
+    const auto args = cls->classArgs();
+    if (args.empty() && !cls->isRoot()) {
         return;
     }
 
@@ -223,7 +223,7 @@ void AstGen::members(AstClass* cls) {
     if (cls->isRoot()) {
         line("AstKind m_kind");
     }
-    list(members, {});
+    list(args, {});
 
     std::vector<std::string> m_classes;
     m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {

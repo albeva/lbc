@@ -1,8 +1,10 @@
 // AST node definitions for lbc
 // Processed by lbc-tblgen to generate Ast.hpp and AstVisitor.hpp
 
-// Member field on a node.
-class Member<string type_, string name_, bit mutable_ = false, string default_ = ""> {
+// -----------------------------------------------------------------------------
+// Arg field on a node.
+// -----------------------------------------------------------------------------
+class Arg<string type_, string name_, bit mutable_ = false, string default_ = ""> {
     string type = type_;
     string name = name_;
     bit mutable = mutable_;
@@ -12,69 +14,45 @@ class Member<string type_, string name_, bit mutable_ = false, string default_ =
 // Forward declare Group
 class Group;
 
+// -----------------------------------------------------------------------------
 // Base AST node. All nodes carry a source range.
-class Node<string desc_ = "", Group parent_, list<Member> members_ = []> {
+// -----------------------------------------------------------------------------
+class Node<string desc_ = "", Group parent_, list<Arg> args_ = []> {
     string desc = desc_;
     Group parent = parent_;
-    list<Member> members = members_;
+    list<Arg> args = args_;
 }
 
+// -----------------------------------------------------------------------------
 // Group node — an abstract intermediate that concrete nodes inherit from.
 // Groups define shared members and form the parent in the hierarchy.
+// -----------------------------------------------------------------------------
 class Group<
     string desc_ = "",
     Group parent_,
-    list<Member> members_ = []
-> : Node<desc_, parent_, members_>;
+    list<Arg> args_ = []
+> : Node<desc_, parent_, args_>;
 
+// -----------------------------------------------------------------------------
 // Leaf node — a concrete, instantiable AST node belonging to a parent.
+// -----------------------------------------------------------------------------
 class Leaf<
     string desc_ = "",
     Group parent_,
-    list<Member> members_ = []
-> : Node<desc_, parent_, members_>;
+    list<Arg> args_ = []
+> : Node<desc_, parent_, args_>;
 
 // ============================================================================
 // Root
 // ============================================================================
 
 def Root : Group<"The root AST node", ?, [
-    Member<"llvm::SMRange", "range">,
-    Member<"AstRoot*", "next", true, "nullptr">
+    Arg<"llvm::SMRange", "range">,
+    Arg<"AstRoot*", "next", true, "nullptr">
 ]>;
 
-// ============================================================================
-// This is just to test subgroup handling
-// We may have ast groups that derive from a group in the future
-// ============================================================================
-
-//def TestGroup : Group<"Test group", Root, [
-//    Member<"bool", "testValue">,
-//]>;
-//
-//def TestLeaf : Leaf<"Test group", TestGroup, [
-//    Member<"bool", "subLeafValue">,
-//]>;
-//
-//def TestSubGroup : Group<"Test group", TestGroup, [
-//    Member<"bool", "subTestValue">,
-//]>;
-//
-//def TestSubLeaf : Leaf<"Test group", TestSubGroup, [
-//    Member<"bool", "subLeafValue">,
-//]>;
-//
-//def EmptyGroup : Group<"Test group without leaves", TestGroup>;
-
-// ============================================================================
-// Module
-// ============================================================================
-
 def Module : Leaf<"Program module node", Root, [
-    Member<"std::span<AstImportDecl*>", "imports">,
-    Member<"AstStmtList*", "stmtList">,
-//    Member<"SymbolTable*", "symbolTable", false, "nullptr">,
-    Member<"bool", "implicitMain", true, "false">,
+    Arg<"AstStmtList*", "stmtList">
 ]>;
 
 // ============================================================================
@@ -82,16 +60,10 @@ def Module : Leaf<"Program module node", Root, [
 // ============================================================================
 
 def Type : Group<"type expression", Root, [
-    Member<"const Type*", "type", true, "nullptr">
+    Arg<"const Type*", "type", true, "nullptr">
 ]>;
 def BuiltInType   : Leaf<"Built-in primitive type", Type, [
-    Member<"TokenKind", "tokenKind">
-]>;
-def PointerType   : Leaf<"Pointer type", Type, [
-    Member<"AstType*", "typeExpr">
-]>;
-def ReferenceType : Leaf<"Reference type", Type, [
-    Member<"AstType*", "typeExpr">
+    Arg<"TokenKind", "tokenKind">
 ]>;
 
 // ============================================================================
@@ -101,48 +73,40 @@ def ReferenceType : Leaf<"Reference type", Type, [
 def Stmt : Group<"statement", Root>;
 
 def StmtList : Leaf<"List of statements", Stmt, [
-    Member<"std::span<AstStmt*>", "stmts">,
-    Member<"std::span<AstDecl*>", "decls">,
-//    Member<"SymbolTable*", "symbolTable", false, "nullptr">
-]>;
-
-def EmptyStmt : Leaf<"Empty statement", Stmt>;
-
-def DimStmt : Leaf<"DIM variable declaration statement", Stmt, [
-    Member<"std::span<AstVarDecl*>", "decls">
+    Arg<"std::span<AstStmt*>", "stmts">,
+    Arg<"std::span<AstDecl*>", "decls">
 ]>;
 
 def ExprStmt : Leaf<"Expression statement", Stmt, [
-    Member<"AstExpr*", "expr">
+    Arg<"AstExpr*", "expr">
 ]>;
 
 def DeclareStmt : Leaf<"Forward declaration statement", Stmt, [
-    Member<"AstFuncDecl*", "decl">
-]>;
-
-def ExternStmt : Leaf<"External linkage block", Stmt, [
-    Member<"AstStmtList*", "stmtList">,
-//    Member<"CallingConvention", "callingConv">,
-]>;
-
-def AssignStmt : Leaf<"Assignment statement", Stmt, [
-    Member<"AstExpr*", "assignee">,
-    Member<"AstExpr*", "expr">,
+    Arg<"AstFuncDecl*", "decl">
 ]>;
 
 def FuncStmt : Leaf<"Function or subroutine definition", Stmt, [
-    Member<"AstFuncDecl*", "decl">,
-    Member<"AstStmtList*", "stmtList">,
+    Arg<"AstFuncDecl*", "decl">,
+    Arg<"AstStmtList*", "stmtList">
 ]>;
 
 def ReturnStmt : Leaf<"Return statement", Stmt, [
-    Member<"AstExpr*", "expr">
+    Arg<"AstExpr*", "expr">
+]>;
+
+def DimStmt : Leaf<"DIM variable declaration statement", Stmt, [
+    Arg<"std::span<AstVarDecl*>", "decls">
+]>;
+
+def AssignStmt : Leaf<"Assignment statement", Stmt, [
+    Arg<"AstExpr*", "assignee">,
+    Arg<"AstExpr*", "expr">
 ]>;
 
 def IfStmt : Leaf<"IF statement", Stmt, [
-    Member<"AstExpr*", "condition">,
-    Member<"AstStmt*", "thenStmt">,
-    Member<"AstStmt*", "elseStmt">,
+    Arg<"AstExpr*", "condition">,
+    Arg<"AstStmt*", "thenStmt">,
+    Arg<"AstStmt*", "elseStmt">
 ]>;
 
 // ============================================================================
@@ -150,29 +114,23 @@ def IfStmt : Leaf<"IF statement", Stmt, [
 // ============================================================================
 
 def Decl : Group<"declaration", Root, [
-    Member<"llvm::StringRef", "name">,
-//    Member<"CallingConvention", "callingConv">,
-//    Member<"SymbolVisibility", "visibility">,
-    Member<"const Type*", "type", true, "nullptr">,
-//    Member<"Symbol*", "symbol", true, "nullptr">,
+    Arg<"llvm::StringRef", "name">,
+    Arg<"const Type*", "type", true, "nullptr">
 ]>;
 
-def ImportDecl : Leaf<"Import declaration", Decl>;
-
 def VarDecl : Leaf<"Variable declaration", Decl, [
-    Member<"AstType*", "typeExpr">,
-    Member<"AstExpr*", "expr">,
+    Arg<"AstType*", "typeExpr">,
+    Arg<"AstExpr*", "expr">
 ]>;
 
 def FuncDecl : Leaf<"Function or subroutine declaration", Decl, [
-    Member<"std::span<AstFuncParamDecl*>", "params">,
-    Member<"AstType*", "retTypeExpr">,
-    Member<"AstFuncStmt*", "impl", true, "nullptr">,
+    Arg<"std::span<AstFuncParamDecl*>", "params">,
+    Arg<"AstType*", "retTypeExpr">,
+    Arg<"AstFuncStmt*", "impl", true, "nullptr">
 ]>;
 
 def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [
-    Member<"AstType*", "typeExpr">,
-    Member<"bool", "isVarArg">,
+    Arg<"AstType*", "typeExpr">
 ]>;
 
 // ============================================================================
@@ -180,55 +138,29 @@ def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [
 // ============================================================================
 
 def Expr : Group<"expression", Root, [
-    Member<"const Type*", "type", true, "nullptr">
+    Arg<"const Type*", "type", true, "nullptr">
 ]>;
 
-def ExprSubGroup : Group<"expression", Expr, [
-]>;
-
-def ExrSubLeaf: Leaf<"Test subgroup expr", ExprSubGroup>;
-
-def VariableExpr : Leaf<"Variable expression", Expr, [
-    Member<"llvm::StringRef", "name">,
-//    Member<"Symbol*", "symbol", true, "nullptr">,
+def VarExpr : Leaf<"Variable expression", Expr, [
+    Arg<"llvm::StringRef", "name">,
 ]>;
 
 def CallExpr : Leaf<"CALL expression", Expr, [
-    Member<"AstExpr*", "callee">,
-    Member<"std::span<AstExpr*>", "args">,
+    Arg<"AstExpr*", "callee">,
+    Arg<"std::span<AstExpr*>", "args">,
 ]>;
 
 def LiteralExpr : Leaf<"Literal expression", Expr, [
-    Member<"LiteralValue", "value">
+    Arg<"LiteralValue", "value">
 ]>;
 
 def UnaryExpr : Leaf<"Unary expression", Expr, [
-    Member<"AstExpr*", "expr">,
-    Member<"TokenKind", "tokenKind">,
+    Arg<"AstExpr*", "expr">,
+    Arg<"TokenKind", "op">,
 ]>;
 
 def BinaryExpr : Leaf<"Binary expression", Expr, [
-    Member<"AstExpr*", "left">,
-    Member<"AstExpr*", "right">,
-    Member<"TokenKind", "tokenKind">,
-]>;
-
-def CastExpr : Leaf<"CAST expression", Expr, [
-    Member<"AstExpr*", "expr">,
-    Member<"AstType*", "typeExpr">,
-    Member<"bool", "isImplicit">,
-]>;
-
-def DereferenceExpr : Leaf<"DEREFERENCE expression", Expr, [
-    Member<"AstExpr*", "expr">
-]>;
-
-def AddressOfExpr : Leaf<"ADDRESS OF expression", Expr, [
-    Member<"AstExpr*", "expr">
-]>;
-
-def MemberExpr : Leaf<"Member expression", Expr, [
-    Member<"AstExpr*", "expr">,
-    Member<"AstExpr*", "member">,
-    Member<"TokenKind", "tokenKind">,
+    Arg<"AstExpr*", "left">,
+    Arg<"AstExpr*", "right">,
+    Arg<"TokenKind", "op">,
 ]>;

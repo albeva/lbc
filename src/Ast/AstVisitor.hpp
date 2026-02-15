@@ -70,32 +70,22 @@ protected:
  * 
  *     // void accept(const AstModule& ast) const;
  *     // void accept(const AstBuiltInType& ast) const;
- *     // void accept(const AstPointerType& ast) const;
- *     // void accept(const AstReferenceType& ast) const;
  *     // void accept(const AstStmtList& ast) const;
- *     // void accept(const AstEmptyStmt& ast) const;
- *     // void accept(const AstDimStmt& ast) const;
  *     // void accept(const AstExprStmt& ast) const;
  *     // void accept(const AstDeclareStmt& ast) const;
- *     // void accept(const AstExternStmt& ast) const;
- *     // void accept(const AstAssignStmt& ast) const;
  *     // void accept(const AstFuncStmt& ast) const;
  *     // void accept(const AstReturnStmt& ast) const;
+ *     // void accept(const AstDimStmt& ast) const;
+ *     // void accept(const AstAssignStmt& ast) const;
  *     // void accept(const AstIfStmt& ast) const;
- *     // void accept(const AstImportDecl& ast) const;
  *     // void accept(const AstVarDecl& ast) const;
  *     // void accept(const AstFuncDecl& ast) const;
  *     // void accept(const AstFuncParamDecl& ast) const;
- *     // void accept(const AstVariableExpr& ast) const;
+ *     // void accept(const AstVarExpr& ast) const;
  *     // void accept(const AstCallExpr& ast) const;
  *     // void accept(const AstLiteralExpr& ast) const;
  *     // void accept(const AstUnaryExpr& ast) const;
  *     // void accept(const AstBinaryExpr& ast) const;
- *     // void accept(const AstCastExpr& ast) const;
- *     // void accept(const AstDereferenceExpr& ast) const;
- *     // void accept(const AstAddressOfExpr& ast) const;
- *     // void accept(const AstMemberExpr& ast) const;
- *     // void accept(const AstExrSubLeaf& ast) const;
  * };
  * @endcode
  */
@@ -111,40 +101,30 @@ public:
                 return self.accept(llvm::cast<AstModule>(ast));
             case AstKind::BuiltInType:
                 return self.accept(llvm::cast<AstBuiltInType>(ast));
-            case AstKind::PointerType:
-                return self.accept(llvm::cast<AstPointerType>(ast));
-            case AstKind::ReferenceType:
-                return self.accept(llvm::cast<AstReferenceType>(ast));
             case AstKind::StmtList:
                 return self.accept(llvm::cast<AstStmtList>(ast));
-            case AstKind::EmptyStmt:
-                return self.accept(llvm::cast<AstEmptyStmt>(ast));
-            case AstKind::DimStmt:
-                return self.accept(llvm::cast<AstDimStmt>(ast));
             case AstKind::ExprStmt:
                 return self.accept(llvm::cast<AstExprStmt>(ast));
             case AstKind::DeclareStmt:
                 return self.accept(llvm::cast<AstDeclareStmt>(ast));
-            case AstKind::ExternStmt:
-                return self.accept(llvm::cast<AstExternStmt>(ast));
-            case AstKind::AssignStmt:
-                return self.accept(llvm::cast<AstAssignStmt>(ast));
             case AstKind::FuncStmt:
                 return self.accept(llvm::cast<AstFuncStmt>(ast));
             case AstKind::ReturnStmt:
                 return self.accept(llvm::cast<AstReturnStmt>(ast));
+            case AstKind::DimStmt:
+                return self.accept(llvm::cast<AstDimStmt>(ast));
+            case AstKind::AssignStmt:
+                return self.accept(llvm::cast<AstAssignStmt>(ast));
             case AstKind::IfStmt:
                 return self.accept(llvm::cast<AstIfStmt>(ast));
-            case AstKind::ImportDecl:
-                return self.accept(llvm::cast<AstImportDecl>(ast));
             case AstKind::VarDecl:
                 return self.accept(llvm::cast<AstVarDecl>(ast));
             case AstKind::FuncDecl:
                 return self.accept(llvm::cast<AstFuncDecl>(ast));
             case AstKind::FuncParamDecl:
                 return self.accept(llvm::cast<AstFuncParamDecl>(ast));
-            case AstKind::VariableExpr:
-                return self.accept(llvm::cast<AstVariableExpr>(ast));
+            case AstKind::VarExpr:
+                return self.accept(llvm::cast<AstVarExpr>(ast));
             case AstKind::CallExpr:
                 return self.accept(llvm::cast<AstCallExpr>(ast));
             case AstKind::LiteralExpr:
@@ -153,16 +133,6 @@ public:
                 return self.accept(llvm::cast<AstUnaryExpr>(ast));
             case AstKind::BinaryExpr:
                 return self.accept(llvm::cast<AstBinaryExpr>(ast));
-            case AstKind::CastExpr:
-                return self.accept(llvm::cast<AstCastExpr>(ast));
-            case AstKind::DereferenceExpr:
-                return self.accept(llvm::cast<AstDereferenceExpr>(ast));
-            case AstKind::AddressOfExpr:
-                return self.accept(llvm::cast<AstAddressOfExpr>(ast));
-            case AstKind::MemberExpr:
-                return self.accept(llvm::cast<AstMemberExpr>(ast));
-            case AstKind::ExrSubLeaf:
-                return self.accept(llvm::cast<AstExrSubLeaf>(ast));
             default:
                 std::unreachable();
         }
@@ -190,8 +160,6 @@ public:
  *     }
  * 
  *     // void accept(const AstBuiltInType& ast) const;
- *     // void accept(const AstPointerType& ast) const;
- *     // void accept(const AstReferenceType& ast) const;
  * };
  * @endcode
  */
@@ -205,10 +173,6 @@ public:
         switch (ast.getKind()) {
             case AstKind::BuiltInType:
                 return self.accept(llvm::cast<AstBuiltInType>(ast));
-            case AstKind::PointerType:
-                return self.accept(llvm::cast<AstPointerType>(ast));
-            case AstKind::ReferenceType:
-                return self.accept(llvm::cast<AstReferenceType>(ast));
             default:
                 std::unreachable();
         }
@@ -236,14 +200,12 @@ public:
  *     }
  * 
  *     // void accept(const AstStmtList& ast) const;
- *     // void accept(const AstEmptyStmt& ast) const;
- *     // void accept(const AstDimStmt& ast) const;
  *     // void accept(const AstExprStmt& ast) const;
  *     // void accept(const AstDeclareStmt& ast) const;
- *     // void accept(const AstExternStmt& ast) const;
- *     // void accept(const AstAssignStmt& ast) const;
  *     // void accept(const AstFuncStmt& ast) const;
  *     // void accept(const AstReturnStmt& ast) const;
+ *     // void accept(const AstDimStmt& ast) const;
+ *     // void accept(const AstAssignStmt& ast) const;
  *     // void accept(const AstIfStmt& ast) const;
  * };
  * @endcode
@@ -258,22 +220,18 @@ public:
         switch (ast.getKind()) {
             case AstKind::StmtList:
                 return self.accept(llvm::cast<AstStmtList>(ast));
-            case AstKind::EmptyStmt:
-                return self.accept(llvm::cast<AstEmptyStmt>(ast));
-            case AstKind::DimStmt:
-                return self.accept(llvm::cast<AstDimStmt>(ast));
             case AstKind::ExprStmt:
                 return self.accept(llvm::cast<AstExprStmt>(ast));
             case AstKind::DeclareStmt:
                 return self.accept(llvm::cast<AstDeclareStmt>(ast));
-            case AstKind::ExternStmt:
-                return self.accept(llvm::cast<AstExternStmt>(ast));
-            case AstKind::AssignStmt:
-                return self.accept(llvm::cast<AstAssignStmt>(ast));
             case AstKind::FuncStmt:
                 return self.accept(llvm::cast<AstFuncStmt>(ast));
             case AstKind::ReturnStmt:
                 return self.accept(llvm::cast<AstReturnStmt>(ast));
+            case AstKind::DimStmt:
+                return self.accept(llvm::cast<AstDimStmt>(ast));
+            case AstKind::AssignStmt:
+                return self.accept(llvm::cast<AstAssignStmt>(ast));
             case AstKind::IfStmt:
                 return self.accept(llvm::cast<AstIfStmt>(ast));
             default:
@@ -302,7 +260,6 @@ public:
  *         unhandled(ast);
  *     }
  * 
- *     // void accept(const AstImportDecl& ast) const;
  *     // void accept(const AstVarDecl& ast) const;
  *     // void accept(const AstFuncDecl& ast) const;
  *     // void accept(const AstFuncParamDecl& ast) const;
@@ -317,8 +274,6 @@ public:
      */
     constexpr auto visit(this auto& self, IsNode<AstDecl> auto& ast) -> ReturnType {
         switch (ast.getKind()) {
-            case AstKind::ImportDecl:
-                return self.accept(llvm::cast<AstImportDecl>(ast));
             case AstKind::VarDecl:
                 return self.accept(llvm::cast<AstVarDecl>(ast));
             case AstKind::FuncDecl:
@@ -351,16 +306,11 @@ public:
  *         unhandled(ast);
  *     }
  * 
- *     // void accept(const AstVariableExpr& ast) const;
+ *     // void accept(const AstVarExpr& ast) const;
  *     // void accept(const AstCallExpr& ast) const;
  *     // void accept(const AstLiteralExpr& ast) const;
  *     // void accept(const AstUnaryExpr& ast) const;
  *     // void accept(const AstBinaryExpr& ast) const;
- *     // void accept(const AstCastExpr& ast) const;
- *     // void accept(const AstDereferenceExpr& ast) const;
- *     // void accept(const AstAddressOfExpr& ast) const;
- *     // void accept(const AstMemberExpr& ast) const;
- *     // void accept(const AstExrSubLeaf& ast) const;
  * };
  * @endcode
  */
@@ -372,8 +322,8 @@ public:
      */
     constexpr auto visit(this auto& self, IsNode<AstExpr> auto& ast) -> ReturnType {
         switch (ast.getKind()) {
-            case AstKind::VariableExpr:
-                return self.accept(llvm::cast<AstVariableExpr>(ast));
+            case AstKind::VarExpr:
+                return self.accept(llvm::cast<AstVarExpr>(ast));
             case AstKind::CallExpr:
                 return self.accept(llvm::cast<AstCallExpr>(ast));
             case AstKind::LiteralExpr:
@@ -382,56 +332,6 @@ public:
                 return self.accept(llvm::cast<AstUnaryExpr>(ast));
             case AstKind::BinaryExpr:
                 return self.accept(llvm::cast<AstBinaryExpr>(ast));
-            case AstKind::CastExpr:
-                return self.accept(llvm::cast<AstCastExpr>(ast));
-            case AstKind::DereferenceExpr:
-                return self.accept(llvm::cast<AstDereferenceExpr>(ast));
-            case AstKind::AddressOfExpr:
-                return self.accept(llvm::cast<AstAddressOfExpr>(ast));
-            case AstKind::MemberExpr:
-                return self.accept(llvm::cast<AstMemberExpr>(ast));
-            case AstKind::ExrSubLeaf:
-                return self.accept(llvm::cast<AstExrSubLeaf>(ast));
-            default:
-                std::unreachable();
-        }
-    }
-};
-
-/**
- * Visitor for expression nodes under AstExprSubGroup.
- * 
- * Inherit privately, friend the visitor, and implement accept() handlers.
- * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- * 
- * @code
- * class SampleExprSubGroupVisitor final : AstExprSubGroupVisitor<> {
- * public:
- *     auto process(const AstExprSubGroup& ast) const {
- *         visit(ast);
- *     }
- * 
- * private:
- *     friend AstExprSubGroupVisitor;
- * 
- *     void accept(const auto& ast) const {
- *         unhandled(ast);
- *     }
- * 
- *     // void accept(const AstExrSubLeaf& ast) const;
- * };
- * @endcode
- */
-template <typename ReturnType = void>
-class AstExprSubGroupVisitor : AstVisitorBase {
-public:
-    /**
-     * Dispatch to the appropriate accept() handler based on the node's AstKind.
-     */
-    constexpr auto visit(this auto& self, IsNode<AstExprSubGroup> auto& ast) -> ReturnType {
-        switch (ast.getKind()) {
-            case AstKind::ExrSubLeaf:
-                return self.accept(llvm::cast<AstExrSubLeaf>(ast));
             default:
                 std::unreachable();
         }

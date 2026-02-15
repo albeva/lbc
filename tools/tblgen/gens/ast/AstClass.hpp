@@ -3,12 +3,12 @@
 //
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <functional>
-#include "AstMember.hpp"
+#include "AstArg.hpp"
 
 class AstGen;
 
@@ -47,12 +47,12 @@ public:
     /** Generate constructor initializer list entries (base class delegation + own members). */
     [[nodiscard]] auto ctorInitParams() const -> std::vector<std::string>;
     /** Generate private data member declarations. */
-    [[nodiscard]] auto dataMembers() const -> std::vector<std::string>;
+    [[nodiscard]] auto classArgs() const -> std::vector<std::string>;
     /** Generate getter (and setter for mutable) function strings. */
-    [[nodiscard]] auto functions() const -> std::vector<std::string>;
+    [[nodiscard]] auto classFunctions() const -> std::vector<std::string>;
     /** Whether this class introduces any new constructor parameters beyond its parent. */
     [[nodiscard]] auto hasOwnCtorParams() -> bool;
-    [[nodiscard]] auto getMembers() const -> const std::vector<std::unique_ptr<AstMember>>& { return m_members; }
+    [[nodiscard]] auto getArgs() const -> const std::vector<std::unique_ptr<AstArg>>& { return m_args; }
     [[nodiscard]] auto getVisitorName() const -> std::string;
 
     /** Find first and last child items. if nested is true, then recursievly find among sub childs */
@@ -84,6 +84,6 @@ private:
     /// AstKind enum name (e.g., "Module")
     std::string m_enumName;
     std::vector<std::unique_ptr<AstClass>> m_children;
-    std::vector<std::unique_ptr<AstMember>> m_members;
+    std::vector<std::unique_ptr<AstArg>> m_args;
     Kind m_kind;
 };

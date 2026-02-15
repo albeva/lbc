@@ -45,7 +45,7 @@ private:
     void constructor(AstClass* cls);
     void classof(AstClass* cls);
     void functions(AstClass* cls);
-    void members(AstClass* cls);
+    void classArgs(AstClass* cls);
 
     /// Root of the AstClass tree, built in the constructor
     std::unique_ptr<AstClass> m_root;

@@ -10,7 +10,7 @@ using namespace llvm;
 AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
 : m_parent(parent)
 , m_record(record) {
-    m_className = std::string("Ast").append(record->getName());
+    m_className = ("Ast" + record->getName()).str();
     m_enumName = record->getName();
 
     // class children
@@ -34,9 +34,9 @@ AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
         m_kind = Kind::Leaf;
     }
 
-    // class members
-    for (const auto& member : record->getValueAsListOfDefs("members")) {
-        m_members.emplace_back(std::make_unique<AstMember>(member));
+    // class args
+    for (const auto& arg : record->getValueAsListOfDefs("args")) {
+        m_args.emplace_back(std::make_unique<AstArg>(arg));
     }
 }
 
@@ -45,13 +45,13 @@ auto AstClass::ctorParams() const -> std::vector<std::string> {
     if (const auto* parent = m_parent) {
         params.append_range(parent->ctorParams());
     }
-    for (const auto& member : m_members) {
-        if (member->hasCtorParam()) {
+    for (const auto& arg : m_args) {
+        if (arg->hasCtorParam()) {
             std::string param;
-            if (member->passAsConst()) {
+            if (arg->passAsConst()) {
                 param += "const ";
             }
-            param += member->getType() + " " + member->getName();
+            param += arg->getType() + " " + arg->getName();
             params.emplace_back(std::move(param));
         }
     }
@@ -74,10 +74,10 @@ auto AstClass::ctorInitParams() const -> std::vector<std::string> {
                     super = "AstKind::" + getEnumName();
                 }
             }
-            for (const auto& members : klass->m_members) {
-                if (members->hasCtorParam()) {
+            for (const auto& arg : klass->m_args) {
+                if (arg->hasCtorParam()) {
                     super.append(", ");
-                    super.append(members->getName());
+                    super.append(arg->getName());
                 }
             }
         };
@@ -85,32 +85,32 @@ auto AstClass::ctorInitParams() const -> std::vector<std::string> {
         init.emplace_back(m_parent->getClassName() + "(" + super + ")");
     }
 
-    // class members
-    for (const auto& member : m_members) {
-        if (member->hasCtorParam()) {
-            init.emplace_back("m_" + member->getName() + "(" + member->getName() + ")");
+    // class args
+    for (const auto& args : m_args) {
+        if (args->hasCtorParam()) {
+            init.emplace_back("m_" + args->getName() + "(" + args->getName() + ")");
         }
     }
 
     return init;
 }
 
-auto AstClass::dataMembers() const -> std::vector<std::string> {
-    std::vector<std::string> members;
-    for (const auto& member : m_members) {
-        std::string decl = member->getType() + " m_" + member->getName();
-        if (not member->getDefault().empty()) {
-            decl += " = " + member->getDefault();
+auto AstClass::classArgs() const -> std::vector<std::string> {
+    std::vector<std::string> args;
+    for (const auto& arg : m_args) {
+        std::string decl = arg->getType() + " m_" + arg->getName();
+        if (not arg->getDefault().empty()) {
+            decl += " = " + arg->getDefault();
         }
         decl += ";";
-        members.emplace_back(decl);
+        args.emplace_back(decl);
     }
-    return members;
+    return args;
 }
 
-auto AstClass::functions() const -> std::vector<std::string> {
+auto AstClass::classFunctions() const -> std::vector<std::string> {
     std::vector<std::string> funcs;
-    funcs.reserve(m_members.size());
+    funcs.reserve(m_args.size());
 
     constexpr auto capitalizeFirst = [](const std::string& str) -> std::string {
         if (str.empty()) {
@@ -122,27 +122,27 @@ auto AstClass::functions() const -> std::vector<std::string> {
         return copy;
     };
 
-    for (const auto& member : m_members) {
+    for (const auto& arg : m_args) {
         // getter
         funcs.emplace_back(
             "/// Get the "
-            + (member->getName() + "\n")
+            + (arg->getName() + "\n")
             + "[[nodiscard]] constexpr auto get"
-            + capitalizeFirst(member->getName())
-            + "() const -> " + member->getType() + " {\n"
-            + "    return m_" + member->getName() + ";\n"
+            + capitalizeFirst(arg->getName())
+            + "() const -> " + arg->getType() + " {\n"
+            + "    return m_" + arg->getName() + ";\n"
             + "}"
         );
 
         // setter
-        if (member->hasSetter()) {
+        if (arg->hasSetter()) {
             funcs.emplace_back(
                 "/// Set the "
-                + (member->getName() + "\n")
+                + (arg->getName() + "\n")
                 + "void set"
-                + capitalizeFirst(member->getName()) + "("
-                + (member->passAsConst() ? "const " : "") + member->getType() + " " + member->getName() + ") {\n"
-                + "    m_" + member->getName() + " = " + member->getName() + ";\n"
+                + capitalizeFirst(arg->getName()) + "("
+                + (arg->passAsConst() ? "const " : "") + arg->getType() + " " + arg->getName() + ") {\n"
+                + "    m_" + arg->getName() + " = " + arg->getName() + ";\n"
                 + "}"
             );
         }
@@ -152,8 +152,8 @@ auto AstClass::functions() const -> std::vector<std::string> {
 }
 
 auto AstClass::hasOwnCtorParams() -> bool {
-    for (const auto& member : m_members) {
-        if (member->hasCtorParam()) {
+    for (const auto& arg : m_args) {
+        if (arg->hasCtorParam()) {
             return true;
         }
     }

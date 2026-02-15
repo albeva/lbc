@@ -13,9 +13,9 @@ class Record;
  * constructor parameter (no default value) or an initialized field, and
  * whether a setter should be generated (mutable bit).
  */
-class AstMember final {
+class AstArg final {
 public:
-    explicit AstMember(const llvm::Record* record);
+    explicit AstArg(const llvm::Record* record);
 
     /// Whether this member generates a setter (mutable flag set in .td)
     [[nodiscard]] auto hasSetter() const -> bool { return m_mutable; }

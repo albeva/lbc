@@ -11,7 +11,7 @@ auto AstExprPrinter::print(const AstExpr& ast) -> std::string {
     return m_output;
 }
 
-void AstExprPrinter::accept(const AstVariableExpr& ast) {
+void AstExprPrinter::accept(const AstVarExpr& ast) {
     m_output += ast.getName();
 }
 
@@ -52,42 +52,14 @@ void AstExprPrinter::accept(const AstLiteralExpr& ast) {
 }
 
 void AstExprPrinter::accept(const AstUnaryExpr& ast) {
-    m_output += ast.getTokenKind().string();
+    m_output += ast.getOp().string();
     visit(*ast.getExpr());
 }
 
 void AstExprPrinter::accept(const AstBinaryExpr& ast) {
     visit(*ast.getLeft());
     m_output += " ";
-    m_output += ast.getTokenKind().string();
+    m_output += ast.getOp().string();
     m_output += " ";
     visit(*ast.getRight());
-}
-
-// void AstExprPrinter::accept(const AstCastExpr& ast) {
-//     visit(*ast.getExpr());
-//     m_output += " AS <not-implemented>";
-//
-// }
-
-void AstExprPrinter::accept(const AstDereferenceExpr& ast) {
-    m_output += "*";
-    visit(*ast.getExpr());
-}
-
-void AstExprPrinter::accept(const AstAddressOfExpr& ast) {
-    m_output += "@";
-    visit(*ast.getExpr());
-}
-
-void AstExprPrinter::accept(const AstMemberExpr& ast) {
-    visit(*ast.getExpr());
-    m_output += ".";
-    visit(*ast.getMember());
-}
-
-void AstExprPrinter::accept(const AstExrSubLeaf& ast) {
-    (void)this;
-    (void)ast;
-    m_output += "AstExrSubLeaf";
 }

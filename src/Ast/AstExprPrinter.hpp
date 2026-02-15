@@ -17,16 +17,11 @@ private:
         m_output += ("unhandled " + ast.getClassName()).str();
     }
 
-    void accept(const AstVariableExpr& ast); // explicit const
+    void accept(const AstVarExpr& ast);
     void accept(const AstCallExpr& ast);
     void accept(const AstLiteralExpr& ast);
     void accept(const AstUnaryExpr& ast);
     void accept(const AstBinaryExpr& ast);
-    // void accept(const AstCastExpr& ast);
-    void accept(const AstDereferenceExpr& ast);
-    void accept(const AstAddressOfExpr& ast);
-    void accept(const AstMemberExpr& ast);
-    void accept(const AstExrSubLeaf& ast);
 
     std::string m_output;
 };

@@ -3,8 +3,8 @@ add_executable(lbc-tblgen
     GeneratorBase.hpp
     gens/ast/AstClass.cpp
     gens/ast/AstClass.hpp
-    gens/ast/AstMember.cpp
-    gens/ast/AstMember.hpp
+    gens/ast/AstArg.cpp
+    gens/ast/AstArg.hpp
     gens/ast/AstGen.cpp
     gens/ast/AstGen.hpp
     gens/ast/AstVisitorGen.cpp
