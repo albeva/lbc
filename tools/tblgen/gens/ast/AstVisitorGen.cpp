@@ -120,7 +120,7 @@ auto AstVisitorGen::visitorSample(const AstClass* klass) -> std::string {
 
     std::string sample;
     sample += "@code\n";
-    sample += "class " + sampleName + " : " + visitorName + "<> {\n";
+    sample += "class " + sampleName + " final : " + visitorName + "<> {\n";
     sample += "public:\n";
     sample += "    auto process(const " + className + "& ast) const {\n";
     sample += "        visit(ast);\n";

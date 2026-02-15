@@ -6,7 +6,7 @@
 #include "AstVisitor.hpp"
 namespace lbc {
 
-class AstExprPrinter : AstExprVisitor<> {
+class AstExprPrinter final : AstExprVisitor<> {
 public:
     auto print(const AstExpr&) -> std::string;
 

@@ -50,24 +50,24 @@ protected:
 
 /**
  * Visitor that dispatches over all concrete AST nodes.
- *
+ * 
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- *
+ * 
  * @code
- * class SampleVisitor : AstVisitor<> {
+ * class SampleVisitor final : AstVisitor<> {
  * public:
  *     auto process(const AstRoot& ast) const {
  *         visit(ast);
  *     }
- *
+ * 
  * private:
  *     friend AstVisitor;
- *
+ * 
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- *
+ * 
  *     // void accept(const AstModule& ast) const;
  *     // void accept(const AstBuiltInType& ast) const;
  *     // void accept(const AstPointerType& ast) const;
@@ -171,24 +171,24 @@ public:
 
 /**
  * Visitor for type expression nodes under AstType.
- *
+ * 
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- *
+ * 
  * @code
- * class SampleTypeVisitor : AstTypeVisitor<> {
+ * class SampleTypeVisitor final : AstTypeVisitor<> {
  * public:
  *     auto process(const AstType& ast) const {
  *         visit(ast);
  *     }
- *
+ * 
  * private:
  *     friend AstTypeVisitor;
- *
+ * 
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- *
+ * 
  *     // void accept(const AstBuiltInType& ast) const;
  *     // void accept(const AstPointerType& ast) const;
  *     // void accept(const AstReferenceType& ast) const;
@@ -217,24 +217,24 @@ public:
 
 /**
  * Visitor for statement nodes under AstStmt.
- *
+ * 
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- *
+ * 
  * @code
- * class SampleStmtVisitor : AstStmtVisitor<> {
+ * class SampleStmtVisitor final : AstStmtVisitor<> {
  * public:
  *     auto process(const AstStmt& ast) const {
  *         visit(ast);
  *     }
- *
+ * 
  * private:
  *     friend AstStmtVisitor;
- *
+ * 
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- *
+ * 
  *     // void accept(const AstStmtList& ast) const;
  *     // void accept(const AstEmptyStmt& ast) const;
  *     // void accept(const AstDimStmt& ast) const;
@@ -284,24 +284,24 @@ public:
 
 /**
  * Visitor for declaration nodes under AstDecl.
- *
+ * 
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- *
+ * 
  * @code
- * class SampleDeclVisitor : AstDeclVisitor<> {
+ * class SampleDeclVisitor final : AstDeclVisitor<> {
  * public:
  *     auto process(const AstDecl& ast) const {
  *         visit(ast);
  *     }
- *
+ * 
  * private:
  *     friend AstDeclVisitor;
- *
+ * 
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- *
+ * 
  *     // void accept(const AstImportDecl& ast) const;
  *     // void accept(const AstVarDecl& ast) const;
  *     // void accept(const AstFuncDecl& ast) const;
@@ -333,24 +333,24 @@ public:
 
 /**
  * Visitor for expression nodes under AstExpr.
- *
+ * 
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- *
+ * 
  * @code
- * class SampleExprVisitor : AstExprVisitor<> {
+ * class SampleExprVisitor final : AstExprVisitor<> {
  * public:
  *     auto process(const AstExpr& ast) const {
  *         visit(ast);
  *     }
- *
+ * 
  * private:
  *     friend AstExprVisitor;
- *
+ * 
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- *
+ * 
  *     // void accept(const AstVariableExpr& ast) const;
  *     // void accept(const AstCallExpr& ast) const;
  *     // void accept(const AstLiteralExpr& ast) const;
@@ -400,24 +400,24 @@ public:
 
 /**
  * Visitor for expression nodes under AstExprSubGroup.
- *
+ * 
  * Inherit privately, friend the visitor, and implement accept() handlers.
  * A generic accept(const auto&) catch-all can handle unimplemented nodes.
- *
+ * 
  * @code
- * class SampleExprSubGroupVisitor : AstExprSubGroupVisitor<> {
+ * class SampleExprSubGroupVisitor final : AstExprSubGroupVisitor<> {
  * public:
  *     auto process(const AstExprSubGroup& ast) const {
  *         visit(ast);
  *     }
- *
+ * 
  * private:
  *     friend AstExprSubGroupVisitor;
- *
+ * 
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- *
+ * 
  *     // void accept(const AstExrSubLeaf& ast) const;
  * };
  * @endcode
