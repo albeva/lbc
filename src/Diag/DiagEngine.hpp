@@ -33,7 +33,8 @@ private:
     using Index = std::uint32_t;
 
     /// Construct a valid index pointing into DiagEngine storage.
-    constexpr explicit DiagIndex(Index index) : m_index(index) {}
+    constexpr explicit DiagIndex(const Index index)
+    : m_index(index) { }
 
     /// Return the raw index value. Asserts validity in debug builds.
     [[nodiscard]] constexpr auto getIndex() const -> Index {
@@ -43,7 +44,7 @@ private:
 
     /// Check whether this index points to an actual diagnostic.
     [[nodiscard]] constexpr auto isValid() const -> bool {
-        return m_index != std::numeric_limits<Index>::max();
+        return m_index != DiagIndex().m_index;
     }
 
     /// Raw index, sentinel when default-constructed.

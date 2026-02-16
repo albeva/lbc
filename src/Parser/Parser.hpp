@@ -3,9 +3,9 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Ast/AstFwdDecl.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
-#include "Ast/AstFwdDecl.hpp"
 namespace lbc {
 class Context;
 
