@@ -55,12 +55,12 @@ private:
     /**
      * Create an error indicating the current token was unexpected.
      */
-    [[nodiscard]] auto unexpected() -> DiagError;
+    [[nodiscard]] auto unexpected(std::source_location location = std::source_location::current()) -> DiagError;
 
     /**
      * Create an error indicating unimplemented functionality.
      */
-    [[nodiscard]] auto notImplemented() -> DiagError;
+    [[nodiscard]] auto notImplemented(std::source_location location = std::source_location::current()) -> DiagError;
 
     /**
      * Consume the current token and advance to the next one.

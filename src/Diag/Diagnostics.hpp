@@ -24,7 +24,7 @@ enum class DiagCategory : std::uint8_t {
 };
 
 /**
- * Encapulsate diagnostic message details
+ * Encapsulate diagnostic message details
  */
 struct [[nodiscard]] DiagMessage final {
     llvm::SourceMgr::DiagKind kind;
@@ -125,7 +125,7 @@ namespace Diagnostics {
             .kind = llvm::SourceMgr::DiagKind::DK_Error,
             .category = DiagCategory::Parse,
             .code = "E0201",
-            .message = std::format("expected {}, fougn {}", expected, found)
+            .message = std::format("expected {}, found {}", expected, found)
         };
     }
 

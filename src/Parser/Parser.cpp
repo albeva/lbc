@@ -25,12 +25,12 @@ auto Parser::parse() -> Result<AstModule*> {
     // return nullptr;
 }
 
-auto Parser::unexpected() -> DiagError {
-    return diag(Diagnostics::unexpectedToken(m_token), m_token.getRange().Start);
+auto Parser::unexpected(std::source_location location) -> DiagError {
+    return diag(Diagnostics::unexpectedToken(m_token), m_token.getRange().Start, {}, location);
 }
 
-auto Parser::notImplemented() -> DiagError {
-    return diag(Diagnostics::notImplemented());
+auto Parser::notImplemented(std::source_location location) -> DiagError {
+    return diag(Diagnostics::notImplemented(), {}, {}, location);
 }
 
 void Parser::advance() {
