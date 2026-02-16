@@ -11,5 +11,10 @@ auto main(int argc, const char* argv[]) -> int {
     std::string included;
     auto id = context.getSourceMgr().AddIncludeFile("samples/hello.bas", {}, included);
     lbc::Parser parser { context, id };
-    MUST(parser.parse());
+    const auto res = parser.parse();
+    context.getDiag().print();
+    if (!res) {
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }

@@ -3,6 +3,7 @@
 //
 #include "Parser.hpp"
 #include "Ast/Ast.hpp"
+#include "Driver/Context.hpp"
 using namespace lbc;
 
 Parser::Parser(Context& context, unsigned id)
@@ -13,37 +14,23 @@ Parser::Parser(Context& context, unsigned id)
 Parser::~Parser() = default;
 
 auto Parser::parse() -> Result<AstModule*> {
-    while (true) {
-        std::println("'{}'", m_token);
-        m_token = m_lexer.next();
-        if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
-            break;
-        }
-    }
-    return nullptr;
+    return notImplemented();
+    // while (true) {
+    //     std::println("'{}'", m_token);
+    //     m_token = m_lexer.next();
+    //     if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
+    //         break;
+    //     }
+    // }
+    // return nullptr;
 }
 
-void Parser::panic(const DiagMessage message) {
-    // TODO: Replace with proper error handling
-    switch (message) {
-    case DiagMessage::Unexpected:
-        std::println(stderr, "lbc: error: unexpected token");
-        break;
-    case DiagMessage::NotImplemented:
-        std::println(stderr, "lbc: error: not implemented");
-        break;
-    }
-    std::exit(EXIT_FAILURE);
+auto Parser::unexpected() -> DiagError {
+    return diag(Diagnostics::unexpectedToken(m_token), m_token.getRange().Start);
 }
 
-auto Parser::unexpected() -> Error {
-    (void)this;
-    return Error(DiagMessage::Unexpected);
-}
-
-auto Parser::notImplemented() -> Error {
-    (void)this;
-    return Error(DiagMessage::NotImplemented);
+auto Parser::notImplemented() -> DiagError {
+    return diag(Diagnostics::notImplemented());
 }
 
 void Parser::advance() {

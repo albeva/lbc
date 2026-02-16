@@ -1,5 +1,6 @@
 # lbc library
-add_library(lbc_lib)
+add_library(lbc_lib
+    Diag/LogProvider.hpp)
 
 # lbc sources
 target_sources(lbc_lib

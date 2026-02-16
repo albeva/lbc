@@ -27,7 +27,7 @@ auto DiagGen::run() -> bool {
     });
     newline();
 
-    doc("Encapulsate diagnostic message details");
+    doc("Encapsulate diagnostic message details");
     block("struct [[nodiscard]] DiagMessage final", true, [&] {
         line("llvm::SourceMgr::DiagKind kind");
         line("DiagCategory category");
@@ -78,23 +78,22 @@ void DiagGen::diagnostic(const Record* record) {
 }
 
 /**
- * Extract params from the message and returns pair where first string contains function parameters
- * and the second contains the std::format string
+ * Parse format string placeholders and return a (params, expression) pair.
  *
- * "unexpected {found}, expected {expected}" -> pair(
- *     const std::formattable<char> auto&& found, std::formattable<char> auto&& expected
- *     std::format("unexpected {}, expected {}", text)
- * )
+ * Untyped placeholders use the Loggable concept:
+ *   "unexpected {found}, expected {expected}" -> pair(
+ *       "const Loggable auto& found, const Loggable auto& expected",
+ *       "std::format(\"unexpected {}, expected {}\", found, expected)"
+ *   )
  *
- * If type is specifed, then instead of "std::formattable<char> auto&&", use the type provied, as-is.
+ * Typed placeholders use the specified C++ type directly:
+ *   "expected {expected:int}, got {got:int}" -> pair(
+ *       "const int expected, const int got",
+ *       "std::format(\"expected {}, got {}\", expected, got)"
+ *   )
  *
- * "too many arguments: expected {expected:int}, got {got:int}" -> pair(
- *     const int expected, const int got
- *     std::format("too many arguments: expected {}, got {}", expected, got)
- * )
- *
- * If message contains no parameters, then return simply string literal.
- *
+ * Messages without placeholders return an empty params string and
+ * a quoted string literal (no std::format call).
  */
 auto DiagGen::messageSpec(const Record* record) -> std::pair<std::string, std::string> {
     const auto message = record->getValueAsString("message").str();

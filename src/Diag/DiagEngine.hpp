@@ -54,6 +54,19 @@ private:
 };
 
 /**
+ * Result type for fallible operations that may produce diagnostics.
+ * On failure, carries a DiagIndex handle into DiagEngine storage.
+ */
+template<typename T>
+using DiagResult = std::expected<T, DiagIndex>;
+
+/**
+ * Error value for returning a diagnostic from a fallible operation.
+ * Wraps a DiagIndex in std::unexpected for use with DiagResult<T>.
+ */
+using DiagError = std::unexpected<DiagIndex>;
+
+/**
  * Central diagnostic engine that accumulates diagnostics during compilation.
  *
  * Compiler passes log diagnostics through DiagEngine, which stores them
@@ -69,22 +82,44 @@ public:
     explicit DiagEngine(Context& context);
     ~DiagEngine();
 
+    /** Return the number of diagnostics with the given severity. */
     [[nodiscard]] auto count(llvm::SourceMgr::DiagKind kind) const -> std::size_t;
-    [[nodiscard]] auto hasErrors() const -> bool;
-    [[nodiscard]] auto get(DiagIndex index) const -> const llvm::SMDiagnostic&;
 
+    /** Check whether any error-level diagnostics have been logged. */
+    [[nodiscard]] auto hasErrors() const -> bool;
+
+    /** Retrieve the structured DiagMessage for a previously logged diagnostic. */
+    [[nodiscard]] auto getMessage(DiagIndex index) const -> const DiagMessage&;
+
+    /** Retrieve the LLVM SMDiagnostic for a previously logged diagnostic. */
+    [[nodiscard]] auto getDiagnostic(DiagIndex index) const -> const llvm::SMDiagnostic&;
+
+    /**
+     * Log a diagnostic message and return an opaque handle to it.
+     *
+     * @param message diagnostic message (typically from Diagnostics::*)
+     * @param loc source location, may be invalid for location-free diagnostics
+     * @param ranges optional source ranges to highlight
+     * @return DiagIndex handle for the logged diagnostic
+     */
     [[nodiscard]] auto log(
-        llvm::SMLoc Loc,
-        llvm::SourceMgr::DiagKind Kind,
-        const std::string& Msg,
-        llvm::ArrayRef<llvm::SMRange> Ranges = {}
+        DiagMessage&& message,
+        llvm::SMLoc loc = {},
+        llvm::ArrayRef<llvm::SMRange> ranges = {}
     ) -> DiagIndex;
 
+    /** Render all accumulated diagnostics to stdout. */
     void print() const;
 
 private:
+    /// Pairs the structured DiagMessage with the rendered LLVM diagnostic.
+    struct Entry final {
+        DiagMessage message;
+        llvm::SMDiagnostic diagnostic;
+    };
+
     [[maybe_unused]] Context& m_context;
-    std::vector<llvm::SMDiagnostic> m_messages;
+    std::vector<Entry> m_messages;
 };
 
 } // namespace lbc

@@ -4,6 +4,9 @@
 #include "Context.hpp"
 using namespace lbc;
 
+Context::Context()
+: m_diagEngine(*this) { }
+
 auto Context::retain(llvm::StringRef string) -> llvm::StringRef {
     return m_strings.insert(string).first->first();
 }

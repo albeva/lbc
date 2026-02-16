@@ -3,11 +3,24 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Diag/DiagEngine.hpp"
 namespace lbc {
+class Context;
+
+/**
+ * Satisfied by any type that exposes a `getContext()` method
+ * returning `Context&`. Used by LogProvider to access the
+ * diagnostic engine through deducing this.
+ */
+template <typename T>
+concept ContextAware = requires(T& obj) {
+    { obj.getContext() } -> std::same_as<Context&>;
+};
 
 class Context final {
 public:
-    Context() = default;
+    NO_COPY_AND_MOVE(Context)
+    Context();
 
     /**
      * Intern given string in a set and return unique, shared copy.
@@ -40,10 +53,16 @@ public:
      */
     [[nodiscard]] auto getSourceMgr() -> llvm::SourceMgr& { return m_sourceMgr; }
 
+    /**
+     * Get diagnostics engine
+     */
+    [[nodiscard]] auto getDiag() -> DiagEngine& { return m_diagEngine; }
+
 private:
     llvm::SourceMgr m_sourceMgr;
     llvm::BumpPtrAllocator m_allocator;
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;
+    DiagEngine m_diagEngine;
 };
 
 } // namespace lbc

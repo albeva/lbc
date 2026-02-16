@@ -4,30 +4,19 @@
 #pragma once
 #include "pch.hpp"
 #include "Ast/AstFwdDecl.hpp"
+#include "Diag/DiagEngine.hpp"
+#include "Diag/LogProvider.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Lexer/Token.hpp"
 namespace lbc {
 class Context;
 
 /**
- * Placeholder diagnostic message kind. Will be replaced by a proper
- * diagnostic engine that accumulates rich context (source locations,
- * expected vs found tokens, notes). Kept lightweight so that
- * Result<T> remains trivially copyable.
- */
-enum class DiagMessage : std::uint8_t {
-    /// Encountered an unexpected token.
-    Unexpected,
-    /// Feature not yet implemented.
-    NotImplemented,
-};
-
-/**
  * Recursive-descent parser. Implementation is split across
  * multiple .cpp files by concern: ParseDecl, ParseExpr, ParseStmt,
  * ParseType, and Parser.cpp for common utilities.
  */
-class Parser final {
+class Parser final : protected LogProvider {
 public:
     NO_COPY_AND_MOVE(Parser);
 
@@ -35,12 +24,7 @@ public:
      * Lightweight result type for fallible parser operations.
      */
     template <typename T>
-    using Result = std::expected<T, DiagMessage>;
-
-    /**
-     * Convenience alias for constructing error results.
-     */
-    using Error = std::unexpected<DiagMessage>;
+    using Result = DiagResult<T>;
 
     /**
      * Construct a parser for the source buffer identified by @param id.
@@ -52,6 +36,11 @@ public:
      * Run the parser over the source buffer.
      */
     auto parse() -> Result<AstModule*>;
+
+    /**
+     * Get associated context object
+     */
+    [[nodiscard]] auto getContext() -> Context& { return m_context; }
 
 private:
     // --------------------------------
@@ -66,12 +55,12 @@ private:
     /**
      * Create an error indicating the current token was unexpected.
      */
-    [[nodiscard]] auto unexpected() -> Error;
+    [[nodiscard]] auto unexpected() -> DiagError;
 
     /**
      * Create an error indicating unimplemented functionality.
      */
-    [[nodiscard]] auto notImplemented() -> Error;
+    [[nodiscard]] auto notImplemented() -> DiagError;
 
     /**
      * Consume the current token and advance to the next one.

@@ -55,8 +55,9 @@ class Note<Category cat, string id, string msg>    : Diag<note, cat, id, msg>;
 // System diagnostics
 // =============================================================================
 
-def fileNotFound    : Error<System, "E0001", "file not found: {path}">;
-def includeNotFound : Error<System, "E0002", "included file not found: {path}">;
+def notImplemented  : Error<System, "E0001", "Not implemented">;
+def fileNotFound    : Error<System, "E0002", "file not found: {path}">;
+def includeNotFound : Error<System, "E0003", "included file not found: {path}">;
 
 // =============================================================================
 // Lexer diagnostics
@@ -70,11 +71,10 @@ def invalidNumber      : Error<Lex, "E0102", "invalid number literal {text}">;
 // Parser diagnostics
 // =============================================================================
 
-def unexpectedToken     : Error<Parse, "E0200", "unexpected {found}, expected {expected}">;
-def unexpectedEndOfFile : Error<Parse, "E0201", "unexpected end of file">;
-def expectedExpression  : Error<Parse, "E0202", "expected expression, found {found}">;
-def expectedIdentifier  : Error<Parse, "E0203", "expected identifier, found {found}">;
-def expectedType        : Error<Parse, "E0204", "expected type expression">;
+def unexpectedToken     : Error<Parse, "E0200", "found unexpected input {found}">;
+def expectedToken       : Error<Parse, "E0201", "expected {expected}, found {found}">;
+def unexpectedEndOfFile : Error<Parse, "E0202", "unexpected end of file">;
+def expectedType        : Error<Parse, "E0203", "expected type expression">;
 
 // =============================================================================
 // Semantic diagnostics

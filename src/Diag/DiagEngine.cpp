@@ -16,35 +16,45 @@ DiagEngine::~DiagEngine() = default;
 
 auto DiagEngine::count(llvm::SourceMgr::DiagKind kind) const -> std::size_t {
     const auto found = std::ranges::count_if(m_messages, [&](const auto& entry) {
-        return entry.getKind() == kind;
+        return entry.message.kind == kind;
     });
     return static_cast<std::size_t>(found);
 }
 
 auto DiagEngine::hasErrors() const -> bool {
     return std::ranges::any_of(m_messages, [](const auto& entry) static {
-        return entry.getKind() == llvm::SourceMgr::DiagKind::DK_Error;
+        return entry.message.kind == llvm::SourceMgr::DiagKind::DK_Error;
     });
 }
 
-auto DiagEngine::get(const DiagIndex index) const -> const llvm::SMDiagnostic& {
+auto DiagEngine::getMessage(DiagIndex index) const -> const DiagMessage& {
     const auto real = static_cast<std::size_t>(index.get());
-    return m_messages.at(real);
+    return m_messages.at(real).message;
+}
+
+auto DiagEngine::getDiagnostic(const DiagIndex index) const -> const llvm::SMDiagnostic& {
+    const auto real = static_cast<std::size_t>(index.get());
+    return m_messages.at(real).diagnostic;
 }
 
 auto DiagEngine::log(
+    DiagMessage&& message,
     llvm::SMLoc loc,
-    llvm::SourceMgr::DiagKind kind,
-    const std::string& msg,
     llvm::ArrayRef<llvm::SMRange> ranges
 ) -> DiagIndex {
     const auto index = m_messages.size();
-    m_messages.emplace_back(m_context.getSourceMgr().GetMessage(loc, kind, msg, ranges));
+    auto diagnostic = [&] -> llvm::SMDiagnostic {
+        if (loc.isValid()) {
+            return m_context.getSourceMgr().GetMessage(loc, message.kind, message.message, ranges);
+        }
+        return { "", message.kind, message.message };
+    }();
+    m_messages.emplace_back(std::move(message), std::move(diagnostic));
     return DiagIndex(static_cast<DiagIndex::Value>(index));
 }
 
 void DiagEngine::print() const {
     for (const auto& message : m_messages) {
-        m_context.getSourceMgr().PrintMessage(llvm::outs(), message, true);
+        m_context.getSourceMgr().PrintMessage(llvm::outs(), message.diagnostic, true);
     }
 }

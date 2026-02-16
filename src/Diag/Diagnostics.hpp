@@ -41,12 +41,22 @@ namespace Diagnostics {
     // System
     // -------------------------------------------------------------------------
 
+    /// Create notImplemented message
+    [[nodiscard]] inline auto notImplemented() -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::System,
+            .code = "E0001",
+            .message = "Not implemented"
+        };
+    }
+
     /// Create fileNotFound message
     [[nodiscard]] inline auto fileNotFound(const Loggable auto& path) -> DiagMessage {
         return {
             .kind = llvm::SourceMgr::DiagKind::DK_Error,
             .category = DiagCategory::System,
-            .code = "E0001",
+            .code = "E0002",
             .message = std::format("file not found: {}", path)
         };
     }
@@ -56,7 +66,7 @@ namespace Diagnostics {
         return {
             .kind = llvm::SourceMgr::DiagKind::DK_Error,
             .category = DiagCategory::System,
-            .code = "E0002",
+            .code = "E0003",
             .message = std::format("included file not found: {}", path)
         };
     }
@@ -100,12 +110,22 @@ namespace Diagnostics {
     // -------------------------------------------------------------------------
 
     /// Create unexpectedToken message
-    [[nodiscard]] inline auto unexpectedToken(const Loggable auto& found, const Loggable auto& expected) -> DiagMessage {
+    [[nodiscard]] inline auto unexpectedToken(const Loggable auto& found) -> DiagMessage {
         return {
             .kind = llvm::SourceMgr::DiagKind::DK_Error,
             .category = DiagCategory::Parse,
             .code = "E0200",
-            .message = std::format("unexpected {}, expected {}", found, expected)
+            .message = std::format("found unexpected input {}", found)
+        };
+    }
+
+    /// Create expectedToken message
+    [[nodiscard]] inline auto expectedToken(const Loggable auto& expected, const Loggable auto& found) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Parse,
+            .code = "E0201",
+            .message = std::format("expected {}, fougn {}", expected, found)
         };
     }
 
@@ -114,28 +134,8 @@ namespace Diagnostics {
         return {
             .kind = llvm::SourceMgr::DiagKind::DK_Error,
             .category = DiagCategory::Parse,
-            .code = "E0201",
-            .message = "unexpected end of file"
-        };
-    }
-
-    /// Create expectedExpression message
-    [[nodiscard]] inline auto expectedExpression(const Loggable auto& found) -> DiagMessage {
-        return {
-            .kind = llvm::SourceMgr::DiagKind::DK_Error,
-            .category = DiagCategory::Parse,
             .code = "E0202",
-            .message = std::format("expected expression, found {}", found)
-        };
-    }
-
-    /// Create expectedIdentifier message
-    [[nodiscard]] inline auto expectedIdentifier(const Loggable auto& found) -> DiagMessage {
-        return {
-            .kind = llvm::SourceMgr::DiagKind::DK_Error,
-            .category = DiagCategory::Parse,
-            .code = "E0203",
-            .message = std::format("expected identifier, found {}", found)
+            .message = "unexpected end of file"
         };
     }
 
@@ -144,7 +144,7 @@ namespace Diagnostics {
         return {
             .kind = llvm::SourceMgr::DiagKind::DK_Error,
             .category = DiagCategory::Parse,
-            .code = "E0204",
+            .code = "E0203",
             .message = "expected type expression"
         };
     }
