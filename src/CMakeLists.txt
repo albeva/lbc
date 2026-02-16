@@ -6,6 +6,7 @@ target_sources(lbc_lib
     PRIVATE
     Ast/Ast.cpp
     Ast/AstExprPrinter.cpp
+    Diag/DiagEngine.cpp
     Driver/Context.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
@@ -16,10 +17,9 @@ target_sources(lbc_lib
     Parser/Parser.cpp
     Type/Type.cpp
 
-    PUBLIC FILE_SET HEADERS
-    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
-    FILES
+    PUBLIC FILE_SET HEADERS FILES
     Ast/AstExprPrinter.hpp
+    Diag/DiagEngine.hpp
     Driver/Context.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
