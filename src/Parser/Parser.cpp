@@ -14,19 +14,18 @@ Parser::Parser(Context& context, unsigned id)
 Parser::~Parser() = default;
 
 auto Parser::parse() -> Result<AstModule*> {
-    return notImplemented();
-    // while (true) {
-    //     std::println("'{}'", m_token);
-    //     m_token = m_lexer.next();
-    //     if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
-    //         break;
-    //     }
-    // }
-    // return nullptr;
+    while (true) {
+        std::println("'{}'", m_token);
+        m_token = m_lexer.next();
+        if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
+            break;
+        }
+    }
+    return nullptr;
 }
 
 auto Parser::unexpected(std::source_location location) -> DiagError {
-    return diag(Diagnostics::unexpectedToken(m_token), m_token.getRange().Start, {}, location);
+    return diag(Diagnostics::unexpectedToken(m_token), m_token.getRange().Start, llvm::ArrayRef(m_token.getRange()), location);
 }
 
 auto Parser::notImplemented(std::source_location location) -> DiagError {
