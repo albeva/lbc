@@ -1,10 +1,12 @@
 add_executable(lbc-tblgen
     Builder.hpp
     GeneratorBase.hpp
-    gens/ast/AstClass.cpp
-    gens/ast/AstClass.hpp
+    gens/TokensGen.cpp
+    gens/TokensGen.hpp
     gens/ast/AstArg.cpp
     gens/ast/AstArg.hpp
+    gens/ast/AstClass.cpp
+    gens/ast/AstClass.hpp
     gens/ast/AstFwdDeclGen.cpp
     gens/ast/AstFwdDeclGen.hpp
     gens/ast/AstGen.cpp
@@ -13,10 +15,6 @@ add_executable(lbc-tblgen
     gens/ast/AstVisitorGen.hpp
     gens/diag/DiagGen.cpp
     gens/diag/DiagGen.hpp
-    gens/diag/DiagImplGen.cpp
-    gens/diag/DiagImplGen.hpp
-    gens/TokensGen.cpp
-    gens/TokensGen.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)
