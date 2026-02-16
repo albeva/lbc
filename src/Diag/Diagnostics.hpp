@@ -11,4 +11,285 @@
 
 namespace lbc {
 
+/**
+ * Error subsystem
+ */
+enum class DiagCategory : std::uint8_t {
+    System,
+    Lex,
+    Parse,
+    Sema,
+    IR,
+    LLVM,
+};
+
+/**
+ * Encapulsate diagnostic message details
+ */
+struct [[nodiscard]] DiagMessage final {
+    llvm::SourceMgr::DiagKind kind;
+    DiagCategory category;
+    std::string code;
+    std::string message;
+};
+
+namespace Diagnostics {
+    template<typename T>
+    concept Loggable = std::formattable<T, char>;
+
+    // -------------------------------------------------------------------------
+    // System
+    // -------------------------------------------------------------------------
+
+    /// Create fileNotFound message
+    [[nodiscard]] inline auto fileNotFound(const Loggable auto& path) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::System,
+            .code = "E0001",
+            .message = std::format("file not found: {}", path)
+        };
+    }
+
+    /// Create includeNotFound message
+    [[nodiscard]] inline auto includeNotFound(const Loggable auto& path) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::System,
+            .code = "E0002",
+            .message = std::format("included file not found: {}", path)
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // Lex
+    // -------------------------------------------------------------------------
+
+    /// Create invalidCharacter message
+    [[nodiscard]] inline auto invalidCharacter(const Loggable auto& character) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Lex,
+            .code = "E0100",
+            .message = std::format("invalid character {}", character)
+        };
+    }
+
+    /// Create unterminatedString message
+    [[nodiscard]] inline auto unterminatedString() -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Lex,
+            .code = "E0101",
+            .message = "unterminated string literal"
+        };
+    }
+
+    /// Create invalidNumber message
+    [[nodiscard]] inline auto invalidNumber(const Loggable auto& text) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Lex,
+            .code = "E0102",
+            .message = std::format("invalid number literal {}", text)
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // Parse
+    // -------------------------------------------------------------------------
+
+    /// Create unexpectedToken message
+    [[nodiscard]] inline auto unexpectedToken(const Loggable auto& found, const Loggable auto& expected) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Parse,
+            .code = "E0200",
+            .message = std::format("unexpected {}, expected {}", found, expected)
+        };
+    }
+
+    /// Create unexpectedEndOfFile message
+    [[nodiscard]] inline auto unexpectedEndOfFile() -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Parse,
+            .code = "E0201",
+            .message = "unexpected end of file"
+        };
+    }
+
+    /// Create expectedExpression message
+    [[nodiscard]] inline auto expectedExpression(const Loggable auto& found) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Parse,
+            .code = "E0202",
+            .message = std::format("expected expression, found {}", found)
+        };
+    }
+
+    /// Create expectedIdentifier message
+    [[nodiscard]] inline auto expectedIdentifier(const Loggable auto& found) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Parse,
+            .code = "E0203",
+            .message = std::format("expected identifier, found {}", found)
+        };
+    }
+
+    /// Create expectedType message
+    [[nodiscard]] inline auto expectedType() -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Parse,
+            .code = "E0204",
+            .message = "expected type expression"
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // Sema
+    // -------------------------------------------------------------------------
+
+    /// Create undeclaredIdentifier message
+    [[nodiscard]] inline auto undeclaredIdentifier(const Loggable auto& name) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0300",
+            .message = std::format("use of undeclared identifier {}", name)
+        };
+    }
+
+    /// Create redefinition message
+    [[nodiscard]] inline auto redefinition(const Loggable auto& name) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0301",
+            .message = std::format("redefinition of {}", name)
+        };
+    }
+
+    /// Create typeMismatch message
+    [[nodiscard]] inline auto typeMismatch(const Loggable auto& from, const Loggable auto& to) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0302",
+            .message = std::format("cannot convert {} to {}", from, to)
+        };
+    }
+
+    /// Create invalidOperands message
+    [[nodiscard]] inline auto invalidOperands(const Loggable auto& op, const Loggable auto& left, const Loggable auto& right) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0303",
+            .message = std::format("invalid operands to {}: {} and {}", op, left, right)
+        };
+    }
+
+    /// Create tooManyArguments message
+    [[nodiscard]] inline auto tooManyArguments(const int expected, const int got) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0304",
+            .message = std::format("too many arguments: expected {}, got {}", expected, got)
+        };
+    }
+
+    /// Create tooFewArguments message
+    [[nodiscard]] inline auto tooFewArguments(const int expected, const int got) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0305",
+            .message = std::format("too few arguments: expected {}, got {}", expected, got)
+        };
+    }
+
+    /// Create returnTypeMismatch message
+    [[nodiscard]] inline auto returnTypeMismatch(const Loggable auto& found, const Loggable auto& expected) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::Sema,
+            .code = "E0306",
+            .message = std::format("return type {} does not match expected {}", found, expected)
+        };
+    }
+
+    /// Create unusedVariable message
+    [[nodiscard]] inline auto unusedVariable(const Loggable auto& name) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Warning,
+            .category = DiagCategory::Sema,
+            .code = "unused-variable",
+            .message = std::format("unused variable {}", name)
+        };
+    }
+
+    /// Create unusedParameter message
+    [[nodiscard]] inline auto unusedParameter(const Loggable auto& name) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Warning,
+            .category = DiagCategory::Sema,
+            .code = "unused-parameter",
+            .message = std::format("unused parameter {}", name)
+        };
+    }
+
+    /// Create declaredHere message
+    [[nodiscard]] inline auto declaredHere(const Loggable auto& name) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Note,
+            .category = DiagCategory::Sema,
+            .code = "N0001",
+            .message = std::format("{} declared here", name)
+        };
+    }
+
+    /// Create previousDefinition message
+    [[nodiscard]] inline auto previousDefinition(const Loggable auto& name) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Note,
+            .category = DiagCategory::Sema,
+            .code = "N0002",
+            .message = std::format("previous definition of {} is here", name)
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // IR
+    // -------------------------------------------------------------------------
+
+    /// Create invalidModule message
+    [[nodiscard]] inline auto invalidModule(const Loggable auto& name, const Loggable auto& reason) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::IR,
+            .code = "E0400",
+            .message = std::format("failed to load module {}: {}", name, reason)
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // LLVM
+    // -------------------------------------------------------------------------
+
+    /// Create codegenFailure message
+    [[nodiscard]] inline auto codegenFailure(const Loggable auto& reason) -> DiagMessage {
+        return {
+            .kind = llvm::SourceMgr::DiagKind::DK_Error,
+            .category = DiagCategory::LLVM,
+            .code = "E0500",
+            .message = std::format("code generation failed: {}", reason)
+        };
+    }
+
+}
 } // namespace lbc

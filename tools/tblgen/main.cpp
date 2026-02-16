@@ -3,8 +3,8 @@
 #include <llvm/TableGen/Main.h>
 #include <llvm/TableGen/Record.h>
 #include "gens/TokensGen.hpp"
-#include "gens/ast/AstGen.hpp"
 #include "gens/ast/AstFwdDeclGen.hpp"
+#include "gens/ast/AstGen.hpp"
 #include "gens/ast/AstVisitorGen.hpp"
 #include "gens/diag/DiagGen.hpp"
 #include "gens/diag/DiagImplGen.hpp"

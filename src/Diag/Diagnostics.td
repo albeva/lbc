@@ -5,15 +5,19 @@
 // Severity levels
 // =============================================================================
 
-// note -> warning -> error:
+// note -> remark -> warning -> error:
 // - note: informational, never stops compilation, can be silenced with a flag
+// - remark: unused, but defined for parity with llvm
 // - warning: does not stop compilation by default, can be silenced or promoted
 //   to error with a flag
 // - error: always stops compilation
+//
+// These values correspond to llvm::SourceMgr::DiagKind
 
 class Severity;
 def error   : Severity;
 def warning : Severity;
+def remark  : Severity;
 def note    : Severity;
 
 // =============================================================================
@@ -58,7 +62,7 @@ def includeNotFound : Error<System, "E0002", "included file not found: {path}">;
 // Lexer diagnostics
 // =============================================================================
 
-def invalidCharacter   : Error<Lex, "E0100", "invalid character {char}">;
+def invalidCharacter   : Error<Lex, "E0100", "invalid character {character}">;
 def unterminatedString : Error<Lex, "E0101", "unterminated string literal">;
 def invalidNumber      : Error<Lex, "E0102", "invalid number literal {text}">;
 

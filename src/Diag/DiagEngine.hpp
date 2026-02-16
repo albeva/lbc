@@ -3,7 +3,9 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Diagnostics.hpp"
 namespace lbc {
+class Context;
 class DiagEngine;
 
 /**
@@ -29,26 +31,26 @@ public:
 private:
     friend class DiagEngine;
 
-    /// Underlying index type.
-    using Index = std::uint32_t;
+    /// Underlying value type.
+    using Value = std::uint32_t;
 
     /// Construct a valid index pointing into DiagEngine storage.
-    constexpr explicit DiagIndex(const Index index)
-    : m_index(index) { }
+    constexpr explicit DiagIndex(const Value value)
+    : m_value(value) { }
 
-    /// Return the raw index value. Asserts validity in debug builds.
-    [[nodiscard]] constexpr auto getIndex() const -> Index {
+    /// Return the raw value. Asserts validity in debug builds.
+    [[nodiscard]] constexpr auto get() const -> Value {
         assert(isValid() && "Getting value from invalid DiagIndex");
-        return m_index;
+        return m_value;
     }
 
     /// Check whether this index points to an actual diagnostic.
     [[nodiscard]] constexpr auto isValid() const -> bool {
-        return m_index != DiagIndex().m_index;
+        return m_value != DiagIndex().m_value;
     }
 
-    /// Raw index, sentinel when default-constructed.
-    Index m_index = std::numeric_limits<Index>::max();
+    /// Raw value, sentinel when default-constructed.
+    Value m_value = std::numeric_limits<Value>::max();
 };
 
 /**
@@ -61,6 +63,28 @@ private:
  * (severity, category, source location, formatted message, attached notes).
  */
 class DiagEngine final {
+public:
+    NO_COPY_AND_MOVE(DiagEngine)
+
+    explicit DiagEngine(Context& context);
+    ~DiagEngine();
+
+    [[nodiscard]] auto count(llvm::SourceMgr::DiagKind kind) const -> std::size_t;
+    [[nodiscard]] auto hasErrors() const -> bool;
+    [[nodiscard]] auto get(DiagIndex index) const -> const llvm::SMDiagnostic&;
+
+    [[nodiscard]] auto log(
+        llvm::SMLoc Loc,
+        llvm::SourceMgr::DiagKind Kind,
+        const std::string& Msg,
+        llvm::ArrayRef<llvm::SMRange> Ranges = {}
+    ) -> DiagIndex;
+
+    void print() const;
+
+private:
+    [[maybe_unused]] Context& m_context;
+    std::vector<llvm::SMDiagnostic> m_messages;
 };
 
 } // namespace lbc

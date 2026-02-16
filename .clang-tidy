@@ -14,7 +14,7 @@ Checks: '-*,
     -*-no-recursion,
     -*-easily-swappable-parameters,
     -*-magic-numbers,
-    -*-unchecked-container-access
+    -*-unchecked-container-access,
     '
 WarningsAsErrors: '*'
 CheckOptions:
