@@ -41,6 +41,8 @@ add_tblgen(lbc_lib lbc-tblgen
     GENERATOR lbc-ast-def INPUT Ast/Ast.td
     GENERATOR lbc-ast-visitor INPUT Ast/Ast.td OUTPUT AstVisitor.hpp
     GENERATOR lbc-ast-fwd-decl INPUT Ast/Ast.td OUTPUT AstFwdDecl.hpp
+    GENERATOR lbc-diag-def INPUT Diag/Diagnostics.td
+    GENERATOR lbc-diag-impl INPUT Diag/Diagnostics.td OUTPUT Diagnostics.cpp
 )
 
 # target settings

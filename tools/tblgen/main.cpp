@@ -6,6 +6,8 @@
 #include "gens/ast/AstGen.hpp"
 #include "gens/ast/AstFwdDeclGen.hpp"
 #include "gens/ast/AstVisitorGen.hpp"
+#include "gens/diag/DiagGen.hpp"
+#include "gens/diag/DiagImplGen.hpp"
 using namespace llvm;
 
 namespace {
@@ -15,6 +17,8 @@ enum class Generator : std::uint8_t {
     AstDef,
     AstFwdDecl,
     AstVisitor,
+    DiagDef,
+    DiagImpl,
 };
 
 const auto generatorOpt = cl::opt<Generator> {
@@ -25,7 +29,9 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::TokensDef, TokensGen::genName, "Generate token definitions"),
         clEnumValN(Generator::AstDef, AstGen::genName, "Generate AST node definitions"),
         clEnumValN(Generator::AstFwdDecl, AstFwdDeclGen::genName, "Generate AST forward declarations"),
-        clEnumValN(Generator::AstVisitor, AstVisitorGen::genName, "Generate AST visitor")
+        clEnumValN(Generator::AstVisitor, AstVisitorGen::genName, "Generate AST visitor"),
+        clEnumValN(Generator::DiagDef, DiagGen::genName, "Generate diagnostic definitions"),
+        clEnumValN(Generator::DiagImpl, DiagImplGen::genName, "Generate diagnostic implementation")
     )
 };
 
@@ -39,6 +45,10 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return AstFwdDeclGen(os, records).run();
     case Generator::AstVisitor:
         return AstVisitorGen(os, records).run();
+    case Generator::DiagDef:
+        return DiagGen(os, records).run();
+    case Generator::DiagImpl:
+        return DiagImplGen(os, records).run();
     default:
         std::unreachable();
     }

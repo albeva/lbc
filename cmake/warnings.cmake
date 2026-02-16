@@ -1,5 +1,5 @@
 # Compiler warnings configuration
-add_library(compiler_warnings INTERFACE)
+add_library(compiler_warnings INTERFACE IMPORTED GLOBAL)
 
 if(MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
     target_compile_options(compiler_warnings INTERFACE
