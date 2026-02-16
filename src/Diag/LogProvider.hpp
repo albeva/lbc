@@ -27,6 +27,7 @@ protected:
      * @param message diagnostic message to log
      * @param loc source location of the diagnostic
      * @param ranges optional source ranges to highlight
+     * @param location C++ call site, captured automatically
      * @return DiagError wrapping the logged DiagIndex
      */
     template <ContextAware T>
@@ -34,9 +35,10 @@ protected:
         this T& self,
         DiagMessage&& message,
         llvm::SMLoc loc = {},
-        llvm::ArrayRef<llvm::SMRange> ranges = {}
+        llvm::ArrayRef<llvm::SMRange> ranges = {},
+        std::source_location location = std::source_location::current()
     ) -> DiagError {
-        return DiagError(self.getContext().getDiag().log(std::move(message), loc, ranges));
+        return DiagError(self.getContext().getDiag().log(std::move(message), loc, ranges, location));
     }
 };
 } // namespace lbc

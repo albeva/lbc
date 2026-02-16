@@ -37,10 +37,16 @@ auto DiagEngine::getDiagnostic(const DiagIndex index) const -> const llvm::SMDia
     return m_messages.at(real).diagnostic;
 }
 
+auto DiagEngine::getLocation(DiagIndex index) const -> const std::source_location& {
+    const auto real = static_cast<std::size_t>(index.get());
+    return m_messages.at(real).location;
+}
+
 auto DiagEngine::log(
     DiagMessage&& message,
     llvm::SMLoc loc,
-    llvm::ArrayRef<llvm::SMRange> ranges
+    llvm::ArrayRef<llvm::SMRange> ranges,
+    std::source_location location
 ) -> DiagIndex {
     const auto index = m_messages.size();
     auto diagnostic = [&] -> llvm::SMDiagnostic {
@@ -49,12 +55,20 @@ auto DiagEngine::log(
         }
         return { "", message.kind, message.message };
     }();
-    m_messages.emplace_back(std::move(message), std::move(diagnostic));
+    m_messages.emplace_back(std::move(message), std::move(diagnostic), location);
     return DiagIndex(static_cast<DiagIndex::Value>(index));
 }
 
 void DiagEngine::print() const {
     for (const auto& message : m_messages) {
         m_context.getSourceMgr().PrintMessage(llvm::outs(), message.diagnostic, true);
+        const auto& loc = m_messages.back().location;
+        llvm::outs() << std::format(
+            "From {}:{}:{} in \"{}\"\n",
+            loc.file_name(),
+            loc.line(),
+            loc.column(),
+            loc.function_name()
+        );
     }
 }

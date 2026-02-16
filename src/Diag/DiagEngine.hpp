@@ -94,18 +94,23 @@ public:
     /** Retrieve the LLVM SMDiagnostic for a previously logged diagnostic. */
     [[nodiscard]] auto getDiagnostic(DiagIndex index) const -> const llvm::SMDiagnostic&;
 
+    /** Retrieve the C++ source location where the diagnostic was logged. */
+    [[nodiscard]] auto getLocation(DiagIndex index) const -> const std::source_location&;
+
     /**
      * Log a diagnostic message and return an opaque handle to it.
      *
      * @param message diagnostic message (typically from Diagnostics::*)
      * @param loc source location, may be invalid for location-free diagnostics
      * @param ranges optional source ranges to highlight
+     * @param location C++ call site, captured automatically
      * @return DiagIndex handle for the logged diagnostic
      */
     [[nodiscard]] auto log(
         DiagMessage&& message,
         llvm::SMLoc loc = {},
-        llvm::ArrayRef<llvm::SMRange> ranges = {}
+        llvm::ArrayRef<llvm::SMRange> ranges = {},
+        std::source_location location = std::source_location::current()
     ) -> DiagIndex;
 
     /** Render all accumulated diagnostics to stdout. */
@@ -116,6 +121,7 @@ private:
     struct Entry final {
         DiagMessage message;
         llvm::SMDiagnostic diagnostic;
+        std::source_location location;
     };
 
     [[maybe_unused]] Context& m_context;
