@@ -28,7 +28,7 @@ public:
     /**
      * Return the source range covering this token.
      */
-    [[nodiscard]] constexpr auto getRange() const -> llvm::SMRange { return m_range; }
+    [[nodiscard]] constexpr auto getRange() const -> const llvm::SMRange& { return m_range; }
 
     /**
      * Return the literal value associated with this token, if any.
