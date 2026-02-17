@@ -24,18 +24,15 @@ public:
     [[nodiscard]] auto run() -> bool override;
 
 private:
+    void diagKind();
+    void diagnosticFunctions();
     void category(const Record* cat);
     void diagnostic(const Record* record);
     static auto messageSpec(const Record* record) -> std::pair<std::string, std::string>;
-    auto input(const Record* record) const -> std::pair<std::string, std::string>;
-    [[nodiscard]] auto format(const Record* record) const -> std::string;
     static auto getCategory(const Record* record) -> llvm::StringRef;
-    [[nodiscard]] auto getKind(const Record* record) const -> llvm::StringRef;
+    static auto getSeverity(const Record* record) -> llvm::StringRef;
 
     std::vector<const Record*> m_categories;
+    std::vector<const Record*> m_severities;
     std::vector<const Record*> m_diagnostics;
-    const Record* m_error;
-    const Record* m_warning;
-    const Record* m_remark;
-    const Record* m_note;
 };
