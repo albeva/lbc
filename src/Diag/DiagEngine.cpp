@@ -2,9 +2,7 @@
 // Created by Albert Varaksin on 16/02/2026.
 //
 #include "DiagEngine.hpp"
-
 #include <llvm/Support/raw_ostream.h>
-
 #include "Driver/Context.hpp"
 using namespace lbc;
 
@@ -14,7 +12,7 @@ DiagEngine::DiagEngine(Context& context)
 
 DiagEngine::~DiagEngine() = default;
 
-auto DiagEngine::count(llvm::SourceMgr::DiagKind kind) const -> std::size_t {
+auto DiagEngine::count(const llvm::SourceMgr::DiagKind kind) const -> std::size_t {
     const auto found = std::ranges::count_if(m_messages, [&](const auto& entry) {
         return entry.kind.getSeverity() == kind;
     });
@@ -27,7 +25,7 @@ auto DiagEngine::hasErrors() const -> bool {
     });
 }
 
-auto DiagEngine::getKind(DiagIndex index) const -> DiagKind {
+auto DiagEngine::getKind(const DiagIndex index) const -> DiagKind {
     const auto real = static_cast<std::size_t>(index.get());
     return m_messages.at(real).kind;
 }
@@ -37,16 +35,16 @@ auto DiagEngine::getDiagnostic(const DiagIndex index) const -> const llvm::SMDia
     return m_messages.at(real).diagnostic;
 }
 
-auto DiagEngine::getLocation(DiagIndex index) const -> const std::source_location& {
+auto DiagEngine::getLocation(const DiagIndex index) const -> const std::source_location& {
     const auto real = static_cast<std::size_t>(index.get());
     return m_messages.at(real).location;
 }
 
 auto DiagEngine::log(
     const DiagMessage& message,
-    llvm::SMLoc loc,
-    llvm::ArrayRef<llvm::SMRange> ranges,
-    std::source_location location
+    const llvm::SMLoc loc,
+    const llvm::ArrayRef<llvm::SMRange>& ranges,
+    const std::source_location& location
 ) -> DiagIndex {
     const auto index = m_messages.size();
     auto diagnostic = [&] -> llvm::SMDiagnostic {
@@ -63,12 +61,6 @@ void DiagEngine::print() const {
     for (const auto& message : m_messages) {
         m_context.getSourceMgr().PrintMessage(llvm::outs(), message.diagnostic, true);
         const auto& loc = m_messages.back().location;
-        llvm::outs() << std::format(
-            "From {}:{}:{} in \"{}\"\n",
-            loc.file_name(),
-            loc.line(),
-            loc.column(),
-            loc.function_name()
-        );
+        llvm::outs() << std::format("{}", loc);
     }
 }

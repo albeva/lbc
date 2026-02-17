@@ -107,10 +107,10 @@ public:
      * @return DiagIndex handle for the logged diagnostic
      */
     [[nodiscard]] auto log(
-        const DiagMessage&,
+        const DiagMessage& message,
         llvm::SMLoc loc = {},
-        llvm::ArrayRef<llvm::SMRange> ranges = {},
-        std::source_location location = std::source_location::current()
+        const llvm::ArrayRef<llvm::SMRange>& ranges = {},
+        const std::source_location& location = std::source_location::current()
     ) -> DiagIndex;
 
     /** Render all accumulated diagnostics to stdout. */

@@ -34,9 +34,9 @@ protected:
     [[nodiscard]] auto diag(
         this T& self,
         const DiagMessage& message,
-        llvm::SMLoc loc = {},
-        llvm::ArrayRef<llvm::SMRange> ranges = {},
-        std::source_location location = std::source_location::current()
+        const llvm::SMLoc loc = {},
+        const llvm::ArrayRef<llvm::SMRange>& ranges = {},
+        const std::source_location& location = std::source_location::current()
     ) -> DiagError {
         return DiagError(self.getContext().getDiag().log(message, loc, ranges, location));
     }

@@ -15,21 +15,22 @@ Parser::~Parser() = default;
 
 auto Parser::parse() -> Result<AstModule*> {
     TRY(advance())
-    while (true) {
-        std::println("'{}'", m_token);
-        TRY(advance())
-        if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
-            break;
-        }
-    }
-    return nullptr;
+    return unexpected();
+    // while (true) {
+    //     std::println("'{}'", m_token);
+    //     TRY(advance())
+    //     if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
+    //         break;
+    //     }
+    // }
+    // return nullptr;
 }
 
-auto Parser::unexpected(std::source_location location) -> DiagError {
+auto Parser::unexpected(const std::source_location &location) -> DiagError {
     return diag(Diagnostics::unexpectedToken(m_token), m_token.getRange().Start, llvm::ArrayRef(m_token.getRange()), location);
 }
 
-auto Parser::notImplemented(std::source_location location) -> DiagError {
+auto Parser::notImplemented(const std::source_location &location) -> DiagError {
     return diag(Diagnostics::notImplemented(), {}, {}, location);
 }
 
