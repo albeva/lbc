@@ -99,8 +99,8 @@ def BuiltInType   : Leaf<"Built-in primitive type", Type, [
 def Stmt : Group<"statement", Root>;
 
 def StmtList : Leaf<"List of statements", Stmt, [
-    Arg<"std::span<AstStmt*>", "stmts">,
-    Arg<"std::span<AstDecl*>", "decls">
+    Arg<"std::span<AstDecl*>", "decls">,
+    Arg<"std::span<AstStmt*>", "stmts">
 ]>;
 
 def ExprStmt : Leaf<"Expression statement", Stmt, [

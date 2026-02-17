@@ -276,21 +276,16 @@ public:
      */
     constexpr AstStmtList(
         const llvm::SMRange range,
-        const std::span<AstStmt*> stmts,
-        const std::span<AstDecl*> decls
+        const std::span<AstDecl*> decls,
+        const std::span<AstStmt*> stmts
     )
     : AstStmt(AstKind::StmtList, range)
-    , m_stmts(stmts)
-    , m_decls(decls) {}
+    , m_decls(decls)
+    , m_stmts(stmts) {}
 
     /// LLVM RTTI support to check if given node is an AstStmtList
     [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
         return ast->getKind() == AstKind::StmtList;
-    }
-
-    /// Get the stmts
-    [[nodiscard]] constexpr auto getStmts() const -> std::span<AstStmt*> {
-        return m_stmts;
     }
 
     /// Get the decls
@@ -298,9 +293,14 @@ public:
         return m_decls;
     }
 
+    /// Get the stmts
+    [[nodiscard]] constexpr auto getStmts() const -> std::span<AstStmt*> {
+        return m_stmts;
+    }
+
 private:
-    std::span<AstStmt*> m_stmts;
     std::span<AstDecl*> m_decls;
+    std::span<AstStmt*> m_stmts;
 };
 
 /**

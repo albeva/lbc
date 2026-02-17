@@ -10,10 +10,12 @@ namespace lbc {
  */
 class Token final {
 public:
+    /** Default-construct an Invalid sentinel token. */
     constexpr Token()
     : m_kind(TokenKind::Value::Invalid)
     , m_value() { }
 
+    /** Construct a token with a kind, source range, and optional literal value. */
     constexpr Token(
         const TokenKind kind,
         const llvm::SMRange range,

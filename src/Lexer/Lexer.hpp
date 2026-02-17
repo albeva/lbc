@@ -9,6 +9,10 @@
 namespace lbc {
 class Context;
 
+/**
+ * Lexer scans a source buffer and produces a stream of tokens.
+ * Inherits LogProvider to report lexical errors as diagnostics.
+ */
 class Lexer final : LogProvider {
 public:
     NO_COPY_AND_MOVE(Lexer)
@@ -36,7 +40,7 @@ public:
 
 private:
     /**
-     * Create an invalid token at the current position.
+     * Log an "invalid input" diagnostic at the current position.
      */
     [[nodiscard]] auto invalid() -> DiagError;
 

@@ -156,7 +156,7 @@ auto Lexer::peek() -> DiagResult<Token> {
 // ------------------------------------
 
 auto Lexer::invalid() -> DiagError {
-    return diag(Diagnostics::invalidInput(), range().Start, range());
+    return diag(diagnostics::invalid(), range().Start, range());
 }
 
 auto Lexer::endOfFile() -> Token {
@@ -308,7 +308,7 @@ auto Lexer::stringLiteral() -> DiagResult<Token> {
 
     // unclosed string?
     if (hasError || m_input.current() != '"') {
-        return diag(Diagnostics::unterminatedString(), m_start.loc(), range());
+        return diag(diagnostics::unterminatedString(), m_start.loc(), range());
     }
 
     const auto str = m_start.next().stringTo(m_input);
@@ -336,7 +336,10 @@ auto Lexer::numberLiteral() -> DiagResult<Token> {
                 isFloat = true;
                 return true;
             }
-        } else if (ch.isIdentifierStartChar()) {
+            hasError = true;
+            return false;
+        }
+        if (ch.isIdentifierStartChar()) {
             hasError = true;
         }
         return false;
@@ -351,5 +354,5 @@ auto Lexer::numberLiteral() -> DiagResult<Token> {
             return token(TokenKind::IntegerLiteral, *value);
         }
     }
-    return diag(Diagnostics::invalidNumber(), m_start.loc(), range());
+    return diag(diagnostics::invalidNumber(), m_start.loc(), range());
 }

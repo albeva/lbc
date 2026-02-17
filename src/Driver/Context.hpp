@@ -38,6 +38,19 @@ public:
     }
 
     /**
+     * Allocate an uninitialized array of T.
+     *
+     * @tparam T The element type
+     * @param count Number of elements
+     * @return Span over the allocated buffer
+     */
+    template <typename T>
+    [[nodiscard]] auto span(std::size_t count) -> std::span<T> {
+        void* buffer = allocate(sizeof(T) * count, alignof(T)); // NOLINT(*-init-variables)
+        return { static_cast<T*>(buffer), count };
+    }
+
+    /**
      * Allocate object in the context and construct it.
      * @tparam T object to create
      * @tparam Args arguments to pass to T constructor

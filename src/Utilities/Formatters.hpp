@@ -24,3 +24,17 @@ struct std::formatter<std::source_location, char> final {
         );
     }
 };
+
+/**
+ * Support using llvm::StringRef with std::print and std::format.
+ */
+template <>
+struct std::formatter<llvm::StringRef, char> final {
+    static constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const llvm::StringRef& ref, std::format_context& ctx) {
+        return std::format_to(ctx.out(), "{}", std::string_view(ref));
+    }
+};

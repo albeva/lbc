@@ -106,17 +106,22 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 
 ## Important Patterns
 
-- Error handling: `std::expected<T, DiagMessage>` for fallible operations. Lightweight error type — rich diagnostics
-  are accumulated separately. `TRY`/`TRY_ASSIGN`/`TRY_DECL`/`MUST` macros (inspired by SerenityOS/Ladybird) for
-  ergonomic error propagation.
+- Error handling: `DiagResult<T>` = `std::expected<T, DiagIndex>` for fallible operations. `DiagIndex` is an opaque
+  handle into `DiagEngine` storage — lightweight to propagate, while the engine owns all diagnostic details.
+  `TRY`/`TRY_ASSIGN`/`TRY_DECL`/`MUST` macros (inspired by SerenityOS/Ladybird) for ergonomic error propagation.
+  `LogProvider` is a CRTP-free mixin using C++23 deducing this — any class satisfying the `ContextAware` concept
+  (exposes `getContext() -> Context&`) inherits a `diag()` helper that logs and returns `DiagError`.
 - Diagnostics: generated from `src/Diag/Diagnostics.td` via `lbc-tblgen --gen=lbc-diag-def` into
   `src/Diag/Diagnostics.hpp`. `DiagKind` is a smart enum struct: a `Value` enum lists every diagnostic, and constexpr
   member functions (`getCategory()`, `getSeverity()`, `getCode()`) encode static metadata via switch tables.
   `getSeverity()` returns `llvm::SourceMgr::DiagKind` directly (`DK_Error`, `DK_Warning`, `DK_Note`, `DK_Remark`).
-  `DiagMessage` is `std::pair<DiagKind, std::string>`. Factory functions in `namespace Diagnostics` parse
+  `DiagMessage` is `std::pair<DiagKind, std::string>`. Factory functions in `namespace diagnostics` parse
   `{name}` / `{name:type}` placeholders in `.td` message strings to generate typed parameters. Consteval collection
   helpers (`allErrors()`, `allWarnings()`, `allNotes()`) group diagnostics by severity at compile time.
-- Memory: RAII everywhere, no manual new/delete
+- Memory: RAII everywhere, no manual new/delete. `Context` owns a `llvm::BumpPtrAllocator` arena — AST nodes and
+  spans are allocated via `Context::create<T>()` and `Context::span<T>()`. `Sequencer<T>` collects AST nodes into
+  an intrusive singly-linked list during parsing, then flattens them into a contiguous arena-allocated `std::span`
+  via `Sequencer::sequence(Context&)`.
 - Parser: single `Parser` class with implementation split across multiple `.cpp` files by concern
   (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utilities).
 - AST: node classes are generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. The TableGen schema

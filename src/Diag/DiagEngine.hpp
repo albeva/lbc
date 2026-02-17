@@ -100,7 +100,7 @@ public:
     /**
      * Log a diagnostic message and return an opaque handle to it.
      *
-     * @param message diagnostic message (typically from Diagnostics::*)
+     * @param message diagnostic message (typically from diagnostics::*)
      * @param loc source location, may be invalid for location-free diagnostics
      * @param ranges optional source ranges to highlight
      * @param location C++ call site, captured automatically
@@ -117,7 +117,7 @@ public:
     void print() const;
 
 private:
-    /// Pairs the structured DiagMessage with the rendered LLVM diagnostic.
+    /// Pairs the DiagKind with the rendered LLVM diagnostic and C++ call site.
     struct Entry final { // NOLINT(*-member-init)
         DiagKind kind;
         llvm::SMDiagnostic diagnostic;

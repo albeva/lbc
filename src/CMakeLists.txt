@@ -1,7 +1,5 @@
 # lbc library
-add_library(lbc_lib
-    Diag/LogProvider.hpp
-    Utilities/Formatters.hpp)
+add_library(lbc_lib)
 
 # lbc sources
 target_sources(lbc_lib
@@ -22,6 +20,7 @@ target_sources(lbc_lib
     PUBLIC FILE_SET HEADERS FILES
     Ast/AstExprPrinter.hpp
     Diag/DiagEngine.hpp
+    Diag/LogProvider.hpp
     Driver/Context.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
@@ -30,8 +29,10 @@ target_sources(lbc_lib
     Parser/Parser.hpp
     Type/Type.hpp
     Utilities/Diagnostics.hpp
+    Utilities/Formatters.hpp
     Utilities/LiteralValue.hpp
     Utilities/NoCopy.hpp
+    Utilities/Sequencer.hpp
     Utilities/Try.hpp
     Utilities/ValueRestorer.hpp
     Utilities/Visitor.hpp

@@ -15,7 +15,7 @@ namespace lbc {
  * access to the diagnostic engine.
  *
  * @code
- * return diag(Diagnostics::unexpectedToken(token), loc);
+ * return diag(diagnostics::unexpected(token), loc);
  * @endcode
  */
 class LogProvider {

@@ -195,7 +195,7 @@ void DiagGen::diagKindFormatter() {
 // -------------------------------------------------------------------------
 
 void DiagGen::diagnosticFunctions() {
-    block("namespace Diagnostics", [&] {
+    block("namespace diagnostics", [&] {
         line("template<typename T>", "");
         line("concept Loggable = std::formattable<T, char>");
         newline();
