@@ -57,7 +57,7 @@ private:
  * Result type for fallible operations that may produce diagnostics.
  * On failure, carries a DiagIndex handle into DiagEngine storage.
  */
-template<typename T>
+template <typename T>
 using DiagResult = std::expected<T, DiagIndex>;
 
 /**
@@ -88,8 +88,8 @@ public:
     /** Check whether any error-level diagnostics have been logged. */
     [[nodiscard]] auto hasErrors() const -> bool;
 
-    /** Retrieve the structured DiagMessage for a previously logged diagnostic. */
-    [[nodiscard]] auto getMessage(DiagIndex index) const -> const DiagMessage&;
+    /** Retrieve the structured DiagKind for a previously logged diagnostic. */
+    [[nodiscard]] auto getKind(DiagIndex index) const -> DiagKind;
 
     /** Retrieve the LLVM SMDiagnostic for a previously logged diagnostic. */
     [[nodiscard]] auto getDiagnostic(DiagIndex index) const -> const llvm::SMDiagnostic&;
@@ -107,7 +107,7 @@ public:
      * @return DiagIndex handle for the logged diagnostic
      */
     [[nodiscard]] auto log(
-        DiagMessage&& message,
+        const DiagMessage&,
         llvm::SMLoc loc = {},
         llvm::ArrayRef<llvm::SMRange> ranges = {},
         std::source_location location = std::source_location::current()
@@ -119,7 +119,7 @@ public:
 private:
     /// Pairs the structured DiagMessage with the rendered LLVM diagnostic.
     struct Entry final {
-        DiagMessage message;
+        DiagKind kind;
         llvm::SMDiagnostic diagnostic;
         std::source_location location;
     };

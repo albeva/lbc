@@ -33,12 +33,12 @@ protected:
     template <ContextAware T>
     [[nodiscard]] auto diag(
         this T& self,
-        DiagMessage&& message,
+        const DiagMessage& message,
         llvm::SMLoc loc = {},
         llvm::ArrayRef<llvm::SMRange> ranges = {},
         std::source_location location = std::source_location::current()
     ) -> DiagError {
-        return DiagError(self.getContext().getDiag().log(std::move(message), loc, ranges, location));
+        return DiagError(self.getContext().getDiag().log(message, loc, ranges, location));
     }
 };
 } // namespace lbc

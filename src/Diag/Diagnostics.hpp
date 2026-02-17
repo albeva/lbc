@@ -62,11 +62,6 @@ struct DiagKind final {
     static constexpr std::size_t COUNT = 23;
 
     /**
-     * Default-construct to an uninitialized diagnostic kind
-     */
-    constexpr DiagKind() = default;
-
-    /**
      * Implicitly convert from a Value enumerator
      */
     constexpr DiagKind(const Value value) // NOLINT(*-explicit-conversions)

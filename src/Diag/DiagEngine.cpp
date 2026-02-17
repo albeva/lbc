@@ -16,20 +16,20 @@ DiagEngine::~DiagEngine() = default;
 
 auto DiagEngine::count(llvm::SourceMgr::DiagKind kind) const -> std::size_t {
     const auto found = std::ranges::count_if(m_messages, [&](const auto& entry) {
-        return entry.message.first.getSeverity() == kind;
+        return entry.kind.getSeverity() == kind;
     });
     return static_cast<std::size_t>(found);
 }
 
 auto DiagEngine::hasErrors() const -> bool {
     return std::ranges::any_of(m_messages, [](const auto& entry) static {
-        return entry.message.first.getSeverity() == llvm::SourceMgr::DK_Error;
+        return entry.kind.getSeverity() == llvm::SourceMgr::DK_Error;
     });
 }
 
-auto DiagEngine::getMessage(DiagIndex index) const -> const DiagMessage& {
+auto DiagEngine::getKind(DiagIndex index) const -> DiagKind {
     const auto real = static_cast<std::size_t>(index.get());
-    return m_messages.at(real).message;
+    return m_messages.at(real).kind;
 }
 
 auto DiagEngine::getDiagnostic(const DiagIndex index) const -> const llvm::SMDiagnostic& {
@@ -43,7 +43,7 @@ auto DiagEngine::getLocation(DiagIndex index) const -> const std::source_locatio
 }
 
 auto DiagEngine::log(
-    DiagMessage&& message,
+    const DiagMessage& message,
     llvm::SMLoc loc,
     llvm::ArrayRef<llvm::SMRange> ranges,
     std::source_location location
@@ -55,7 +55,7 @@ auto DiagEngine::log(
         }
         return { "", message.first.getSeverity(), message.second };
     }();
-    m_messages.emplace_back(std::move(message), std::move(diagnostic), location);
+    m_messages.emplace_back(message.first, std::move(diagnostic), location);
     return DiagIndex(static_cast<DiagIndex::Value>(index));
 }
 
