@@ -65,13 +65,13 @@ private:
     /**
      * Consume the current token and advance to the next one.
      */
-    void advance();
+    [[nodiscard]] auto advance() -> Result<void>;
 
     /**
      * If the current token matches the given kind, consume it
      * and return true. Otherwise leave it and return false.
      */
-    [[nodiscard]] auto accept(TokenKind kind) -> bool;
+    [[nodiscard]] auto accept(TokenKind kind) -> Result<bool>;
 
     /**
      * Assert that the current token is of the given kind.

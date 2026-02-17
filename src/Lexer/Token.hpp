@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.hpp"
+
 #include "TokenKind.hpp"
 #include "Utilities/LiteralValue.hpp"
 namespace lbc {
@@ -9,7 +10,11 @@ namespace lbc {
  */
 class Token final {
 public:
-    explicit constexpr Token(
+    constexpr Token()
+    : m_kind(TokenKind::Value::Invalid)
+    , m_value() { }
+
+    constexpr Token(
         const TokenKind kind,
         const llvm::SMRange range,
         const LiteralValue value = {}

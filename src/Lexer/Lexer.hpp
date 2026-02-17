@@ -4,11 +4,12 @@
 #pragma once
 #include "pch.hpp"
 #include "Cursor.hpp"
+#include "Diag/LogProvider.hpp"
 #include "Token.hpp"
 namespace lbc {
 class Context;
 
-class Lexer final {
+class Lexer final : LogProvider {
 public:
     NO_COPY_AND_MOVE(Lexer)
     Lexer(Context& context, unsigned id);
@@ -21,18 +22,23 @@ public:
     /**
      * Get next token from the input.
      */
-    [[nodiscard]] auto next() -> Token;
+    [[nodiscard]] auto next() -> DiagResult<Token>;
 
     /**
      * Peek at the next token without consuming it.
      */
-    [[nodiscard]] auto peek() -> Token;
+    [[nodiscard]] auto peek() -> DiagResult<Token>;
+
+    /**
+     * Get associated context object
+     */
+    [[nodiscard]] auto getContext() -> Context& { return m_context; }
 
 private:
     /**
      * Create an invalid token at the current position.
      */
-    [[nodiscard]] auto invalid() -> Token;
+    [[nodiscard]] auto invalid() -> DiagError;
 
     /**
      * Create an end-of-file token.
@@ -72,17 +78,17 @@ private:
     /**
      * Lex an identifier or keyword.
      */
-    [[nodiscard]] auto identifier() -> Token;
+    [[nodiscard]] auto identifier() -> DiagResult<Token>;
 
     /**
      * Lex a double-quoted string literal.
      */
-    [[nodiscard]] auto stringLiteral() -> Token;
+    [[nodiscard]] auto stringLiteral() -> DiagResult<Token>;
 
     /**
      * Lex an integer or floating-point number literal.
      */
-    [[nodiscard]] auto numberLiteral() -> Token;
+    [[nodiscard]] auto numberLiteral() -> DiagResult<Token>;
 
     /**
      * Return the source range from m_start to m_input.

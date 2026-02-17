@@ -6,7 +6,7 @@
 using namespace lbc;
 
 namespace {
-const llvm::StringMap<TokenKind> kKeywords = [] {
+const llvm::StringMap<TokenKind> kKeywords = [] static {
     llvm::StringMap<TokenKind> keywords {};
     for (const auto& kind : TokenKind::allKeywords()) {
         keywords.try_emplace(kind.string(), kind);
@@ -29,7 +29,7 @@ Lexer::Lexer(Context& context, unsigned id)
 , m_hasStatement(false) {
 }
 
-auto Lexer::next() -> Token {
+auto Lexer::next() -> DiagResult<Token> {
     while (true) {
         switch (m_input.current().getChar()) {
         case '\0':
@@ -146,7 +146,7 @@ auto Lexer::next() -> Token {
     }
 }
 
-auto Lexer::peek() -> Token {
+auto Lexer::peek() -> DiagResult<Token> {
     const ValueRestorer restorer { m_start, m_input, m_hasStatement };
     return next();
 }
@@ -155,8 +155,8 @@ auto Lexer::peek() -> Token {
 // Token factories
 // ------------------------------------
 
-auto Lexer::invalid() -> Token {
-    return Token { TokenKind::Invalid, range() };
+auto Lexer::invalid() -> DiagError {
+    return diag(Diagnostics::invalidInput(), range().Start, range());
 }
 
 auto Lexer::endOfFile() -> Token {
@@ -248,7 +248,7 @@ void Lexer::skipToNextLine() {
 // Token lexers
 // ------------------------------------
 
-auto Lexer::identifier() -> Token {
+auto Lexer::identifier() -> DiagResult<Token> {
     // assume m_input[0] == '_' || m_input[0].isAlpha()
     assert(m_input.current().isIdentifierStartChar() && "Unexpected identifier start");
 
@@ -283,7 +283,7 @@ auto Lexer::identifier() -> Token {
     return token(TokenKind::Identifier, m_context.retain(m_buffer));
 }
 
-auto Lexer::stringLiteral() -> Token {
+auto Lexer::stringLiteral() -> DiagResult<Token> {
     // assume m_input[0] == '"'
     assert(m_input.current() == '"');
     m_start = m_input;
@@ -308,7 +308,7 @@ auto Lexer::stringLiteral() -> Token {
 
     // unclosed string?
     if (hasError || m_input.current() != '"') {
-        return invalid();
+        return diag(Diagnostics::unterminatedString(), m_start.loc(), range());
     }
 
     const auto str = m_start.next().stringTo(m_input);
@@ -316,7 +316,7 @@ auto Lexer::stringLiteral() -> Token {
     return token(TokenKind::StringLiteral, str);
 }
 
-auto Lexer::numberLiteral() -> Token {
+auto Lexer::numberLiteral() -> DiagResult<Token> {
     // TODO: Proper integral and FP number lexing
 
     // assume m_input[0] == '.' || m_input[0].isDigit()
@@ -347,11 +347,9 @@ auto Lexer::numberLiteral() -> Token {
             if (const auto value = number<double>()) {
                 return token(TokenKind::FloatLiteral, *value);
             }
-        } else {
-            if (const auto value = number<std::uint64_t>()) {
-                return token(TokenKind::IntegerLiteral, *value);
-            }
+        } else if (const auto value = number<std::uint64_t>()) {
+            return token(TokenKind::IntegerLiteral, *value);
         }
     }
-    return invalid();
+    return diag(Diagnostics::invalidNumber(), m_start.loc(), range());
 }

@@ -22,7 +22,7 @@ struct DiagKind final {
         notImplemented,
         fileNotFound,
         includeNotFound,
-        invalidCharacter,
+        invalidInput,
         unterminatedString,
         invalidNumber,
         unexpectedToken,
@@ -62,6 +62,11 @@ struct DiagKind final {
     static constexpr std::size_t COUNT = 23;
 
     /**
+     * Default-construct to an uninitialized diagnostic kind
+     */
+    constexpr DiagKind() = default;
+
+    /**
      * Implicitly convert from a Value enumerator
      */
     constexpr DiagKind(const Value value) // NOLINT(*-explicit-conversions)
@@ -95,7 +100,7 @@ struct DiagKind final {
             case fileNotFound:
             case includeNotFound:
                 return Category::System;
-            case invalidCharacter:
+            case invalidInput:
             case unterminatedString:
             case invalidNumber:
                 return Category::Lex;
@@ -132,7 +137,7 @@ struct DiagKind final {
             case notImplemented:
             case fileNotFound:
             case includeNotFound:
-            case invalidCharacter:
+            case invalidInput:
             case unterminatedString:
             case invalidNumber:
             case unexpectedToken:
@@ -167,7 +172,7 @@ struct DiagKind final {
             case notImplemented: return "E0001";
             case fileNotFound: return "E0002";
             case includeNotFound: return "E0003";
-            case invalidCharacter: return "E0100";
+            case invalidInput: return "E0100";
             case unterminatedString: return "E0101";
             case invalidNumber: return "E0102";
             case unexpectedToken: return "E0200";
@@ -195,7 +200,7 @@ struct DiagKind final {
      * Return all Error diagnostics
      */
     [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 19> { // NOLINT(*-magic-numbers)
-        return { notImplemented, fileNotFound, includeNotFound, invalidCharacter, unterminatedString, invalidNumber, unexpectedToken, expectedToken, unexpectedEndOfFile, expectedType, undeclaredIdentifier, redefinition, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, returnTypeMismatch, invalidModule, codegenFailure };
+        return { notImplemented, fileNotFound, includeNotFound, invalidInput, unterminatedString, invalidNumber, unexpectedToken, expectedToken, unexpectedEndOfFile, expectedType, undeclaredIdentifier, redefinition, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, returnTypeMismatch, invalidModule, codegenFailure };
     }
 
     /**
@@ -266,9 +271,9 @@ namespace Diagnostics {
     // Lex
     // -------------------------------------------------------------------------
 
-    /// Create invalidCharacter message
-    [[nodiscard]] inline auto invalidCharacter(const Loggable auto& character) -> DiagMessage {
-        return { DiagKind::invalidCharacter, std::format("invalid character {}", character) };
+    /// Create invalidInput message
+    [[nodiscard]] inline auto invalidInput() -> DiagMessage {
+        return { DiagKind::invalidInput, "invalid input" };
     }
 
     /// Create unterminatedString message
@@ -277,8 +282,8 @@ namespace Diagnostics {
     }
 
     /// Create invalidNumber message
-    [[nodiscard]] inline auto invalidNumber(const Loggable auto& text) -> DiagMessage {
-        return { DiagKind::invalidNumber, std::format("invalid number literal {}", text) };
+    [[nodiscard]] inline auto invalidNumber() -> DiagMessage {
+        return { DiagKind::invalidNumber, "invalid number" };
     }
 
     // -------------------------------------------------------------------------

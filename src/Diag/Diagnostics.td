@@ -63,9 +63,9 @@ def includeNotFound : Error<System, "E0003", "included file not found: {path}">;
 // Lexer diagnostics
 // =============================================================================
 
-def invalidCharacter   : Error<Lex, "E0100", "invalid character {character}">;
+def invalidInput       : Error<Lex, "E0100", "invalid input">;
 def unterminatedString : Error<Lex, "E0101", "unterminated string literal">;
-def invalidNumber      : Error<Lex, "E0102", "invalid number literal {text}">;
+def invalidNumber      : Error<Lex, "E0102", "invalid number">;
 
 // =============================================================================
 // Parser diagnostics

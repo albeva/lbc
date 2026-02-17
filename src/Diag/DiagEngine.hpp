@@ -118,7 +118,7 @@ public:
 
 private:
     /// Pairs the structured DiagMessage with the rendered LLVM diagnostic.
-    struct Entry final {
+    struct Entry final { // NOLINT(*-member-init)
         DiagKind kind;
         llvm::SMDiagnostic diagnostic;
         std::source_location location;

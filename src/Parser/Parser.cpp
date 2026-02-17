@@ -8,15 +8,17 @@ using namespace lbc;
 
 Parser::Parser(Context& context, unsigned id)
 : m_context(context)
-, m_lexer(context, id)
-, m_token(m_lexer.next()) { }
+, m_lexer(context, id) {
+}
 
 Parser::~Parser() = default;
 
 auto Parser::parse() -> Result<AstModule*> {
+    TRY_ASSIGN(m_token, m_lexer.next())
+
     while (true) {
         std::println("'{}'", m_token);
-        m_token = m_lexer.next();
+        TRY_ASSIGN(m_token, m_lexer.next())
         if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
             break;
         }
@@ -32,13 +34,14 @@ auto Parser::notImplemented(std::source_location location) -> DiagError {
     return diag(Diagnostics::notImplemented(), {}, {}, location);
 }
 
-void Parser::advance() {
-    m_token = m_lexer.next();
+auto Parser::advance() -> Result<void> {
+    TRY_ASSIGN(m_token, m_lexer.next())
+    return {};
 }
 
-auto Parser::accept(const TokenKind kind) -> bool {
+auto Parser::accept(const TokenKind kind) -> Result<bool> {
     if (m_token.kind() == kind) {
-        advance();
+        TRY(advance());
         return true;
     }
     return false;
@@ -53,6 +56,5 @@ auto Parser::expect(const TokenKind kind) -> Result<void> {
 
 auto Parser::consume(const TokenKind kind) -> Result<void> {
     TRY(expect(kind))
-    advance();
-    return {};
+    return advance();
 }
