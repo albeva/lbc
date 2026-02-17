@@ -16,14 +16,14 @@ DiagEngine::~DiagEngine() = default;
 
 auto DiagEngine::count(llvm::SourceMgr::DiagKind kind) const -> std::size_t {
     const auto found = std::ranges::count_if(m_messages, [&](const auto& entry) {
-        return entry.message.first.llvmKind() == kind;
+        return entry.message.first.getSeverity() == kind;
     });
     return static_cast<std::size_t>(found);
 }
 
 auto DiagEngine::hasErrors() const -> bool {
     return std::ranges::any_of(m_messages, [](const auto& entry) static {
-        return entry.message.first.getSeverity() == DiagKind::Severity::Error;
+        return entry.message.first.getSeverity() == llvm::SourceMgr::DK_Error;
     });
 }
 
@@ -51,9 +51,9 @@ auto DiagEngine::log(
     const auto index = m_messages.size();
     auto diagnostic = [&] -> llvm::SMDiagnostic {
         if (loc.isValid()) {
-            return m_context.getSourceMgr().GetMessage(loc, message.first.llvmKind(), message.second, ranges);
+            return m_context.getSourceMgr().GetMessage(loc, message.first.getSeverity(), message.second, ranges);
         }
-        return { "", message.first.llvmKind(), message.second };
+        return { "", message.first.getSeverity(), message.second };
     }();
     m_messages.emplace_back(std::move(message), std::move(diagnostic), location);
     return DiagIndex(static_cast<DiagIndex::Value>(index));

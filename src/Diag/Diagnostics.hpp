@@ -57,22 +57,18 @@ struct DiagKind final {
     };
 
     /**
-     * Diagnostic severity level
-     */
-    enum class Severity : std::uint8_t {
-        Error,
-        Warning,
-        Note,
-        Remark,
-    };
-
-    /**
      * Total number of diagnostic kinds
      */
     static constexpr std::size_t COUNT = 23;
 
+    /**
+     * Default-construct to an uninitialized diagnostic kind
+     */
     constexpr DiagKind() = default;
 
+    /**
+     * Implicitly convert from a Value enumerator
+     */
     constexpr DiagKind(const Value value) // NOLINT(*-explicit-conversions)
     : m_value(value) { }
 
@@ -83,8 +79,14 @@ struct DiagKind final {
         return m_value;
     }
 
+    /**
+     * Compare two DiagKind values for equality
+     */
     [[nodiscard]] constexpr auto operator==(const DiagKind& other) const -> bool = default;
 
+    /**
+     * Compare against a raw Value enumerator
+     */
     [[nodiscard]] constexpr auto operator==(const Value value) const -> bool {
         return m_value == value;
     }
@@ -130,7 +132,7 @@ struct DiagKind final {
     /**
      * Return the severity for this diagnostic
      */
-    [[nodiscard]] constexpr auto getSeverity() const -> Severity {
+    [[nodiscard]] constexpr auto getSeverity() const -> llvm::SourceMgr::DiagKind {
         switch (m_value) {
             case notImplemented:
             case fileNotFound:
@@ -151,13 +153,13 @@ struct DiagKind final {
             case returnTypeMismatch:
             case invalidModule:
             case codegenFailure:
-                return Severity::Error;
+                return llvm::SourceMgr::DK_Error;
             case unusedVariable:
             case unusedParameter:
-                return Severity::Warning;
+                return llvm::SourceMgr::DK_Warning;
             case declaredHere:
             case previousDefinition:
-                return Severity::Note;
+                return llvm::SourceMgr::DK_Note;
         }
         std::unreachable();
     }
@@ -195,19 +197,28 @@ struct DiagKind final {
     }
 
     /**
-     * Map severity to llvm::SourceMgr::DiagKind
+     * Return all Error diagnostics
      */
-    [[nodiscard]] constexpr auto llvmKind() const -> llvm::SourceMgr::DiagKind {
-        switch (getSeverity()) {
-            case Severity::Error:   return llvm::SourceMgr::DK_Error;
-            case Severity::Warning: return llvm::SourceMgr::DK_Warning;
-            case Severity::Note:    return llvm::SourceMgr::DK_Note;
-            case Severity::Remark:  return llvm::SourceMgr::DK_Remark;
-        }
-        std::unreachable();
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 19> { // NOLINT(*-magic-numbers)
+        return {notImplemented, fileNotFound, includeNotFound, invalidCharacter, unterminatedString, invalidNumber, unexpectedToken, expectedToken, unexpectedEndOfFile, expectedType, undeclaredIdentifier, redefinition, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, returnTypeMismatch, invalidModule, codegenFailure};
+    }
+
+    /**
+     * Return all Warning diagnostics
+     */
+    [[nodiscard]] static consteval auto allWarnings() -> std::array<DiagKind, 2> { // NOLINT(*-magic-numbers)
+        return {unusedVariable, unusedParameter};
+    }
+
+    /**
+     * Return all Note diagnostics
+     */
+    [[nodiscard]] static consteval auto allNotes() -> std::array<DiagKind, 2> { // NOLINT(*-magic-numbers)
+        return {declaredHere, previousDefinition};
     }
 
     private:
+    /// Underlying enumerator
     Value m_value;
 };
 } // namespace lbc

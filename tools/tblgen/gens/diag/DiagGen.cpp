@@ -55,22 +55,14 @@ void DiagGen::diagKind() {
         });
         newline();
 
-        // Severity enum
-        doc("Diagnostic severity level");
-        block("enum class Severity : std::uint8_t", true, [&] {
-            line("Error", ",");
-            line("Warning", ",");
-            line("Note", ",");
-            line("Remark", ",");
-        });
-        newline();
-
         // Total count
         doc("Total number of diagnostic kinds");
         line("static constexpr std::size_t COUNT = " + std::to_string(m_diagnostics.size()), ";\n");
 
         // Constructors
+        doc("Default-construct to an uninitialized diagnostic kind");
         line("constexpr DiagKind() = default", ";\n");
+        doc("Implicitly convert from a Value enumerator");
         line("constexpr DiagKind(const Value value) // NOLINT(*-explicit-conversions)", "");
         line(": m_value(value) { }", "\n");
 
@@ -82,7 +74,9 @@ void DiagGen::diagKind() {
         newline();
 
         // operator==
+        doc("Compare two DiagKind values for equality");
         line("[[nodiscard]] constexpr auto operator==(const DiagKind& other) const -> bool = default", ";\n");
+        doc("Compare against a raw Value enumerator");
         block("[[nodiscard]] constexpr auto operator==(const Value value) const -> bool", [&] {
             line("return m_value == value");
         });
@@ -109,7 +103,7 @@ void DiagGen::diagKind() {
 
         // getSeverity()
         doc("Return the severity for this diagnostic");
-        block("[[nodiscard]] constexpr auto getSeverity() const -> Severity", [&] {
+        block("[[nodiscard]] constexpr auto getSeverity() const -> llvm::SourceMgr::DiagKind", [&] {
             block("switch (m_value)", [&] {
                 for (const auto* sev : m_severities) {
                     const auto cases = collect(m_diagnostics, "severity", sev);
@@ -119,7 +113,7 @@ void DiagGen::diagKind() {
                     for (const auto* cse : cases) {
                         line("case " + cse->getName(), ":");
                     }
-                    line("    return Severity::" + getSeverity(sev).str());
+                    line("    return " + getSeverity(sev).str());
                 }
             });
             line("std::unreachable()");
@@ -138,21 +132,34 @@ void DiagGen::diagKind() {
         });
         newline();
 
-        // llvmKind()
-        doc("Map severity to llvm::SourceMgr::DiagKind");
-        block("[[nodiscard]] constexpr auto llvmKind() const -> llvm::SourceMgr::DiagKind", [&] {
-            block("switch (getSeverity())", [&] {
-                line("case Severity::Error:   return llvm::SourceMgr::DK_Error");
-                line("case Severity::Warning: return llvm::SourceMgr::DK_Warning");
-                line("case Severity::Note:    return llvm::SourceMgr::DK_Note");
-                line("case Severity::Remark:  return llvm::SourceMgr::DK_Remark");
-            });
-            line("std::unreachable()");
-        });
-        newline();
+        // consteval severity collection functions
+        for (const auto* sev : m_severities) {
+            const auto all = collect(m_diagnostics, "severity", sev);
+            if (all.empty()) {
+                continue;
+            }
+            const auto name = sev->getName();
+            const auto pascal = name.substr(0, 1).upper() + name.substr(1).str();
+            doc("Return all " + pascal + " diagnostics");
+            block("[[nodiscard]] static consteval auto all" + pascal + "s() -> std::array<DiagKind, " + std::to_string(all.size()) + ">", [&] {
+                space();
+                m_os << "return {";
+                bool first = true;
+                for (const auto* diag : all) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        m_os << ", ";
+                    }
+                    m_os << diag->getName();
+                }
+                m_os << "};\n"; }, "*-magic-numbers");
+            newline();
+        }
 
         // private field
         line("private:", "");
+        comment("Underlying enumerator");
         line("Value m_value");
     });
     closeNamespace();
@@ -292,16 +299,16 @@ auto DiagGen::getCategory(const Record* record) -> llvm::StringRef {
 auto DiagGen::getSeverity(const Record* record) -> llvm::StringRef {
     const auto name = record->getName();
     if (name == "error") {
-        return "Error";
+        return "llvm::SourceMgr::DK_Error";
     }
     if (name == "warning") {
-        return "Warning";
+        return "llvm::SourceMgr::DK_Warning";
     }
     if (name == "note") {
-        return "Note";
+        return "llvm::SourceMgr::DK_Note";
     }
     if (name == "remark") {
-        return "Remark";
+        return "llvm::SourceMgr::DK_Remark";
     }
     std::unreachable();
 }
