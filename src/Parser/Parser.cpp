@@ -14,11 +14,10 @@ Parser::Parser(Context& context, unsigned id)
 Parser::~Parser() = default;
 
 auto Parser::parse() -> Result<AstModule*> {
-    TRY_ASSIGN(m_token, m_lexer.next())
-
+    TRY(advance())
     while (true) {
         std::println("'{}'", m_token);
-        TRY_ASSIGN(m_token, m_lexer.next())
+        TRY(advance())
         if (m_token.kind().isOneOf(TokenKind::EndOfFile, TokenKind::Invalid)) {
             break;
         }
