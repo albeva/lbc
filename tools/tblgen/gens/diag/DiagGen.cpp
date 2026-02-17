@@ -37,135 +37,144 @@ auto DiagGen::run() -> bool {
 void DiagGen::diagKind() {
     doc("DiagKind identifies a specific diagnostic and carries its static metadata");
     block("struct DiagKind final", true, [&] {
-        // Value enum
-        doc("Diagnostic identifier");
-        block("enum Value : std::uint8_t", true, [&] {
-            for (const auto* diag : m_diagnostics) {
-                line(diag->getName(), ",");
-            }
-        }, "*-use-enum-class");
-        newline();
-
-        // Category enum
-        doc("Diagnostic subsystem");
-        block("enum class Category : std::uint8_t", true, [&] {
-            for (const auto* cat : m_categories) {
-                line(cat->getName(), ",");
-            }
-        });
-        newline();
-
-        // Total count
-        doc("Total number of diagnostic kinds");
-        line("static constexpr std::size_t COUNT = " + std::to_string(m_diagnostics.size()), ";\n");
-
-        // Constructors
-        doc("Default-construct to an uninitialized diagnostic kind");
-        line("constexpr DiagKind() = default", ";\n");
-        doc("Implicitly convert from a Value enumerator");
-        line("constexpr DiagKind(const Value value) // NOLINT(*-explicit-conversions)", "");
-        line(": m_value(value) { }", "\n");
-
-        // value()
-        doc("Return the underlying Value enum");
-        block("[[nodiscard]] constexpr auto value() const", [&] {
-            line("return m_value");
-        });
-        newline();
-
-        // operator==
-        doc("Compare two DiagKind values for equality");
-        line("[[nodiscard]] constexpr auto operator==(const DiagKind& other) const -> bool = default", ";\n");
-        doc("Compare against a raw Value enumerator");
-        block("[[nodiscard]] constexpr auto operator==(const Value value) const -> bool", [&] {
-            line("return m_value == value");
-        });
-        newline();
-
-        // getCategory()
-        doc("Return the category for this diagnostic");
-        block("[[nodiscard]] constexpr auto getCategory() const -> Category", [&] {
-            block("switch (m_value)", [&] {
-                for (const auto* cat : m_categories) {
-                    const auto cases = collect(m_diagnostics, "category", cat);
-                    if (cases.empty()) {
-                        continue;
-                    }
-                    for (const auto* cse : cases) {
-                        line("case " + cse->getName(), ":");
-                    }
-                    line("    return Category::" + cat->getName());
-                }
-            });
-            line("std::unreachable()");
-        });
-        newline();
-
-        // getSeverity()
-        doc("Return the severity for this diagnostic");
-        block("[[nodiscard]] constexpr auto getSeverity() const -> llvm::SourceMgr::DiagKind", [&] {
-            block("switch (m_value)", [&] {
-                for (const auto* sev : m_severities) {
-                    const auto cases = collect(m_diagnostics, "severity", sev);
-                    if (cases.empty()) {
-                        continue;
-                    }
-                    for (const auto* cse : cases) {
-                        line("case " + cse->getName(), ":");
-                    }
-                    line("    return " + getSeverity(sev).str());
-                }
-            });
-            line("std::unreachable()");
-        });
-        newline();
-
-        // getCode()
-        doc("Return the diagnostic code string");
-        block("[[nodiscard]] constexpr auto getCode() const -> llvm::StringRef", [&] {
-            block("switch (m_value)", [&] {
-                for (const auto* diag : m_diagnostics) {
-                    line("case " + diag->getName() + ": return " + quoted(diag->getValueAsString("diagCode")));
-                }
-            });
-            line("std::unreachable()");
-        });
-        newline();
-
-        // consteval severity collection functions
-        for (const auto* sev : m_severities) {
-            const auto all = collect(m_diagnostics, "severity", sev);
-            if (all.empty()) {
-                continue;
-            }
-            const auto name = sev->getName();
-            const auto pascal = name.substr(0, 1).upper() + name.substr(1).str();
-            doc("Return all " + pascal + " diagnostics");
-            block("[[nodiscard]] static consteval auto all" + pascal + "s() -> std::array<DiagKind, " + std::to_string(all.size()) + ">", [&] {
-                space();
-                m_os << "return {";
-                bool first = true;
-                for (const auto* diag : all) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        m_os << ", ";
-                    }
-                    m_os << diag->getName();
-                }
-                m_os << "};\n"; }, "*-magic-numbers");
-            newline();
-        }
+        diagKindEnums();
+        diagKindConstructors();
+        diagKindAccessors();
+        diagKindCollections();
 
         // private field
-        line("private:", "");
+        scope(Scope::Private, true);
         comment("Underlying enumerator");
         line("Value m_value");
     });
     closeNamespace();
     newline();
 
-    // std::formatter
+    diagKindFormatter();
+
+    // Reopen namespace for DiagMessage alias and factory functions
+    m_os << "namespace lbc {\n";
+}
+
+void DiagGen::diagKindEnums() {
+    doc("Diagnostic identifier");
+    block("enum Value : std::uint8_t", true, [&] {
+        for (const auto* diag : m_diagnostics) {
+            line(diag->getName(), ",");
+        }
+    }, "*-use-enum-class");
+    newline();
+
+    doc("Diagnostic subsystem");
+    block("enum class Category : std::uint8_t", true, [&] {
+        for (const auto* cat : m_categories) {
+            line(cat->getName(), ",");
+        }
+    });
+    newline();
+
+    doc("Total number of diagnostic kinds");
+    line("static constexpr std::size_t COUNT = " + std::to_string(m_diagnostics.size()), ";\n");
+}
+
+void DiagGen::diagKindConstructors() {
+    doc("Default-construct to an uninitialized diagnostic kind");
+    line("constexpr DiagKind() = default", ";\n");
+    doc("Implicitly convert from a Value enumerator");
+    line("constexpr DiagKind(const Value value) // NOLINT(*-explicit-conversions)", "");
+    line(": m_value(value) { }", "\n");
+
+    doc("Return the underlying Value enum");
+    block("[[nodiscard]] constexpr auto value() const", [&] {
+        line("return m_value");
+    });
+    newline();
+
+    doc("Compare two DiagKind values for equality");
+    line("[[nodiscard]] constexpr auto operator==(const DiagKind& other) const -> bool = default", ";\n");
+    doc("Compare against a raw Value enumerator");
+    block("[[nodiscard]] constexpr auto operator==(const Value value) const -> bool", [&] {
+        line("return m_value == value");
+    });
+    newline();
+}
+
+void DiagGen::diagKindAccessors() {
+    doc("Return the category for this diagnostic");
+    block("[[nodiscard]] constexpr auto getCategory() const -> Category", [&] {
+        block("switch (m_value)", [&] {
+            for (const auto* cat : m_categories) {
+                const auto cases = collect(m_diagnostics, "category", cat);
+                if (cases.empty()) {
+                    continue;
+                }
+                for (const auto* cse : cases) {
+                    line("case " + cse->getName(), ":");
+                }
+                line("    return Category::" + cat->getName());
+            }
+        });
+        line("std::unreachable()");
+    });
+    newline();
+
+    doc("Return the severity for this diagnostic");
+    block("[[nodiscard]] constexpr auto getSeverity() const -> llvm::SourceMgr::DiagKind", [&] {
+        block("switch (m_value)", [&] {
+            for (const auto* sev : m_severities) {
+                const auto cases = collect(m_diagnostics, "severity", sev);
+                if (cases.empty()) {
+                    continue;
+                }
+                for (const auto* cse : cases) {
+                    line("case " + cse->getName(), ":");
+                }
+                line("    return " + getSeverity(sev).str());
+            }
+        });
+        line("std::unreachable()");
+    });
+    newline();
+
+    doc("Return the diagnostic code string");
+    block("[[nodiscard]] constexpr auto getCode() const -> llvm::StringRef", [&] {
+        block("switch (m_value)", [&] {
+            for (const auto* diag : m_diagnostics) {
+                line("case " + diag->getName() + ": return " + quoted(diag->getValueAsString("diagCode")));
+            }
+        });
+        line("std::unreachable()");
+    });
+    newline();
+}
+
+void DiagGen::diagKindCollections() {
+    for (const auto* sev : m_severities) {
+        const auto all = collect(m_diagnostics, "severity", sev);
+        if (all.empty()) {
+            continue;
+        }
+        const auto name = sev->getName();
+        const auto pascal = name.substr(0, 1).upper() + name.substr(1).str();
+        doc("Return all " + pascal + " diagnostics");
+        block("[[nodiscard]] static consteval auto all" + pascal + "s() -> std::array<DiagKind, " + std::to_string(all.size()) + ">", [&] {
+            space();
+            m_os << "return { ";
+            bool first = true;
+            for (const auto* diag : all) {
+                if (first) {
+                    first = false;
+                } else {
+                    m_os << ", ";
+                }
+                m_os << diag->getName();
+            }
+            m_os << " };\n"; }, "*-magic-numbers");
+        newline();
+    }
+}
+
+void DiagGen::diagKindFormatter() {
     doc("Support using DiagKind with std::print and std::format");
     line("template <>", "");
     block("struct std::formatter<lbc::DiagKind, char> final", true, [&] {
@@ -179,9 +188,6 @@ void DiagGen::diagKind() {
         });
     });
     newline();
-
-    // Reopen namespace for DiagMessage alias and factory functions
-    m_os << "namespace lbc {\n\n";
 }
 
 // -------------------------------------------------------------------------

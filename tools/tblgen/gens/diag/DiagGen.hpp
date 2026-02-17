@@ -25,6 +25,11 @@ public:
 
 private:
     void diagKind();
+    void diagKindEnums();
+    void diagKindConstructors();
+    void diagKindAccessors();
+    void diagKindCollections();
+    void diagKindFormatter();
     void diagnosticFunctions();
     void category(const Record* cat);
     void diagnostic(const Record* record);

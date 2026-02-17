@@ -200,24 +200,24 @@ struct DiagKind final {
      * Return all Error diagnostics
      */
     [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 19> { // NOLINT(*-magic-numbers)
-        return {notImplemented, fileNotFound, includeNotFound, invalidCharacter, unterminatedString, invalidNumber, unexpectedToken, expectedToken, unexpectedEndOfFile, expectedType, undeclaredIdentifier, redefinition, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, returnTypeMismatch, invalidModule, codegenFailure};
+        return { notImplemented, fileNotFound, includeNotFound, invalidCharacter, unterminatedString, invalidNumber, unexpectedToken, expectedToken, unexpectedEndOfFile, expectedType, undeclaredIdentifier, redefinition, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, returnTypeMismatch, invalidModule, codegenFailure };
     }
 
     /**
      * Return all Warning diagnostics
      */
     [[nodiscard]] static consteval auto allWarnings() -> std::array<DiagKind, 2> { // NOLINT(*-magic-numbers)
-        return {unusedVariable, unusedParameter};
+        return { unusedVariable, unusedParameter };
     }
 
     /**
      * Return all Note diagnostics
      */
     [[nodiscard]] static consteval auto allNotes() -> std::array<DiagKind, 2> { // NOLINT(*-magic-numbers)
-        return {declaredHere, previousDefinition};
+        return { declaredHere, previousDefinition };
     }
 
-    private:
+private:
     /// Underlying enumerator
     Value m_value;
 };
@@ -238,7 +238,6 @@ struct std::formatter<lbc::DiagKind, char> final {
 };
 
 namespace lbc {
-
 
 /**
  * Encapsulate a diagnostic kind and its formatted message
