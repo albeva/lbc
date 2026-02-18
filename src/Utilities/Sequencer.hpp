@@ -10,8 +10,9 @@ class Context;
  * Satisfied by types that support intrusive singly-linked list chaining.
  */
 template <typename T>
-concept HasSetNext = requires(T* node, T* next) {
+concept Sequencable = requires(T* node, T* next) {
     { node->setNext(next) } -> std::same_as<void>;
+    { static_cast<T*>(node->getNext()) };
 };
 
 /**
@@ -20,7 +21,7 @@ concept HasSetNext = requires(T* node, T* next) {
  *
  * @tparam T The type of node that has setNext() method.
  */
-template <HasSetNext T>
+template <Sequencable T>
 struct Sequencer final {
     /// Convenience alias for a pointer to the node type.
     using pointer = T*;

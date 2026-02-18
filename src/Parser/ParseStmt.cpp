@@ -5,15 +5,31 @@
 #include "Parser.hpp"
 using namespace lbc;
 
+namespace {
+/// Check if given token should terminate statement list
+auto isTerminator(const Token& tkn) -> bool {
+    return tkn.kind().isOneOf(TokenKind::Invalid, TokenKind::EndOfFile, TokenKind::End);
+}
+} // namespace
+
+// stmtList = { statement EOS } .
 auto Parser::stmtList() -> Result<AstStmtList*> {
     const auto start = m_token.getRange().Start;
     Sequencer<AstDecl> decls {};
     Sequencer<AstStmt> stmts {};
-    // TODO: iterate over statements
+
+    // { Statement EOS } .
+    while (not isTerminator(m_token)) {
+        TRY_DECL(stmt, statement())
+        TRY(consume(TokenKind::EndOfStmt))
+        stmts.add(stmt);
+    }
+
     return make<AstStmtList>(range(start), sequence(decls), sequence(stmts));
 }
 
-auto Parser::statement() -> Result<void> {
+// statement = .
+auto Parser::statement() -> Result<AstStmt*> {
     (void)this;
     return notImplemented();
 }

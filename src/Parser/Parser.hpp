@@ -152,7 +152,7 @@ private:
     // -------------------------------------------------------------------------
 
     [[nodiscard]] auto stmtList() -> Result<AstStmtList*>;
-    [[nodiscard]] auto statement() -> Result<void>;
+    [[nodiscard]] auto statement() -> Result<AstStmt*>;
 
     // -------------------------------------------------------------------------
     // Expressions (ParseExpr.cpp)

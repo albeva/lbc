@@ -38,6 +38,13 @@ public:
      */
     [[nodiscard]] auto getContext() -> Context& { return m_context; }
 
+    /**
+     * Return the source range from m_start to m_input.
+     */
+    [[nodiscard]] auto range() const -> llvm::SMRange {
+        return m_start.rangeTo(m_input);
+    }
+
 private:
     /**
      * Log an "invalid input" diagnostic at the current position.
@@ -93,13 +100,6 @@ private:
      * Lex an integer or floating-point number literal.
      */
     [[nodiscard]] auto numberLiteral() -> DiagResult<Token>;
-
-    /**
-     * Return the source range from m_start to m_input.
-     */
-    [[nodiscard]] auto range() const -> llvm::SMRange {
-        return m_start.rangeTo(m_input);
-    }
 
     /**
      * Return the source text from m_start to m_input.

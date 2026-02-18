@@ -12,10 +12,10 @@ Parser::Parser(Context& context, unsigned id)
 
 Parser::~Parser() = default;
 
+// module = stmtList EOF .
 auto Parser::parse() -> Result<AstModule*> {
     TRY(advance())
 
-    // program
     TRY_DECL(stmts, stmtList())
     TRY(consume(TokenKind::EndOfFile))
 
@@ -32,7 +32,12 @@ auto Parser::notImplemented(const std::source_location& location) -> DiagError {
 }
 
 auto Parser::advance() -> Result<void> {
-    TRY_ASSIGN(m_token, m_lexer.next())
+    if (auto res = m_lexer.next(); res) {
+        m_token = res.value();
+    } else {
+        m_token = Token(TokenKind::Invalid, m_lexer.range());
+        return DiagError(res.error());
+    }
     return {};
 }
 
