@@ -90,11 +90,12 @@ private:
 
     /**
      * Create an error indicating the current token was unexpected.
+     * If a deferred lexer error is pending, returns that instead.
      */
     [[nodiscard]] auto unexpected(const std::source_location& location = std::source_location::current()) -> DiagError;
 
     /**
-     * Create an error reporting what was expected vs. what was found.
+     * Create an error reporting what was @param expected vs. what was found.
      */
     [[nodiscard]] auto expected(const diagnostics::Loggable auto& expected, const std::source_location& location = std::source_location::current()) -> DiagError {
         return diag(diagnostics::expected(expected, m_token), m_token.getRange().Start, m_token.getRange(), location);
@@ -111,23 +112,33 @@ private:
 
     /**
      * Consume the current token and advance to the next one.
+     *
+     * If the lexer produces an error, the token is set to Invalid and
+     * the error is stored in m_deferredError rather than returned
+     * immediately. This allows valid subexpressions to complete before
+     * the error surfaces. The deferred error is returned on the next
+     * call to advance(), or when expect() / unexpected() encounters
+     * the Invalid token. m_lastLoc is only updated on success, so it
+     * always reflects the end of the last successfully consumed token.
      */
     [[nodiscard]] auto advance() -> Result<void>;
 
     /**
-     * If the current token matches the given kind, consume it
-     * and return true. Otherwise leave it and return false.
+     * If the current token matches @param kind, consume it and
+     * return true. Otherwise leave the token in place and return false.
      */
     [[nodiscard]] auto accept(TokenKind kind) -> Result<bool>;
 
     /**
-     * Assert that the current token is of the given kind.
-     * Returns an error if it does not match.
+     * Verify that the current token matches @param kind without
+     * consuming it. If a deferred lexer error is pending, returns
+     * that. Otherwise returns an "expected X" diagnostic.
      */
     [[nodiscard]] auto expect(TokenKind kind) -> Result<void>;
 
     /**
-     * Expect the current token to match the given kind, then advance.
+     * Expect the current token to match @param kind, then advance
+     * past it. Equivalent to expect() followed by advance().
      */
     [[nodiscard]] auto consume(TokenKind kind) -> Result<void>;
 
@@ -136,7 +147,8 @@ private:
     // -------------------------------------------------------------------------
 
     /**
-     * Parse an identifier token and return its string value.
+     * Expect the current token to be an identifier, consume it,
+     * and return its string value.
      */
     [[nodiscard]] auto identifier() -> Result<llvm::StringRef>;
 
