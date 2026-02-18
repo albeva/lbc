@@ -257,6 +257,7 @@ private:
     Lexer m_lexer;                            ///< Lexer producing tokens from the source buffer
     Token m_token;                            ///< Currently read token (one-token lookahead)
     llvm::SMLoc m_lastLoc;                    ///< End location of the last consumed token
+    DiagIndex m_deferredError;                ///< Lexer error deferred until token is demanded
     Scope m_scope = Scope::Module;            ///< Current parsing scope
     ExprFlags m_exprFlags = defaultExprFlags; ///< Active expression parsing flags
 };

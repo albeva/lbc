@@ -24,6 +24,9 @@ auto Parser::parse() -> Result<AstModule*> {
 }
 
 auto Parser::unexpected(const std::source_location& location) -> DiagError {
+    if (m_deferredError.isValid()) {
+        return DiagError(std::exchange(m_deferredError, {}));
+    }
     return diag(diagnostics::unexpected(m_token), m_token.getRange().Start, llvm::ArrayRef(m_token.getRange()), location);
 }
 
@@ -32,12 +35,15 @@ auto Parser::notImplemented(const std::source_location& location) -> DiagError {
 }
 
 auto Parser::advance() -> Result<void> {
-    m_lastLoc = m_token.getRange().End;
+    if (m_deferredError.isValid()) {
+        return DiagError(std::exchange(m_deferredError, {}));
+    }
     if (auto res = m_lexer.next(); res) {
+        m_lastLoc = m_token.getRange().End;
         m_token = res.value();
     } else {
         m_token = Token(TokenKind::Invalid, m_lexer.range());
-        return DiagError(res.error());
+        m_deferredError = res.error();
     }
     return {};
 }
@@ -52,6 +58,9 @@ auto Parser::accept(const TokenKind kind) -> Result<bool> {
 
 auto Parser::expect(const TokenKind kind) -> Result<void> {
     if (m_token.kind() != kind) {
+        if (m_deferredError.isValid()) {
+            return DiagError(std::exchange(m_deferredError, {}));
+        }
         return expected(kind);
     }
     return {};

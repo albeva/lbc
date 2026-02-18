@@ -28,6 +28,11 @@ public:
     /** Construct an invalid (sentinel) index. */
     constexpr DiagIndex() = default;
 
+    /// Check whether this index points to an actual diagnostic.
+    [[nodiscard]] constexpr auto isValid() const -> bool {
+        return m_value != DiagIndex().m_value;
+    }
+
 private:
     friend class DiagEngine;
 
@@ -42,11 +47,6 @@ private:
     [[nodiscard]] constexpr auto get() const -> Value {
         assert(isValid() && "Getting value from invalid DiagIndex");
         return m_value;
-    }
-
-    /// Check whether this index points to an actual diagnostic.
-    [[nodiscard]] constexpr auto isValid() const -> bool {
-        return m_value != DiagIndex().m_value;
     }
 
     /// Raw value, sentinel when default-constructed.
