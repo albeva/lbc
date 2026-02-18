@@ -29,4 +29,8 @@ private:
     [[nodiscard]] static auto visitorSample(const AstClass* klass) -> std::string;
     void caseAccept(const AstClass* klass);
     void defaultCase();
+
+    void visitFunctions();
+    void visitFunction(const AstClass* ast);
+    void caseForward(const AstClass* klass);
 };

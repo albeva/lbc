@@ -338,4 +338,129 @@ public:
     }
 };
 
+/**
+ * Dispatch over all concrete AST nodes using a callable visitor.
+ */
+template <typename Callable>
+constexpr auto visit(IsNode<AstRoot> auto& ast, Callable&& callable) -> decltype(auto) {
+    switch (ast.getKind()) {
+        case AstKind::Module:
+            return std::forward<Callable>(callable)(llvm::cast<AstModule>(ast));
+        case AstKind::BuiltInType:
+            return std::forward<Callable>(callable)(llvm::cast<AstBuiltInType>(ast));
+        case AstKind::StmtList:
+            return std::forward<Callable>(callable)(llvm::cast<AstStmtList>(ast));
+        case AstKind::ExprStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstExprStmt>(ast));
+        case AstKind::DeclareStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstDeclareStmt>(ast));
+        case AstKind::FuncStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstFuncStmt>(ast));
+        case AstKind::ReturnStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstReturnStmt>(ast));
+        case AstKind::DimStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstDimStmt>(ast));
+        case AstKind::AssignStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstAssignStmt>(ast));
+        case AstKind::IfStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstIfStmt>(ast));
+        case AstKind::VarDecl:
+            return std::forward<Callable>(callable)(llvm::cast<AstVarDecl>(ast));
+        case AstKind::FuncDecl:
+            return std::forward<Callable>(callable)(llvm::cast<AstFuncDecl>(ast));
+        case AstKind::FuncParamDecl:
+            return std::forward<Callable>(callable)(llvm::cast<AstFuncParamDecl>(ast));
+        case AstKind::VarExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstVarExpr>(ast));
+        case AstKind::CallExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstCallExpr>(ast));
+        case AstKind::LiteralExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstLiteralExpr>(ast));
+        case AstKind::UnaryExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstUnaryExpr>(ast));
+        case AstKind::BinaryExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstBinaryExpr>(ast));
+        default:
+            std::unreachable();
+    }
+}
+
+/**
+ * Dispatch over type expression nodes using a callable visitor.
+ */
+template <typename Callable>
+constexpr auto visit(IsNode<AstType> auto& ast, Callable&& callable) -> decltype(auto) {
+    switch (ast.getKind()) {
+        case AstKind::BuiltInType:
+            return std::forward<Callable>(callable)(llvm::cast<AstBuiltInType>(ast));
+        default:
+            std::unreachable();
+    }
+}
+
+/**
+ * Dispatch over statement nodes using a callable visitor.
+ */
+template <typename Callable>
+constexpr auto visit(IsNode<AstStmt> auto& ast, Callable&& callable) -> decltype(auto) {
+    switch (ast.getKind()) {
+        case AstKind::StmtList:
+            return std::forward<Callable>(callable)(llvm::cast<AstStmtList>(ast));
+        case AstKind::ExprStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstExprStmt>(ast));
+        case AstKind::DeclareStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstDeclareStmt>(ast));
+        case AstKind::FuncStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstFuncStmt>(ast));
+        case AstKind::ReturnStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstReturnStmt>(ast));
+        case AstKind::DimStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstDimStmt>(ast));
+        case AstKind::AssignStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstAssignStmt>(ast));
+        case AstKind::IfStmt:
+            return std::forward<Callable>(callable)(llvm::cast<AstIfStmt>(ast));
+        default:
+            std::unreachable();
+    }
+}
+
+/**
+ * Dispatch over declaration nodes using a callable visitor.
+ */
+template <typename Callable>
+constexpr auto visit(IsNode<AstDecl> auto& ast, Callable&& callable) -> decltype(auto) {
+    switch (ast.getKind()) {
+        case AstKind::VarDecl:
+            return std::forward<Callable>(callable)(llvm::cast<AstVarDecl>(ast));
+        case AstKind::FuncDecl:
+            return std::forward<Callable>(callable)(llvm::cast<AstFuncDecl>(ast));
+        case AstKind::FuncParamDecl:
+            return std::forward<Callable>(callable)(llvm::cast<AstFuncParamDecl>(ast));
+        default:
+            std::unreachable();
+    }
+}
+
+/**
+ * Dispatch over expression nodes using a callable visitor.
+ */
+template <typename Callable>
+constexpr auto visit(IsNode<AstExpr> auto& ast, Callable&& callable) -> decltype(auto) {
+    switch (ast.getKind()) {
+        case AstKind::VarExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstVarExpr>(ast));
+        case AstKind::CallExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstCallExpr>(ast));
+        case AstKind::LiteralExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstLiteralExpr>(ast));
+        case AstKind::UnaryExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstUnaryExpr>(ast));
+        case AstKind::BinaryExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstBinaryExpr>(ast));
+        default:
+            std::unreachable();
+    }
+}
+
 } // namespace lbc

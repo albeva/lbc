@@ -62,8 +62,9 @@ struct Sequencer final {
     /**
      * Append content of the span to this sequence
      */
-    void append(std::span<pointer> nodes)  {
-        for (pointer node : nodes) {
+    template<std::convertible_to<pointer> U>
+    void append(std::span<U> nodes)  {
+        for (auto* node : nodes) {
             add(node);
         }
     }

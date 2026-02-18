@@ -17,6 +17,7 @@ auto AstVisitorGen::run() -> bool {
 
     visitorBaseClass();
     visitorClasses();
+    visitFunctions();
     return false;
 }
 
@@ -157,4 +158,52 @@ void AstVisitorGen::caseAccept(const AstClass* klass) {
 void AstVisitorGen::defaultCase() {
     line("default", ":");
     line("    std::unreachable()");
+}
+
+/**
+ * Emit free visit functions for all ast groups
+ */
+void AstVisitorGen::visitFunctions() {
+    getRoot()->visit([&](const AstClass* klass) {
+        if (not klass->isLeaf()) {
+            visitFunction(klass);
+        }
+    });
+}
+
+/**
+ * Generate free visit function for given group
+ */
+void AstVisitorGen::visitFunction(const AstClass* ast) {
+    if (ast->getChildren().empty()) {
+        return;
+    }
+
+    std::string docStr;
+    if (ast->isRoot()) {
+        docStr = "Dispatch over all concrete AST nodes using a callable visitor.";
+    } else {
+        docStr = "Dispatch over " + ast->getRecord()->getValueAsString("desc").str()
+               + " nodes using a callable visitor.";
+    }
+    doc(docStr);
+
+    line("template <typename Callable>", "");
+    block("constexpr auto visit(IsNode<" + ast->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
+        block("switch (ast.getKind())", [&] {
+            ast->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+                caseForward(node);
+            });
+            defaultCase();
+        });
+    });
+    newline();
+}
+
+/**
+ * Generate case statement that forwards to the callable visitor
+ */
+void AstVisitorGen::caseForward(const AstClass* klass) {
+    line("case AstKind::" + klass->getEnumName(), ":");
+    line("    return std::forward<Callable>(callable)(llvm::cast<" + klass->getClassName() + ">(ast))");
 }

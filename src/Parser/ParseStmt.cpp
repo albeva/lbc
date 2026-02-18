@@ -3,6 +3,7 @@
 //
 #include "Ast/Ast.hpp"
 #include "Parser.hpp"
+#include "Ast/AstVisitor.hpp"
 using namespace lbc;
 
 namespace {
@@ -23,6 +24,16 @@ auto Parser::stmtList() -> Result<AstStmtList*> {
         TRY_DECL(stmt, statement())
         TRY(consume(TokenKind::EndOfStmt))
         stmts.add(stmt);
+        // collection declarations
+        visit(*stmt, Visitor {
+            [&](const AstDimStmt& ast) {
+                decls.append(ast.getDecls());
+            },
+            [&](const AstDeclareStmt& ast) {
+                decls.add(ast.getDecl());
+            },
+            [](const auto&){}
+        });
     }
 
     return make<AstStmtList>(range(start), sequence(decls), sequence(stmts));
