@@ -32,6 +32,7 @@ auto Parser::notImplemented(const std::source_location& location) -> DiagError {
 }
 
 auto Parser::advance() -> Result<void> {
+    m_lastLoc = m_token.getRange().End;
     if (auto res = m_lexer.next(); res) {
         m_token = res.value();
     } else {
@@ -59,4 +60,11 @@ auto Parser::expect(const TokenKind kind) -> Result<void> {
 auto Parser::consume(const TokenKind kind) -> Result<void> {
     TRY(expect(kind))
     return advance();
+}
+
+auto Parser::identifier() -> Result<llvm::StringRef> {
+    TRY(expect(TokenKind::Identifier))
+    const auto id = std::get<llvm::StringRef>(m_token.getValue());
+    TRY(advance())
+    return id;
 }

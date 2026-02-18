@@ -42,7 +42,7 @@ void AstExprPrinter::accept(const AstLiteralExpr& ast) {
             m_output += std::to_string(value);
         },
         [&](const bool& value) {
-            m_output += std::to_string(value);
+            m_output += value ? "true" : "false";
         },
         [&](const llvm::StringRef& value) {
             m_output += value;
@@ -52,14 +52,24 @@ void AstExprPrinter::accept(const AstLiteralExpr& ast) {
 }
 
 void AstExprPrinter::accept(const AstUnaryExpr& ast) {
+    m_output += "(";
     m_output += ast.getOp().string();
     visit(*ast.getExpr());
+    m_output += ")";
 }
 
 void AstExprPrinter::accept(const AstBinaryExpr& ast) {
+    m_output += "(";
     visit(*ast.getLeft());
     m_output += " ";
     m_output += ast.getOp().string();
     m_output += " ";
+    visit(*ast.getRight());
+    m_output += ")";
+}
+
+void AstExprPrinter::accept(const AstMemberExpr& ast) {
+    visit(*ast.getLeft());
+    m_output += ".";
     visit(*ast.getRight());
 }

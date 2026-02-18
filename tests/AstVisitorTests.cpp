@@ -17,5 +17,5 @@ TEST(AstVisitorTests, ExprPrinterVisitsMultipleNodes) {
     AstCallExpr callExpr({}, &callee, std::span(args));
 
     AstExprPrinter printer;
-    EXPECT_EQ(printer.print(callExpr), "foo(x + 42)");
+    EXPECT_EQ(printer.print(callExpr), "foo((x + 42))");
 }

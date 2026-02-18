@@ -31,7 +31,7 @@ struct Sequencer final {
      *
      * @param node The AST node to add to the sequence.
      */
-    void add(pointer node)  {
+    void add(pointer node) {
         size += 1;
         if (first == nullptr) {
             first = last = node;
@@ -46,7 +46,7 @@ struct Sequencer final {
      *
      * @param other The Sequencer to append.
      */
-    void append(const Sequencer& other)  {
+    void append(const Sequencer& other) {
         if (other.size == 0) {
             return;
         }
@@ -62,8 +62,8 @@ struct Sequencer final {
     /**
      * Append content of the span to this sequence
      */
-    template<std::convertible_to<pointer> U>
-    void append(std::span<U> nodes)  {
+    template <std::convertible_to<pointer> U>
+    void append(std::span<U> nodes) {
         for (auto* node : nodes) {
             add(node);
         }

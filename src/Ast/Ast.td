@@ -190,3 +190,9 @@ def BinaryExpr : Leaf<"Binary expression", Expr, [
     Arg<"AstExpr*", "right">,
     Arg<"TokenKind", "op">,
 ]>;
+
+def MemberExpr : Leaf<"Member access", Expr, [
+    Arg<"AstExpr*", "left">,
+    Arg<"AstExpr*", "right">,
+    Arg<"TokenKind", "op">,
+]>;

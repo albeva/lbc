@@ -18,6 +18,23 @@ class Context;
  * Recursive-descent parser. Implementation is split across
  * multiple .cpp files by concern: ParseDecl, ParseExpr, ParseStmt,
  * ParseType, and Parser.cpp for common utilities.
+ *
+ * Grammar (EBNF):
+ * @code
+ * module     = stmtList EOF .
+ * stmtList   = { statement EOS } .
+ * statement  = declareStmt | dimStmt .
+ * dimStmt    = "DIM" varDecl { "," varDecl } .
+ * varDecl    = id ( "AS" typeExpr [ "=" expression ] | "=" expression ) .
+ * expression = primary { <binary-op> primary } .
+ * primary    = variable | literal | "(" expression ")" | prefix .
+ * variable   = id .
+ * literal    = "null" | "true" | "false" | <integer> | <float> | <string> .
+ * prefix     = <unary-op> primary .
+ * sub        = callee [ params ] .
+ * function   = callee "(" [ params ] ")" .
+ * params     = expression { "," expression } .
+ * @endcode
  */
 class Parser final : protected LogProvider {
 public:
@@ -50,12 +67,22 @@ private:
     // Utilities
     // --------------------------------
 
+    /// Current parsing scope, determines which constructs are valid.
     enum class Scope : std::uint8_t {
-        Module,       // top-level module scope
-        ImplicitMain, // once non-declaration is encountered, scope becomes implicit main
-        Sub,          // subroutine scope
-        Function,     // function scope
+        Module,       ///< top-level module scope
+        ImplicitMain, ///< once a non-declaration is encountered, scope becomes implicit main
+        Sub,          ///< subroutine scope
+        Function,     ///< function scope
     };
+
+    /// Flags that modify expression parsing behaviour.
+    struct ExprFlags {
+        bool callWithoutParens : 1 = false; ///< allow paren-free subroutine call syntax
+        bool stopAtAssign      : 1 = false; ///< stop before `=` so assignment is handled at statement level
+    };
+
+    /// Default expression flags used when none are explicitly provided.
+    constexpr static ExprFlags defaultExprFlags { .callWithoutParens = false, .stopAtAssign = false };
 
     // -------------------------------------------------------------------------
     // Error Handling
@@ -105,24 +132,32 @@ private:
     [[nodiscard]] auto consume(TokenKind kind) -> Result<void>;
 
     // -------------------------------------------------------------------------
+    // Generic grammars
+    // -------------------------------------------------------------------------
+
+    /**
+     * Parse an identifier token and return its string value.
+     */
+    [[nodiscard]] auto identifier() -> Result<llvm::StringRef>;
+
+    // -------------------------------------------------------------------------
     // Source location and range
     // -------------------------------------------------------------------------
 
-    [[nodiscard]] auto start() const -> llvm::SMLoc { return m_token.getRange().Start; }
-    [[nodiscard]] auto end() const -> llvm::SMLoc { return m_token.getRange().End; }
+    /** Return the start location of the current token. */
+    [[nodiscard]] auto startLoc() const -> llvm::SMLoc { return m_token.getRange().Start; }
 
-    [[nodiscard]] auto range() const -> llvm::SMRange {
-        return { start(), end() };
-    }
-
+    /** Build a range from @param start to the end of the last consumed token. */
     [[nodiscard]] auto range(const llvm::SMLoc start) const -> llvm::SMRange {
-        return { start, end() };
+        return { start, m_lastLoc };
     }
 
+    /** Build a range from the start of @param start node to the end of the last consumed token. */
     [[nodiscard]] auto range(const AstRoot* start) const -> llvm::SMRange {
-        return { start->getRange().Start, end() };
+        return { start->getRange().Start, m_lastLoc };
     }
 
+    /** Build a range spanning from @param first to @param last node. */
     [[nodiscard]] static auto range(const AstRoot* first, const AstRoot* last) -> llvm::SMRange {
         return { first->getRange().Start, last->getRange().End };
     }
@@ -131,11 +166,13 @@ private:
     // Memory handling
     // -------------------------------------------------------------------------
 
+    /** Arena-allocate an AST node via the context. */
     template <typename T, typename... Args>
     auto make(Args&&... args) -> T* {
         return getContext().create<T>(std::forward<Args>(args)...);
     }
 
+    /** Flatten a sequencer into a contiguous arena-allocated span. */
     template <typename T>
     [[nodiscard]] auto sequence(Sequencer<T>& seq) -> std::span<T*> {
         return seq.sequence(getContext());
@@ -145,36 +182,83 @@ private:
     // Declarations (ParseDecl.cpp)
     // -------------------------------------------------------------------------
 
+    /** Parse a top-level declaration. */
     [[nodiscard]] auto declaration() -> Result<void>;
+
+    /** Parse a variable declaration (name, optional type, optional initializer). */
+    [[nodiscard]] auto varDecl() -> Result<AstVarDecl*>;
 
     // -------------------------------------------------------------------------
     // Statements (ParseStmt.cpp)
     // -------------------------------------------------------------------------
 
+    /** Parse a list of statements terminated by a block-ending token. */
     [[nodiscard]] auto stmtList() -> Result<AstStmtList*>;
+
+    /** Parse a single statement. */
     [[nodiscard]] auto statement() -> Result<AstStmt*>;
+
+    /** Parse a DIM statement with one or more variable declarations. */
+    [[nodiscard]] auto dimStmt() -> Result<AstStmt*>;
+
+    /** Parse a DECLARE forward-declaration statement. */
+    [[nodiscard]] auto declareStmt() -> Result<AstStmt*>;
 
     // -------------------------------------------------------------------------
     // Expressions (ParseExpr.cpp)
     // -------------------------------------------------------------------------
 
-    [[nodiscard]] auto expression() -> Result<void>;
+    /** Parse an expression using precedence climbing. */
+    [[nodiscard]] auto expression(ExprFlags flags = defaultExprFlags) -> Result<AstExpr*>;
+
+    /** Parse a primary expression (variable, literal, parenthesised, or prefix). */
+    [[nodiscard]] auto primary() -> Result<AstExpr*>;
+
+    /** Parse a variable reference. */
+    [[nodiscard]] auto variable() -> Result<AstExpr*>;
+
+    /** Parse a literal value (integer, float, boolean, string, or null). */
+    [[nodiscard]] auto literal() -> Result<AstExpr*>;
+
+    /** Parse a paren-free subroutine call: `callee arg1, arg2`. */
+    [[nodiscard]] auto sub(AstExpr* callee) -> Result<AstExpr*>;
+
+    /** Parse a parenthesised function call: `callee(arg1, arg2)`. */
+    [[nodiscard]] auto function(AstExpr* callee) -> Result<AstExpr*>;
+
+    /** Parse a comma-separated parameter list. */
+    [[nodiscard]] auto params() -> Result<std::span<AstExpr*>>;
+
+    /** Parse a prefix unary expression. */
+    [[nodiscard]] auto prefix() -> Result<AstExpr*>;
+
+    /** Parse a suffix expression (function call, type cast). */
+    [[nodiscard]] auto suffix(AstExpr* lhs) -> Result<AstExpr*>;
+
+    /** Construct the appropriate binary or member-access AST node. */
+    [[nodiscard]] auto binary(AstExpr* lhs, AstExpr* rhs, TokenKind tkn) -> Result<AstExpr*>;
+
+    /** Precedence-climbing loop. Parses binary and suffix operators at or above @param precedence. */
+    [[nodiscard]] auto climb(AstExpr* lhs, int precedence = 1) -> Result<AstExpr*>;
+
+    /** Check whether expression parsing should stop before the current token. */
+    [[nodiscard]] auto shouldBreak() const -> bool;
 
     // -------------------------------------------------------------------------
     // Types (ParseType.cpp)
     // -------------------------------------------------------------------------
 
+    /** Parse a type expression. */
     [[nodiscard]] auto type() -> Result<void>;
 
     // -------------------------------------------------------------------------
     // Parser Data
     // -------------------------------------------------------------------------
-    // the lexer
-    Lexer m_lexer;
-    // current token
-    Token m_token;
-    // parsing scope
-    Scope m_scope = Scope::Module;
+    Lexer m_lexer;                            ///< Lexer producing tokens from the source buffer
+    Token m_token;                            ///< Currently read token (one-token lookahead)
+    llvm::SMLoc m_lastLoc;                    ///< End location of the last consumed token
+    Scope m_scope = Scope::Module;            ///< Current parsing scope
+    ExprFlags m_exprFlags = defaultExprFlags; ///< Active expression parsing flags
 };
 
 } // namespace lbc

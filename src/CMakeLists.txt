@@ -28,7 +28,6 @@ target_sources(lbc_lib
     Lexer/Token.hpp
     Parser/Parser.hpp
     Type/Type.hpp
-    Utilities/Diagnostics.hpp
     Utilities/Formatters.hpp
     Utilities/LiteralValue.hpp
     Utilities/NoCopy.hpp

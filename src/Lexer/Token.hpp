@@ -33,6 +33,11 @@ public:
     [[nodiscard]] constexpr auto kind() const -> TokenKind { return m_kind; }
 
     /**
+     * Change token kind. Useful for Minus -> Negate, Assign -> Equal, etc.
+     */
+    constexpr void changeKind(const TokenKind kind) { m_kind = kind; }
+
+    /**
      * Return the source range covering this token.
      */
     [[nodiscard]] constexpr auto getRange() const -> const llvm::SMRange& { return m_range; }

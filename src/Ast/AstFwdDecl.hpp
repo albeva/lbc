@@ -33,4 +33,5 @@ class AstCallExpr;
 class AstLiteralExpr;
 class AstUnaryExpr;
 class AstBinaryExpr;
+class AstMemberExpr;
 } // namespace lbc

@@ -38,6 +38,7 @@ enum class AstKind : std::uint8_t {
     LiteralExpr,
     UnaryExpr,
     BinaryExpr,
+    MemberExpr,
 };
 
 // -----------------------------------------------------------------------------
@@ -67,6 +68,7 @@ class AstCallExpr;
 class AstLiteralExpr;
 class AstUnaryExpr;
 class AstBinaryExpr;
+class AstMemberExpr;
 
 // -----------------------------------------------------------------------------
 // Root nodes
@@ -97,7 +99,7 @@ public:
     }
 
     /// Number of AST leaf nodes
-    static constexpr std::size_t NODE_COUNT = 18;
+    static constexpr std::size_t NODE_COUNT = 19;
 
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
@@ -154,7 +156,8 @@ private:
         "AstCallExpr",
         "AstLiteralExpr",
         "AstUnaryExpr",
-        "AstBinaryExpr"
+        "AstBinaryExpr",
+        "AstMemberExpr"
     };
 };
 
@@ -715,7 +718,7 @@ protected:
 public:
     /// LLVM RTTI support to check if given node is an AstExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
-        return ast->getKind() >= AstKind::VarExpr && ast->getKind() <= AstKind::BinaryExpr;
+        return ast->getKind() >= AstKind::VarExpr && ast->getKind() <= AstKind::MemberExpr;
     }
 
     /// Get the type
@@ -886,6 +889,51 @@ public:
     /// LLVM RTTI support to check if given node is an AstBinaryExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
         return ast->getKind() == AstKind::BinaryExpr;
+    }
+
+    /// Get the left
+    [[nodiscard]] constexpr auto getLeft() const -> AstExpr* {
+        return m_left;
+    }
+
+    /// Get the right
+    [[nodiscard]] constexpr auto getRight() const -> AstExpr* {
+        return m_right;
+    }
+
+    /// Get the op
+    [[nodiscard]] constexpr auto getOp() const -> TokenKind {
+        return m_op;
+    }
+
+private:
+    AstExpr* m_left;
+    AstExpr* m_right;
+    TokenKind m_op;
+};
+
+/**
+ * Member access
+ */
+class [[nodiscard]] AstMemberExpr final : public AstExpr {
+public:
+    /**
+     * Construct an AstMemberExpr node
+     */
+    constexpr AstMemberExpr(
+        const llvm::SMRange range,
+        AstExpr* left,
+        AstExpr* right,
+        const TokenKind op
+    )
+    : AstExpr(AstKind::MemberExpr, range)
+    , m_left(left)
+    , m_right(right)
+    , m_op(op) {}
+
+    /// LLVM RTTI support to check if given node is an AstMemberExpr
+    [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
+        return ast->getKind() == AstKind::MemberExpr;
     }
 
     /// Get the left

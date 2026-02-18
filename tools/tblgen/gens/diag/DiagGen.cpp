@@ -61,8 +61,7 @@ void DiagGen::diagKindEnums() {
     block("enum Value : std::uint8_t", true, [&] {
         for (const auto* diag : m_diagnostics) {
             line(diag->getName(), ",");
-        }
-    }, "*-use-enum-class");
+        } }, "*-use-enum-class");
     newline();
 
     doc("Diagnostic subsystem");

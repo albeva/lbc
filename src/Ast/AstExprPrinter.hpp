@@ -22,6 +22,7 @@ private:
     void accept(const AstLiteralExpr& ast);
     void accept(const AstUnaryExpr& ast);
     void accept(const AstBinaryExpr& ast);
+    void accept(const AstMemberExpr& ast);
 
     std::string m_output;
 };
