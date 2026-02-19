@@ -101,11 +101,6 @@ private:
         return diag(diagnostics::expected(expected, m_token), m_token.getRange().Start, m_token.getRange(), location);
     }
 
-    /**
-     * Create an error indicating unimplemented functionality.
-     */
-    [[nodiscard]] auto notImplemented(const std::source_location& location = std::source_location::current()) -> DiagError;
-
     // -------------------------------------------------------------------------
     // Parsing basics
     // -------------------------------------------------------------------------

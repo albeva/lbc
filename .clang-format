@@ -21,6 +21,7 @@ IncludeCategories:
   - Priority: 4
     Regex: .*
 StatementMacros:
+  - NO_COPY_AND_MOVE
   - TRY
   - TRY_ASSIGN
   - TRY_DECL

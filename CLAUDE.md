@@ -124,6 +124,10 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
   via `Sequencer::sequence(Context&)`.
 - Parser: single `Parser` class with implementation split across multiple `.cpp` files by concern
   (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utilities).
+- Semantic Analyser: single `SemanticAnalyser` class, same split-file pattern as the parser
+  (`Sema.cpp`, `SemaDecl.cpp`, `SemaExpr.cpp`, `SemaStmt.cpp`, `SemaType.cpp`). Inherits `LogProvider` for
+  diagnostics and `AstVisitor<DiagResult<void>>` for dispatch. Each AST node type has a corresponding `accept()`
+  handler. Entry point is `analyse(AstModule&)`.
 - AST: node classes are generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. The TableGen schema
   uses three class types: `Node` (base), `Group` (abstract intermediate — types, statements, declarations,
   expressions), and `Leaf` (concrete instantiable nodes). Each node has a `list<Member>` with two subtypes:

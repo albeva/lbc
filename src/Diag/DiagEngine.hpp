@@ -82,6 +82,9 @@ public:
     explicit DiagEngine(Context& context);
     ~DiagEngine();
 
+    [[nodiscard]] auto isAutoPrintEnabled() const -> bool { return m_autoPrint; }
+    void setAutoPrint(const bool autoPrint) { m_autoPrint = autoPrint; }
+
     /** Return the number of diagnostics with the given severity. */
     [[nodiscard]] auto count(llvm::SourceMgr::DiagKind kind) const -> std::size_t;
 
@@ -126,6 +129,7 @@ private:
 
     [[maybe_unused]] Context& m_context;
     std::vector<Entry> m_messages;
+    bool m_autoPrint = true;
 };
 
 } // namespace lbc

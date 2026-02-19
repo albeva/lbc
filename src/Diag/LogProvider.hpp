@@ -40,5 +40,13 @@ protected:
     ) -> DiagError {
         return DiagError(self.getContext().getDiag().log(message, loc, ranges, location));
     }
+
+    /**
+     * Create an error indicating unimplemented functionality.
+     */
+    template <ContextAware T>
+    [[nodiscard]] auto notImplemented(this T& self, const std::source_location& location = std::source_location::current()) -> DiagError {
+        return DiagError(self.getContext().getDiag().log(diagnostics::notImplemented(), {}, {}, location));
+    }
 };
 } // namespace lbc

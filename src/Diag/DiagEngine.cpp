@@ -10,7 +10,11 @@ DiagEngine::DiagEngine(Context& context)
 : m_context(context) {
 }
 
-DiagEngine::~DiagEngine() = default;
+DiagEngine::~DiagEngine() {
+    if (m_autoPrint) {
+        print();
+    }
+}
 
 auto DiagEngine::count(const llvm::SourceMgr::DiagKind kind) const -> std::size_t {
     const auto found = std::ranges::count_if(m_messages, [&](const auto& entry) {

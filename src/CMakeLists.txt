@@ -15,6 +15,11 @@ target_sources(lbc_lib
     Parser/ParseStmt.cpp
     Parser/ParseType.cpp
     Parser/Parser.cpp
+    Sema/Sema.cpp
+    Sema/SemaDecl.cpp
+    Sema/SemaExpr.cpp
+    Sema/SemaStmt.cpp
+    Sema/SemaType.cpp
     Type/Type.cpp
 
     PUBLIC FILE_SET HEADERS FILES
@@ -27,6 +32,7 @@ target_sources(lbc_lib
     Lexer/Lexer.hpp
     Lexer/Token.hpp
     Parser/Parser.hpp
+    Sema/SemanticAnalyser.hpp
     Type/Type.hpp
     Utilities/Formatters.hpp
     Utilities/LiteralValue.hpp
