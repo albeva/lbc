@@ -51,7 +51,12 @@ auto Parser::statement() -> Result<AstStmt*> {
     case TokenKind::Declare:
         return declareStmt();
     default:
-        return unexpected();
+        TRY_DECL(primary, expression({ .callWithoutParens = true, .stopAtAssign = true }));
+        TRY_IF (accept(TokenKind::Assign)) {
+            TRY_DECL(expr, expression())
+            return make<AstAssignStmt>(range(primary, expr), primary, expr);
+        }
+        return make<AstExprStmt>(primary->getRange(), primary);
     }
 }
 
@@ -63,14 +68,29 @@ auto Parser::dimStmt() -> Result<AstStmt*> {
     // varDecl { "," varDecl }
     Sequencer<AstVarDecl> decls {};
     TRY_ADD(decls, varDecl())
-    TRY_WHILE(accept(TokenKind::Comma)) {
+    TRY_WHILE (accept(TokenKind::Comma)) {
         TRY_ADD(decls, varDecl())
     }
 
     return make<AstDimStmt>(range(start), sequence(decls));
 }
 
-/// declareStmt = ... .
+/// declareStmt = "DECLARE" ( subDecl | funcDecl )
 auto Parser::declareStmt() -> Result<AstStmt*> {
-    return notImplemented();
+    const auto start = startLoc();
+    TRY(consume(TokenKind::Declare))
+
+    AstFuncDecl* decl {}; // NOLINT(*-const-correctness)
+    switch (m_token.kind().value()) {
+    case TokenKind::Sub:
+        TRY_ASSIGN(decl, subDecl())
+        break;
+    case TokenKind::Function:
+        TRY_ASSIGN(decl, funcDecl())
+        break;
+    default:
+        return unexpected();
+    }
+
+    return make<AstDeclareStmt>(range(start), decl);
 }

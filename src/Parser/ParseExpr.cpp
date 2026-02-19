@@ -27,7 +27,7 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
     const ValueRestorer restorer { m_exprFlags };
     m_exprFlags = flags;
 
-    TRY_DECL(lhs, primary())
+    TRY_DECL(lhs, primaryExpr())
 
     if (shouldBreak()) {
         return lhs;
@@ -36,7 +36,7 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
     // Enable function call without parentheses
     if (flags.callWithoutParens && llvm::isa<AstVarExpr>(lhs)) {
         if (not(m_token.kind().isBinary() && m_token.kind().isLeftAssociative())) {
-            return sub(lhs);
+            return subCallExpr(lhs);
         }
     }
 
@@ -50,16 +50,16 @@ auto Parser::expression(const ExprFlags flags) -> Result<AstExpr*> {
  *         | prefix
  *         .
  */
-auto Parser::primary() -> Result<AstExpr*> {
+auto Parser::primaryExpr() -> Result<AstExpr*> {
     switch (m_token.kind().value()) {
     case TokenKind::Identifier:
-        return variable();
+        return varExpr();
     case TokenKind::BooleanLiteral:
     case TokenKind::IntegerLiteral:
     case TokenKind::FloatLiteral:
     case TokenKind::StringLiteral:
     case TokenKind::NullLiteral:
-        return literal();
+        return literalExpr();
     case TokenKind::ParenOpen: {
         TRY(advance());
         TRY_DECL(expr, expression())
@@ -68,17 +68,17 @@ auto Parser::primary() -> Result<AstExpr*> {
     }
     case TokenKind::Minus:
         m_token.changeKind(TokenKind::Negate);
-        return prefix();
+        return prefixExpr();
     case TokenKind::Multiply:
         m_token.changeKind(TokenKind::Dereference);
-        return prefix();
+        return prefixExpr();
     default:
-        return prefix();
+        return prefixExpr();
     }
 }
 
-/// variable = id .
-auto Parser::variable() -> Result<AstExpr*> {
+/// varExpr = id .
+auto Parser::varExpr() -> Result<AstExpr*> {
     const auto start = startLoc();
     TRY_DECL(id, identifier());
     return make<AstVarExpr>(range(start), id);
@@ -91,44 +91,44 @@ auto Parser::variable() -> Result<AstExpr*> {
  *         | <string>
  *         .
  */
-auto Parser::literal() -> Result<AstExpr*> {
+auto Parser::literalExpr() -> Result<AstExpr*> {
     auto* expr = make<AstLiteralExpr>(m_token.getRange(), m_token.getValue());
     TRY(advance())
     return expr;
 }
 
-/// sub = callee [ params ] .
-auto Parser::sub(AstExpr* callee) -> Result<AstExpr*> {
+/// subCallExpr = callee [ argExprList ] .
+auto Parser::subCallExpr(AstExpr* callee) -> Result<AstExpr*> {
     std::span<AstExpr*> exprs;
     if (m_token.kind() != TokenKind::EndOfStmt) {
-        TRY_ASSIGN(exprs, params())
+        TRY_ASSIGN(exprs, argExprList())
     }
     return make<AstCallExpr>(range(callee), callee, exprs);
 }
 
-/// function = callee "(" [ params ] ")" .
-auto Parser::function(AstExpr* callee) -> Result<AstExpr*> {
+/// funcCallExpr = callee "(" [ argExprList ] ")" .
+auto Parser::funcCallExpr(AstExpr* callee) -> Result<AstExpr*> {
     TRY(consume(TokenKind::ParenOpen))
     std::span<AstExpr*> exprs;
-    TRY_IF_NOT(accept(TokenKind::ParenClose)) {
-        TRY_ASSIGN(exprs, params())
+    TRY_IF_NOT (accept(TokenKind::ParenClose)) {
+        TRY_ASSIGN(exprs, argExprList())
         TRY(consume(TokenKind::ParenClose))
     }
     return make<AstCallExpr>(range(callee), callee, exprs);
 }
 
-/// params = expression { "," expression } .
-auto Parser::params() -> Result<std::span<AstExpr*>> {
+/// argExprList = expression { "," expression } .
+auto Parser::argExprList() -> Result<std::span<AstExpr*>> {
     Sequencer<AstExpr> args {};
     TRY_ADD(args, expression())
-    TRY_WHILE(accept(TokenKind::Comma)) {
+    TRY_WHILE (accept(TokenKind::Comma)) {
         TRY_ADD(args, expression())
     }
     return sequence(args);
 }
 
-/// prefix = <unary-op> primary .
-auto Parser::prefix() -> Result<AstExpr*> {
+/// prefixExpr = <unary-op> primaryExpr .
+auto Parser::prefixExpr() -> Result<AstExpr*> {
     if (!m_token.kind().isUnary()) {
         return expected("unary expression");
     }
@@ -136,7 +136,7 @@ auto Parser::prefix() -> Result<AstExpr*> {
     const auto kind = m_token.kind();
     TRY(advance())
 
-    TRY_DECL(lhs, primary())
+    TRY_DECL(lhs, primaryExpr())
     TRY_DECL(expr, climb(lhs, kind.getPrecedence()))
     return make<AstUnaryExpr>(range(start), expr, kind);
 }
@@ -145,10 +145,10 @@ auto Parser::prefix() -> Result<AstExpr*> {
  * Parse a suffix operator applied to @param lhs.
  * Dispatches to the appropriate handler based on the current token.
  */
-auto Parser::suffix(AstExpr* lhs) -> Result<AstExpr*> {
+auto Parser::suffixExpr(AstExpr* lhs) -> Result<AstExpr*> {
     switch (m_token.kind().value()) {
     case TokenKind::Value::ParenOpen:
-        return function(lhs);
+        return funcCallExpr(lhs);
     case TokenKind::Value::As:
     case TokenKind::Value::Is:
         return notImplemented();
@@ -161,7 +161,7 @@ auto Parser::suffix(AstExpr* lhs) -> Result<AstExpr*> {
  * Construct the appropriate binary AST node for the given operator.
  * Handles special cases like short-circuit `AND` and member access.
  */
-auto Parser::binary(AstExpr* lhs, AstExpr* rhs, const TokenKind tkn) -> Result<AstExpr*> {
+auto Parser::binaryExpr(AstExpr* lhs, AstExpr* rhs, const TokenKind tkn) -> Result<AstExpr*> {
     const auto loc = range(lhs, rhs);
     switch (tkn.value()) {
     case TokenKind::Value::ConditionAnd:
@@ -192,7 +192,7 @@ auto Parser::climb(AstExpr* lhs, const int precedence) -> Result<AstExpr*> {
     auto kind = getKind();
     while (kind.getPrecedence() >= precedence) {
         if (kind.isUnary()) {
-            TRY_ASSIGN(lhs, suffix(lhs));
+            TRY_ASSIGN(lhs, suffixExpr(lhs));
             if (shouldBreak()) {
                 break;
             }
@@ -202,9 +202,9 @@ auto Parser::climb(AstExpr* lhs, const int precedence) -> Result<AstExpr*> {
 
         const auto op = kind;
         TRY(advance());
-        TRY_DECL(rhs, primary());
+        TRY_DECL(rhs, primaryExpr());
         if (shouldBreak()) {
-            TRY_ASSIGN(lhs, binary(lhs, rhs, op));
+            TRY_ASSIGN(lhs, binaryExpr(lhs, rhs, op));
             break;
         }
         kind = getKind();
@@ -213,7 +213,7 @@ auto Parser::climb(AstExpr* lhs, const int precedence) -> Result<AstExpr*> {
             TRY_ASSIGN(rhs, climb(rhs, kind.getPrecedence()));
             kind = getKind();
         }
-        TRY_ASSIGN(lhs, binary(lhs, rhs, op));
+        TRY_ASSIGN(lhs, binaryExpr(lhs, rhs, op));
     }
     return lhs;
 }

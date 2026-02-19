@@ -12,11 +12,22 @@ AlignTrailingComments: true
 AlignConsecutiveBitFields: true
 SortIncludes: CaseSensitive
 IncludeCategories:
-    - Priority: 1
-      Regex: ^"pch\.hpp"
-    - Priority: 3
-      Regex: ^<gtest/
-    - Priority: 2
-      Regex: ^<
-    - Priority: 4
-      Regex: .*
+  - Priority: 1
+    Regex: ^"pch\.hpp"
+  - Priority: 3
+    Regex: ^<gtest/
+  - Priority: 2
+    Regex: ^<
+  - Priority: 4
+    Regex: .*
+StatementMacros:
+  - TRY
+  - TRY_ASSIGN
+  - TRY_DECL
+  - TRY_ADD
+  - MUST
+IfMacros:
+  - TRY_IF
+  - TRY_IF_NOT
+ForEachMacros:
+  - TRY_WHILE

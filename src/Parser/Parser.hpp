@@ -194,11 +194,20 @@ private:
     // Declarations (ParseDecl.cpp)
     // -------------------------------------------------------------------------
 
-    /** Parse a top-level declaration. */
-    [[nodiscard]] auto declaration() -> Result<void>;
-
     /** Parse a variable declaration (name, optional type, optional initializer). */
     [[nodiscard]] auto varDecl() -> Result<AstVarDecl*>;
+
+    /** Parse a subroutine declaration (name and optional parameter list, no return type). */
+    [[nodiscard]] auto subDecl() -> Result<AstFuncDecl*>;
+
+    /** Parse a function declaration (name, parameter list, and return type). */
+    [[nodiscard]] auto funcDecl() -> Result<AstFuncDecl*>;
+
+    /** Parse a comma-separated parameter declaration list. */
+    [[nodiscard]] auto paramList() -> Result<std::span<AstFuncParamDecl*>>;
+
+    /** Parse a single parameter declaration (name and type). */
+    [[nodiscard]] auto paramDecl() -> Result<AstFuncParamDecl*>;
 
     // -------------------------------------------------------------------------
     // Statements (ParseStmt.cpp)
@@ -224,31 +233,31 @@ private:
     [[nodiscard]] auto expression(ExprFlags flags = defaultExprFlags) -> Result<AstExpr*>;
 
     /** Parse a primary expression (variable, literal, parenthesised, or prefix). */
-    [[nodiscard]] auto primary() -> Result<AstExpr*>;
+    [[nodiscard]] auto primaryExpr() -> Result<AstExpr*>;
 
     /** Parse a variable reference. */
-    [[nodiscard]] auto variable() -> Result<AstExpr*>;
+    [[nodiscard]] auto varExpr() -> Result<AstExpr*>;
 
     /** Parse a literal value (integer, float, boolean, string, or null). */
-    [[nodiscard]] auto literal() -> Result<AstExpr*>;
+    [[nodiscard]] auto literalExpr() -> Result<AstExpr*>;
 
     /** Parse a paren-free subroutine call: `callee arg1, arg2`. */
-    [[nodiscard]] auto sub(AstExpr* callee) -> Result<AstExpr*>;
+    [[nodiscard]] auto subCallExpr(AstExpr* callee) -> Result<AstExpr*>;
 
     /** Parse a parenthesised function call: `callee(arg1, arg2)`. */
-    [[nodiscard]] auto function(AstExpr* callee) -> Result<AstExpr*>;
+    [[nodiscard]] auto funcCallExpr(AstExpr* callee) -> Result<AstExpr*>;
 
-    /** Parse a comma-separated parameter list. */
-    [[nodiscard]] auto params() -> Result<std::span<AstExpr*>>;
+    /** Parse a comma-separated argument list. */
+    [[nodiscard]] auto argExprList() -> Result<std::span<AstExpr*>>;
 
     /** Parse a prefix unary expression. */
-    [[nodiscard]] auto prefix() -> Result<AstExpr*>;
+    [[nodiscard]] auto prefixExpr() -> Result<AstExpr*>;
 
     /** Parse a suffix expression (function call, type cast). */
-    [[nodiscard]] auto suffix(AstExpr* lhs) -> Result<AstExpr*>;
+    [[nodiscard]] auto suffixExpr(AstExpr* lhs) -> Result<AstExpr*>;
 
     /** Construct the appropriate binary or member-access AST node. */
-    [[nodiscard]] auto binary(AstExpr* lhs, AstExpr* rhs, TokenKind tkn) -> Result<AstExpr*>;
+    [[nodiscard]] auto binaryExpr(AstExpr* lhs, AstExpr* rhs, TokenKind tkn) -> Result<AstExpr*>;
 
     /** Precedence-climbing loop. Parses binary and suffix operators at or above @param precedence. */
     [[nodiscard]] auto climb(AstExpr* lhs, int precedence = 1) -> Result<AstExpr*>;
@@ -262,7 +271,7 @@ private:
 
     /** Parse a type expression. */
     [[nodiscard]] auto type() -> Result<AstType*>;
-    [[nodiscard]] auto builtin() -> Result<AstBuiltInType*>;
+    [[nodiscard]] auto builtinType() -> Result<AstBuiltInType*>;
 
     // -------------------------------------------------------------------------
     // Parser Data

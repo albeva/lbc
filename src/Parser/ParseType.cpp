@@ -7,13 +7,13 @@ using namespace lbc;
 // type = builtin { "PTR" | "REF" } .
 auto Parser::type() -> Result<AstType*> {
     AstType* ty {}; // NOLINT(*-const-correctness)
-    TRY_ASSIGN(ty, builtin())
+    TRY_ASSIGN(ty, builtinType())
     while (true) {
-        TRY_IF(accept(TokenKind::Ptr)) {
+        TRY_IF (accept(TokenKind::Ptr)) {
             ty = make<AstPointerType>(range(ty), ty);
             continue;
         }
-        TRY_IF(accept(TokenKind::Ref)) {
+        TRY_IF (accept(TokenKind::Ref)) {
             ty = make<AstReferenceType>(range(ty), ty);
             continue;
         }
@@ -31,7 +31,7 @@ auto Parser::type() -> Result<AstType*> {
 //         | "SINGLE"  | "DOUBLE"
 //         .
 // -------------------------------------------------------------------------
-auto Parser::builtin() -> Result<AstBuiltInType*> {
+auto Parser::builtinType() -> Result<AstBuiltInType*> {
     const auto start = startLoc();
     if (not m_token.kind().isType()) {
         return expected("type");
