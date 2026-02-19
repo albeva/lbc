@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "pch.hpp"
-
 #include "Ast/Ast.hpp"
 #include "Ast/AstVisitor.hpp"
 #include "Diag/DiagEngine.hpp"

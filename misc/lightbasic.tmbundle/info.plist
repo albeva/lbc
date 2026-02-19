@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>contactEmailRot13</key>
+	<string>nyorin@zr.pbz</string>
+	<key>contactName</key>
+	<string>Albert Varaksin</string>
+	<key>description</key>
+	<string>Syntax highlighting for LightBASIC.</string>
+	<key>name</key>
+	<string>lightbasic</string>
+	<key>uuid</key>
+	<string>33575269-8414-4f36-84e5-07d4c604e32c</string>
+</dict>
+</plist>
