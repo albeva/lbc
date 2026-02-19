@@ -6,8 +6,9 @@
 #include "Driver/Context.hpp"
 using namespace lbc;
 
-Parser::Parser(Context& context, unsigned id)
-: m_lexer(context, id) {
+Parser::Parser(Context& context, const unsigned id)
+: m_lexer(context, id)
+, m_lastLoc(m_lexer.range().Start) {
 }
 
 Parser::~Parser() = default;
