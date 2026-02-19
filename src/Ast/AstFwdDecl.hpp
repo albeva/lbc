@@ -14,6 +14,8 @@ class AstRoot;
 class AstModule;
 class AstType;
 class AstBuiltInType;
+class AstPointerType;
+class AstReferenceType;
 class AstStmt;
 class AstStmtList;
 class AstExprStmt;

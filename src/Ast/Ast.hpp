@@ -22,6 +22,8 @@ class Type;
 enum class AstKind : std::uint8_t {
     Module,
     BuiltInType,
+    PointerType,
+    ReferenceType,
     StmtList,
     ExprStmt,
     DeclareStmt,
@@ -49,6 +51,8 @@ class AstRoot;
 class AstModule;
 class AstType;
 class AstBuiltInType;
+class AstPointerType;
+class AstReferenceType;
 class AstStmt;
 class AstStmtList;
 class AstExprStmt;
@@ -99,7 +103,7 @@ public:
     }
 
     /// Number of AST leaf nodes
-    static constexpr std::size_t NODE_COUNT = 19;
+    static constexpr std::size_t NODE_COUNT = 21;
 
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
@@ -141,6 +145,8 @@ private:
     static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames {
         "AstModule",
         "AstBuiltInType",
+        "AstPointerType",
+        "AstReferenceType",
         "AstStmtList",
         "AstExprStmt",
         "AstDeclareStmt",
@@ -204,7 +210,7 @@ protected:
 public:
     /// LLVM RTTI support to check if given node is an AstType
     [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
-        return ast->getKind() == AstKind::BuiltInType;
+        return ast->getKind() >= AstKind::BuiltInType && ast->getKind() <= AstKind::ReferenceType;
     }
 
     /// Get the type
@@ -248,6 +254,64 @@ public:
 
 private:
     TokenKind m_tokenKind;
+};
+
+/**
+ * Pointer type
+ */
+class [[nodiscard]] AstPointerType final : public AstType {
+public:
+    /**
+     * Construct an AstPointerType node
+     */
+    constexpr AstPointerType(
+        const llvm::SMRange range,
+        AstType* typeExpr
+    )
+    : AstType(AstKind::PointerType, range)
+    , m_typeExpr(typeExpr) {}
+
+    /// LLVM RTTI support to check if given node is an AstPointerType
+    [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
+        return ast->getKind() == AstKind::PointerType;
+    }
+
+    /// Get the typeExpr
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+private:
+    AstType* m_typeExpr;
+};
+
+/**
+ * Reference type
+ */
+class [[nodiscard]] AstReferenceType final : public AstType {
+public:
+    /**
+     * Construct an AstReferenceType node
+     */
+    constexpr AstReferenceType(
+        const llvm::SMRange range,
+        AstType* typeExpr
+    )
+    : AstType(AstKind::ReferenceType, range)
+    , m_typeExpr(typeExpr) {}
+
+    /// LLVM RTTI support to check if given node is an AstReferenceType
+    [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
+        return ast->getKind() == AstKind::ReferenceType;
+    }
+
+    /// Get the typeExpr
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+private:
+    AstType* m_typeExpr;
 };
 
 // -----------------------------------------------------------------------------

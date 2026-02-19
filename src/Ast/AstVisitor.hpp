@@ -63,6 +63,8 @@ protected:
  * 
  *     // void accept(const AstModule& ast) const;
  *     // void accept(const AstBuiltInType& ast) const;
+ *     // void accept(const AstPointerType& ast) const;
+ *     // void accept(const AstReferenceType& ast) const;
  *     // void accept(const AstStmtList& ast) const;
  *     // void accept(const AstExprStmt& ast) const;
  *     // void accept(const AstDeclareStmt& ast) const;
@@ -95,6 +97,10 @@ public:
                 return self.accept(llvm::cast<AstModule>(ast));
             case AstKind::BuiltInType:
                 return self.accept(llvm::cast<AstBuiltInType>(ast));
+            case AstKind::PointerType:
+                return self.accept(llvm::cast<AstPointerType>(ast));
+            case AstKind::ReferenceType:
+                return self.accept(llvm::cast<AstReferenceType>(ast));
             case AstKind::StmtList:
                 return self.accept(llvm::cast<AstStmtList>(ast));
             case AstKind::ExprStmt:
@@ -156,6 +162,8 @@ public:
  *     }
  * 
  *     // void accept(const AstBuiltInType& ast) const;
+ *     // void accept(const AstPointerType& ast) const;
+ *     // void accept(const AstReferenceType& ast) const;
  * };
  * @endcode
  */
@@ -169,6 +177,10 @@ public:
         switch (ast.getKind()) {
             case AstKind::BuiltInType:
                 return self.accept(llvm::cast<AstBuiltInType>(ast));
+            case AstKind::PointerType:
+                return self.accept(llvm::cast<AstPointerType>(ast));
+            case AstKind::ReferenceType:
+                return self.accept(llvm::cast<AstReferenceType>(ast));
             default:
                 std::unreachable();
         }
@@ -347,6 +359,10 @@ constexpr auto visit(IsNode<AstRoot> auto& ast, Callable&& callable) -> decltype
             return std::forward<Callable>(callable)(llvm::cast<AstModule>(ast));
         case AstKind::BuiltInType:
             return std::forward<Callable>(callable)(llvm::cast<AstBuiltInType>(ast));
+        case AstKind::PointerType:
+            return std::forward<Callable>(callable)(llvm::cast<AstPointerType>(ast));
+        case AstKind::ReferenceType:
+            return std::forward<Callable>(callable)(llvm::cast<AstReferenceType>(ast));
         case AstKind::StmtList:
             return std::forward<Callable>(callable)(llvm::cast<AstStmtList>(ast));
         case AstKind::ExprStmt:
@@ -394,6 +410,10 @@ constexpr auto visit(IsNode<AstType> auto& ast, Callable&& callable) -> decltype
     switch (ast.getKind()) {
         case AstKind::BuiltInType:
             return std::forward<Callable>(callable)(llvm::cast<AstBuiltInType>(ast));
+        case AstKind::PointerType:
+            return std::forward<Callable>(callable)(llvm::cast<AstPointerType>(ast));
+        case AstKind::ReferenceType:
+            return std::forward<Callable>(callable)(llvm::cast<AstReferenceType>(ast));
         default:
             std::unreachable();
     }

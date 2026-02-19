@@ -203,7 +203,6 @@ auto Parser::climb(AstExpr* lhs, const int precedence) -> Result<AstExpr*> {
         const auto op = kind;
         TRY(advance());
         TRY_DECL(rhs, primary());
-
         if (shouldBreak()) {
             TRY_ASSIGN(lhs, binary(lhs, rhs, op));
             break;

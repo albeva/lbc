@@ -261,7 +261,8 @@ private:
     // -------------------------------------------------------------------------
 
     /** Parse a type expression. */
-    [[nodiscard]] auto type() -> Result<void>;
+    [[nodiscard]] auto type() -> Result<AstType*>;
+    [[nodiscard]] auto builtin() -> Result<AstBuiltInType*>;
 
     // -------------------------------------------------------------------------
     // Parser Data

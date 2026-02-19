@@ -91,6 +91,12 @@ def Type : Group<"type expression", Root, [
 def BuiltInType   : Leaf<"Built-in primitive type", Type, [
     Arg<"TokenKind", "tokenKind">
 ]>;
+def PointerType   : Leaf<"Pointer type", Type, [
+    Arg<"AstType*", "typeExpr">
+]>;
+def ReferenceType   : Leaf<"Reference type", Type, [
+    Arg<"AstType*", "typeExpr">
+]>;
 
 // ============================================================================
 // Statements

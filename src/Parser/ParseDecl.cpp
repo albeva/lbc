@@ -18,15 +18,21 @@ auto Parser::declaration() -> Result<void> {
 auto Parser::varDecl() -> Result<AstVarDecl*> {
     const auto start = startLoc();
     TRY_DECL(id, identifier())
+    AstType* ty {};   // NOLINT(*-const-correctness)
+    AstExpr* expr {}; // NOLINT(*-const-correctness)
 
-    // "AS" typeExpr
+    // "AS" typeExpr [ "=" expression
     TRY_IF(accept(TokenKind::As)) {
-        return notImplemented();
+        TRY_ASSIGN(ty, type())
+        TRY_IF(accept(TokenKind::Assign)) {
+            TRY_ASSIGN(expr, expression())
+        }
+    }
+    // "=" expression
+    else {
+        TRY(consume(TokenKind::Assign))
+        TRY_ASSIGN(expr, expression())
     }
 
-    // "=" expr
-    TRY(consume(TokenKind::Assign))
-    TRY_DECL(expr, expression())
-
-    return make<AstVarDecl>(range(start), id, nullptr, expr);
+    return make<AstVarDecl>(range(start), id, ty, expr);
 }

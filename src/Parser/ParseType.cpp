@@ -4,7 +4,39 @@
 #include "Parser.hpp"
 using namespace lbc;
 
-auto Parser::type() -> Result<void> {
-    (void)this;
-    return notImplemented();
+// type = builtin { "PTR" | "REF" } .
+auto Parser::type() -> Result<AstType*> {
+    AstType* ty {}; // NOLINT(*-const-correctness)
+    TRY_ASSIGN(ty, builtin())
+    while (true) {
+        TRY_IF(accept(TokenKind::Ptr)) {
+            ty = make<AstPointerType>(range(ty), ty);
+            continue;
+        }
+        TRY_IF(accept(TokenKind::Ref)) {
+            ty = make<AstReferenceType>(range(ty), ty);
+            continue;
+        }
+        break;
+    }
+    return ty;
+}
+
+// -------------------------------------------------------------------------
+// builtin = "BOOL"    | "ZSTRING"
+//         | "BYTE"    | "UBYTE"
+//         | "SHORT"   | "USHORT"
+//         | "INTEGER" | "UINTEGER"
+//         | "LONG"    | "ULONG"
+//         | "SINGLE"  | "DOUBLE"
+//         .
+// -------------------------------------------------------------------------
+auto Parser::builtin() -> Result<AstBuiltInType*> {
+    const auto start = startLoc();
+    if (not m_token.kind().isType()) {
+        return expected("type");
+    }
+    const auto kind = m_token.kind();
+    TRY(advance());
+    return make<AstBuiltInType>(range(start), kind);
 }
