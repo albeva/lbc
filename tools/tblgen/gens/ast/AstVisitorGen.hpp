@@ -31,6 +31,6 @@ private:
     void defaultCase();
 
     void visitFunctions();
-    void visitFunction(const AstClass* ast);
+    void visitFunction();
     void caseForward(const AstClass* klass);
 };

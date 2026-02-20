@@ -54,14 +54,16 @@ public:
 
     template <std::invocable Func>
     void block(const Streamable auto& line, Func&& func, const StringRef nolint = {}) {
-        m_os << m_space << line << " ";
+        space();
+        m_os << line << " ";
         indent(true, std::forward<Func>(func), nolint);
         m_os << "\n";
     }
 
     template <std::invocable Func>
     void block(const Streamable auto& line, const bool terminate, Func&& func, const StringRef nolint = {}) {
-        m_os << m_space << line << " ";
+        space();
+        m_os << line << " ";
         indent(true, std::forward<Func>(func), nolint);
         if (terminate) {
             m_os << ";";
@@ -70,7 +72,8 @@ public:
     }
 
     void line(const Streamable auto& line, const StringRef terminator = ";") {
-        m_os << m_space << line << terminator << "\n"; // NOLINT(*-pro-bounds-array-to-pointer-decay, *-no-array-decay)
+        space();
+        m_os << line << terminator << "\n"; // NOLINT(*-pro-bounds-array-to-pointer-decay, *-no-array-decay)
     }
 
     void lines(const std::string& lines, const StringRef sep = "\n") {
@@ -169,6 +172,9 @@ public:
     }
 
     void newline() {
+        if (m_isDoc) {
+            space();
+        }
         m_os << "\n";
     }
 
@@ -193,22 +199,27 @@ public:
         updateSpace();
 
         if (scoped) {
-            m_os << m_space << "}";
+            space();
+            m_os << "}";
         }
     }
 
     void comment(const Streamable auto& comment) {
-        m_os << m_space << "/// " << comment << "\n";
+        space();
+        m_os << "/// " << comment << "\n";
     }
 
     void doc(const StringRef comment) {
-        m_os << m_space << "/**\n";
-        m_os << m_space << " * ";
+        space();
+        m_os << "/**\n";
+        space();
+        m_os << " * ";
         for (const auto& ch : comment) {
             switch (ch) {
             case '\n':
-                m_os << '\n'
-                     << m_space << " * ";
+                m_os << '\n';
+                space();
+                m_os << " * ";
                 continue;
             case '\r':
             case '\v':
@@ -218,8 +229,18 @@ public:
                 m_os << ch;
             }
         }
-        m_os << '\n'
-             << m_space << " */\n";
+        m_os << '\n';
+        space();
+        m_os << " */\n";
+    }
+
+    template <std::invocable Func>
+    void doc(Func&& func) {
+        m_os << m_space << "/**\n";
+        m_isDoc = true;
+        std::invoke(std::forward<Func>(func));
+        m_isDoc = false;
+        m_os << m_space << " */\n";
     }
 
     void section(const StringRef comment) {
@@ -246,6 +267,9 @@ public:
     }
 
     void space() {
+        if (m_isDoc) {
+            m_os << " * ";
+        }
         m_os << m_space;
     }
 
@@ -321,4 +345,5 @@ private:
     std::string m_space;
     std::vector<StringRef> m_includes;
     bool closed = false;
+    bool m_isDoc = false;
 };

@@ -343,7 +343,38 @@ public:
 };
 
 /**
- * Dispatch over all concrete AST nodes using a callable visitor.
+ * Dispatch over concrete AST nodes using a callable visitor.;
+ * 
+ * @code
+ * const auto visitor = Visitor {
+ *     [&](const AstModule& ast) {},
+ *     /// Type
+ *     [&](const AstBuiltInType& ast) {},
+ *     [&](const AstPointerType& ast) {},
+ *     [&](const AstReferenceType& ast) {},
+ *     /// Stmt
+ *     [&](const AstStmtList& ast) {},
+ *     [&](const AstExprStmt& ast) {},
+ *     [&](const AstDeclareStmt& ast) {},
+ *     [&](const AstFuncStmt& ast) {},
+ *     [&](const AstReturnStmt& ast) {},
+ *     [&](const AstDimStmt& ast) {},
+ *     [&](const AstAssignStmt& ast) {},
+ *     [&](const AstIfStmt& ast) {},
+ *     /// Decl
+ *     [&](const AstVarDecl& ast) {},
+ *     [&](const AstFuncDecl& ast) {},
+ *     [&](const AstFuncParamDecl& ast) {},
+ *     /// Expr
+ *     [&](const AstVarExpr& ast) {},
+ *     [&](const AstCallExpr& ast) {},
+ *     [&](const AstLiteralExpr& ast) {},
+ *     [&](const AstUnaryExpr& ast) {},
+ *     [&](const AstBinaryExpr& ast) {},
+ *     [&](const AstMemberExpr& ast) {},
+ * };
+ * visit(ast, visitor);
+ * @endcode
  */
 template <typename Callable>
 constexpr auto visit(std::derived_from<AstRoot> auto& ast, Callable&& callable) -> decltype(auto) {
