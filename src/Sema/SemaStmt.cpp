@@ -4,8 +4,12 @@
 #include "SemanticAnalyser.hpp"
 using namespace lbc;
 
-auto SemanticAnalyser::accept(AstStmtList& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
+    for (auto& decl: ast.getDecls()) {
+        TRY(visit(*decl));
+        (void)decl;
+    }
+    return {};
 }
 
 auto SemanticAnalyser::accept(AstExprStmt& /*ast*/) -> Result {

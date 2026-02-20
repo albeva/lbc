@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 15/02/2026.
 //
 #include "AstVisitorGen.hpp"
+using namespace std::string_literals;
 
 AstVisitorGen::AstVisitorGen(
     raw_ostream& os,
@@ -10,11 +11,6 @@ AstVisitorGen::AstVisitorGen(
 : AstGen(os, records, genName, "lbc", { "pch.hpp", "Ast/Ast.hpp" }) { }
 
 auto AstVisitorGen::run() -> bool {
-    doc("Constrains a visitor parameter to match the exact node type,\n"
-        "stripping cv-ref qualifiers before comparison.");
-    m_os << "template<typename T, typename U>\n"
-            "concept IsNode = std::same_as<std::remove_cvref_t<T>, U>;\n\n";
-
     visitorBaseClass();
     visitorClasses();
     visitFunctions();
@@ -80,6 +76,7 @@ void AstVisitorGen::visitorClass(const AstClass* ast) {
     doc(docStr);
     line("template <typename ReturnType = void>", "");
     block("class " + ast->getVisitorName() + " : AstVisitorBase", true, [&] {
+        scope(Scope::Public, true);
         visit(ast);
     });
     newline();
@@ -89,9 +86,8 @@ void AstVisitorGen::visit(const AstClass* klass) {
     if (klass->getChildren().empty()) {
         return;
     }
-    scope(Scope::Public, true);
     doc("Dispatch to the appropriate accept() handler based on the node's AstKind.");
-    block("constexpr auto visit(this auto& self, IsNode<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
+    block("constexpr auto visit(this auto& self, std::derived_from<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
         block("switch (ast.getKind())", [&] {
             klass->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
                 caseAccept(node);
@@ -154,11 +150,15 @@ void AstVisitorGen::defaultCase() {
  * Emit free visit functions for all ast groups
  */
 void AstVisitorGen::visitFunctions() {
-    getRoot()->visit([&](const AstClass* klass) {
-        if (not klass->isLeaf()) {
-            visitFunction(klass);
-        }
-    });
+    // getRoot()->visit([&](const AstClass* klass) {
+    //     if (not klass->isLeaf()) {
+    //         visitFunction(klass, false);
+    //         newline();
+    //         visitFunction(klass, true);
+    //         newline();
+    //     }
+    // });
+    visitFunction(getRoot());
 }
 
 /**
@@ -179,7 +179,7 @@ void AstVisitorGen::visitFunction(const AstClass* ast) {
     doc(docStr);
 
     line("template <typename Callable>", "");
-    block("constexpr auto visit(IsNode<" + ast->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
+    block("constexpr auto visit(std::derived_from<AstRoot> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
         block("switch (ast.getKind())", [&] {
             ast->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
                 caseForward(node);
@@ -187,7 +187,6 @@ void AstVisitorGen::visitFunction(const AstClass* ast) {
             defaultCase();
         });
     });
-    newline();
 }
 
 /**

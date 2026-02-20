@@ -14,6 +14,6 @@ auto SemanticAnalyser::analyse(AstModule& ast) -> Result {
     return accept(ast);
 }
 
-auto SemanticAnalyser::accept(AstModule& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstModule& ast) -> Result {
+    return accept(*ast.getStmtList());
 }
