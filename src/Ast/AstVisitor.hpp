@@ -343,7 +343,7 @@ public:
 };
 
 /**
- * Dispatch over concrete AST nodes using a callable visitor.;
+ * Dispatch over concrete AST nodes using a callable visitor.
  * 
  * @code
  * const auto visitor = Visitor {

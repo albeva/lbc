@@ -157,7 +157,7 @@ void AstVisitorGen::visitFunction() {
         }
     };
     doc([&] {
-        line("Dispatch over concrete AST nodes using a callable visitor.");
+        line("Dispatch over concrete AST nodes using a callable visitor.", "");
         newline();
         line("@code", "");
         block("const auto visitor = Visitor", true, [&] {
