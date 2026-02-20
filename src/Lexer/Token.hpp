@@ -1,8 +1,8 @@
 #pragma once
 #include "pch.hpp"
 
+#include "../Symbol/LiteralValue.hpp"
 #include "TokenKind.hpp"
-#include "Utilities/LiteralValue.hpp"
 namespace lbc {
 
 /**

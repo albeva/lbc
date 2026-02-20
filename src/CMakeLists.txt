@@ -20,6 +20,8 @@ target_sources(lbc_lib
     Sema/SemaExpr.cpp
     Sema/SemaStmt.cpp
     Sema/SemaType.cpp
+    Symbol/Symbol.cpp
+    Symbol/SymbolTable.cpp
     Type/Type.cpp
 
     PUBLIC FILE_SET HEADERS FILES
@@ -33,9 +35,12 @@ target_sources(lbc_lib
     Lexer/Token.hpp
     Parser/Parser.hpp
     Sema/SemanticAnalyser.hpp
+    Symbol/LiteralValue.hpp
+    Symbol/Symbol.hpp
+    Symbol/SymbolTable.hpp
     Type/Type.hpp
+    Utilities/BaseFlags.hpp
     Utilities/Formatters.hpp
-    Utilities/LiteralValue.hpp
     Utilities/NoCopy.hpp
     Utilities/Sequencer.hpp
     Utilities/Try.hpp

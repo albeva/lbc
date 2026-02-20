@@ -70,7 +70,7 @@ auto Parser::consume(const TokenKind kind) -> Result<void> {
 
 auto Parser::identifier() -> Result<llvm::StringRef> {
     TRY(expect(TokenKind::Identifier))
-    const auto id = std::get<llvm::StringRef>(m_token.getValue());
+    const auto id = std::get<llvm::StringRef>(m_token.getValue().getValue());
     TRY(advance())
     return id;
 }

@@ -8,7 +8,7 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
-#include "Utilities/LiteralValue.hpp"
+#include "../Symbol/LiteralValue.hpp"
 #include "Lexer/TokenKind.hpp"
 
 namespace lbc {

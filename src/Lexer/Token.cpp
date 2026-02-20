@@ -5,7 +5,7 @@ auto Token::string() const -> llvm::StringRef {
     switch (m_kind.value()) {
     case TokenKind::Identifier:
     case TokenKind::StringLiteral:
-        return std::get<llvm::StringRef>(m_value);
+        return m_value.get<llvm::StringRef>();
     case TokenKind::IntegerLiteral:
     case TokenKind::FloatLiteral: {
         return lexeme();

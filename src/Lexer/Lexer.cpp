@@ -269,9 +269,9 @@ auto Lexer::identifier() -> DiagResult<Token> {
     if (const auto iter = kKeywords.find(m_buffer); iter != kKeywords.end()) {
         switch (iter->second.value()) {
         case TokenKind::True:
-            return token(TokenKind::BooleanLiteral, true);
+            return token(TokenKind::BooleanLiteral, LiteralValue::from(true));
         case TokenKind::False:
-            return token(TokenKind::BooleanLiteral, false);
+            return token(TokenKind::BooleanLiteral, LiteralValue::from(false));
         case TokenKind::Null:
             return token(TokenKind::NullLiteral);
         default:
@@ -280,7 +280,7 @@ auto Lexer::identifier() -> DiagResult<Token> {
     }
 
     // Is an identifier
-    return token(TokenKind::Identifier, m_context.retain(m_buffer));
+    return token(TokenKind::Identifier, LiteralValue::from(m_context.retain(m_buffer)));
 }
 
 auto Lexer::stringLiteral() -> DiagResult<Token> {
@@ -313,7 +313,7 @@ auto Lexer::stringLiteral() -> DiagResult<Token> {
 
     const auto str = m_start.next().stringTo(m_input);
     m_input.advance();
-    return token(TokenKind::StringLiteral, str);
+    return token(TokenKind::StringLiteral, LiteralValue::from(str));
 }
 
 auto Lexer::numberLiteral() -> DiagResult<Token> {
@@ -348,10 +348,10 @@ auto Lexer::numberLiteral() -> DiagResult<Token> {
     if (!hasError) {
         if (isFloat) {
             if (const auto value = number<double>()) {
-                return token(TokenKind::FloatLiteral, *value);
+                return token(TokenKind::FloatLiteral, LiteralValue::from(*value));
             }
         } else if (const auto value = number<std::uint64_t>()) {
-            return token(TokenKind::IntegerLiteral, *value);
+            return token(TokenKind::IntegerLiteral, LiteralValue::from(*value));
         }
     }
     return diag(diagnostics::invalidNumber(), m_start.loc(), range());
