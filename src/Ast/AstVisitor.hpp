@@ -81,10 +81,13 @@ protected:
 template <typename ReturnType = void>
 class AstVisitor : AstVisitorBase {
 public:
+    /// Result type of ast accept calls
+    using Result = ReturnType;
+
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstRoot> auto& ast) -> ReturnType {
+    constexpr auto visit(this auto& self, std::derived_from<AstRoot> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::Module:
                 return self.accept(llvm::cast<AstModule>(ast));
@@ -163,10 +166,13 @@ public:
 template <typename ReturnType = void>
 class AstTypeVisitor : AstVisitorBase {
 public:
+    /// Result type of ast accept calls
+    using Result = ReturnType;
+
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstType> auto& ast) -> ReturnType {
+    constexpr auto visit(this auto& self, std::derived_from<AstType> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::BuiltInType:
                 return self.accept(llvm::cast<AstBuiltInType>(ast));
@@ -214,10 +220,13 @@ public:
 template <typename ReturnType = void>
 class AstStmtVisitor : AstVisitorBase {
 public:
+    /// Result type of ast accept calls
+    using Result = ReturnType;
+
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstStmt> auto& ast) -> ReturnType {
+    constexpr auto visit(this auto& self, std::derived_from<AstStmt> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::StmtList:
                 return self.accept(llvm::cast<AstStmtList>(ast));
@@ -270,10 +279,13 @@ public:
 template <typename ReturnType = void>
 class AstDeclVisitor : AstVisitorBase {
 public:
+    /// Result type of ast accept calls
+    using Result = ReturnType;
+
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstDecl> auto& ast) -> ReturnType {
+    constexpr auto visit(this auto& self, std::derived_from<AstDecl> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::VarDecl:
                 return self.accept(llvm::cast<AstVarDecl>(ast));
@@ -319,10 +331,13 @@ public:
 template <typename ReturnType = void>
 class AstExprVisitor : AstVisitorBase {
 public:
+    /// Result type of ast accept calls
+    using Result = ReturnType;
+
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstExpr> auto& ast) -> ReturnType {
+    constexpr auto visit(this auto& self, std::derived_from<AstExpr> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::VarExpr:
                 return self.accept(llvm::cast<AstVarExpr>(ast));
@@ -347,6 +362,7 @@ public:
  * 
  * @code
  * const auto visitor = Visitor {
+ *     /// Root
  *     [&](const AstModule& ast) {},
  *     /// Type
  *     [&](const AstBuiltInType& ast) {},

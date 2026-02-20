@@ -5,9 +5,11 @@
 using namespace lbc;
 
 auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
-    for (auto& decl: ast.getDecls()) {
+    for (auto& decl : ast.getDecls()) {
         TRY(visit(*decl));
-        (void)decl;
+    }
+    for (auto& stmt : ast.getStmts()) {
+        TRY(visit(*stmt));
     }
     return {};
 }

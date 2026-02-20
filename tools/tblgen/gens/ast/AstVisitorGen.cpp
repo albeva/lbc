@@ -100,6 +100,9 @@ void AstVisitorGen::visitorClass(const AstClass* ast) {
     line("template <typename ReturnType = void>", "");
     block("class " + visitorName + " : AstVisitorBase", true, [&] {
         scope(Scope::Public, true);
+        comment("Result type of ast accept calls");
+        line("using Result = ReturnType");
+        newline();
         visit(ast);
     });
     newline();
@@ -110,7 +113,7 @@ void AstVisitorGen::visit(const AstClass* klass) {
         return;
     }
     doc("Dispatch to the appropriate accept() handler based on the node's AstKind.");
-    block("constexpr auto visit(this auto& self, std::derived_from<" + klass->getClassName() + "> auto& ast) -> ReturnType", [&] {
+    block("constexpr auto visit(this auto& self, std::derived_from<" + klass->getClassName() + "> auto& ast) -> Result", [&] {
         block("switch (ast.getKind())", [&] {
             klass->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
                 caseAccept(node);
@@ -151,6 +154,7 @@ void AstVisitorGen::visitFunction() {
         newline();
         line("@code", "");
         block("const auto visitor = Visitor", true, [&] {
+            comment(root->getEnumName());
             for (const auto& child : root->getChildren()) {
                 childdoc(child.get());
             }

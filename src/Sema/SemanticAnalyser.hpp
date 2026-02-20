@@ -18,7 +18,6 @@ class Context;
 class SemanticAnalyser final : LogProvider, AstVisitor<DiagResult<void>> {
 public:
     NO_COPY_AND_MOVE(SemanticAnalyser)
-    using Result = DiagResult<void>;
 
     /**
      * Construct a semantic analyser for the given context.

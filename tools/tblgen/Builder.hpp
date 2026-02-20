@@ -331,10 +331,10 @@ private:
     }
 
     void footer() {
-        if (closed) {
+        if (m_closed) {
             return;
         }
-        closed = true;
+        m_closed = true;
         m_os << "} // namespace " << m_ns << "\n";
     }
 
@@ -344,6 +344,6 @@ private:
     std::size_t m_indent = 0;
     std::string m_space;
     std::vector<StringRef> m_includes;
-    bool closed = false;
+    bool m_closed = false;
     bool m_isDoc = false;
 };
