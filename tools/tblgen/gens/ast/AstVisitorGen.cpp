@@ -13,7 +13,7 @@ AstVisitorGen::AstVisitorGen(
 auto AstVisitorGen::run() -> bool {
     visitorBaseClass();
     visitorClasses();
-    visitFunctions();
+    visitFunction();
     return false;
 }
 
@@ -147,25 +147,10 @@ void AstVisitorGen::defaultCase() {
 }
 
 /**
- * Emit free visit functions for all ast groups
- */
-void AstVisitorGen::visitFunctions() {
-    // getRoot()->visit([&](const AstClass* klass) {
-    //     if (not klass->isLeaf()) {
-    //         visitFunction(klass, false);
-    //         newline();
-    //         visitFunction(klass, true);
-    //         newline();
-    //     }
-    // });
-    visitFunction();
-}
-
-/**
  * Generate free visit function for given group
  */
 void AstVisitorGen::visitFunction() {
-    const auto* ast = getRoot();
+    const auto* root = getRoot();
     const auto childdoc = [&](const AstClass* child) {
         if (child->isLeaf()) {
             line("[&](const " + child->getClassName() + "& ast) {}", ",");
@@ -176,10 +161,10 @@ void AstVisitorGen::visitFunction() {
         newline();
         line("@code", "");
         block("const auto visitor = Visitor", true, [&] {
-            for (const auto& child : ast->getChildren()) {
+            for (const auto& child : root->getChildren()) {
                 childdoc(child.get());
             }
-            ast->visit(AstClass::Kind::Group, [&](const AstClass* group) {
+            root->visit(AstClass::Kind::Group, [&](const AstClass* group) {
                 comment(group->getEnumName());
                 for (const auto& child : group->getChildren()) {
                     childdoc(child.get());
@@ -191,9 +176,9 @@ void AstVisitorGen::visitFunction() {
     });
 
     line("template <typename Callable>", "");
-    block("constexpr auto visit(std::derived_from<" + ast->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
+    block("constexpr auto visit(std::derived_from<" + root->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
         block("switch (ast.getKind())", [&] {
-            ast->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+            root->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
                 caseForward(node);
             });
             defaultCase();

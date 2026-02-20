@@ -30,7 +30,6 @@ private:
     void caseAccept(const AstClass* klass);
     void defaultCase();
 
-    void visitFunctions();
     void visitFunction();
     void caseForward(const AstClass* klass);
 };
