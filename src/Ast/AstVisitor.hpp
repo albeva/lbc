@@ -46,14 +46,14 @@ protected:
  *     auto process(const AstRoot& ast) const {
  *         visit(ast);
  *     }
- * 
+ *     
  * private:
  *     friend AstVisitor;
- * 
+ *     
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- * 
+ *     
  *     // void accept(const AstModule& ast) const;
  *     // void accept(const AstBuiltInType& ast) const;
  *     // void accept(const AstPointerType& ast) const;
@@ -146,14 +146,14 @@ public:
  *     auto process(const AstType& ast) const {
  *         visit(ast);
  *     }
- * 
+ *     
  * private:
  *     friend AstTypeVisitor;
- * 
+ *     
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- * 
+ *     
  *     // void accept(const AstBuiltInType& ast) const;
  *     // void accept(const AstPointerType& ast) const;
  *     // void accept(const AstReferenceType& ast) const;
@@ -192,14 +192,14 @@ public:
  *     auto process(const AstStmt& ast) const {
  *         visit(ast);
  *     }
- * 
+ *     
  * private:
  *     friend AstStmtVisitor;
- * 
+ *     
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- * 
+ *     
  *     // void accept(const AstStmtList& ast) const;
  *     // void accept(const AstExprStmt& ast) const;
  *     // void accept(const AstDeclareStmt& ast) const;
@@ -253,14 +253,14 @@ public:
  *     auto process(const AstDecl& ast) const {
  *         visit(ast);
  *     }
- * 
+ *     
  * private:
  *     friend AstDeclVisitor;
- * 
+ *     
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- * 
+ *     
  *     // void accept(const AstVarDecl& ast) const;
  *     // void accept(const AstFuncDecl& ast) const;
  *     // void accept(const AstFuncParamDecl& ast) const;
@@ -299,14 +299,14 @@ public:
  *     auto process(const AstExpr& ast) const {
  *         visit(ast);
  *     }
- * 
+ *     
  * private:
  *     friend AstExprVisitor;
- * 
+ *     
  *     void accept(const auto& ast) const {
  *         unhandled(ast);
  *     }
- * 
+ *     
  *     // void accept(const AstVarExpr& ast) const;
  *     // void accept(const AstCallExpr& ast) const;
  *     // void accept(const AstLiteralExpr& ast) const;

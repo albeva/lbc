@@ -62,20 +62,43 @@ void AstVisitorGen::visitorClasses() {
  * Generate visitor class for given group
  */
 void AstVisitorGen::visitorClass(const AstClass* ast) {
-    std::string docStr;
-    if (ast->isRoot()) {
-        docStr = "Visitor that dispatches over all concrete AST nodes.";
-    } else {
-        docStr = "Visitor for " + ast->getRecord()->getValueAsString("desc").str()
-               + " nodes under " + ast->getClassName() + ".";
-    }
-    docStr += "\n\n"
-              "Inherit privately, friend the visitor, and implement accept() handlers.\n"
-              "A generic accept(const auto&) catch-all can handle unimplemented nodes.\n\n";
-    docStr += visitorSample(ast);
-    doc(docStr);
+    const auto& visitorName = ast->getVisitorName();
+    const auto& className = ast->getClassName();
+    const auto sampleName = "Sample" + visitorName.substr(3);
+
+    doc([&] {
+        if (ast->isRoot()) {
+            line("Visitor that dispatches over all concrete AST nodes.", "");
+        } else {
+            line("Visitor for "s + ast->getRecord()->getValueAsString("desc").str() + " nodes under " + className + ".", "");
+        }
+        newline();
+        line("Inherit privately, friend the visitor, and implement accept() handlers.", "");
+        line("A generic accept(const auto&) catch-all can handle unimplemented nodes.", "");
+        newline();
+        line("@code", "");
+        block("class " + sampleName + " final : " + visitorName + "<>", true, [&] {
+            scope(Scope::Public, true);
+            block("auto process(const " + className + "& ast) const", [&] {
+                line("visit(ast)");
+            });
+            newline();
+            scope(Scope::Private);
+            line("friend " + visitorName);
+            newline();
+            block("void accept(const auto& ast) const", [&] {
+                line("unhandled(ast)");
+            });
+            newline();
+            ast->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+                line("// void accept(const " + node->getClassName() + "& ast) const");
+            });
+        });
+        line("@endcode", "");
+    });
+
     line("template <typename ReturnType = void>", "");
-    block("class " + ast->getVisitorName() + " : AstVisitorBase", true, [&] {
+    block("class " + visitorName + " : AstVisitorBase", true, [&] {
         scope(Scope::Public, true);
         visit(ast);
     });
@@ -95,39 +118,6 @@ void AstVisitorGen::visit(const AstClass* klass) {
             defaultCase();
         });
     });
-}
-
-/**
- * Generate sample visitor code for use in the class documentation
- */
-auto AstVisitorGen::visitorSample(const AstClass* klass) -> std::string {
-    const auto sampleName = "Sample" + klass->getVisitorName().substr(3);
-    const auto& visitorName = klass->getVisitorName();
-    const auto& className = klass->getClassName();
-
-    std::string sample;
-    sample += "@code\n";
-    sample += "class " + sampleName + " final : " + visitorName + "<> {\n";
-    sample += "public:\n";
-    sample += "    auto process(const " + className + "& ast) const {\n";
-    sample += "        visit(ast);\n";
-    sample += "    }\n";
-    sample += "\n";
-    sample += "private:\n";
-    sample += "    friend " + visitorName + ";\n";
-    sample += "\n";
-    sample += "    void accept(const auto& ast) const {\n";
-    sample += "        unhandled(ast);\n";
-    sample += "    }\n";
-
-    klass->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
-        sample += "\n    // void accept(const " + node->getClassName() + "& ast) const;";
-    });
-
-    sample += "\n};\n";
-    sample += "@endcode";
-
-    return sample;
 }
 
 /**
