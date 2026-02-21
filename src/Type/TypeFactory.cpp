@@ -37,12 +37,12 @@ auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnT
     return arr.emplace_back(create<TypeFunction>(params, returnType));
 }
 
-auto TypeFactory::getQualifiedWith(const Type* type, TypeQualifierFlags flags) -> const TypeQualified* {
-    const auto fetch = [&](QualArr& arr, const Type* type, TypeQualifierFlags flags) {
-        if (const auto* found = std::ranges::find(arr, flags, &TypeQualified::getFlags); found != arr.end()) {
+auto TypeFactory::getQualifiedWith(const Type* type, const TypeQualifierFlags flags) -> const TypeQualified* {
+    const auto fetch = [&](QualArr& arr, const Type* ty, TypeQualifierFlags fl) {
+        if (const auto* found = std::ranges::find(arr, fl, &TypeQualified::getFlags); found != arr.end()) {
             return *found;
         }
-        return arr.emplace_back(create<TypeQualified>(type, flags));
+        return arr.emplace_back(create<TypeQualified>(ty, fl));
     };
 
     // already a qualified type?

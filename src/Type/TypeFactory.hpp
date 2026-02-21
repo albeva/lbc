@@ -40,7 +40,7 @@ public:
     [[nodiscard]] auto getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction*;
 
     /** Get the owning context. */
-    [[nodiscard]] auto getContext() -> Context& { return m_context; }
+    [[nodiscard]] auto getContext() const -> Context& { return m_context; }
 
 private:
     /**
