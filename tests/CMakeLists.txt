@@ -15,6 +15,7 @@ add_executable(tests
     BasicTests.cpp
     LexerTests.cpp
     ParserTests.cpp
+    TypeFactoryTests.cpp
 )
 
 # Link

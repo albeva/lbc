@@ -72,6 +72,11 @@ public:
      */
     [[nodiscard]] auto getDiag() -> DiagEngine& { return m_diagEngine; }
 
+    /**
+     * Get the type factory
+     */
+    [[nodiscard]] auto getTypeFactory() -> TypeFactory& { return m_typeFactory; }
+
 private:
     llvm::SourceMgr m_sourceMgr;
     llvm::BumpPtrAllocator m_allocator;
