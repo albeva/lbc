@@ -145,14 +145,14 @@ public:
                 return nullptr;
         }
     }
-protected:
 
+protected:
     /**
      * Retrieve a singleton type by its TypeKind.
      */
     [[nodiscard]] auto getSingleton(const TypeKind kind) const -> const Type* {
         const auto index = static_cast<std::size_t>(kind);
-        return m_singleTypes.at(index);
+        return m_singletons.at(index);
     }
 
     /**
@@ -160,13 +160,13 @@ protected:
      */
     void setSingleton(const Type* type) {
         const auto index = static_cast<std::size_t>(type->getKind());
-        m_singleTypes.at(index) = type;
+        m_singletons.at(index) = type;
     }
 
     /// Number of singleton types
     static constexpr std::size_t COUNT = 15;
     /// TypeKind values for all singleton types
-    static constexpr std::array<TypeKind, COUNT> kSingleTypeKinds {
+    static constexpr std::array<TypeKind, COUNT> kSingletonKinds {
         TypeKind::Void,
         TypeKind::Null,
         TypeKind::Any,
@@ -186,6 +186,6 @@ protected:
 
 private:
     /// Storage for singleton type instances, indexed by TypeKind ordinal
-    std::array<const Type*, COUNT> m_singleTypes {};
+    std::array<const Type*, COUNT> m_singletons {};
 };
 } // namespace lbc

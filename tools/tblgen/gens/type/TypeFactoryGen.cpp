@@ -35,30 +35,30 @@ void TypeFactoryGen::factoryClass() {
         line("virtual ~TypeFactoryBase() = default");
         newline();
 
-        singleTypeGetters();
+        singletonGetters();
         keywordToType();
+        newline();
 
         scope(Scope::Protected);
-        newline();
 
         doc("Retrieve a singleton type by its TypeKind.");
         block("[[nodiscard]] auto getSingleton(const TypeKind kind) const -> const Type*", [&] {
             line("const auto index = static_cast<std::size_t>(kind)");
-            line("return m_singleTypes.at(index)");
+            line("return m_singletons.at(index)");
         });
         newline();
 
         doc("Register a singleton type, indexed by its TypeKind.");
         block("void setSingleton(const Type* type)", [&] {
             line("const auto index = static_cast<std::size_t>(type->getKind())");
-            line("m_singleTypes.at(index) = type");
+            line("m_singletons.at(index) = type");
         });
         newline();
 
         comment("Number of singleton types");
         line("static constexpr std::size_t COUNT = " + std::to_string(getSingles().size()));
         comment("TypeKind values for all singleton types");
-        block("static constexpr std::array<TypeKind, COUNT> kSingleTypeKinds", true, [&] {
+        block("static constexpr std::array<TypeKind, COUNT> kSingletonKinds", true, [&] {
             for (const auto* single : getSingles()) {
                 line("TypeKind::" + single->getEnumName(), ",");
             }
@@ -67,11 +67,11 @@ void TypeFactoryGen::factoryClass() {
 
         scope(Scope::Private);
         comment("Storage for singleton type instances, indexed by TypeKind ordinal");
-        line("std::array<const Type*, COUNT> m_singleTypes {}");
+        line("std::array<const Type*, COUNT> m_singletons {}");
     });
 }
 
-void TypeFactoryGen::singleTypeGetters() {
+void TypeFactoryGen::singletonGetters() {
     line("// NOLINTBEGIN(*-static-cast-downcast)", "");
     newline();
     llvm::SmallPtrSet<const TypeCategory*, 16> set {};

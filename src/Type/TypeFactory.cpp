@@ -12,7 +12,7 @@ TypeFactory::TypeFactory(Context& context)
 }
 
 void TypeFactory::initializeTypes() {
-    for (const auto kind : kSingleTypeKinds) {
+    for (const auto kind : kSingletonKinds) {
         switch (kind) {
         case TypeKind::Void:
         case TypeKind::Null:

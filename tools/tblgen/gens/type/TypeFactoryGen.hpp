@@ -29,6 +29,6 @@ private:
     void factoryClass();
 
     /** Emit typed getter methods for each singleton type. */
-    void singleTypeGetters();
+    void singletonGetters();
     void keywordToType();
 };
