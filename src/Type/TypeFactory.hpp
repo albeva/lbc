@@ -39,6 +39,10 @@ public:
     /** Get or create a function type with the given parameter and return types. */
     [[nodiscard]] auto getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction*;
 
+    /** Get the owning context. */
+    [[nodiscard]] auto getContext() -> Context& { return m_context; }
+
+private:
     /**
      * Get or create a qualified type with the given flags.
      *
@@ -47,10 +51,6 @@ public:
      */
     [[nodiscard]] auto getQualifiedWith(const Type* type, TypeQualifierFlags flags) -> const TypeQualified*;
 
-    /** Get the owning context. */
-    [[nodiscard]] auto getContext() -> Context& { return m_context; }
-
-private:
     /** Allocate raw memory from the arena. */
     [[nodiscard]] auto allocate(std::size_t size, std::size_t alignment) -> void*;
 
