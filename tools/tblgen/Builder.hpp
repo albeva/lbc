@@ -71,6 +71,37 @@ public:
         m_os << "\n";
     }
 
+    void getter(const llvm::StringRef name, const Streamable auto& type, bool isConstexpr = true) {
+        space();
+        m_os << "[[nodiscard]] ";
+        if (isConstexpr) {
+            m_os << "constexpr ";
+        }
+        m_os << "auto get" << ucfirst(name) << "() const -> " << type << " { return m_" << name << "; }\n";
+    }
+
+    void predicate(const llvm::StringRef name, bool isConstexpr, const Streamable auto& expr) {
+        space();
+        m_os << "[[nodiscard]] ";
+        if (isConstexpr) {
+            m_os << "constexpr ";
+        }
+        m_os << "auto is" << ucfirst(name) << "() const -> bool ";
+        m_os << "{ return " << expr << "; }\n";
+    }
+
+    template <std::invocable Func>
+    void predicate(const llvm::StringRef name, bool isConstexpr, Func&& func) {
+        space();
+        m_os << "[[nodiscard]] ";
+        if (isConstexpr) {
+            m_os << "constexpr ";
+        }
+        m_os << "auto is" << ucfirst(name) << "() const -> bool ";
+        indent(true, std::forward<Func>(func));
+        m_os << "\n";
+    }
+
     void line(const Streamable auto& line, const StringRef terminator = ";") {
         space();
         m_os << line << terminator << "\n"; // NOLINT(*-pro-bounds-array-to-pointer-decay, *-no-array-decay)
@@ -169,6 +200,14 @@ public:
 
     static auto pluralize(const StringRef word) -> std::string {
         return (word.str() + "s");
+    }
+
+    static auto ucfirst(const StringRef word) -> std::string {
+        auto str = word.str();
+        if (not str.empty()) {
+            str.front() = static_cast<char>(std::toupper(str.front()));
+        }
+        return str;
     }
 
     void newline() {

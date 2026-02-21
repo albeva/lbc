@@ -19,14 +19,14 @@ enum class TypeKind : std::uint8_t {
     Any,
     Bool,
     ZString,
-    Byte,
     UByte,
-    Short,
     UShort,
-    Integer,
     UInteger,
-    Long,
     ULong,
+    Byte,
+    Short,
+    Integer,
+    Long,
     Single,
     Double,
     Pointer,
@@ -42,8 +42,91 @@ public:
     NO_COPY_AND_MOVE(TypeBase)
 
     TypeBase() = delete;
-    constexpr virtual ~TypeBase() noexcept = default;
+    constexpr virtual ~TypeBase() = default;
 
+    /// Get underlying type kind
+    [[nodiscard]] constexpr auto getKind() const -> TypeKind { return m_kind; }
+
+    // -------------------------------------------------------------------------
+    // Basic type queries
+    // -------------------------------------------------------------------------
+
+    /// Sentinel types
+    [[nodiscard]] constexpr auto isSentinel() const -> bool {
+        return m_kind >= TypeKind::Void && m_kind <= TypeKind::Any;
+    }
+    [[nodiscard]] constexpr auto isVoid() const -> bool { return m_kind == TypeKind::Void; }
+    [[nodiscard]] constexpr auto isNull() const -> bool { return m_kind == TypeKind::Null; }
+    [[nodiscard]] constexpr auto isAny() const -> bool { return m_kind == TypeKind::Any; }
+
+    /// Primitive types
+    [[nodiscard]] constexpr auto isPrimitive() const -> bool {
+        return m_kind >= TypeKind::Bool && m_kind <= TypeKind::ZString;
+    }
+    [[nodiscard]] constexpr auto isBool() const -> bool { return m_kind == TypeKind::Bool; }
+    [[nodiscard]] constexpr auto isZString() const -> bool { return m_kind == TypeKind::ZString; }
+
+    /// UnsignedIntegral types
+    [[nodiscard]] constexpr auto isUnsignedIntegral() const -> bool {
+        return m_kind >= TypeKind::UByte && m_kind <= TypeKind::ULong;
+    }
+    [[nodiscard]] constexpr auto isUByte() const -> bool { return m_kind == TypeKind::UByte; }
+    [[nodiscard]] constexpr auto isUShort() const -> bool { return m_kind == TypeKind::UShort; }
+    [[nodiscard]] constexpr auto isUInteger() const -> bool { return m_kind == TypeKind::UInteger; }
+    [[nodiscard]] constexpr auto isULong() const -> bool { return m_kind == TypeKind::ULong; }
+
+    /// SignedIntegral types
+    [[nodiscard]] constexpr auto isSignedIntegral() const -> bool {
+        return m_kind >= TypeKind::Byte && m_kind <= TypeKind::Long;
+    }
+    [[nodiscard]] constexpr auto isByte() const -> bool { return m_kind == TypeKind::Byte; }
+    [[nodiscard]] constexpr auto isShort() const -> bool { return m_kind == TypeKind::Short; }
+    [[nodiscard]] constexpr auto isInteger() const -> bool { return m_kind == TypeKind::Integer; }
+    [[nodiscard]] constexpr auto isLong() const -> bool { return m_kind == TypeKind::Long; }
+
+    /// FloatingPoint types
+    [[nodiscard]] constexpr auto isFloatingPoint() const -> bool {
+        return m_kind >= TypeKind::Single && m_kind <= TypeKind::Double;
+    }
+    [[nodiscard]] constexpr auto isSingle() const -> bool { return m_kind == TypeKind::Single; }
+    [[nodiscard]] constexpr auto isDouble() const -> bool { return m_kind == TypeKind::Double; }
+
+    /// Compound types
+    [[nodiscard]] constexpr auto isCompound() const -> bool {
+        return m_kind >= TypeKind::Pointer && m_kind <= TypeKind::Qualified;
+    }
+    [[nodiscard]] constexpr auto isPointer() const -> bool { return m_kind == TypeKind::Pointer; }
+    [[nodiscard]] constexpr auto isReference() const -> bool { return m_kind == TypeKind::Reference; }
+    [[nodiscard]] constexpr auto isQualified() const -> bool { return m_kind == TypeKind::Qualified; }
+
+    /// Aggregate types
+    [[nodiscard]] constexpr auto isAggregate() const -> bool {
+        return m_kind == TypeKind::Function;
+    }
+    [[nodiscard]] constexpr auto isFunction() const -> bool { return m_kind == TypeKind::Function; }
+
+    /// Is it a built-in (with a keyword) type
+    [[nodiscard]] constexpr auto isBuiltin() const -> bool {
+        switch (m_kind) {
+            case TypeKind::Bool:
+            case TypeKind::ZString:
+            case TypeKind::UByte:
+            case TypeKind::UShort:
+            case TypeKind::UInteger:
+            case TypeKind::ULong:
+            case TypeKind::Byte:
+            case TypeKind::Short:
+            case TypeKind::Integer:
+            case TypeKind::Long:
+            case TypeKind::Single:
+            case TypeKind::Double:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+protected:
     explicit constexpr TypeBase(const TypeKind kind)
     : m_kind(kind) { }
 

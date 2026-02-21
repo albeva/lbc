@@ -27,7 +27,8 @@ public:
 
 private:
     void typeKind();
-    void typeBase();
+    void typeBaseClass();
+    void typeQueryMethods();
 
     std::vector<const Record*> m_typeKinds;
     std::vector<const Record*> m_types;

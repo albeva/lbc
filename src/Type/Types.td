@@ -18,8 +18,10 @@ class TypeKind;
 def Sentinel : TypeKind;
 // Primitive are types that lbc does not categorize as numeric types. e.g. bool, zstring
 def Primitive : TypeKind;
-// All signed and unsigned integral types
-def Integral : TypeKind;
+// All unsigned integral types
+def UnsignedIntegral : TypeKind;
+// All signed integral types
+def SignedIntegral : TypeKind;
 // All floating point types
 def FloatingPoint : TypeKind;
 // pointers, references, etc.
@@ -51,14 +53,14 @@ def ZString : KeywordType<"ZSTRING", Primitive>;
 // Integral types
 // -----------------------------------------------------------------------------
 
-def Byte     : KeywordType<"BYTE", Integral>;
-def UByte    : KeywordType<"UBYTE", Integral>;
-def Short    : KeywordType<"SHORT", Integral>;
-def UShort   : KeywordType<"USHORT", Integral>;
-def Integer  : KeywordType<"INTEGER", Integral>;
-def UInteger : KeywordType<"UINTEGER", Integral>;
-def Long     : KeywordType<"LONG", Integral>;
-def ULong    : KeywordType<"ULONG", Integral>;
+def Byte     : KeywordType<"BYTE",     SignedIntegral   >;
+def UByte    : KeywordType<"UBYTE",    UnsignedIntegral >;
+def Short    : KeywordType<"SHORT",    SignedIntegral   >;
+def UShort   : KeywordType<"USHORT",   UnsignedIntegral >;
+def Integer  : KeywordType<"INTEGER",  SignedIntegral   >;
+def UInteger : KeywordType<"UINTEGER", UnsignedIntegral >;
+def Long     : KeywordType<"LONG",     SignedIntegral   >;
+def ULong    : KeywordType<"ULONG",    UnsignedIntegral >;
 
 // -----------------------------------------------------------------------------
 // Floating point values
