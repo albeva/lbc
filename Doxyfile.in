@@ -7,9 +7,10 @@ PROJECT_BRIEF          = "@CMAKE_PROJECT_DESCRIPTION@"
 OUTPUT_DIRECTORY       = "@CMAKE_SOURCE_DIR@/docs"
 
 # Input
-INPUT                  = @CMAKE_SOURCE_DIR@/src
+INPUT                  = @CMAKE_SOURCE_DIR@/src \
+                         @CMAKE_SOURCE_DIR@/doxygen
 RECURSIVE              = YES
-FILE_PATTERNS          = *.hpp *.cpp
+FILE_PATTERNS          = *.hpp *.cpp *.md
 
 # Extraction
 EXTRACT_ALL            = NO
