@@ -1,0 +1,33 @@
+# Doxyfile — generated from Doxyfile.in by CMake
+
+# Project
+PROJECT_NAME           = "@CMAKE_PROJECT_NAME@"
+PROJECT_NUMBER         = "@CMAKE_PROJECT_VERSION@"
+PROJECT_BRIEF          = "@CMAKE_PROJECT_DESCRIPTION@"
+OUTPUT_DIRECTORY       = "@CMAKE_SOURCE_DIR@/docs"
+
+# Input
+INPUT                  = @CMAKE_SOURCE_DIR@/src
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.cpp
+
+# Extraction
+EXTRACT_ALL            = NO
+EXTRACT_STATIC         = YES
+BUILTIN_STL_SUPPORT    = YES
+
+# Output
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+# HTML
+HTML_COLORSTYLE        = DARK
+
+# Diagrams
+HAVE_DOT               = YES
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+
+# Misc
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO

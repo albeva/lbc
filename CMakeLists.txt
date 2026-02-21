@@ -18,6 +18,7 @@ include(cmake/warnings.cmake)
 include(cmake/options.cmake)
 include(cmake/tblgen.cmake)
 include(cmake/llvm.cmake)
+include(cmake/doxygen.cmake)
 
 # Add sources
 add_subdirectory(configured_files)
