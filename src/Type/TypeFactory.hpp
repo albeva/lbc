@@ -52,7 +52,7 @@ private:
     [[nodiscard]] auto getQualifiedWith(const Type* type, TypeQualifierFlags flags) -> const TypeQualified*;
 
     /** Allocate raw memory from the arena. */
-    [[nodiscard]] auto allocate(std::size_t size, std::size_t alignment) -> void*;
+    [[nodiscard]] auto allocate(std::size_t size, std::size_t alignment)const -> void*;
 
     /**
      * Construct a type in arena-allocated memory.

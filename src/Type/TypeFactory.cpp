@@ -38,24 +38,19 @@ auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnT
 }
 
 auto TypeFactory::getQualifiedWith(const Type* type, const TypeQualifierFlags flags) -> const TypeQualified* {
-    const auto fetch = [&](QualArr& arr, const Type* ty, TypeQualifierFlags fl) {
-        if (const auto* found = std::ranges::find(arr, fl, &TypeQualified::getFlags); found != arr.end()) {
-            return *found;
-        }
-        return arr.emplace_back(create<TypeQualified>(ty, fl));
-    };
-
-    // already a qualified type?
     if (const auto* qual = llvm::dyn_cast<TypeQualified>(type)) {
         using namespace ::flags;
-        return fetch(m_qualified[qual->getBaseType()], qual->getBaseType(), qual->getFlags() | flags);
+        return getQualifiedWith(qual->getBaseType(), qual->getFlags() | flags);
     }
 
-    // find existing qualified type
-    return fetch(m_qualified[type], type, flags);
+    auto& arr = m_qualified[type];
+    if (const auto* found = std::ranges::find(arr, flags, &TypeQualified::getFlags); found != arr.end()) {
+        return *found;
+    }
+    return arr.emplace_back(create<TypeQualified>(type, flags));
 }
 
-auto TypeFactory::allocate(std::size_t size, std::size_t alignment) -> void* {
+auto TypeFactory::allocate(const std::size_t size, const std::size_t alignment) const -> void* {
     return m_context.allocate(size, alignment);
 }
 
