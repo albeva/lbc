@@ -78,7 +78,7 @@ private:
 
     /// Identity hasher for pre-computed llvm::hash_code values
     struct FunctionKeyHash final {
-        static constexpr auto operator()(const llvm::hash_code& key) -> std::size_t {
+        static auto operator()(const llvm::hash_code& key) -> std::size_t {
             return key;
         }
     };
