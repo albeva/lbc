@@ -12,11 +12,15 @@
 #include "Aggregate.hpp"
 #include "Compound.hpp"
 #include "Numeric.hpp"
+#include "Lexer/TokenKind.hpp"
 namespace lbc {
 
-
 /**
- * Factory for retrieving and creating types
+ * Generated base class for the type factory.
+ * Provides typed getters for singleton types and protected
+ * storage for type instances indexed by TypeKind. Subclasses
+ * are responsible for allocating and registering types via
+ * setSingleton().
  */
 class TypeFactoryBase {
 public:
@@ -108,21 +112,60 @@ public:
 
     // NOLINTEND(*-static-cast-downcast)
 
+    /**
+     * Get type for given TokenKind or a nullptr
+     */
+    [[nodiscard]] constexpr auto getType(const TokenKind kind) const -> const Type* {
+        switch (kind.value()) {
+            case TokenKind::Bool:
+                return getBool();
+            case TokenKind::ZString:
+                return getZString();
+            case TokenKind::UByte:
+                return getUByte();
+            case TokenKind::UShort:
+                return getUShort();
+            case TokenKind::UInteger:
+                return getUInteger();
+            case TokenKind::ULong:
+                return getULong();
+            case TokenKind::Byte:
+                return getByte();
+            case TokenKind::Short:
+                return getShort();
+            case TokenKind::Integer:
+                return getInteger();
+            case TokenKind::Long:
+                return getLong();
+            case TokenKind::Single:
+                return getSingle();
+            case TokenKind::Double:
+                return getDouble();
+            default:
+                return nullptr;
+        }
+    }
 protected:
 
-    /// Get type from m_singleTypes based on TypeKind
+    /**
+     * Retrieve a singleton type by its TypeKind.
+     */
     [[nodiscard]] auto getSingleton(const TypeKind kind) const -> const Type* {
         const auto index = static_cast<std::size_t>(kind);
         return m_singleTypes.at(index);
     }
 
-    /// Set type to m_singleTypes based on TypeKind
+    /**
+     * Register a singleton type, indexed by its TypeKind.
+     */
     void setSingleton(const Type* type) {
         const auto index = static_cast<std::size_t>(type->getKind());
         m_singleTypes.at(index) = type;
     }
 
+    /// Number of singleton types
     static constexpr std::size_t COUNT = 15;
+    /// TypeKind values for all singleton types
     static constexpr std::array<TypeKind, COUNT> kSingleTypeKinds {
         TypeKind::Void,
         TypeKind::Null,
@@ -142,6 +185,7 @@ protected:
     };
 
 private:
+    /// Storage for singleton type instances, indexed by TypeKind ordinal
     std::array<const Type*, COUNT> m_singleTypes {};
 };
 } // namespace lbc

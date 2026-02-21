@@ -14,13 +14,19 @@ TypeFactoryGen::TypeFactoryGen(
 }
 
 auto TypeFactoryGen::run() -> bool {
-    newline();
     factoryClass();
     return false;
 }
 
 void TypeFactoryGen::factoryClass() {
-    doc("Factory for retrieving and creating types");
+    doc([&] {
+        lines("Generated base class for the type factory.");
+        lines("");
+        lines("Provides typed getters for singleton types and protected");
+        lines("storage for type instances indexed by TypeKind. Subclasses");
+        lines("are responsible for allocating and registering types via");
+        lines("setSingleton().");
+    });
     block("class TypeFactoryBase", true, [&]() {
         scope(Scope::Public, true);
         line("NO_COPY_AND_MOVE(TypeFactoryBase)", "");
@@ -30,25 +36,28 @@ void TypeFactoryGen::factoryClass() {
         newline();
 
         singleTypeGetters();
+        keywordToType();
 
         scope(Scope::Protected);
         newline();
 
-        comment("Get type from m_singleTypes based on TypeKind");
+        doc("Retrieve a singleton type by its TypeKind.");
         block("[[nodiscard]] auto getSingleton(const TypeKind kind) const -> const Type*", [&] {
             line("const auto index = static_cast<std::size_t>(kind)");
             line("return m_singleTypes.at(index)");
         });
         newline();
 
-        comment("Set type to m_singleTypes based on TypeKind");
+        doc("Register a singleton type, indexed by its TypeKind.");
         block("void setSingleton(const Type* type)", [&] {
             line("const auto index = static_cast<std::size_t>(type->getKind())");
             line("m_singleTypes.at(index) = type");
         });
         newline();
 
+        comment("Number of singleton types");
         line("static constexpr std::size_t COUNT = " + std::to_string(getSingles().size()));
+        comment("TypeKind values for all singleton types");
         block("static constexpr std::array<TypeKind, COUNT> kSingleTypeKinds", true, [&] {
             for (const auto* single : getSingles()) {
                 line("TypeKind::" + single->getEnumName(), ",");
@@ -57,6 +66,7 @@ void TypeFactoryGen::factoryClass() {
         newline();
 
         scope(Scope::Private);
+        comment("Storage for singleton type instances, indexed by TypeKind ordinal");
         line("std::array<const Type*, COUNT> m_singleTypes {}");
     });
 }
@@ -90,4 +100,18 @@ void TypeFactoryGen::singleTypeGetters() {
     }
     line("// NOLINTEND(*-static-cast-downcast)", "");
     newline();
+}
+
+void TypeFactoryGen::keywordToType() {
+    doc("Get type for given TokenKind or a nullptr");
+    block("[[nodiscard]] constexpr auto getType(const TokenKind kind) const -> const Type*", [&] {
+        block("switch (kind.value())", [&] {
+            for (const auto& type : getKeywords()) {
+                line("case TokenKind::" + type->getEnumName(), ":");
+                line("    return get" + type->getEnumName() + "()");
+            }
+            line("default", ":");
+            line("    return nullptr");
+        });
+    });
 }

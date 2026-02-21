@@ -34,6 +34,18 @@ auto TypeBaseGen::run() -> bool {
     return false;
 }
 
+auto TypeBaseGen::getKeywords() const -> std::vector<const Type*> {
+    const auto* keywordType = m_records.getClass("KeywordType");
+    if (keywordType == nullptr) {
+        return {};
+    }
+    return getSingles()
+         | std::views::filter([&](const Type* type) {
+               return type->getRecord()->hasDirectSuperClass(keywordType);
+           })
+         | std::ranges::to<std::vector>();
+}
+
 void TypeBaseGen::typeKind() {
     doc("Enumerate type kinds");
     block("enum class TypeKind : std::uint8_t", true, [&] {
@@ -60,6 +72,8 @@ void TypeBaseGen::typeBaseClass() {
         newline();
 
         typeQueryMethods();
+        typeToKeyword();
+        newline();
 
         const auto* keywordType = m_records.getClass("KeywordType");
         if (keywordType != nullptr) {
@@ -121,4 +135,18 @@ void TypeBaseGen::typeQueryMethods() {
         }
         newline();
     }
+}
+
+void TypeBaseGen::typeToKeyword() {
+    doc("Get keyword TokenKind matching current type, or a std::nullopt");
+    block("[[nodiscard]] constexpr auto getTokenKind() const -> std::optional<TokenKind>", [&] {
+        block("switch (m_kind)", [&] {
+            for (const auto& type : getKeywords()) {
+                line("case TypeKind::" + type->getEnumName(), ":");
+                line("    return TokenKind::" + type->getEnumName());
+            }
+            line("default", ":");
+            line("    return std::nullopt");
+        });
+    });
 }

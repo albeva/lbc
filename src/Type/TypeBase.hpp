@@ -8,6 +8,7 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
+#include "Lexer/TokenKind.hpp"
 namespace lbc {
 
 /**
@@ -104,6 +105,40 @@ public:
         return m_kind == TypeKind::Function;
     }
     [[nodiscard]] constexpr auto isFunction() const -> bool { return m_kind == TypeKind::Function; }
+
+    /**
+     * Get keyword TokenKind matching current type, or a std::nullopt
+     */
+    [[nodiscard]] constexpr auto getTokenKind() const -> std::optional<TokenKind> {
+        switch (m_kind) {
+            case TypeKind::Bool:
+                return TokenKind::Bool;
+            case TypeKind::ZString:
+                return TokenKind::ZString;
+            case TypeKind::UByte:
+                return TokenKind::UByte;
+            case TypeKind::UShort:
+                return TokenKind::UShort;
+            case TypeKind::UInteger:
+                return TokenKind::UInteger;
+            case TypeKind::ULong:
+                return TokenKind::ULong;
+            case TypeKind::Byte:
+                return TokenKind::Byte;
+            case TypeKind::Short:
+                return TokenKind::Short;
+            case TypeKind::Integer:
+                return TokenKind::Integer;
+            case TypeKind::Long:
+                return TokenKind::Long;
+            case TypeKind::Single:
+                return TokenKind::Single;
+            case TypeKind::Double:
+                return TokenKind::Double;
+            default:
+                return std::nullopt;
+        }
+    }
 
     /// Is it a built-in (with a keyword) type
     [[nodiscard]] constexpr auto isBuiltin() const -> bool {
