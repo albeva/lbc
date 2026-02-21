@@ -3,27 +3,22 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "TypeFactoryBase.hpp"
 namespace lbc {
 class Context;
-class Type;
-class TypeIntegral;
-class TypeFloatingPoint;
-class TypePointer;
-class TypeReference;
-class TypeQualified;
-class TypeFunction;
 
 /**
- * Factory for creating and retrieving types
+ * Factory for retrieving and creating types
  */
-class TypeFactory final {
+class TypeFactory final : public TypeFactoryBase {
 public:
-    NO_COPY_AND_MOVE(TypeFactory)
     explicit TypeFactory(Context& context);
 
     [[nodiscard]] auto getContext() -> Context& { return m_context; }
 
 private:
+    void initializeTypes();
+
     Context& m_context;
 };
 } // namespace lbc

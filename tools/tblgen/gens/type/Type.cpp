@@ -12,6 +12,10 @@ TypeCategory::TypeCategory(const Record* record, const TypeBaseGen& gen)
     }
 }
 
+auto TypeCategory::isSingle() const -> bool {
+    return m_record->getValueAsBit("single");
+}
+
 Type::Type(const Record* record, const TypeCategory* category)
 : m_record(record)
 , m_category(category)

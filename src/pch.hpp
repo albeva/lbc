@@ -36,12 +36,12 @@
 #endif
 
 // LBC utilities
+#include "Utilities/BaseFlags.hpp"
 #include "Utilities/Formatters.hpp"
 #include "Utilities/NoCopy.hpp"
 #include "Utilities/Try.hpp"
 #include "Utilities/ValueRestorer.hpp"
 #include "Utilities/Visitor.hpp"
-#include "Utilities/BaseFlags.hpp"
 
 namespace lbc {
 using namespace std::string_view_literals;

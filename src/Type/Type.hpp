@@ -15,7 +15,8 @@ class Context;
  */
 class Type : public TypeBase {
 public:
-    using TypeBase::TypeBase;
+    constexpr explicit Type(const TypeKind kind)
+    : TypeBase(kind) { }
 
     // -------------------------------------------------------------------------
     // Compound type queries

@@ -4,6 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Diag/DiagEngine.hpp"
+#include "Type/TypeFactory.hpp"
 namespace lbc {
 class Context;
 
@@ -76,6 +77,7 @@ private:
     llvm::BumpPtrAllocator m_allocator;
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;
     DiagEngine m_diagEngine;
+    TypeFactory m_typeFactory;
 };
 
 } // namespace lbc

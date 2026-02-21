@@ -17,6 +17,7 @@ public:
 
     [[nodiscard]] auto getRecord() const -> const Record* { return m_record; }
     [[nodiscard]] auto getTypes() const -> const std::vector<std::unique_ptr<Type>>& { return m_types; }
+    [[nodiscard]] auto isSingle() const -> bool;
 
 private:
     const Record* m_record;

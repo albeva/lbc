@@ -8,6 +8,7 @@
 #include "gens/ast/AstVisitorGen.hpp"
 #include "gens/diag/DiagGen.hpp"
 #include "gens/type/TypeBaseGen.hpp"
+#include "gens/type/TypeFactoryGen.hpp"
 using namespace llvm;
 
 namespace {
@@ -32,7 +33,8 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::AstFwdDecl, AstFwdDeclGen::genName, "Generate AST forward declarations"),
         clEnumValN(Generator::AstVisitor, AstVisitorGen::genName, "Generate AST visitor"),
         clEnumValN(Generator::DiagDef, DiagGen::genName, "Generate diagnostic definitions"),
-        clEnumValN(Generator::TypeBase, TypeBaseGen::genName, "Generate type base definitions")
+        clEnumValN(Generator::TypeBase, TypeBaseGen::genName, "Generate type base definitions"),
+        clEnumValN(Generator::TypeFactory, TypeFactoryGen::genName, "Generate type factory")
     )
 };
 
@@ -50,6 +52,8 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return DiagGen(os, records).run();
     case Generator::TypeBase:
         return TypeBaseGen(os, records).run();
+    case Generator::TypeFactory:
+        return TypeFactoryGen(os, records).run();
     default:
         std::unreachable();
     }

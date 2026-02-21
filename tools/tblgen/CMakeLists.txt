@@ -19,6 +19,8 @@ add_executable(lbc-tblgen
     gens/type/Type.hpp
     gens/type/TypeBaseGen.cpp
     gens/type/TypeBaseGen.hpp
+    gens/type/TypeFactoryGen.cpp
+    gens/type/TypeFactoryGen.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)

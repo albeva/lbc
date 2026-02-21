@@ -71,13 +71,17 @@ public:
         m_os << "\n";
     }
 
-    void getter(const llvm::StringRef name, const Streamable auto& type, bool isConstexpr = true) {
+    void getter(const llvm::StringRef name, const Streamable auto& type, bool isConstexpr = true, bool isConst = true) {
         space();
         m_os << "[[nodiscard]] ";
         if (isConstexpr) {
             m_os << "constexpr ";
         }
-        m_os << "auto get" << ucfirst(name) << "() const -> " << type << " { return m_" << name << "; }\n";
+        m_os << "auto get" << ucfirst(name) << "() ";
+        if (isConst) {
+            m_os << "const ";
+        }
+        m_os << "-> " << type << " { return m_" << name << "; }\n";
     }
 
     void predicate(const llvm::StringRef name, bool isConstexpr, const Streamable auto& expr) {

@@ -13,7 +13,10 @@ class Type<string str_> {
 #endif
 
 // Type kind categories
-class TypeKind;
+class TypeKind<bit single_ = true> {
+    // Single types have a single instance. E.g. integer, bool, etc.
+    bit single = single_;
+}
 // Represent special types such as void, any, null
 def Sentinel : TypeKind;
 // Primitive are types that lbc does not categorize as numeric types. e.g. bool, zstring
@@ -25,9 +28,9 @@ def SignedIntegral : TypeKind;
 // All floating point types
 def FloatingPoint : TypeKind;
 // pointers, references, etc.
-def Compound : TypeKind;
+def Compound : TypeKind<false>;
 // functions, user defined types, etc.
-def Aggregate : TypeKind;
+def Aggregate : TypeKind<false>;
 
 // Base type structure
 class BaseType<TypeKind kind_, string cls_ = ""> {
@@ -38,7 +41,11 @@ class BaseType<TypeKind kind_, string cls_ = ""> {
 }
 
 // Type that is exposed as lexical keyword
-class KeywordType<string str_, TypeKind kind_, string cls_ = "">: BaseType<kind_, cls_>, Type<str_>;
+class KeywordType<
+    string str_,
+    TypeKind kind_,
+    string cls_ = ""
+>: BaseType<kind_, cls_>, Type<str_>;
 
 // -----------------------------------------------------------------------------
 // Basic types

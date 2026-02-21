@@ -16,6 +16,16 @@ TypeBaseGen::TypeBaseGen(
     for (const auto* record : m_typeKinds) {
         m_categories.emplace_back(std::make_unique<TypeCategory>(record, *this));
     }
+
+    // single types should be at the top, to ensure predictable index range
+    std::ranges::stable_partition(m_categories, &TypeCategory::isSingle);
+
+    // filter all the single types
+    visit([&](const Type* type) {
+        if (type->getCategory()->isSingle()) {
+            m_singles.emplace_back(type);
+        }
+    });
 }
 
 auto TypeBaseGen::run() -> bool {

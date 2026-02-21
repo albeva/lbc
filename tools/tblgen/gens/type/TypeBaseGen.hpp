@@ -24,6 +24,7 @@ public:
     [[nodiscard]] auto getTypeKinds() const -> const std::vector<const Record*>& { return m_typeKinds; }
     [[nodiscard]] auto getTypes() const -> const std::vector<const Record*>& { return m_types; }
     [[nodiscard]] auto getCategories() const -> const std::vector<std::unique_ptr<TypeCategory>>& { return m_categories; }
+    [[nodiscard]] auto getSingles() const -> const std::vector<const Type*>& { return m_singles; }
 
     template <std::invocable<const Type*> Func>
     void visit(Func&& func) {
@@ -42,4 +43,5 @@ private:
     std::vector<const Record*> m_typeKinds;
     std::vector<const Record*> m_types;
     std::vector<std::unique_ptr<TypeCategory>> m_categories;
+    std::vector<const Type*> m_singles;
 };
