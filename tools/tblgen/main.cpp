@@ -19,6 +19,7 @@ enum class Generator : std::uint8_t {
     AstVisitor,
     DiagDef,
     TypeBase,
+    TypeFactory,
 };
 
 const auto generatorOpt = cl::opt<Generator> {

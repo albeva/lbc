@@ -30,17 +30,15 @@ def Compound : TypeKind;
 def Aggregate : TypeKind;
 
 // Base type structure
-class BaseType<TypeKind kind_> {
+class BaseType<TypeKind kind_, string cls_ = ""> {
+    // Type category
     TypeKind kind = kind_;
+    // Type backing class
+    string cls = cls_;
 }
 
 // Type that is exposed as lexical keyword
-class KeywordType<string str_, TypeKind kind_>: BaseType<kind_>, Type<str_>;
-
-// Concrete types are backed by their own class that inherit Type
-class ConcreteType<string class_, TypeKind kind_>: BaseType<kind_> {
-    string cls = class_;
-}
+class KeywordType<string str_, TypeKind kind_, string cls_ = "">: BaseType<kind_, cls_>, Type<str_>;
 
 // -----------------------------------------------------------------------------
 // Basic types
@@ -53,35 +51,35 @@ def ZString : KeywordType<"ZSTRING", Primitive>;
 // Integral types
 // -----------------------------------------------------------------------------
 
-def Byte     : KeywordType<"BYTE",     SignedIntegral   >;
-def UByte    : KeywordType<"UBYTE",    UnsignedIntegral >;
-def Short    : KeywordType<"SHORT",    SignedIntegral   >;
-def UShort   : KeywordType<"USHORT",   UnsignedIntegral >;
-def Integer  : KeywordType<"INTEGER",  SignedIntegral   >;
-def UInteger : KeywordType<"UINTEGER", UnsignedIntegral >;
-def Long     : KeywordType<"LONG",     SignedIntegral   >;
-def ULong    : KeywordType<"ULONG",    UnsignedIntegral >;
+def Byte     : KeywordType<"BYTE",     SignedIntegral,   "TypeIntegral">;
+def UByte    : KeywordType<"UBYTE",    UnsignedIntegral, "TypeIntegral">;
+def Short    : KeywordType<"SHORT",    SignedIntegral,   "TypeIntegral">;
+def UShort   : KeywordType<"USHORT",   UnsignedIntegral, "TypeIntegral">;
+def Integer  : KeywordType<"INTEGER",  SignedIntegral,   "TypeIntegral">;
+def UInteger : KeywordType<"UINTEGER", UnsignedIntegral, "TypeIntegral">;
+def Long     : KeywordType<"LONG",     SignedIntegral,   "TypeIntegral">;
+def ULong    : KeywordType<"ULONG",    UnsignedIntegral, "TypeIntegral">;
 
 // -----------------------------------------------------------------------------
 // Floating point values
 // -----------------------------------------------------------------------------
 
-def Single : KeywordType<"SINGLE", FloatingPoint>;
-def Double : KeywordType<"DOUBLE", FloatingPoint>;
+def Single : KeywordType<"SINGLE", FloatingPoint, "TypeFloatingPoint">;
+def Double : KeywordType<"DOUBLE", FloatingPoint, "TypeFloatingPoint">;
 
 // -----------------------------------------------------------------------------
 // Compound types
 // -----------------------------------------------------------------------------
 
-def PointerType   : ConcreteType<"PointerType", Compound>;
-def ReferenceType : ConcreteType<"ReferenceType", Compound>;
-def QualifiedType : ConcreteType<"QualifiedType", Compound>;
+def PointerType   : BaseType<Compound, "TypePointer">;
+def ReferenceType : BaseType<Compound, "TypeReference">;
+def QualifiedType : BaseType<Compound, "TypeQualified">;
 
 // -----------------------------------------------------------------------------
 // Aggregate types
 // -----------------------------------------------------------------------------
 
-def FunctionType : ConcreteType<"FunctionType", Aggregate>;
+def FunctionType : BaseType<Aggregate, "TypeFunction">;
 
 // -----------------------------------------------------------------------------
 // Sentinel types

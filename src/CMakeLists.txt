@@ -23,6 +23,7 @@ target_sources(lbc_lib
     Symbol/Symbol.cpp
     Symbol/SymbolTable.cpp
     Type/Type.cpp
+    Type/TypeFactory.cpp
 
     PUBLIC FILE_SET HEADERS FILES
     Ast/AstExprPrinter.hpp
@@ -42,6 +43,7 @@ target_sources(lbc_lib
     Type/Compound.hpp
     Type/Numeric.hpp
     Type/Type.hpp
+    Type/TypeFactory.hpp
     Utilities/BaseFlags.hpp
     Utilities/Formatters.hpp
     Utilities/NoCopy.hpp

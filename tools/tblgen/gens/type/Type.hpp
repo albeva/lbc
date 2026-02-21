@@ -33,6 +33,7 @@ public:
     [[nodiscard]] auto getRecord() const -> const Record* { return m_record; }
     [[nodiscard]] auto getCategory() const -> const TypeCategory* { return m_category; }
     [[nodiscard]] auto getEnumName() const -> llvm::StringRef { return m_enumName; }
+    [[nodiscard]] auto getBackingClassName() const -> std::optional<llvm::StringRef>;
 
 private:
     const Record* m_record;

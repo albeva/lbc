@@ -25,6 +25,15 @@ public:
     [[nodiscard]] auto getTypes() const -> const std::vector<const Record*>& { return m_types; }
     [[nodiscard]] auto getCategories() const -> const std::vector<std::unique_ptr<TypeCategory>>& { return m_categories; }
 
+    template <std::invocable<const Type*> Func>
+    void visit(Func&& func) {
+        for (const auto& cat : m_categories) {
+            for (const auto& type : cat->getTypes()) {
+                std::invoke(std::forward<Func>(func), type.get());
+            }
+        }
+    }
+
 private:
     void typeKind();
     void typeBaseClass();

@@ -42,7 +42,7 @@ public:
     NO_COPY_AND_MOVE(TypeBase)
 
     TypeBase() = delete;
-    constexpr virtual ~TypeBase() = default;
+    virtual ~TypeBase() = default;
 
     /// Get underlying type kind
     [[nodiscard]] constexpr auto getKind() const -> TypeKind { return m_kind; }
