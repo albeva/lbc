@@ -37,6 +37,7 @@
 
 // LBC utilities
 #include "Utilities/BaseFlags.hpp"
+#include "Utilities/Flags.hpp"
 #include "Utilities/Formatters.hpp"
 #include "Utilities/NoCopy.hpp"
 #include "Utilities/Try.hpp"

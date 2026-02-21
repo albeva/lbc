@@ -45,6 +45,7 @@ target_sources(lbc_lib
     Type/Type.hpp
     Type/TypeFactory.hpp
     Utilities/BaseFlags.hpp
+    Utilities/Flags.hpp
     Utilities/Formatters.hpp
     Utilities/NoCopy.hpp
     Utilities/Sequencer.hpp

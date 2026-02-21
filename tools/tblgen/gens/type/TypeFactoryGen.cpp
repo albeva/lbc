@@ -1,5 +1,5 @@
 // Custom TableGen backend for generating type factory.
-// Reads Types.td and emits TypeFactory.hpp
+// Reads Types.td and emits TypeFactoryBase.hpp
 #include "TypeFactoryGen.hpp"
 #include <llvm/ADT/StringSet.h>
 

@@ -5,6 +5,7 @@
 #include "pch.hpp"
 #include "Type.hpp"
 namespace lbc {
+class TypeFactory;
 
 /**
  * Function type representing a callable signature with parameter types
@@ -12,14 +13,6 @@ namespace lbc {
  */
 class TypeFunction final : public Type {
 public:
-    explicit constexpr TypeFunction(
-        const std::span<const Type*> params,
-        const Type* returnType
-    )
-    : Type(TypeKind::Function)
-    , m_params(params)
-    , m_returnType(returnType) { }
-
     /** Get the parameter types. */
     [[nodiscard]] auto getParams() const -> std::span<const Type*> { return m_params; }
 
@@ -30,6 +23,17 @@ public:
     [[nodiscard]] constexpr static auto classof(const Type* type) -> bool {
         return type->isFunction();
     }
+
+protected:
+    friend class TypeFactory;
+
+    explicit constexpr TypeFunction(
+        const std::span<const Type*> params,
+        const Type* returnType
+    )
+    : Type(TypeKind::Function)
+    , m_params(params)
+    , m_returnType(returnType) { }
 
 private:
     /// Parameter types

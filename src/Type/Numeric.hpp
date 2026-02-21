@@ -5,6 +5,7 @@
 #include "pch.hpp"
 #include "Type.hpp"
 namespace lbc {
+class TypeFactory;
 
 /**
  * Integral type representing signed and unsigned integer types.
@@ -12,12 +13,15 @@ namespace lbc {
  * Covers Byte, Short, Integer, Long and their unsigned variants.
  */
 class TypeIntegral final : public Type {
-public:
+protected:
+    friend class TypeFactory;
+
     constexpr TypeIntegral(const TypeKind kind, const std::uint8_t size, const bool isSigned)
     : Type(kind)
     , m_size(size)
     , m_signed(isSigned) { }
 
+public:
     /** Get the size of this type in bytes. */
     [[nodiscard]] constexpr auto getBytes() const -> std::size_t { return m_size; }
 
@@ -49,11 +53,14 @@ private:
  * Floating point type representing Single and Double precision values.
  */
 class TypeFloatingPoint final : public Type {
-public:
+protected:
+    friend class TypeFactory;
+
     constexpr TypeFloatingPoint(const TypeKind kind, const std::uint8_t size)
     : Type(kind)
     , m_size(size) { }
 
+public:
     /** Get the size of this type in bytes. */
     [[nodiscard]] constexpr auto getBytes() const -> std::size_t { return m_size; }
 

@@ -7,11 +7,12 @@
  * TableGen backend that reads Types.td and emits TypeFactoryBase.hpp.
  *
  * Generates the TypeFactoryBase class with typed singleton getters,
- * protected storage, and a kSingleTypeKinds constant array.
+ * protected storage, and a kSingletonKinds constant array.
  * Extends TypeBaseGen to reuse the type/category hierarchy.
  */
 class TypeFactoryGen : public TypeBaseGen {
 public:
+    /// Generator name used for CLI dispatch
     static constexpr auto genName = "lbc-type-factory";
 
     TypeFactoryGen(
@@ -30,5 +31,7 @@ private:
 
     /** Emit typed getter methods for each singleton type. */
     void singletonGetters();
+
+    /** Emit the getType(TokenKind) method that maps keyword tokens to types. */
     void keywordToType();
 };

@@ -6,18 +6,18 @@
 #include "TypeBase.hpp"
 namespace lbc {
 class Context;
+class TypeFactory;
 
 /**
  * Base type class for the lbc type system.
  *
  * Extends the generated TypeBase with compound queries and virtual
- * methods that concrete type subclasses can override.
+ * methods that concrete type subclasses can override. The constructor
+ * is protected — only TypeFactory (and its subclasses) can instantiate
+ * types; all type objects are arena-allocated and never individually freed.
  */
 class Type : public TypeBase {
 public:
-    constexpr explicit Type(const TypeKind kind)
-    : TypeBase(kind) { }
-
     // -------------------------------------------------------------------------
     // Compound type queries
     // -------------------------------------------------------------------------
@@ -45,6 +45,12 @@ public:
     [[nodiscard]] constexpr static auto classof(const Type* /* type */) -> bool {
         return true;
     }
+
+protected:
+    friend class TypeFactory;
+
+    constexpr explicit Type(const TypeKind kind)
+    : TypeBase(kind) { }
 };
 
 } // namespace lbc
