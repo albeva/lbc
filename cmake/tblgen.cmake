@@ -9,6 +9,7 @@
 # OUTPUT is resolved relative to the directory containing the INPUT file.
 # DEFINES adds -D<macro> flags (boolean only, no values) to the tblgen invocation for that group.
 # Wires up rebuild dependencies so the .inc is regenerated when the .td or tool changes.
+# Also creates a runnable target named <gen_name> for each generator (e.g. ninja lbc-type-base).
 function(add_tblgen target tblgen_tool)
     set(all_inc_files "")
 
@@ -92,6 +93,14 @@ function(add_tblgen target tblgen_tool)
             COMMENT "Generating ${inc_rel} (--gen=${gen_name})"
         )
         list(APPEND all_inc_files "${inc_abs}")
+
+        # Runnable target for testing individual generators
+        add_custom_target(${gen_name}
+            COMMAND ${tblgen_tool} "${td_abs}" --gen="${gen_name}" -o "${inc_abs}" -I "${CMAKE_CURRENT_SOURCE_DIR}" ${define_flags}
+            DEPENDS ${tblgen_tool} "${td_abs}"
+            USES_TERMINAL
+            COMMENT "Running ${gen_name}: ${td_rel} -> ${inc_rel}"
+        )
 
         math(EXPR i "${i} + 1")
     endwhile()

@@ -76,10 +76,10 @@ TEST(LexerTests, BooleanAndNullLiterals) {
     Context context;
     auto tr = tok(makeLexer(context, "True").next());
     EXPECT_EQ(tr.kind(), TokenKind::BooleanLiteral);
-    EXPECT_EQ(std::get<bool>(tr.getValue()), true);
+    EXPECT_EQ(tr.getValue().get<bool>(), true);
     auto fl = tok(makeLexer(context, "FALSE").next());
     EXPECT_EQ(fl.kind(), TokenKind::BooleanLiteral);
-    EXPECT_EQ(std::get<bool>(fl.getValue()), false);
+    EXPECT_EQ(fl.getValue().get<bool>(), false);
     EXPECT_EQ(tok(makeLexer(context, "Null").next()).kind(), TokenKind::NullLiteral);
 }
 
@@ -88,7 +88,7 @@ TEST(LexerTests, StringLiterals) {
     // basic string
     auto t = tok(makeLexer(context, "\"hello world\"").next());
     EXPECT_EQ(t.kind(), TokenKind::StringLiteral);
-    EXPECT_EQ(std::get<llvm::StringRef>(t.getValue()), "hello world");
+    EXPECT_EQ(t.getValue().get<llvm::StringRef>(), "hello world");
     // unclosed string is an error
     EXPECT_FALSE(makeLexer(context, "\"unclosed").next().has_value());
 }
@@ -98,7 +98,7 @@ TEST(LexerTests, StringEscapeSequences) {
     // all valid escapes
     auto t = tok(makeLexer(context, R"("\a\b\f\n\r\t\v\\\'\"\0")").next());
     EXPECT_EQ(t.kind(), TokenKind::StringLiteral);
-    EXPECT_EQ(std::get<llvm::StringRef>(t.getValue()), R"(\a\b\f\n\r\t\v\\\'\"\0)");
+    EXPECT_EQ(t.getValue().get<llvm::StringRef>(), R"(\a\b\f\n\r\t\v\\\'\"\0)");
     // escaped quote doesn't terminate
     EXPECT_EQ(tok(makeLexer(context, R"("say \"hi\"")").next()).kind(), TokenKind::StringLiteral);
     // invalid escapes
@@ -117,15 +117,15 @@ TEST(LexerTests, NumberLiterals) {
     // integer
     auto integer = tok(makeLexer(context, "12345").next());
     EXPECT_EQ(integer.kind(), TokenKind::IntegerLiteral);
-    EXPECT_EQ(std::get<std::uint64_t>(integer.getValue()), 12345U);
+    EXPECT_EQ(integer.getValue().get<std::uint64_t>(), 12345U);
     // float
     auto fp = tok(makeLexer(context, "3.14").next());
     EXPECT_EQ(fp.kind(), TokenKind::FloatLiteral);
-    EXPECT_DOUBLE_EQ(std::get<double>(fp.getValue()), 3.14);
+    EXPECT_DOUBLE_EQ(fp.getValue().get<double>(), 3.14);
     // float starting with dot
     auto dot = tok(makeLexer(context, ".5").next());
     EXPECT_EQ(dot.kind(), TokenKind::FloatLiteral);
-    EXPECT_DOUBLE_EQ(std::get<double>(dot.getValue()), 0.5);
+    EXPECT_DOUBLE_EQ(dot.getValue().get<double>(), 0.5);
     // trailing alpha is an error
     EXPECT_FALSE(makeLexer(context, "123abc").next().has_value());
 }

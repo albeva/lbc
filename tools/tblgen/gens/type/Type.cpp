@@ -12,6 +12,7 @@ TypeCategory::TypeCategory(const Record* record, const TypeBaseGen& gen)
     }
 }
 
+
 Type::Type(const Record* record, const TypeCategory* category)
 : m_record(record)
 , m_category(category)
