@@ -48,7 +48,7 @@ void AstExprPrinter::accept(const AstLiteralExpr& ast) {
             m_output += value;
         }
     };
-    std::visit(visitor, ast.getValue().getValue());
+    std::visit(visitor, ast.getValue().storage());
 }
 
 void AstExprPrinter::accept(const AstUnaryExpr& ast) {

@@ -326,7 +326,6 @@ private:
             }
         }
 
-        m_os << "\n";
         m_os << "namespace " << m_ns << " {\n\n";
     }
 

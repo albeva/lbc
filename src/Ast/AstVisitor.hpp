@@ -9,7 +9,6 @@
 #pragma once
 #include "pch.hpp"
 #include "Ast/Ast.hpp"
-
 namespace lbc {
 
 /**

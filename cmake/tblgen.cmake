@@ -1,5 +1,5 @@
 # add_tblgen(<target> <tblgen_tool>
-#     GENERATOR <gen_name> INPUT <td_file> [OUTPUT <inc_file>]
+#     GENERATOR <gen_name> INPUT <td_file> [OUTPUT <inc_file>] [DEFINES <macro>...]
 #     ...
 # )
 #
@@ -7,6 +7,7 @@
 # to produce a .inc file alongside the INPUT .td file in the source tree.
 # If OUTPUT is omitted, the .inc filename is derived from the INPUT (.td -> .inc).
 # OUTPUT is resolved relative to the directory containing the INPUT file.
+# DEFINES adds -D<macro> flags (boolean only, no values) to the tblgen invocation for that group.
 # Wires up rebuild dependencies so the .inc is regenerated when the .td or tool changes.
 function(add_tblgen target tblgen_tool)
     set(all_inc_files "")
@@ -48,6 +49,25 @@ function(add_tblgen target tblgen_tool)
             endif()
         endif()
 
+        # Check for optional DEFINES
+        set(define_flags "")
+        math(EXPR next "${i} + 1")
+        if(next LESS argc)
+            list(GET args ${next} maybe_defines)
+            if(maybe_defines STREQUAL "DEFINES")
+                set(i ${next})
+                math(EXPR i "${i} + 1")
+                while(i LESS argc)
+                    list(GET args ${i} val)
+                    if(val STREQUAL "GENERATOR")
+                        break()
+                    endif()
+                    list(APPEND define_flags "-D${val}")
+                    math(EXPR i "${i} + 1")
+                endwhile()
+            endif()
+        endif()
+
         # Resolve input to absolute path and get its directory
         cmake_path(ABSOLUTE_PATH td_file BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE td_abs)
         cmake_path(GET td_abs PARENT_PATH td_dir)
@@ -67,7 +87,7 @@ function(add_tblgen target tblgen_tool)
 
         add_custom_command(
             OUTPUT "${inc_abs}"
-            COMMAND ${tblgen_tool} "${td_abs}" --gen="${gen_name}" --write-if-changed -o "${inc_abs}" -I "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMAND ${tblgen_tool} "${td_abs}" --gen="${gen_name}" --write-if-changed -o "${inc_abs}" -I "${CMAKE_CURRENT_SOURCE_DIR}" ${define_flags}
             DEPENDS ${tblgen_tool} "${td_abs}"
             COMMENT "Generating ${inc_rel} (--gen=${gen_name})"
         )

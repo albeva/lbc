@@ -25,23 +25,23 @@ class Token<string str_, Group group_> {
     string str = str_;
     Group group = group_;
 }
-class General<string str>  : Token<str, General>;
-class Literal<string str>  : Token<str, Literal>;
-class Symbol<string str>   : Token<str, Symbol>;
+class General<string str_>  : Token<str_, General>;
+class Literal<string str_>  : Token<str_, Literal>;
+class Symbol<string str_>   : Token<str_, Symbol>;
 class Operator<
-    string str,
+    string str_,
     int prec_,
     bit isBinary_,
     bit isLeftAssociative_,
     Category cat_
-> : Token<str, Operator> {
+> : Token<str_, Operator> {
     int prec = prec_;
     bit isBinary = isBinary_;
     bit isLeftAssociative = isLeftAssociative_;
     Category category = cat_;
 }
-class Keyword<string str>  : Token<str, Keyword>;
-class Type<string str> : Token<str, Type>;
+class Keyword<string str_>  : Token<str_, Keyword>;
+class Type<string str_> : Token<str_, Type>;
 
 // General
 def Invalid    : General<"<Invalid>">;
@@ -125,4 +125,5 @@ def Until     : Keyword<"UNTIL">;
 def While     : Keyword<"WHILE">;
 
 // Types
+#define DEFINES_TYPE_GROUP
 include "Type/Types.td"

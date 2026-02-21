@@ -7,6 +7,7 @@
 #include "gens/ast/AstGen.hpp"
 #include "gens/ast/AstVisitorGen.hpp"
 #include "gens/diag/DiagGen.hpp"
+#include "gens/type/TypeBaseGen.hpp"
 using namespace llvm;
 
 namespace {
@@ -17,6 +18,7 @@ enum class Generator : std::uint8_t {
     AstFwdDecl,
     AstVisitor,
     DiagDef,
+    TypeBase,
 };
 
 const auto generatorOpt = cl::opt<Generator> {
@@ -28,7 +30,8 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::AstDef, AstGen::genName, "Generate AST node definitions"),
         clEnumValN(Generator::AstFwdDecl, AstFwdDeclGen::genName, "Generate AST forward declarations"),
         clEnumValN(Generator::AstVisitor, AstVisitorGen::genName, "Generate AST visitor"),
-        clEnumValN(Generator::DiagDef, DiagGen::genName, "Generate diagnostic definitions")
+        clEnumValN(Generator::DiagDef, DiagGen::genName, "Generate diagnostic definitions"),
+        clEnumValN(Generator::TypeBase, TypeBaseGen::genName, "Generate type base definitions")
     )
 };
 
@@ -44,6 +47,8 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return AstVisitorGen(os, records).run();
     case Generator::DiagDef:
         return DiagGen(os, records).run();
+    case Generator::TypeBase:
+        return TypeBaseGen(os, records).run();
     default:
         std::unreachable();
     }

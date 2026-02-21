@@ -1,26 +1,90 @@
 // Types definitions for lbc
 // Processed by lbc-tblgen to generate Types.inc
 
-class TypeKind;
-def Primitive: TypeKind;
-def Integral: TypeKind;
-def FloatingPoint: TypeKind;
+// =============================================================================
+// Define type structures
+// =============================================================================
 
-class DataType<string str_, TypeKind kind_>: Type<str_> {
+// TokenKind defines Type as a token group.
+#ifndef DEFINES_TYPE_GROUP
+class Type<string str_> {
+    string str = str_;
+}
+#endif
+
+// Type kind categories
+class TypeKind;
+// Represent special types such as void, any, null
+def Sentinel : TypeKind;
+// Primitive are types that lbc does not categorize as numeric types. e.g. bool, zstring
+def Primitive : TypeKind;
+// All signed and unsigned integral types
+def Integral : TypeKind;
+// All floating point types
+def FloatingPoint : TypeKind;
+// pointers, references, etc.
+def Compound : TypeKind;
+// functions, user defined types, etc.
+def Aggregate : TypeKind;
+
+// Base type structure
+class BaseType<TypeKind kind_> {
     TypeKind kind = kind_;
 }
 
-def BoolType    : DataType<"BOOL", Primitive>;
-def ZString     : DataType<"ZSTRING", Primitive>;
+// Type that is exposed as lexical keyword
+class KeywordType<string str_, TypeKind kind_>: BaseType<kind_>, Type<str_>;
 
-def Byte     : DataType<"BYTE", Primitive>;
-def UByte    : DataType<"UBYTE", Integral>;
-def Short    : DataType<"SHORT", Integral>;
-def UShort   : DataType<"USHORT", Integral>;
-def Integer  : DataType<"INTEGER", Integral>;
-def UInteger : DataType<"UINTEGER", Integral>;
-def Long     : DataType<"LONG", Integral>;
-def ULong    : DataType<"ULONG", Integral>;
+// Concrete types are backed by their own class that inherit Type
+class ConcreteType<string class_, TypeKind kind_>: BaseType<kind_> {
+    string cls = class_;
+}
 
-def Single : DataType<"SINGLE", FloatingPoint>;
-def Double : DataType<"DOUBLE", FloatingPoint>;
+// -----------------------------------------------------------------------------
+// Basic types
+// -----------------------------------------------------------------------------
+
+def Bool    : KeywordType<"BOOL", Primitive>;
+def ZString : KeywordType<"ZSTRING", Primitive>;
+
+// -----------------------------------------------------------------------------
+// Integral types
+// -----------------------------------------------------------------------------
+
+def Byte     : KeywordType<"BYTE", Integral>;
+def UByte    : KeywordType<"UBYTE", Integral>;
+def Short    : KeywordType<"SHORT", Integral>;
+def UShort   : KeywordType<"USHORT", Integral>;
+def Integer  : KeywordType<"INTEGER", Integral>;
+def UInteger : KeywordType<"UINTEGER", Integral>;
+def Long     : KeywordType<"LONG", Integral>;
+def ULong    : KeywordType<"ULONG", Integral>;
+
+// -----------------------------------------------------------------------------
+// Floating point values
+// -----------------------------------------------------------------------------
+
+def Single : KeywordType<"SINGLE", FloatingPoint>;
+def Double : KeywordType<"DOUBLE", FloatingPoint>;
+
+// -----------------------------------------------------------------------------
+// Compound types
+// -----------------------------------------------------------------------------
+
+def PointerType   : ConcreteType<"PointerType", Compound>;
+def ReferenceType : ConcreteType<"ReferenceType", Compound>;
+def QualifiedType : ConcreteType<"QualifiedType", Compound>;
+
+// -----------------------------------------------------------------------------
+// Aggregate types
+// -----------------------------------------------------------------------------
+
+def FunctionType : ConcreteType<"FunctionType", Aggregate>;
+
+// -----------------------------------------------------------------------------
+// Sentinel types
+// -----------------------------------------------------------------------------
+
+def VoidType : BaseType<Sentinel>;
+def NullType : BaseType<Sentinel>;
+def AnyType  : BaseType<Sentinel>;

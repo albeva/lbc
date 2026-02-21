@@ -8,7 +8,6 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
-
 namespace lbc {
 
 /**

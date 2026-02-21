@@ -15,6 +15,10 @@ add_executable(lbc-tblgen
     gens/ast/AstVisitorGen.hpp
     gens/diag/DiagGen.cpp
     gens/diag/DiagGen.hpp
+    gens/type/Type.cpp
+    gens/type/Type.hpp
+    gens/type/TypeBaseGen.cpp
+    gens/type/TypeBaseGen.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)

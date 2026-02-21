@@ -8,7 +8,6 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
-
 namespace lbc {
 
 /**
@@ -90,7 +89,7 @@ struct TokenKind final {
         TypeOf,
         Until,
         While,
-        BoolType,
+        Bool,
         ZString,
         Byte,
         UByte,
@@ -205,7 +204,7 @@ struct TokenKind final {
      * Check if this token belongs to the Type group
      */
     [[nodiscard]] constexpr auto isType() const -> bool {
-        return m_value >= BoolType && m_value <= Double;
+        return m_value >= Bool && m_value <= Double;
     }
 
     /**
@@ -495,7 +494,7 @@ struct TokenKind final {
             case TypeOf: return "TYPEOF";
             case Until: return "UNTIL";
             case While: return "WHILE";
-            case BoolType: return "BOOL";
+            case Bool: return "BOOL";
             case ZString: return "ZSTRING";
             case Byte: return "BYTE";
             case UByte: return "UBYTE";
@@ -550,7 +549,7 @@ struct TokenKind final {
      * Return all Type tokens
      */
     [[nodiscard]] static consteval auto allTypes() -> std::array<TokenKind, 12> { // NOLINT(*-magic-numbers)
-        return {BoolType, ZString, Byte, UByte, Short, UShort, Integer, UInteger, Long, ULong, Single, Double};
+        return {Bool, ZString, Byte, UByte, Short, UShort, Integer, UInteger, Long, ULong, Single, Double};
     }
 
     /**

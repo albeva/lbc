@@ -25,7 +25,7 @@ public:
         const RecordKeeper& records,
         StringRef generator = genName,
         StringRef ns = "lbc",
-        std::vector<StringRef> includes = { "pch.hpp", "Utilities/LiteralValue.hpp", "Lexer/TokenKind.hpp" }
+        std::vector<StringRef> includes = { "pch.hpp", "Symbol/LiteralValue.hpp", "Lexer/TokenKind.hpp" }
     );
 
     [[nodiscard]] auto run() -> bool override;

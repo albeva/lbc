@@ -112,7 +112,7 @@ public:
     [[nodiscard]] constexpr auto isString() const -> bool { return is<String>(); }
 
     /** Get the underlying variant directly. */
-    [[nodiscard]] constexpr auto getValue() const -> const Value& { return m_value; }
+    [[nodiscard]] constexpr auto storage() const -> const Value& { return m_value; }
 
     /** Convert the stored value to its string representation. */
     [[nodiscard]] auto asString() const -> std::string {
