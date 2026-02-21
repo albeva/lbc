@@ -37,10 +37,11 @@ auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnT
     return arr.emplace_back(create<TypeFunction>(params, returnType));
 }
 
-auto TypeFactory::getQualifiedWith(const Type* type, const TypeQualifierFlags flags) -> const TypeQualified* {
+auto TypeFactory::getQualifiedWith(const Type* type, TypeQualifierFlags flags) -> const TypeQualified* {
     if (const auto* qual = llvm::dyn_cast<TypeQualified>(type)) {
         using namespace ::flags;
-        return getQualifiedWith(qual->getBaseType(), qual->getFlags() | flags);
+        type = qual->getBaseType();
+        flags |= qual->getFlags();
     }
 
     auto& arr = m_qualified[type];
