@@ -210,7 +210,7 @@ TEST(TypeFactoryTests, FunctionType) {
     Context context;
     auto& tf = context.getTypeFactory();
 
-    const Type* params[] = { tf.getInteger(), tf.getBool() };
+    std::array<const Type*, 2> params { tf.getInteger(), tf.getBool() };
     const auto* fn = tf.getFunction(params, tf.getVoid());
 
     EXPECT_TRUE(fn->isFunction());
@@ -234,7 +234,7 @@ TEST(TypeFactoryTests, FunctionStability) {
     Context context;
     auto& tf = context.getTypeFactory();
 
-    const Type* params[] = { tf.getInteger(), tf.getBool() };
+    std::array<const Type*, 2> params { tf.getInteger(), tf.getBool() };
     const auto* fn1 = tf.getFunction(params, tf.getVoid());
     const auto* fn2 = tf.getFunction(params, tf.getVoid());
     EXPECT_EQ(fn1, fn2);
@@ -244,7 +244,7 @@ TEST(TypeFactoryTests, FunctionDistinctReturnType) {
     Context context;
     auto& tf = context.getTypeFactory();
 
-    const Type* params[] = { tf.getInteger() };
+    std::array<const Type*, 1> params { tf.getInteger() };
     EXPECT_NE(tf.getFunction(params, tf.getVoid()), tf.getFunction(params, tf.getBool()));
 }
 
@@ -252,7 +252,7 @@ TEST(TypeFactoryTests, FunctionDistinctParams) {
     Context context;
     auto& tf = context.getTypeFactory();
 
-    const Type* p1[] = { tf.getInteger() };
-    const Type* p2[] = { tf.getBool() };
+    std::array<const Type*, 1> p1 { tf.getInteger() };
+    std::array<const Type*, 1> p2 { tf.getBool() };
     EXPECT_NE(tf.getFunction(p1, tf.getVoid()), tf.getFunction(p2, tf.getVoid()));
 }
