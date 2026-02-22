@@ -38,6 +38,7 @@ public:
     // -------------------------------------------------------------------------
 
     [[nodiscard]] auto compare(const Type* from) const -> TypeComparisonResult;
+    [[nodiscard]] auto common(const Type* other) const -> const Type*;
 
     // -------------------------------------------------------------------------
     // Utilities

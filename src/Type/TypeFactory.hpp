@@ -56,7 +56,6 @@ private:
     /** Create and register all singleton type instances. */
     void createSingletonTypes();
 
-    // NOLINTNEXTLINE(*-avoid-const-or-ref-data-members)
     Context& m_context;             ///< The owning context providing arena allocation
     const TypePointer* m_anyPtr {}; ///< Any Ptr is frequent, so pre-create it
 

@@ -78,9 +78,7 @@ auto toPointer(const TypePointer* target, const Type* from) -> TypeComparisonRes
 // target <- from
 auto toReference(const Type* target, const Type* from) -> TypeComparisonResult {
     if (auto res = target->getBaseType()->compare(from); res.result != TypeComparisonResult::Incompatible) {
-        if (res.result == TypeComparisonResult::Identical) {
-            res.result = TypeComparisonResult::Convertible;
-        }
+        res.result = TypeComparisonResult::Convertible;
         res.reference = TypeComparisonResult::Flags::Added;
         return res;
     }
@@ -122,4 +120,16 @@ auto Type::compare(const Type* from) const -> TypeComparisonResult {
     }
     // no match
     return TypeComparisonResult::Incompatible;
+}
+
+auto Type::common(const Type* other) const -> const Type* {
+    if (compare(other).result != TypeComparisonResult::Incompatible) {
+        return this;
+    }
+
+    if (other->compare(this).result != TypeComparisonResult::Incompatible) {
+        return other;
+    }
+
+    return nullptr;
 }

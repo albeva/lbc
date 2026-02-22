@@ -50,134 +50,86 @@ protected:
 // =============================================================================
 
 TEST_F(TypeComparisonTests, IdenticalTypes) {
+    const auto* intPtr = tf.getPointer(intTy);
+    const auto* intRef = tf.getReference(intTy);
     const Type* types[] = {
         voidTy, nullTy, anyTy, boolTy, zstringTy,
         byteTy, shortTy, intTy, longTy,
         ubyteTy, ushortTy, uintTy, ulongTy,
-        singleTy, doubleTy
+        singleTy, doubleTy,
+        intPtr, intRef
     };
     for (const auto* ty : types) {
         EXPECT_EQ(ty->compare(ty).result, R::Identical);
     }
 }
 
-TEST_F(TypeComparisonTests, PointerAndReferenceIdentity) {
-    const auto* intPtr = tf.getPointer(intTy);
-    const auto* intRef = tf.getReference(intTy);
-    EXPECT_EQ(intPtr->compare(intPtr).result, R::Identical);
-    EXPECT_EQ(intRef->compare(intRef).result, R::Identical);
-}
-
 // =============================================================================
-// Signed integral widening: BYTE -> SHORT -> INTEGER -> LONG
+// Signed integral: widening accepted, narrowing rejected
 // =============================================================================
 
-TEST_F(TypeComparisonTests, SignedWidening) {
+TEST_F(TypeComparisonTests, SignedIntegralConversions) {
     const TypeIntegral* chain[] = { byteTy, shortTy, intTy, longTy };
     for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
             expectConvertible(chain[j], chain[i], F::Added, F::Unchanged);
+            expectIncompatible(chain[i], chain[j]);
         }
     }
 }
 
 // =============================================================================
-// Unsigned integral widening: UBYTE -> USHORT -> UINTEGER -> ULONG
+// Unsigned integral: widening accepted, narrowing rejected
 // =============================================================================
 
-TEST_F(TypeComparisonTests, UnsignedWidening) {
+TEST_F(TypeComparisonTests, UnsignedIntegralConversions) {
     const TypeIntegral* chain[] = { ubyteTy, ushortTy, uintTy, ulongTy };
     for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
             expectConvertible(chain[j], chain[i], F::Added, F::Unchanged);
+            expectIncompatible(chain[i], chain[j]);
         }
     }
 }
 
 // =============================================================================
-// Floating-point widening: SINGLE -> DOUBLE
+// Floating-point: SINGLE -> DOUBLE accepted, reverse rejected
 // =============================================================================
 
-TEST_F(TypeComparisonTests, FloatWidening) {
+TEST_F(TypeComparisonTests, FloatingPointConversions) {
     expectConvertible(doubleTy, singleTy, F::Added, F::Unchanged);
+    expectIncompatible(singleTy, doubleTy);
 }
 
 // =============================================================================
-// Safe sign change: unsigned -> larger signed
+// Cross-sign: unsigned -> larger signed ok, everything else rejected
 // =============================================================================
 
-TEST_F(TypeComparisonTests, UnsignedToLargerSigned) {
+TEST_F(TypeComparisonTests, CrossSignConversions) {
     const TypeIntegral* unsigned_[] = { ubyteTy, ushortTy, uintTy, ulongTy };
     const TypeIntegral* signed_[] = { byteTy, shortTy, intTy, longTy };
 
-    // Each unsigned type can convert to any signed type with more bytes
     for (int u = 0; u < 4; u++) {
         for (int s = 0; s < 4; s++) {
+            // signed -> unsigned: always rejected
+            expectIncompatible(unsigned_[u], signed_[s]);
+
+            // unsigned -> signed: only if signed is strictly larger
             if (signed_[s]->getBytes() > unsigned_[u]->getBytes()) {
                 expectConvertible(signed_[s], unsigned_[u], F::Added, F::Added);
+            } else {
+                expectIncompatible(signed_[s], unsigned_[u]);
             }
         }
     }
 }
 
 // =============================================================================
-// Narrowing (REJECTED): larger -> smaller, same family
+// Integer <-> floating-point: always rejected
 // =============================================================================
 
-TEST_F(TypeComparisonTests, SignedNarrowing) {
-    const TypeIntegral* chain[] = { byteTy, shortTy, intTy, longTy };
-    for (int i = 0; i < 4; i++) {
-        for (int j = i + 1; j < 4; j++) {
-            expectIncompatible(chain[i], chain[j]);
-        }
-    }
-}
-
-TEST_F(TypeComparisonTests, UnsignedNarrowing) {
-    const TypeIntegral* chain[] = { ubyteTy, ushortTy, uintTy, ulongTy };
-    for (int i = 0; i < 4; i++) {
-        for (int j = i + 1; j < 4; j++) {
-            expectIncompatible(chain[i], chain[j]);
-        }
-    }
-}
-
-TEST_F(TypeComparisonTests, FloatNarrowing) {
-    expectIncompatible(singleTy, doubleTy);
-}
-
-// =============================================================================
-// Signed -> unsigned (REJECTED): always illegal regardless of size
-// =============================================================================
-
-TEST_F(TypeComparisonTests, SignedToUnsigned) {
-    const TypeIntegral* signed_[] = { byteTy, shortTy, intTy, longTy };
-    const TypeIntegral* unsigned_[] = { ubyteTy, ushortTy, uintTy, ulongTy };
-
-    for (const auto* s : signed_) {
-        for (const auto* u : unsigned_) {
-            expectIncompatible(u, s);
-        }
-    }
-}
-
-// =============================================================================
-// Unsigned -> signed same size (REJECTED)
-// =============================================================================
-
-TEST_F(TypeComparisonTests, UnsignedToSignedSameSize) {
-    expectIncompatible(byteTy, ubyteTy);
-    expectIncompatible(shortTy, ushortTy);
-    expectIncompatible(intTy, uintTy);
-    expectIncompatible(longTy, ulongTy);
-}
-
-// =============================================================================
-// Integer <-> floating-point (REJECTED)
-// =============================================================================
-
-TEST_F(TypeComparisonTests, IntegerToFloat) {
-    const Type* integrals[] = { byteTy, shortTy, intTy, longTy, ubyteTy, ushortTy, uintTy, ulongTy };
+TEST_F(TypeComparisonTests, IntegerFloatIncompatible) {
+    const Type* integrals[] = { byteTy, intTy, longTy, ubyteTy, uintTy };
     const Type* floats[] = { singleTy, doubleTy };
 
     for (const auto* i : integrals) {
@@ -189,83 +141,52 @@ TEST_F(TypeComparisonTests, IntegerToFloat) {
 }
 
 // =============================================================================
-// Incompatible type families
+// Incompatible type families (bool, void, zstring vs numerics)
 // =============================================================================
 
-TEST_F(TypeComparisonTests, BoolIncompatibleWithNumeric) {
-    const Type* numerics[] = { byteTy, intTy, longTy, ubyteTy, uintTy, singleTy, doubleTy };
-    for (const auto* n : numerics) {
-        expectIncompatible(n, boolTy);
-        expectIncompatible(boolTy, n);
-    }
-}
-
-TEST_F(TypeComparisonTests, VoidIncompatibleWithEverything) {
-    const Type* types[] = { boolTy, byteTy, intTy, doubleTy, nullTy };
-    for (const auto* ty : types) {
-        expectIncompatible(voidTy, ty);
-        expectIncompatible(ty, voidTy);
-    }
-}
-
-TEST_F(TypeComparisonTests, ZStringIncompatibleWithNumeric) {
+TEST_F(TypeComparisonTests, IncompatibleFamilies) {
+    const Type* isolated[] = { boolTy, voidTy, zstringTy };
     const Type* numerics[] = { byteTy, intTy, doubleTy };
-    for (const auto* n : numerics) {
-        expectIncompatible(zstringTy, n);
-        expectIncompatible(n, zstringTy);
+
+    for (const auto* iso : isolated) {
+        for (const auto* num : numerics) {
+            expectIncompatible(iso, num);
+            expectIncompatible(num, iso);
+        }
     }
+    expectIncompatible(voidTy, nullTy);
+    expectIncompatible(nullTy, voidTy);
 }
 
 // =============================================================================
 // Pointer conversions
 // =============================================================================
 
-TEST_F(TypeComparisonTests, PointerFromNull) {
+TEST_F(TypeComparisonTests, PointerConversions) {
     const auto* intPtr = tf.getPointer(intTy);
     const auto* bytePtr = tf.getPointer(byteTy);
     const auto* anyPtr = tf.getAnyPtr();
+    const auto* intPtrPtr = tf.getPointer(intPtr);
+
+    // null -> any pointer type
     EXPECT_EQ(intPtr->compare(nullTy).result, R::Convertible);
-    EXPECT_EQ(bytePtr->compare(nullTy).result, R::Convertible);
     EXPECT_EQ(anyPtr->compare(nullTy).result, R::Convertible);
-}
-
-TEST_F(TypeComparisonTests, NullToNonPointer) {
     expectIncompatible(intTy, nullTy);
-    expectIncompatible(doubleTy, nullTy);
-    expectIncompatible(boolTy, nullTy);
-}
 
-TEST_F(TypeComparisonTests, AnyPtrFromAnyPointer) {
-    const auto* anyPtr = tf.getAnyPtr();
-    const auto* intPtr = tf.getPointer(intTy);
-    const auto* bytePtr = tf.getPointer(byteTy);
+    // any pointer -> AnyPtr
     EXPECT_EQ(anyPtr->compare(intPtr).result, R::Convertible);
     EXPECT_EQ(anyPtr->compare(bytePtr).result, R::Convertible);
-}
-
-TEST_F(TypeComparisonTests, AnyPtrFromNonPointer) {
-    const auto* anyPtr = tf.getAnyPtr();
     expectIncompatible(anyPtr, intTy);
-    expectIncompatible(anyPtr, boolTy);
-}
 
-TEST_F(TypeComparisonTests, PointerMismatch) {
-    const auto* intPtr = tf.getPointer(intTy);
-    const auto* bytePtr = tf.getPointer(byteTy);
+    // mismatched pointee types
     expectIncompatible(intPtr, bytePtr);
     expectIncompatible(bytePtr, intPtr);
-}
 
-TEST_F(TypeComparisonTests, PointerToNonPointerIncompatible) {
-    const auto* intPtr = tf.getPointer(intTy);
+    // pointer vs non-pointer
     expectIncompatible(intPtr, intTy);
     expectIncompatible(intTy, intPtr);
-}
 
-TEST_F(TypeComparisonTests, NestedPointers) {
-    const auto* intPtr = tf.getPointer(intTy);
-    const auto* intPtrPtr = tf.getPointer(intPtr);
-    EXPECT_EQ(intPtrPtr->compare(intPtrPtr).result, R::Identical);
+    // nested pointer mismatch
     expectIncompatible(intPtrPtr, intPtr);
     expectIncompatible(intPtr, intPtrPtr);
 }
@@ -274,38 +195,34 @@ TEST_F(TypeComparisonTests, NestedPointers) {
 // Reference conversions
 // =============================================================================
 
-TEST_F(TypeComparisonTests, ReferenceFromValue) {
+TEST_F(TypeComparisonTests, ReferenceConversions) {
     const auto* intRef = tf.getReference(intTy);
-    auto res = intRef->compare(intTy);
-    EXPECT_EQ(res.result, R::Convertible);
-    EXPECT_EQ(res.reference, F::Added);
-}
 
-TEST_F(TypeComparisonTests, ValueFromReference) {
-    const auto* intRef = tf.getReference(intTy);
-    auto res = intTy->compare(intRef);
-    EXPECT_EQ(res.result, R::Convertible);
-    EXPECT_EQ(res.reference, F::Removed);
-}
+    // value -> reference (add ref)
+    auto toRef = intRef->compare(intTy);
+    EXPECT_EQ(toRef.result, R::Convertible);
+    EXPECT_EQ(toRef.reference, F::Added);
 
-TEST_F(TypeComparisonTests, ReferenceWithWidening) {
+    // reference -> value (remove ref)
+    auto fromRef = intTy->compare(intRef);
+    EXPECT_EQ(fromRef.result, R::Convertible);
+    EXPECT_EQ(fromRef.reference, F::Removed);
+
+    // value -> wider reference (add ref + widen)
     const auto* shortRef = tf.getReference(shortTy);
-    auto res = shortRef->compare(byteTy);
-    EXPECT_EQ(res.result, R::Convertible);
-    EXPECT_EQ(res.reference, F::Added);
-    EXPECT_EQ(res.size, F::Added);
-}
+    auto wider = shortRef->compare(byteTy);
+    EXPECT_EQ(wider.result, R::Convertible);
+    EXPECT_EQ(wider.reference, F::Added);
+    EXPECT_EQ(wider.size, F::Added);
 
-TEST_F(TypeComparisonTests, ValueFromReferenceWithWidening) {
+    // reference -> wider value (remove ref + widen)
     const auto* refByte = tf.getReference(byteTy);
-    auto res = intTy->compare(refByte);
-    EXPECT_EQ(res.result, R::Convertible);
-    EXPECT_EQ(res.size, F::Added);
-    EXPECT_EQ(res.reference, F::Removed);
-}
+    auto derefWider = intTy->compare(refByte);
+    EXPECT_EQ(derefWider.result, R::Convertible);
+    EXPECT_EQ(derefWider.reference, F::Removed);
+    EXPECT_EQ(derefWider.size, F::Added);
 
-TEST_F(TypeComparisonTests, ReferenceMismatch) {
-    const auto* intRef = tf.getReference(intTy);
+    // incompatible reference types
     const auto* dblRef = tf.getReference(doubleTy);
     expectIncompatible(intRef, dblRef);
     expectIncompatible(dblRef, intRef);
@@ -315,40 +232,101 @@ TEST_F(TypeComparisonTests, ReferenceMismatch) {
 // Function type comparisons
 // =============================================================================
 
-TEST_F(TypeComparisonTests, FunctionIdentical) {
+TEST_F(TypeComparisonTests, FunctionTypeComparisons) {
     std::array<const Type*, 2> params { intTy, byteTy };
     const auto* fn = tf.getFunction(params, voidTy);
+
+    // identity
     EXPECT_EQ(fn->compare(fn).result, R::Identical);
-}
 
-TEST_F(TypeComparisonTests, FunctionDifferentReturnType) {
-    const auto* fn1 = tf.getFunction({}, intTy);
-    const auto* fn2 = tf.getFunction({}, voidTy);
-    expectIncompatible(fn1, fn2);
-    expectIncompatible(fn2, fn1);
-}
+    // different return type
+    const auto* fnInt = tf.getFunction({}, intTy);
+    const auto* fnVoid = tf.getFunction({}, voidTy);
+    expectIncompatible(fnInt, fnVoid);
 
-TEST_F(TypeComparisonTests, FunctionDifferentParams) {
+    // different param types
     std::array<const Type*, 1> p1 { intTy };
     std::array<const Type*, 1> p2 { byteTy };
-    const auto* fn1 = tf.getFunction(p1, voidTy);
-    const auto* fn2 = tf.getFunction(p2, voidTy);
-    expectIncompatible(fn1, fn2);
-    expectIncompatible(fn2, fn1);
-}
+    expectIncompatible(tf.getFunction(p1, voidTy), tf.getFunction(p2, voidTy));
 
-TEST_F(TypeComparisonTests, FunctionDifferentParamCount) {
-    std::array<const Type*, 1> p1 { intTy };
-    std::array<const Type*, 2> p2 { intTy, intTy };
-    const auto* fn1 = tf.getFunction(p1, voidTy);
-    const auto* fn2 = tf.getFunction(p2, voidTy);
-    expectIncompatible(fn1, fn2);
-    expectIncompatible(fn2, fn1);
-}
+    // different param count
+    std::array<const Type*, 2> p3 { intTy, intTy };
+    expectIncompatible(tf.getFunction(p1, voidTy), tf.getFunction(p3, voidTy));
 
-TEST_F(TypeComparisonTests, FunctionIncompatibleWithNonFunction) {
-    const auto* fn = tf.getFunction({}, voidTy);
+    // function vs non-function
     expectIncompatible(fn, intTy);
     expectIncompatible(intTy, fn);
-    expectIncompatible(fn, tf.getPointer(intTy));
+}
+
+// =============================================================================
+// Common type: same family
+// =============================================================================
+
+TEST_F(TypeComparisonTests, CommonSameFamily) {
+    // Signed: common is the wider type, symmetric
+    const TypeIntegral* signedChain[] = { byteTy, shortTy, intTy, longTy };
+    for (int i = 0; i < 4; i++) {
+        EXPECT_EQ(signedChain[i]->common(signedChain[i]), signedChain[i]);
+        for (int j = i + 1; j < 4; j++) {
+            EXPECT_EQ(signedChain[i]->common(signedChain[j]), signedChain[j]);
+            EXPECT_EQ(signedChain[j]->common(signedChain[i]), signedChain[j]);
+        }
+    }
+
+    // Unsigned: common is the wider type
+    const TypeIntegral* unsignedChain[] = { ubyteTy, ushortTy, uintTy, ulongTy };
+    for (int i = 0; i < 4; i++) {
+        for (int j = i + 1; j < 4; j++) {
+            EXPECT_EQ(unsignedChain[i]->common(unsignedChain[j]), unsignedChain[j]);
+            EXPECT_EQ(unsignedChain[j]->common(unsignedChain[i]), unsignedChain[j]);
+        }
+    }
+
+    // Float: SINGLE + DOUBLE -> DOUBLE
+    EXPECT_EQ(singleTy->common(doubleTy), doubleTy);
+    EXPECT_EQ(doubleTy->common(singleTy), doubleTy);
+}
+
+// =============================================================================
+// Common type: mixed sign
+// =============================================================================
+
+TEST_F(TypeComparisonTests, CommonMixedSign) {
+    const TypeIntegral* unsigned_[] = { ubyteTy, ushortTy, uintTy, ulongTy };
+    const TypeIntegral* signed_[] = { byteTy, shortTy, intTy, longTy };
+
+    for (int u = 0; u < 4; u++) {
+        // Same size: no common type
+        EXPECT_EQ(signed_[u]->common(unsigned_[u]), nullptr);
+        EXPECT_EQ(unsigned_[u]->common(signed_[u]), nullptr);
+
+        // Unsigned -> larger signed: common is the signed type
+        for (int s = 0; s < 4; s++) {
+            if (signed_[s]->getBytes() > unsigned_[u]->getBytes()) {
+                EXPECT_EQ(unsigned_[u]->common(signed_[s]), signed_[s]);
+                EXPECT_EQ(signed_[s]->common(unsigned_[u]), signed_[s]);
+            }
+        }
+    }
+}
+
+// =============================================================================
+// Common type: incompatible
+// =============================================================================
+
+TEST_F(TypeComparisonTests, CommonIncompatible) {
+    // Integer <-> float
+    EXPECT_EQ(intTy->common(singleTy), nullptr);
+    EXPECT_EQ(doubleTy->common(longTy), nullptr);
+
+    // Different families
+    EXPECT_EQ(boolTy->common(intTy), nullptr);
+    EXPECT_EQ(voidTy->common(intTy), nullptr);
+    EXPECT_EQ(zstringTy->common(intTy), nullptr);
+
+    // Pointers: only identical pointers share a common type
+    const auto* intPtr = tf.getPointer(intTy);
+    const auto* bytePtr = tf.getPointer(byteTy);
+    EXPECT_EQ(intPtr->common(intPtr), intPtr);
+    EXPECT_EQ(intPtr->common(bytePtr), nullptr);
 }

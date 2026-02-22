@@ -13,6 +13,7 @@ TypeFactory::TypeFactory(Context& context)
 }
 
 auto TypeFactory::getPointer(const Type* type) -> const TypePointer* {
+    assert(not type->isReference() && "pointer to a reference");
     if (const auto iter = m_pointers.find(type); iter != m_pointers.end()) {
         return iter->second;
     }
@@ -20,6 +21,7 @@ auto TypeFactory::getPointer(const Type* type) -> const TypePointer* {
 }
 
 auto TypeFactory::getReference(const Type* type) -> const TypeReference* {
+    assert(not type->isReference() && "reference to a reference");
     if (const auto iter = m_references.find(type); iter != m_references.end()) {
         return iter->second;
     }
