@@ -70,7 +70,7 @@ private:
         }
     };
     using FunctionMap = std::unordered_map<llvm::hash_code, llvm::SmallVector<const TypeFunction*, 2>, FunctionKeyHash>;
-    FunctionMap m_functions; ///< Cached function types, keyed by hash of return type + params
+    FunctionMap m_functions; ///< Cached function types
 
     // -------------------------------------------------------------------------
     // Compound type caches (keyed by base type pointer)
