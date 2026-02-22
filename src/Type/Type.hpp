@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Comparison.hpp"
 #include "TypeBase.hpp"
 namespace lbc {
 class Context;
@@ -22,6 +23,10 @@ public:
     // Compound type queries
     // -------------------------------------------------------------------------
 
+    [[nodiscard]] constexpr auto isAnyPtr() const -> bool {
+        return isPointer() && getBaseType()->isAny();
+    }
+
     /** Check if the type is any integral type (signed or unsigned). */
     [[nodiscard]] constexpr auto isIntegral() const -> bool { return isSignedIntegral() || isUnsignedIntegral(); }
 
@@ -33,6 +38,17 @@ public:
 
     /** Check if the type has a volatile qualifier. */
     [[nodiscard]] constexpr virtual auto isVolatile() const -> bool { return false; }
+
+    // -------------------------------------------------------------------------
+    // Type comparison & conversions
+    // -------------------------------------------------------------------------
+
+    enum class ComparisonFlags : std::uint8_t {
+        Default = 0,
+        AllowRemovingConstFromPtr = 1U << 0U
+    };
+
+    [[nodiscard]] auto compare(const Type* from, ComparisonFlags flags = ComparisonFlags::Default) const -> TypeComparisonResult;
 
     // -------------------------------------------------------------------------
     // Utilities
@@ -52,5 +68,6 @@ protected:
     constexpr explicit Type(const TypeKind kind)
     : TypeBase(kind) { }
 };
+MARK_AS_FLAGS_ENUM(Type::ComparisonFlags);
 
 } // namespace lbc
