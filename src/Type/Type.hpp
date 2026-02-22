@@ -33,22 +33,11 @@ public:
     /** Check if the type is any numeric type (integral or floating point). */
     [[nodiscard]] constexpr auto isNumeric() const -> bool { return isIntegral() || isFloatingPoint(); }
 
-    /** Check if the type has a const qualifier. */
-    [[nodiscard]] constexpr virtual auto isConst() const -> bool { return false; }
-
-    /** Check if the type has a volatile qualifier. */
-    [[nodiscard]] constexpr virtual auto isVolatile() const -> bool { return false; }
-
     // -------------------------------------------------------------------------
     // Type comparison & conversions
     // -------------------------------------------------------------------------
 
-    enum class ComparisonFlags : std::uint8_t {
-        Default = 0,
-        AllowRemovingConstFromPtr = 1U << 0U
-    };
-
-    [[nodiscard]] auto compare(const Type* from, ComparisonFlags flags = ComparisonFlags::Default) const -> TypeComparisonResult;
+    [[nodiscard]] auto compare(const Type* from) const -> TypeComparisonResult;
 
     // -------------------------------------------------------------------------
     // Utilities
@@ -68,6 +57,5 @@ protected:
     constexpr explicit Type(const TypeKind kind)
     : TypeBase(kind) { }
 };
-MARK_AS_FLAGS_ENUM(Type::ComparisonFlags);
 
 } // namespace lbc

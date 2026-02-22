@@ -37,20 +37,6 @@ auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnT
     return arr.emplace_back(create<TypeFunction>(params, returnType));
 }
 
-auto TypeFactory::getQualifiedWith(const Type* type, TypeQualifierFlags flags) -> const TypeQualified* {
-    if (const auto* qual = llvm::dyn_cast<TypeQualified>(type)) {
-        using namespace ::flags;
-        type = qual->getBaseType();
-        flags |= qual->getFlags();
-    }
-
-    auto& arr = m_qualified[type];
-    if (const auto* found = std::ranges::find(arr, flags, &TypeQualified::getFlags); found != arr.end()) {
-        return *found;
-    }
-    return arr.emplace_back(create<TypeQualified>(type, flags));
-}
-
 auto TypeFactory::allocate(const std::size_t size, const std::size_t alignment) const -> void* {
     return m_context.allocate(size, alignment);
 }
@@ -97,7 +83,6 @@ void TypeFactory::createSingletonTypes() {
             break;
         case TypeKind::Pointer:
         case TypeKind::Reference:
-        case TypeKind::Qualified:
         case TypeKind::Function:
             std::unreachable();
         }

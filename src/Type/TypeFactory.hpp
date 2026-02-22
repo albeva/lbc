@@ -30,12 +30,6 @@ public:
     /** Get or create a reference type to the given base type. */
     [[nodiscard]] auto getReference(const Type* type) -> const TypeReference*;
 
-    /** Get or create a const-qualified version of the given type. */
-    [[nodiscard]] auto getConst(const Type* type) -> const TypeQualified* { return getQualifiedWith(type, TypeQualifierFlags::Const); }
-
-    /** Get or create a volatile-qualified version of the given type. */
-    [[nodiscard]] auto getVolatile(const Type* type) -> const TypeQualified* { return getQualifiedWith(type, TypeQualifierFlags::Volatile); }
-
     /** Get or create a function type with the given parameter and return types. */
     [[nodiscard]] auto getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction*;
 
@@ -43,13 +37,6 @@ public:
     [[nodiscard]] auto getContext() const -> Context& { return m_context; }
 
 private:
-    /**
-     * Get or create a qualified type with the given flags.
-     *
-     * If the input is already qualified, the flags are merged and
-     * the result wraps the original unqualified base type.
-     */
-    [[nodiscard]] auto getQualifiedWith(const Type* type, TypeQualifierFlags flags) -> const TypeQualified*;
 
     /** Allocate raw memory from the arena. */
     [[nodiscard]] auto allocate(std::size_t size, std::size_t alignment) const -> void*;
@@ -69,6 +56,7 @@ private:
     /** Create and register all singleton type instances. */
     void createSingletonTypes();
 
+    // NOLINTNEXTLINE(*-avoid-const-or-ref-data-members)
     Context& m_context;             ///< The owning context providing arena allocation
     const TypePointer* m_anyPtr {}; ///< Any Ptr is frequent, so pre-create it
 
@@ -91,9 +79,7 @@ private:
 
     template <typename T>
     using Map = std::unordered_map<const Type*, T>;
-    using QualArr = llvm::SmallVector<const TypeQualified*, 4>;
     Map<const TypePointer*> m_pointers;     ///< Cached pointer types
     Map<const TypeReference*> m_references; ///< Cached reference types
-    Map<QualArr> m_qualified;               ///< Cached qualified types, grouped by base type
 };
 } // namespace lbc

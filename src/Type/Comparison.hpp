@@ -9,9 +9,7 @@ struct TypeComparisonResult final {
     enum Result : std::uint8_t { // NOLINT(*-use-enum-class)
         Incompatible,
         Convertible,
-        Identical,
-        ToNullPtr,
-        FromNullPtr
+        Identical
     };
 
     enum class Flags : std::uint8_t {
@@ -21,7 +19,6 @@ struct TypeComparisonResult final {
     };
 
     Result result   : 4 = Result::Incompatible;
-    Flags constness : 2 = Flags::Unchanged;
     Flags sign      : 2 = Flags::Unchanged;
     Flags reference : 2 = Flags::Unchanged;
     Flags size      : 2 = Flags::Unchanged;

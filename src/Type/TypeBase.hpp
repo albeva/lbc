@@ -32,7 +32,6 @@ enum class TypeKind : std::uint8_t {
     Double,
     Pointer,
     Reference,
-    Qualified,
     Function,
 };
 /**
@@ -94,11 +93,10 @@ public:
 
     /// Compound types
     [[nodiscard]] constexpr auto isCompound() const -> bool {
-        return m_kind >= TypeKind::Pointer && m_kind <= TypeKind::Qualified;
+        return m_kind >= TypeKind::Pointer && m_kind <= TypeKind::Reference;
     }
     [[nodiscard]] constexpr auto isPointer() const -> bool { return m_kind == TypeKind::Pointer; }
     [[nodiscard]] constexpr auto isReference() const -> bool { return m_kind == TypeKind::Reference; }
-    [[nodiscard]] constexpr auto isQualified() const -> bool { return m_kind == TypeKind::Qualified; }
 
     /// Aggregate types
     [[nodiscard]] constexpr auto isAggregate() const -> bool {
