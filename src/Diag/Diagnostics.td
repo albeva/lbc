@@ -28,7 +28,7 @@ class Category;
 def System : Category;
 def Lex    : Category;
 def Parse  : Category;
-//def Sema   : Category;
+def Sema   : Category;
 //def IR     : Category;
 //def LLVM   : Category;
 
@@ -81,7 +81,8 @@ def expected            : Error<Parse, "E0201", "expected {expected}, found {fou
 // =============================================================================
 
 //def undeclaredIdentifier : Error<Sema, "E0300", "use of undeclared identifier {name}">;
-//def redefinition         : Error<Sema, "E0301", "redefinition of {name}">;
+def redefinition         : Error<Sema, "E0301", "redefinition of {name}">;
+def circularDependency   : Error<Sema, "E0302", "circular dependency on {name}">;
 //def typeMismatch         : Error<Sema, "E0302", "cannot convert {from} to {to}">;
 //def invalidOperands      : Error<Sema, "E0303", "invalid operands to {op}: {left} and {right}">;
 //def tooManyArguments     : Error<Sema, "E0304", "too many arguments: expected {expected:int}, got {got:int}">;

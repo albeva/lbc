@@ -29,6 +29,7 @@ class AstVarDecl;
 class AstFuncDecl;
 class AstFuncParamDecl;
 class AstExpr;
+class AstCastExpr;
 class AstVarExpr;
 class AstCallExpr;
 class AstLiteralExpr;

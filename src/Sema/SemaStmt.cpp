@@ -2,24 +2,48 @@
 // Created by Albert Varaksin on 19/02/2026.
 //
 #include "SemanticAnalyser.hpp"
+#include "Symbol/SymbolTable.hpp"
 using namespace lbc;
 
 auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
-    for (auto& decl : ast.getDecls()) {
-        TRY(visit(*decl));
+    const ValueRestorer restore { m_symbolTable };
+
+    // Set active symbol table (scope)
+    if (auto* symbolTable = ast.getSymbolTable()) {
+        m_symbolTable = symbolTable;
+    } else {
+        m_symbolTable = m_context.create<SymbolTable>(m_symbolTable);
+        ast.setSymbolTable(m_symbolTable);
     }
+
+    // seclare symbols
+    for (auto& decl : ast.getDecls()) {
+        TRY(declare(*decl));
+    }
+
+    // define symbols
+    for (auto& decl : ast.getDecls()) {
+        if (llvm::isa<AstFuncDecl>(decl)) {
+            TRY(define(*decl));
+        }
+    }
+
+    // process statements
     for (auto& stmt : ast.getStmts()) {
         TRY(visit(*stmt));
     }
+
+    // done
     return {};
 }
 
-auto SemanticAnalyser::accept(AstExprStmt& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstExprStmt& ast) -> Result {
+    return visit(*ast.getExpr());
 }
 
 auto SemanticAnalyser::accept(AstDeclareStmt& /*ast*/) -> Result {
-    return notImplemented();
+    /* NO OP, handled in stmtList */
+    return {};
 }
 
 auto SemanticAnalyser::accept(AstFuncStmt& /*ast*/) -> Result {
@@ -30,12 +54,18 @@ auto SemanticAnalyser::accept(AstReturnStmt& /*ast*/) -> Result {
     return notImplemented();
 }
 
-auto SemanticAnalyser::accept(AstDimStmt& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstDimStmt& ast) -> Result {
+    for (auto* decl : ast.getDecls()) {
+        TRY(visit(*decl));
+    }
+    return {};
 }
 
-auto SemanticAnalyser::accept(AstAssignStmt& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstAssignStmt& ast) -> Result {
+    TRY(visit(*ast.getAssignee()))
+    ast.getExpr()->setType(ast.getAssignee()->getType());
+    TRY(visit(*ast.getExpr()))
+    return {};
 }
 
 auto SemanticAnalyser::accept(AstIfStmt& /*ast*/) -> Result {

@@ -52,8 +52,17 @@ auto DiagEngine::log(
 ) -> DiagIndex {
     const auto index = m_messages.size();
     auto diagnostic = [&] -> llvm::SMDiagnostic {
-        if (loc.isValid()) {
-            return m_context.getSourceMgr().GetMessage(loc, message.first.getSeverity(), message.second, ranges);
+        const auto theLoc = [&] -> llvm::SMLoc {
+            if (loc.isValid()) {
+                return loc;
+            }
+            if (ranges.size() == 1) {
+                return ranges.front().Start;
+            }
+            return {};
+        }();
+        if (theLoc.isValid()) {
+            return m_context.getSourceMgr().GetMessage(theLoc, message.first.getSeverity(), message.second, ranges);
         }
         return { "", message.first.getSeverity(), message.second };
     }();

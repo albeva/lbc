@@ -11,6 +11,14 @@ auto AstExprPrinter::print(const AstExpr& ast) -> std::string {
     return m_output;
 }
 
+void AstExprPrinter::accept(const AstCastExpr& ast) {
+    m_output += "(";
+    accept(*ast.getExpr());
+    m_output += " AS ";
+    accept(*ast.getTypeExpr());
+    m_output += ")";
+}
+
 void AstExprPrinter::accept(const AstVarExpr& ast) {
     m_output += ast.getName();
 }

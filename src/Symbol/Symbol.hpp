@@ -32,7 +32,7 @@ enum class SymbolFlags : std::uint8_t {
  * Symbols are arena-allocated and owned by the Context. Each symbol tracks its name,
  * type, source location, visibility, and lifecycle state via SymbolFlags.
  */
-class Symbol final : TypedFlags<SymbolFlags> {
+class Symbol final : public TypedFlags<SymbolFlags> {
 public:
     NO_COPY_AND_MOVE(Symbol)
 
@@ -57,8 +57,8 @@ public:
     void setType(const Type* type) { m_type = type; }
 
     /** Get the source location where this symbol was declared. */
-    [[nodiscard]] auto getOrigin() const -> llvm::SMRange { return m_origin; }
-    void setOrigin(const llvm::SMRange origin) { m_origin = origin; }
+    [[nodiscard]] auto getRange() const -> llvm::SMRange { return m_range; }
+    void setRange(const llvm::SMRange origin) { m_range = origin; }
 
     /** Get the visibility of this symbol. */
     [[nodiscard]] auto getVisibility() const -> SymbolVisibility { return m_visibility; }
@@ -70,13 +70,17 @@ public:
     [[nodiscard]] auto getValue() const -> std::optional<LiteralValue> { return m_value; }
     void setValue(const std::optional<LiteralValue>& constant) { m_value = constant; }
 
+    [[nodiscard]] auto getRelatedSymbols() const -> std::span<Symbol*> { return m_relatedSymbols; }
+    void setRelatedSymbols(const std::span<Symbol*> relatedSymbols) { m_relatedSymbols = relatedSymbols; }
+
 private:
     llvm::StringRef m_name;              ///< symbol name
     llvm::StringRef m_alias;             ///< optional alias
     const Type* m_type;                  ///< symbol type
-    llvm::SMRange m_origin;              ///< declaration location
+    llvm::SMRange m_range;               ///< declaration location
     SymbolVisibility m_visibility;       ///< visibility of the symbol
     std::optional<LiteralValue> m_value; ///< constant value associated with the symbol
+    std::span<Symbol*> m_relatedSymbols; ///< related symbols, e.g. function parameters, or UDT members
 };
 
 } // namespace lbc

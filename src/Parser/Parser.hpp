@@ -97,7 +97,7 @@ private:
     /**
      * Create an error reporting what was @param expected vs. what was found.
      */
-    [[nodiscard]] auto expected(const diagnostics::Loggable auto& expected, const std::source_location& location = std::source_location::current()) -> DiagError {
+    [[nodiscard]] auto expected(const auto& expected, const std::source_location& location = std::source_location::current()) -> DiagError {
         return diag(diagnostics::expected(expected, m_token), m_token.getRange().Start, m_token.getRange(), location);
     }
 

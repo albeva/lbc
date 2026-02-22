@@ -9,6 +9,7 @@
 #include "Diag/LogProvider.hpp"
 namespace lbc {
 class Context;
+class SymbolTable;
 
 /**
  * Semantic analyser. Implementation is split across multiple
@@ -38,12 +39,24 @@ public:
 private:
     friend AstVisitor;
 
+    [[nodiscard]] auto getTypeFactory() const -> TypeFactory& { return m_context.getTypeFactory(); }
+
     /** Analyse the module root node. */
     [[nodiscard]] auto accept(AstModule& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Declarations (SemaDecl.cpp)
     // -------------------------------------------------------------------------
+
+    /**
+     * Declare a new symbol from ast node
+     */
+    [[nodiscard]] auto declare(AstDecl& ast) -> Result;
+
+    /**
+     * Define symbol from the ast.
+     */
+    [[nodiscard]] auto define(AstDecl& ast) -> Result;
 
     /** Analyse a variable declaration. */
     [[nodiscard]] auto accept(AstVarDecl& ast) -> Result;
@@ -65,7 +78,7 @@ private:
     [[nodiscard]] auto accept(AstExprStmt& ast) -> Result;
 
     /** Analyse a DECLARE statement. */
-    [[nodiscard]] auto accept(AstDeclareStmt& ast) -> Result;
+    [[nodiscard]] static auto accept(AstDeclareStmt& ast) -> Result;
 
     /** Analyse a function body statement. */
     [[nodiscard]] auto accept(AstFuncStmt& ast) -> Result;
@@ -85,6 +98,8 @@ private:
     // -------------------------------------------------------------------------
     // Expressions (SemaExpr.cpp)
     // -------------------------------------------------------------------------
+
+    [[nodiscard]] auto accept(AstCastExpr& ast) -> Result;
 
     /** Analyse a variable reference expression. */
     [[nodiscard]] auto accept(AstVarExpr& ast) -> Result;
@@ -121,6 +136,7 @@ private:
     // Data
     // -------------------------------------------------------------------------
     Context& m_context;
+    SymbolTable* m_symbolTable = nullptr;
 };
 
 } // namespace lbc

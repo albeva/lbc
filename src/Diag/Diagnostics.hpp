@@ -24,6 +24,8 @@ struct DiagKind final {
         invalidNumber,
         unexpected,
         expected,
+        redefinition,
+        circularDependency,
     };
 
     /**
@@ -33,12 +35,13 @@ struct DiagKind final {
         System,
         Lex,
         Parse,
+        Sema,
     };
 
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 6;
+    static constexpr std::size_t COUNT = 8;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -84,6 +87,9 @@ struct DiagKind final {
             case unexpected:
             case expected:
                 return Category::Parse;
+            case redefinition:
+            case circularDependency:
+                return Category::Sema;
         }
         std::unreachable();
     }
@@ -99,6 +105,8 @@ struct DiagKind final {
             case invalidNumber:
             case unexpected:
             case expected:
+            case redefinition:
+            case circularDependency:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -115,6 +123,8 @@ struct DiagKind final {
             case invalidNumber: return "E0102";
             case unexpected: return "E0200";
             case expected: return "E0201";
+            case redefinition: return "E0301";
+            case circularDependency: return "E0302";
         }
         std::unreachable();
     }
@@ -122,8 +132,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 6> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 8> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, redefinition, circularDependency };
     }
 
 private:
@@ -154,9 +164,6 @@ namespace lbc {
 using DiagMessage = std::pair<DiagKind, std::string>;
 
 namespace diagnostics {
-    template<typename T>
-    concept Loggable = std::formattable<T, char>;
-
     // -------------------------------------------------------------------------
     // System
     // -------------------------------------------------------------------------
@@ -190,13 +197,27 @@ namespace diagnostics {
     // -------------------------------------------------------------------------
 
     /// Create unexpected message
-    [[nodiscard]] inline auto unexpected(const Loggable auto& found) -> DiagMessage {
+    [[nodiscard]] inline auto unexpected(const auto& found) -> DiagMessage {
         return { DiagKind::unexpected, std::format("unexpected {}", found) };
     }
 
     /// Create expected message
-    [[nodiscard]] inline auto expected(const Loggable auto& expected, const Loggable auto& found) -> DiagMessage {
+    [[nodiscard]] inline auto expected(const auto& expected, const auto& found) -> DiagMessage {
         return { DiagKind::expected, std::format("expected {}, found {}", expected, found) };
+    }
+
+    // -------------------------------------------------------------------------
+    // Sema
+    // -------------------------------------------------------------------------
+
+    /// Create redefinition message
+    [[nodiscard]] inline auto redefinition(const auto& name) -> DiagMessage {
+        return { DiagKind::redefinition, std::format("redefinition of {}", name) };
+    }
+
+    /// Create circularDependency message
+    [[nodiscard]] inline auto circularDependency(const auto& name) -> DiagMessage {
+        return { DiagKind::circularDependency, std::format("circular dependency on {}", name) };
     }
 
 }

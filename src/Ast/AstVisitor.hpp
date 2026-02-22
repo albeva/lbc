@@ -68,6 +68,7 @@ protected:
  *     // void accept(const AstVarDecl& ast) const;
  *     // void accept(const AstFuncDecl& ast) const;
  *     // void accept(const AstFuncParamDecl& ast) const;
+ *     // void accept(const AstCastExpr& ast) const;
  *     // void accept(const AstVarExpr& ast) const;
  *     // void accept(const AstCallExpr& ast) const;
  *     // void accept(const AstLiteralExpr& ast) const;
@@ -118,6 +119,8 @@ public:
                 return self.accept(llvm::cast<AstFuncDecl>(ast));
             case AstKind::FuncParamDecl:
                 return self.accept(llvm::cast<AstFuncParamDecl>(ast));
+            case AstKind::CastExpr:
+                return self.accept(llvm::cast<AstCastExpr>(ast));
             case AstKind::VarExpr:
                 return self.accept(llvm::cast<AstVarExpr>(ast));
             case AstKind::CallExpr:
@@ -318,6 +321,7 @@ public:
  *         unhandled(ast);
  *     }
  *     
+ *     // void accept(const AstCastExpr& ast) const;
  *     // void accept(const AstVarExpr& ast) const;
  *     // void accept(const AstCallExpr& ast) const;
  *     // void accept(const AstLiteralExpr& ast) const;
@@ -338,6 +342,8 @@ public:
      */
     constexpr auto visit(this auto& self, std::derived_from<AstExpr> auto& ast) -> Result {
         switch (ast.getKind()) {
+            case AstKind::CastExpr:
+                return self.accept(llvm::cast<AstCastExpr>(ast));
             case AstKind::VarExpr:
                 return self.accept(llvm::cast<AstVarExpr>(ast));
             case AstKind::CallExpr:
@@ -381,6 +387,7 @@ public:
  *     [&](const AstFuncDecl& ast) {},
  *     [&](const AstFuncParamDecl& ast) {},
  *     /// Expr
+ *     [&](const AstCastExpr& ast) {},
  *     [&](const AstVarExpr& ast) {},
  *     [&](const AstCallExpr& ast) {},
  *     [&](const AstLiteralExpr& ast) {},
@@ -424,6 +431,8 @@ constexpr auto visit(std::derived_from<AstRoot> auto& ast, Callable&& callable) 
             return std::forward<Callable>(callable)(llvm::cast<AstFuncDecl>(ast));
         case AstKind::FuncParamDecl:
             return std::forward<Callable>(callable)(llvm::cast<AstFuncParamDecl>(ast));
+        case AstKind::CastExpr:
+            return std::forward<Callable>(callable)(llvm::cast<AstCastExpr>(ast));
         case AstKind::VarExpr:
             return std::forward<Callable>(callable)(llvm::cast<AstVarExpr>(ast));
         case AstKind::CallExpr:

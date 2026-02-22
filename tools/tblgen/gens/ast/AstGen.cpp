@@ -38,6 +38,8 @@ auto AstGen::run() -> bool {
  */
 void AstGen::forwardDecls() {
     line("class Type");
+    line("class SymbolTable");
+    line("class Symbol");
     newline();
 }
 

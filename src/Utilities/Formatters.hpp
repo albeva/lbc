@@ -2,7 +2,6 @@
 // Created by Albert on 17/02/2026.
 //
 #pragma once
-#include "pch.hpp"
 
 /**
  * std::format and std::print support for std::source_location

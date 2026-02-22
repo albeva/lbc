@@ -13,6 +13,8 @@
 namespace lbc {
 
 class Type;
+class SymbolTable;
+class Symbol;
 
 /**
  * Enumerates all concrete AST node kinds.
@@ -34,6 +36,7 @@ enum class AstKind : std::uint8_t {
     VarDecl,
     FuncDecl,
     FuncParamDecl,
+    CastExpr,
     VarExpr,
     CallExpr,
     LiteralExpr,
@@ -66,6 +69,7 @@ class AstVarDecl;
 class AstFuncDecl;
 class AstFuncParamDecl;
 class AstExpr;
+class AstCastExpr;
 class AstVarExpr;
 class AstCallExpr;
 class AstLiteralExpr;
@@ -102,7 +106,7 @@ public:
     }
 
     /// Number of AST leaf nodes
-    static constexpr std::size_t NODE_COUNT = 21;
+    static constexpr std::size_t NODE_COUNT = 22;
 
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
@@ -157,6 +161,7 @@ private:
         "AstVarDecl",
         "AstFuncDecl",
         "AstFuncParamDecl",
+        "AstCastExpr",
         "AstVarExpr",
         "AstCallExpr",
         "AstLiteralExpr",
@@ -364,9 +369,20 @@ public:
         return m_stmts;
     }
 
+    /// Get the symbolTable
+    [[nodiscard]] constexpr auto getSymbolTable() const -> SymbolTable* {
+        return m_symbolTable;
+    }
+
+    /// Set the symbolTable
+    void setSymbolTable(SymbolTable* symbolTable) {
+        m_symbolTable = symbolTable;
+    }
+
 private:
     std::span<AstDecl*> m_decls;
     std::span<AstStmt*> m_stmts;
+    SymbolTable* m_symbolTable = nullptr;
 };
 
 /**
@@ -645,9 +661,20 @@ public:
         m_type = type;
     }
 
+    /// Get the symbol
+    [[nodiscard]] constexpr auto getSymbol() const -> Symbol* {
+        return m_symbol;
+    }
+
+    /// Set the symbol
+    void setSymbol(Symbol* symbol) {
+        m_symbol = symbol;
+    }
+
 private:
     llvm::StringRef m_name;
     const Type* m_type = nullptr;
+    Symbol* m_symbol = nullptr;
 };
 
 /**
@@ -781,7 +808,7 @@ protected:
 public:
     /// LLVM RTTI support to check if given node is an AstExpr
     [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
-        return ast->getKind() >= AstKind::VarExpr && ast->getKind() <= AstKind::MemberExpr;
+        return ast->getKind() >= AstKind::CastExpr && ast->getKind() <= AstKind::MemberExpr;
     }
 
     /// Get the type
@@ -796,6 +823,51 @@ public:
 
 private:
     const Type* m_type = nullptr;
+};
+
+/**
+ * Casting
+ */
+class [[nodiscard]] AstCastExpr final : public AstExpr {
+public:
+    /**
+     * Construct an AstCastExpr node
+     */
+    constexpr AstCastExpr(
+        const llvm::SMRange range,
+        AstExpr* expr,
+        AstExpr* typeExpr,
+        const bool implicit
+    )
+    : AstExpr(AstKind::CastExpr, range)
+    , m_expr(expr)
+    , m_typeExpr(typeExpr)
+    , m_implicit(implicit) {}
+
+    /// LLVM RTTI support to check if given node is an AstCastExpr
+    [[nodiscard]] static constexpr auto classof(const AstRoot* ast) -> bool {
+        return ast->getKind() == AstKind::CastExpr;
+    }
+
+    /// Get the expr
+    [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
+        return m_expr;
+    }
+
+    /// Get the typeExpr
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstExpr* {
+        return m_typeExpr;
+    }
+
+    /// Get the implicit
+    [[nodiscard]] constexpr auto getImplicit() const -> bool {
+        return m_implicit;
+    }
+
+private:
+    AstExpr* m_expr;
+    AstExpr* m_typeExpr;
+    bool m_implicit;
 };
 
 /**

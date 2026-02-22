@@ -195,10 +195,6 @@ void DiagGen::diagKindFormatter() {
 
 void DiagGen::diagnosticFunctions() {
     block("namespace diagnostics", [&] {
-        line("template<typename T>", "");
-        line("concept Loggable = std::formattable<T, char>");
-        newline();
-
         for (const auto& cat : m_categories) {
             category(cat);
         }
@@ -276,7 +272,7 @@ auto DiagGen::messageSpec(const Record* record) -> std::pair<std::string, std::s
         }
 
         if (type.empty()) {
-            params += "const Loggable auto& ";
+            params += "const auto& ";
         } else {
             params += "const ";
             params += type;

@@ -10,6 +10,7 @@ if(DOXYGEN_FOUND)
 
     add_custom_target(docs
         COMMAND Doxygen::doxygen "${CMAKE_BINARY_DIR}/Doxyfile"
+        COMMAND open "${CMAKE_SOURCE_DIR}/docs/html/index.html"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         COMMENT "Generating documentation with Doxygen"
         VERBATIM

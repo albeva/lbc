@@ -106,7 +106,8 @@ def Stmt : Group<"statement", Root>;
 
 def StmtList : Leaf<"List of statements", Stmt, [
     Arg<"std::span<AstDecl*>", "decls">,
-    Arg<"std::span<AstStmt*>", "stmts">
+    Arg<"std::span<AstStmt*>", "stmts">,
+    Arg<"SymbolTable*", "symbolTable", true, "nullptr">
 ]>;
 
 def ExprStmt : Leaf<"Expression statement", Stmt, [
@@ -147,7 +148,8 @@ def IfStmt : Leaf<"IF statement", Stmt, [
 
 def Decl : Group<"declaration", Root, [
     Arg<"llvm::StringRef", "name">,
-    Arg<"const Type*", "type", true, "nullptr">
+    Arg<"const Type*", "type", true, "nullptr">,
+    Arg<"Symbol*", "symbol", true, "nullptr">
 ]>;
 
 def VarDecl : Leaf<"Variable declaration", Decl, [
@@ -171,6 +173,12 @@ def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [
 
 def Expr : Group<"expression", Root, [
     Arg<"const Type*", "type", true, "nullptr">
+]>;
+
+def CastExpr : Leaf<"Casting", Expr, [
+    Arg<"AstExpr*", "expr">,
+    Arg<"AstExpr*", "typeExpr">,
+    Arg<"bool", "implicit">,
 ]>;
 
 def VarExpr : Leaf<"Variable expression", Expr, [

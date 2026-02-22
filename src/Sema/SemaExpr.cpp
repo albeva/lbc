@@ -4,6 +4,10 @@
 #include "SemanticAnalyser.hpp"
 using namespace lbc;
 
+auto SemanticAnalyser::accept(AstCastExpr& /* ast */) -> Result {
+    return notImplemented();
+}
+
 auto SemanticAnalyser::accept(AstVarExpr& /*ast*/) -> Result {
     return notImplemented();
 }

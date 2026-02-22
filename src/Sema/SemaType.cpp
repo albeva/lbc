@@ -4,14 +4,25 @@
 #include "SemanticAnalyser.hpp"
 using namespace lbc;
 
-auto SemanticAnalyser::accept(AstBuiltInType& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstBuiltInType& ast) -> Result {
+    const auto kind = ast.getTokenKind();
+    const auto* type = getTypeFactory().getType(kind);
+    ast.setType(type);
+    return {};
 }
 
-auto SemanticAnalyser::accept(AstPointerType& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstPointerType& ast) -> Result {
+    auto& base = *ast.getTypeExpr();
+    TRY(visit(base));
+    const Type* type = getTypeFactory().getPointer(base.getType());
+    ast.setType(type);
+    return {};
 }
 
-auto SemanticAnalyser::accept(AstReferenceType& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstReferenceType& ast) -> Result {
+    auto& base = *ast.getTypeExpr();
+    TRY(visit(base));
+    const Type* type = getTypeFactory().getReference(base.getType());
+    ast.setType(type);
+    return {};
 }

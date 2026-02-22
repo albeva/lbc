@@ -17,6 +17,7 @@ private:
         m_output += ("unhandled " + ast.getClassName()).str();
     }
 
+    void accept(const AstCastExpr& ast);
     void accept(const AstVarExpr& ast);
     void accept(const AstCallExpr& ast);
     void accept(const AstLiteralExpr& ast);
