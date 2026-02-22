@@ -52,8 +52,7 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
         type = ty->getType();
     }
     if (auto* expr = ast.getExpr()) {
-        expr->setType(type);
-        TRY(visit(*expr));
+        TRY(expression(*expr, type));
         type = expr->getType();
     }
     ast.setType(type);

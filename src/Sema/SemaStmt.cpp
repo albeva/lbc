@@ -38,7 +38,7 @@ auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
 }
 
 auto SemanticAnalyser::accept(AstExprStmt& ast) -> Result {
-    return visit(*ast.getExpr());
+    return expression(*ast.getExpr(), nullptr);
 }
 
 auto SemanticAnalyser::accept(AstDeclareStmt& /*ast*/) -> Result {
@@ -63,8 +63,7 @@ auto SemanticAnalyser::accept(AstDimStmt& ast) -> Result {
 
 auto SemanticAnalyser::accept(AstAssignStmt& ast) -> Result {
     TRY(visit(*ast.getAssignee()))
-    ast.getExpr()->setType(ast.getAssignee()->getType());
-    TRY(visit(*ast.getExpr()))
+    TRY(expression(*ast.getExpr(), ast.getAssignee()->getType()))
     return {};
 }
 

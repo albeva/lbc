@@ -99,6 +99,8 @@ private:
     // Expressions (SemaExpr.cpp)
     // -------------------------------------------------------------------------
 
+    [[nodiscard]] auto expression(AstExpr& ast, const Type* implicitType) -> Result;
+
     [[nodiscard]] auto accept(AstCastExpr& ast) -> Result;
 
     /** Analyse a variable reference expression. */
@@ -119,6 +121,11 @@ private:
     /** Analyse a member access expression. */
     [[nodiscard]] auto accept(AstMemberExpr& ast) -> Result;
 
+    [[nodiscard]] auto coerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*>;
+    [[nodiscard]] auto castOrCoerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*>;
+    [[nodiscard]] auto coerceLiteral(AstLiteralExpr* ast, const Type* targetType) -> Result;
+    void setSuggestedType(const Type* implicitType);
+
     // -------------------------------------------------------------------------
     // Types (SemaType.cpp)
     // -------------------------------------------------------------------------
@@ -137,6 +144,13 @@ private:
     // -------------------------------------------------------------------------
     Context& m_context;
     SymbolTable* m_symbolTable = nullptr;
+
+    // During expression evaluation, expression will be cast or
+    // coerced to expected type, if one exists
+    const Type* m_implicitType = nullptr;
+    // Type that may propagate from expression during analyses
+    // "2 + 3 as byte" - result should be byte type
+    const Type* m_suggestedType = nullptr;
 };
 
 } // namespace lbc

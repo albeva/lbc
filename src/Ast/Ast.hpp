@@ -854,14 +854,29 @@ public:
         return m_expr;
     }
 
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
+    }
+
     /// Get the typeExpr
     [[nodiscard]] constexpr auto getTypeExpr() const -> AstExpr* {
         return m_typeExpr;
     }
 
+    /// Set the typeExpr
+    void setTypeExpr(AstExpr* typeExpr) {
+        m_typeExpr = typeExpr;
+    }
+
     /// Get the implicit
     [[nodiscard]] constexpr auto getImplicit() const -> bool {
         return m_implicit;
+    }
+
+    /// Set the implicit
+    void setImplicit(const bool implicit) {
+        m_implicit = implicit;
     }
 
 private:
@@ -895,8 +910,19 @@ public:
         return m_name;
     }
 
+    /// Get the symbol
+    [[nodiscard]] constexpr auto getSymbol() const -> Symbol* {
+        return m_symbol;
+    }
+
+    /// Set the symbol
+    void setSymbol(Symbol* symbol) {
+        m_symbol = symbol;
+    }
+
 private:
     llvm::StringRef m_name;
+    Symbol* m_symbol = nullptr;
 };
 
 /**
@@ -924,6 +950,11 @@ public:
     /// Get the callee
     [[nodiscard]] constexpr auto getCallee() const -> AstExpr* {
         return m_callee;
+    }
+
+    /// Set the callee
+    void setCallee(AstExpr* callee) {
+        m_callee = callee;
     }
 
     /// Get the args
@@ -992,6 +1023,11 @@ public:
         return m_expr;
     }
 
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
+    }
+
     /// Get the op
     [[nodiscard]] constexpr auto getOp() const -> TokenKind {
         return m_op;
@@ -1031,9 +1067,19 @@ public:
         return m_left;
     }
 
+    /// Set the left
+    void setLeft(AstExpr* left) {
+        m_left = left;
+    }
+
     /// Get the right
     [[nodiscard]] constexpr auto getRight() const -> AstExpr* {
         return m_right;
+    }
+
+    /// Set the right
+    void setRight(AstExpr* right) {
+        m_right = right;
     }
 
     /// Get the op
@@ -1076,9 +1122,19 @@ public:
         return m_left;
     }
 
+    /// Set the left
+    void setLeft(AstExpr* left) {
+        m_left = left;
+    }
+
     /// Get the right
     [[nodiscard]] constexpr auto getRight() const -> AstExpr* {
         return m_right;
+    }
+
+    /// Set the right
+    void setRight(AstExpr* right) {
+        m_right = right;
     }
 
     /// Get the op

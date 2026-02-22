@@ -176,17 +176,18 @@ def Expr : Group<"expression", Root, [
 ]>;
 
 def CastExpr : Leaf<"Casting", Expr, [
-    Arg<"AstExpr*", "expr">,
-    Arg<"AstExpr*", "typeExpr">,
-    Arg<"bool", "implicit">,
+    Arg<"AstExpr*", "expr", true>,
+    Arg<"AstExpr*", "typeExpr", true>,
+    Arg<"bool", "implicit", true>,
 ]>;
 
 def VarExpr : Leaf<"Variable expression", Expr, [
     Arg<"llvm::StringRef", "name">,
+    Arg<"Symbol*", "symbol", true, "nullptr">,
 ]>;
 
 def CallExpr : Leaf<"CALL expression", Expr, [
-    Arg<"AstExpr*", "callee">,
+    Arg<"AstExpr*", "callee", true>,
     Arg<"std::span<AstExpr*>", "args">,
 ]>;
 
@@ -195,18 +196,18 @@ def LiteralExpr : Leaf<"Literal expression", Expr, [
 ]>;
 
 def UnaryExpr : Leaf<"Unary expression", Expr, [
-    Arg<"AstExpr*", "expr">,
+    Arg<"AstExpr*", "expr", true>,
     Arg<"TokenKind", "op">,
 ]>;
 
 def BinaryExpr : Leaf<"Binary expression", Expr, [
-    Arg<"AstExpr*", "left">,
-    Arg<"AstExpr*", "right">,
+    Arg<"AstExpr*", "left", true>,
+    Arg<"AstExpr*", "right", true>,
     Arg<"TokenKind", "op">,
 ]>;
 
 def MemberExpr : Leaf<"Member access", Expr, [
-    Arg<"AstExpr*", "left">,
-    Arg<"AstExpr*", "right">,
+    Arg<"AstExpr*", "left", true>,
+    Arg<"AstExpr*", "right", true>,
     Arg<"TokenKind", "op">,
 ]>;
