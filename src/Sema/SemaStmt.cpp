@@ -56,7 +56,7 @@ auto SemanticAnalyser::accept(AstReturnStmt& /*ast*/) -> Result {
 
 auto SemanticAnalyser::accept(AstDimStmt& ast) -> Result {
     for (auto* decl : ast.getDecls()) {
-        TRY(visit(*decl));
+        TRY(define(*decl));
     }
     return {};
 }

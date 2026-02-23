@@ -8,9 +8,7 @@ using namespace lbc;
 
 namespace {
 [[nodiscard]] auto isAccessibleVariable(const Symbol* symbol) -> bool {
-    return symbol->hasFlag(SymbolFlags::Declared)
-        || symbol->hasFlag(SymbolFlags::Function)
-        || symbol->hasFlag(SymbolFlags::Type);
+    return symbol->hasFlag(SymbolFlags::Defined);
 }
 } // namespace
 
