@@ -123,13 +123,13 @@ auto Type::compare(const Type* from) const -> TypeComparisonResult {
 }
 
 auto Type::common(const Type* other) const -> const Type* {
-    if (compare(other).result != TypeComparisonResult::Incompatible) {
-        return this;
+    auto [lhs, res1] = removeRef(this);
+    auto [rhs, res2] = removeRef(other);
+    if (lhs->compare(rhs).result != TypeComparisonResult::Incompatible) {
+        return lhs;
     }
-
-    if (other->compare(this).result != TypeComparisonResult::Incompatible) {
-        return other;
+    if (rhs->compare(lhs).result != TypeComparisonResult::Incompatible) {
+        return rhs;
     }
-
     return nullptr;
 }
