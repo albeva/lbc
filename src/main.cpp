@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include <llvm/Support/InitLLVM.h>
+#include "Ast/AstCodePrinter.hpp"
 #include "Driver/Context.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
@@ -22,6 +23,9 @@ auto main(int argc, const char* argv[]) -> int {
     if (!sema.analyse(*module.value())) {
         return EXIT_FAILURE;
     }
+
+    lbc::AstCodePrinter printer;
+    printer.print(*module.value());
 
     return EXIT_SUCCESS;
 }

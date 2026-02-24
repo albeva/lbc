@@ -4,7 +4,7 @@
 #include "pch.hpp"
 #include <gtest/gtest.h>
 #include "Ast/Ast.hpp"
-#include "Ast/AstExprPrinter.hpp"
+#include "Ast/AstCodePrinter.hpp"
 #include "Driver/Context.hpp"
 #include "Parser/Parser.hpp"
 using namespace lbc;
@@ -39,7 +39,11 @@ auto parseExpr(llvm::StringRef expr) -> std::string {
     auto* varExpr = decls[0]->getExpr();
     EXPECT_NE(varExpr, nullptr);
 
-    return AstExprPrinter {}.print(*varExpr);
+    std::string output = "";
+    llvm::raw_string_ostream ss { output };
+    AstCodePrinter printer { ss };
+    printer.print(*varExpr);
+    return output;
 }
 
 } // namespace

@@ -234,6 +234,34 @@ TEST(SemaExprTests, NullToReferenceRejected) {
 }
 
 // =============================================================================
+// Error paths — unary
+// =============================================================================
+
+TEST(SemaExprTests, NegateNonNumericRejected) {
+    EXPECT_TRUE(semaFails("DIM x = -true"));
+}
+
+TEST(SemaExprTests, LogicalNotNonBoolRejected) {
+    EXPECT_TRUE(semaFails("DIM x = NOT 42"));
+}
+
+TEST(SemaExprTests, DereferenceNonPointerRejected) {
+    EXPECT_TRUE(semaFails("DIM x = *42"));
+}
+
+// =============================================================================
+// Error paths — binary
+// =============================================================================
+
+TEST(SemaExprTests, AddStringToIntegerRejected) {
+    EXPECT_TRUE(semaFails("DIM x = 1 + \"hello\""));
+}
+
+TEST(SemaExprTests, LogicalAndIntegerRejected) {
+    EXPECT_TRUE(semaFails("DIM x = 1 AND 2"));
+}
+
+// =============================================================================
 // Explicit cast (AS) — requires parser support for suffix expressions
 // =============================================================================
 

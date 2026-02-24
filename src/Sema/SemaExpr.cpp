@@ -102,6 +102,9 @@ auto SemanticAnalyser::castOrCoerce(AstExpr* ast, const Type* targetType) -> Dia
 }
 
 void SemanticAnalyser::setSuggestedType(const Type* type) {
+    if (type == nullptr || !type->isNumeric()) {
+        return;
+    }
     if (m_suggestedType == nullptr) {
         m_suggestedType = type;
     } else {
@@ -170,7 +173,7 @@ auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
 }
 
 // Validate the operand type for each unary operator:
-// - Negate: numeric types only
+// - Negate: signed integral and floating-point types only
 // - LogicalNot: boolean only
 // - AddressOf: operand must be addressable (lvalue); produces a pointer
 // - Dereference: pointer types only; produces the pointee type
@@ -181,13 +184,14 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
     const auto op = ast.getOp();
 
     if (op == TokenKind::Negate) {
-        if (!operandType->isNumeric()) {
-            return diag(diagnostics::invalidOperands(op, *operandType, *operandType), {}, ast.getRange());
+        if (!(operandType->isSignedIntegral() || operandType->isFloatingPoint())) {
+
+            return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
         }
         ast.setType(operandType);
     } else if (op == TokenKind::LogicalNot) {
         if (!operandType->isBool()) {
-            return diag(diagnostics::invalidOperands(op, *operandType, *operandType), {}, ast.getRange());
+            return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
         }
         ast.setType(operandType);
     } else if (op == TokenKind::AddressOf) {
@@ -195,9 +199,11 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         ast.setType(getTypeFactory().getPointer(operandType));
     } else if (op == TokenKind::Dereference) {
         if (!operandType->isPointer()) {
-            return diag(diagnostics::invalidOperands(op, *operandType, *operandType), {}, ast.getRange());
+            return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
         }
         ast.setType(operandType->getBaseType());
+    } else {
+        std::unreachable();
     }
 
     setSuggestedType(ast.getType());
@@ -264,10 +270,7 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
             ast.setType(commonType);
         }
     } else if (category == TokenKind::Category::Logical) {
-        if (!left->getType()->isBool()) {
-            return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), {}, ast.getRange());
-        }
-        if (!right->getType()->isBool()) {
+        if (!left->getType()->isBool() || !right->getType()->isBool()) {
             return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), {}, ast.getRange());
         }
         ast.setType(getTypeFactory().getBool());

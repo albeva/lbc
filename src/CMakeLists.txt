@@ -5,7 +5,7 @@ add_library(lbc_lib)
 target_sources(lbc_lib
     PRIVATE
     Ast/Ast.cpp
-    Ast/AstExprPrinter.cpp
+    Ast/AstCodePrinter.cpp
     Diag/DiagEngine.cpp
     Driver/Context.cpp
     Lexer/Lexer.cpp
@@ -29,7 +29,7 @@ target_sources(lbc_lib
     Type/TypeFactory.cpp
 
     PUBLIC FILE_SET HEADERS FILES
-    Ast/AstExprPrinter.hpp
+    Ast/AstCodePrinter.hpp
     Diag/DiagEngine.hpp
     Diag/LogProvider.hpp
     Driver/Context.hpp

@@ -54,12 +54,14 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
     if (auto* expr = ast.getExpr()) {
         TRY_DECL(repl, expression(*expr, type));
         ast.setExpr(repl);
-        type = expr->getType();
+        type = repl->getType();
     }
-    if (type != nullptr && type->isReference() && ast.getExpr() == nullptr) {
+    assert(type != nullptr && "failed to infer type");
+
+    if (type->isReference() && ast.getExpr() == nullptr) {
         return diag(diagnostics::uninitializedReference(ast.getName()), ast.getRange().Start, ast.getRange());
     }
-    if (type != nullptr && type->isNull()) {
+    if (type->isNull()) {
         return diag(diagnostics::nullVariable(), ast.getRange().Start, ast.getRange());
     }
     ast.setType(type);
