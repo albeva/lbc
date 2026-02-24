@@ -25,6 +25,7 @@ struct DiagKind final {
         unexpected,
         expected,
         undeclaredIdentifier,
+        useBeforeDefinition,
         redefinition,
         circularDependency,
         typeMismatch,
@@ -35,7 +36,7 @@ struct DiagKind final {
         referenceToReference,
         pointerToReference,
         nullVariable,
-        addressOfNull,
+        nonAddressableExpr,
     };
 
     /**
@@ -51,7 +52,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 18;
+    static constexpr std::size_t COUNT = 19;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -98,6 +99,7 @@ struct DiagKind final {
             case expected:
                 return Category::Parse;
             case undeclaredIdentifier:
+            case useBeforeDefinition:
             case redefinition:
             case circularDependency:
             case typeMismatch:
@@ -108,7 +110,7 @@ struct DiagKind final {
             case referenceToReference:
             case pointerToReference:
             case nullVariable:
-            case addressOfNull:
+            case nonAddressableExpr:
                 return Category::Sema;
         }
         std::unreachable();
@@ -126,6 +128,7 @@ struct DiagKind final {
             case unexpected:
             case expected:
             case undeclaredIdentifier:
+            case useBeforeDefinition:
             case redefinition:
             case circularDependency:
             case typeMismatch:
@@ -136,7 +139,7 @@ struct DiagKind final {
             case referenceToReference:
             case pointerToReference:
             case nullVariable:
-            case addressOfNull:
+            case nonAddressableExpr:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -154,17 +157,18 @@ struct DiagKind final {
             case unexpected: return "E0200";
             case expected: return "E0201";
             case undeclaredIdentifier: return "E0300";
-            case redefinition: return "E0301";
-            case circularDependency: return "E0302";
-            case typeMismatch: return "E0303";
-            case invalidOperands: return "E0304";
-            case tooManyArguments: return "E0305";
-            case tooFewArguments: return "E0306";
-            case uninitializedReference: return "E0307";
-            case referenceToReference: return "E0308";
-            case pointerToReference: return "E0309";
-            case nullVariable: return "E0310";
-            case addressOfNull: return "E0311";
+            case useBeforeDefinition: return "E0301";
+            case redefinition: return "E0302";
+            case circularDependency: return "E0303";
+            case typeMismatch: return "E0304";
+            case invalidOperands: return "E0305";
+            case tooManyArguments: return "E0306";
+            case tooFewArguments: return "E0307";
+            case uninitializedReference: return "E0308";
+            case referenceToReference: return "E0309";
+            case pointerToReference: return "E0310";
+            case nullVariable: return "E0311";
+            case nonAddressableExpr: return "E0312";
         }
         std::unreachable();
     }
@@ -172,8 +176,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 18> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, undeclaredIdentifier, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, addressOfNull };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 19> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr };
     }
 
 private:
@@ -255,6 +259,11 @@ namespace diagnostics {
         return { DiagKind::undeclaredIdentifier, std::format("use of undeclared identifier {}", name) };
     }
 
+    /// Create useBeforeDefinition message
+    [[nodiscard]] inline auto useBeforeDefinition(const auto& name) -> DiagMessage {
+        return { DiagKind::useBeforeDefinition, std::format("use of identifier before definition {}", name) };
+    }
+
     /// Create redefinition message
     [[nodiscard]] inline auto redefinition(const auto& name) -> DiagMessage {
         return { DiagKind::redefinition, std::format("redefinition of {}", name) };
@@ -305,9 +314,9 @@ namespace diagnostics {
         return { DiagKind::nullVariable, "cannot declare a variable of type null" };
     }
 
-    /// Create addressOfNull message
-    [[nodiscard]] inline auto addressOfNull() -> DiagMessage {
-        return { DiagKind::addressOfNull, "cannot take address of null" };
+    /// Create nonAddressableExpr message
+    [[nodiscard]] inline auto nonAddressableExpr() -> DiagMessage {
+        return { DiagKind::nonAddressableExpr, "cannot take address from expression" };
     }
 
 }

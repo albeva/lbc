@@ -29,8 +29,6 @@ def System : Category;
 def Lex    : Category;
 def Parse  : Category;
 def Sema   : Category;
-//def IR     : Category;
-//def LLVM   : Category;
 
 // =============================================================================
 // Diagnostic base
@@ -56,8 +54,6 @@ class Note<Category cat, string id, string msg>    : Diag<note, cat, id, msg>;
 // =============================================================================
 
 def notImplemented  : Error<System, "E0001", "Not implemented">;
-//def fileNotFound    : Error<System, "E0002", "file not found: {path}">;
-//def includeNotFound : Error<System, "E0003", "included file not found: {path}">;
 
 // =============================================================================
 // Lexer diagnostics
@@ -71,43 +67,24 @@ def invalidNumber      : Error<Lex, "E0102", "invalid number">;
 // Parser diagnostics
 // =============================================================================
 
-def unexpected          : Error<Parse, "E0200", "unexpected {found}">;
-def expected            : Error<Parse, "E0201", "expected {expected}, found {found}">;
-//def unexpectedEndOfFile : Error<Parse, "E0202", "unexpected end of file">;
-//def expectedType        : Error<Parse, "E0203", "expected type expression">;
+def unexpected : Error<Parse, "E0200", "unexpected {found}">;
+def expected   : Error<Parse, "E0201", "expected {expected}, found {found}">;
 
 // =============================================================================
 // Semantic diagnostics
 // =============================================================================
 
 def undeclaredIdentifier   : Error<Sema, "E0300", "use of undeclared identifier {name}">;
-def redefinition           : Error<Sema, "E0301", "redefinition of {name}">;
-def circularDependency     : Error<Sema, "E0302", "circular dependency on {name}">;
-def typeMismatch           : Error<Sema, "E0303", "cannot convert {from} to {to}">;
-def invalidOperands        : Error<Sema, "E0304", "invalid operands to {op}: {left} and {right}">;
-def tooManyArguments       : Error<Sema, "E0305", "too many arguments: expected {expected:std::size_t}, got {got:std::size_t}">;
-def tooFewArguments        : Error<Sema, "E0306", "too few arguments: expected {expected:std::size_t}, got {got:std::size_t}">;
-def uninitializedReference : Error<Sema, "E0307", "reference variable {name} must be initialised">;
-def referenceToReference   : Error<Sema, "E0308", "cannot create a reference to a reference">;
-def pointerToReference     : Error<Sema, "E0309", "cannot create a pointer to a reference">;
-def nullVariable           : Error<Sema, "E0310", "cannot declare a variable of type null">;
-def addressOfNull          : Error<Sema, "E0311", "cannot take address of null">;
-//def returnTypeMismatch   : Error<Sema, "E0306", "return type {found} does not match expected {expected}">;
-// Warnings
-//def unusedVariable       : Warning<Sema, "unused-variable", "unused variable {name}">;
-//def unusedParameter      : Warning<Sema, "unused-parameter", "unused parameter {name}">;
-// Notes
-//def declaredHere         : Note<Sema, "N0001", "{name} declared here">;
-//def previousDefinition   : Note<Sema, "N0002", "previous definition of {name} is here">;
+def useBeforeDefinition    : Error<Sema, "E0301", "use of identifier before definition {name}">;
+def redefinition           : Error<Sema, "E0302", "redefinition of {name}">;
+def circularDependency     : Error<Sema, "E0303", "circular dependency on {name}">;
+def typeMismatch           : Error<Sema, "E0304", "cannot convert {from} to {to}">;
+def invalidOperands        : Error<Sema, "E0305", "invalid operands to {op}: {left} and {right}">;
+def tooManyArguments       : Error<Sema, "E0306", "too many arguments: expected {expected:std::size_t}, got {got:std::size_t}">;
+def tooFewArguments        : Error<Sema, "E0307", "too few arguments: expected {expected:std::size_t}, got {got:std::size_t}">;
+def uninitializedReference : Error<Sema, "E0308", "reference variable {name} must be initialised">;
+def referenceToReference   : Error<Sema, "E0309", "cannot create a reference to a reference">;
+def pointerToReference     : Error<Sema, "E0310", "cannot create a pointer to a reference">;
+def nullVariable           : Error<Sema, "E0311", "cannot declare a variable of type null">;
+def nonAddressableExpr     : Error<Sema, "E0312", "cannot take address from expression">;
 
-// =============================================================================
-// IR diagnostics
-// =============================================================================
-
-//def invalidModule : Error<IR, "E0400", "failed to load module {name}: {reason}">;
-
-// =============================================================================
-// LLVM diagnostics
-// =============================================================================
-
-//def codegenFailure : Error<LLVM, "E0500", "code generation failed: {reason}">;

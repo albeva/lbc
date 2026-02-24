@@ -173,10 +173,16 @@ private:
 
     /**
      * Record a suggested type that propagates upward through binary expressions.
-     * Set once per expression tree — the first AS cast wins. Used to coerce
-     * sibling literal operands (e.g. `2 + 3 AS BYTE` types the 2 as BYTE).
+     * When multiple AS casts appear, the common type of all suggestions is used.
+     * Coerces sibling literal operands (e.g. `2 + 3 AS BYTE` types the 2 as BYTE).
      */
     void setSuggestedType(const Type* implicitType);
+
+    /**
+     * Verify that an expression is addressable (can have its address taken).
+     * Currently only variable references are addressable.
+     */
+    [[nodiscard]] auto ensureAddressable(AstExpr& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Types (SemaType.cpp)

@@ -47,6 +47,11 @@ auto SemanticAnalyser::expression(AstExpr& ast, const Type* implicitType) -> Dia
 // — their bit representation adapts to the target type at codegen time.
 
 auto SemanticAnalyser::coerceLiteral(AstLiteralExpr* ast, const Type* targetType) -> Result {
+    // Already expected type?
+    if (ast->getType() == targetType) {
+        return {};
+    }
+
     const auto value = ast->getValue();
 
     // Integral literal → any integral type
@@ -68,7 +73,7 @@ auto SemanticAnalyser::coerceLiteral(AstLiteralExpr* ast, const Type* targetType
     }
 
     // No cross-family coercion
-    return diag(diagnostics::typeMismatch(ast->getType()->string(), targetType->string()), {}, ast->getRange());
+    return diag(diagnostics::typeMismatch(*ast->getType(), *targetType), {}, ast->getRange());
 }
 
 auto SemanticAnalyser::coerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*> {
@@ -98,7 +103,16 @@ auto SemanticAnalyser::castOrCoerce(AstExpr* ast, const Type* targetType) -> Dia
 void SemanticAnalyser::setSuggestedType(const Type* type) {
     if (m_suggestedType == nullptr) {
         m_suggestedType = type;
+    } else {
+        m_suggestedType = type->common(m_suggestedType);
     }
+}
+
+auto SemanticAnalyser::ensureAddressable(AstExpr& ast) -> Result {
+    if (llvm::isa<AstVarExpr>(ast)) {
+        return {};
+    }
+    return diag(diagnostics::nonAddressableExpr(), {}, ast.getRange());
 }
 
 // =============================================================================
@@ -143,6 +157,10 @@ auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
         return diag(diagnostics::undeclaredIdentifier(ast.getName()), {}, ast.getRange());
     }
 
+    if (not symbol->hasFlag(SymbolFlags::Defined)) {
+        return diag(diagnostics::useBeforeDefinition(symbol->getName()), {}, ast.getRange());
+    }
+
     ast.setSymbol(symbol);
     ast.setType(symbol->getType());
     return {};
@@ -170,10 +188,8 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         }
         ast.setType(operandType);
     } else if (op == TokenKind::AddressOf) {
-        if (const auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.getExpr());
-            literal != nullptr && literal->getValue().isNull()) {
-            return diag(diagnostics::addressOfNull(), {}, ast.getRange());
-        }
+        TRY(ensureAddressable(*ast.getExpr()))
+
         if (operandType->isReference()) {
             ast.setType(getTypeFactory().getPointer(operandType->getBaseType()));
         } else {
@@ -297,8 +313,7 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
     }
 
     for (std::size_t i = 0; i < args.size(); i++) {
-        TRY_DECL(replace, expression(*args[i], params[i]));
-        args[i] = replace;
+        TRY_ASSIGN(args[i], expression(*args[i], params[i]));
     }
 
     ast.setType(funcType->getReturnType());
