@@ -119,7 +119,7 @@ void AstCodePrinter::accept(const AstVarDecl& ast) {
 
 void AstCodePrinter::accept(const AstFuncDecl& ast) {
     const bool isSub = ast.getRetTypeExpr() == nullptr;
-    m_output << (isSub ? "SUB " : "FUNCTION ");
+    m_output << (isSub ? "SUB" : "FUNCTION");
 
     if (not ast.getName().empty()) {
         m_output << " ";

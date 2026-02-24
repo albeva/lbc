@@ -51,7 +51,7 @@ private:
         } else if (const auto* typeExpr = node.getTypeExpr()) {
             visit(*typeExpr);
         } else {
-            m_output << "<unknown " << node->getClassName() << ">";
+            m_output << "/'<unknown type in " << node.getClassName() << ">'/";
         }
     }
 
