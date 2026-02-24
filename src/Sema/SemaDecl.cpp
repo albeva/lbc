@@ -55,6 +55,9 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
         TRY(expression(*expr, type));
         type = expr->getType();
     }
+    if (type != nullptr && type->isReference() && ast.getExpr() == nullptr) {
+        return diag(diagnostics::uninitializedReference(ast.getName()), ast.getRange().Start, ast.getRange());
+    }
     ast.setType(type);
     ast.getSymbol()->setType(type);
     return {};

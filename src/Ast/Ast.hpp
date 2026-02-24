@@ -836,7 +836,7 @@ public:
     constexpr AstCastExpr(
         const llvm::SMRange range,
         AstExpr* expr,
-        AstExpr* typeExpr,
+        AstType* typeExpr,
         const bool implicit
     )
     : AstExpr(AstKind::CastExpr, range)
@@ -860,12 +860,12 @@ public:
     }
 
     /// Get the typeExpr
-    [[nodiscard]] constexpr auto getTypeExpr() const -> AstExpr* {
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
 
     /// Set the typeExpr
-    void setTypeExpr(AstExpr* typeExpr) {
+    void setTypeExpr(AstType* typeExpr) {
         m_typeExpr = typeExpr;
     }
 
@@ -881,7 +881,7 @@ public:
 
 private:
     AstExpr* m_expr;
-    AstExpr* m_typeExpr;
+    AstType* m_typeExpr;
     bool m_implicit;
 };
 

@@ -14,6 +14,9 @@ auto SemanticAnalyser::accept(AstBuiltInType& ast) -> Result {
 auto SemanticAnalyser::accept(AstPointerType& ast) -> Result {
     auto& base = *ast.getTypeExpr();
     TRY(visit(base));
+    if (base.getType()->isReference()) {
+        return diag(diagnostics::pointerToReference(), ast.getRange().Start, ast.getRange());
+    }
     const Type* type = getTypeFactory().getPointer(base.getType());
     ast.setType(type);
     return {};
@@ -22,6 +25,9 @@ auto SemanticAnalyser::accept(AstPointerType& ast) -> Result {
 auto SemanticAnalyser::accept(AstReferenceType& ast) -> Result {
     auto& base = *ast.getTypeExpr();
     TRY(visit(base));
+    if (base.getType()->isReference()) {
+        return diag(diagnostics::referenceToReference(), ast.getRange().Start, ast.getRange());
+    }
     const Type* type = getTypeFactory().getReference(base.getType());
     ast.setType(type);
     return {};

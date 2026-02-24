@@ -80,13 +80,16 @@ def expected            : Error<Parse, "E0201", "expected {expected}, found {fou
 // Semantic diagnostics
 // =============================================================================
 
-//def undeclaredIdentifier : Error<Sema, "E0300", "use of undeclared identifier {name}">;
-def redefinition         : Error<Sema, "E0301", "redefinition of {name}">;
-def circularDependency   : Error<Sema, "E0302", "circular dependency on {name}">;
-//def typeMismatch         : Error<Sema, "E0302", "cannot convert {from} to {to}">;
-//def invalidOperands      : Error<Sema, "E0303", "invalid operands to {op}: {left} and {right}">;
-//def tooManyArguments     : Error<Sema, "E0304", "too many arguments: expected {expected:int}, got {got:int}">;
-//def tooFewArguments      : Error<Sema, "E0305", "too few arguments: expected {expected:int}, got {got:int}">;
+def undeclaredIdentifier   : Error<Sema, "E0300", "use of undeclared identifier {name}">;
+def redefinition           : Error<Sema, "E0301", "redefinition of {name}">;
+def circularDependency     : Error<Sema, "E0302", "circular dependency on {name}">;
+def typeMismatch           : Error<Sema, "E0303", "cannot convert {from} to {to}">;
+def invalidOperands        : Error<Sema, "E0304", "invalid operands to {op}: {left} and {right}">;
+def tooManyArguments       : Error<Sema, "E0305", "too many arguments: expected {expected:int}, got {got:int}">;
+def tooFewArguments        : Error<Sema, "E0306", "too few arguments: expected {expected:int}, got {got:int}">;
+def uninitializedReference : Error<Sema, "E0307", "reference variable {name} must be initialised">;
+def referenceToReference   : Error<Sema, "E0308", "cannot create a reference to a reference">;
+def pointerToReference     : Error<Sema, "E0309", "cannot create a pointer to a reference">;
 //def returnTypeMismatch   : Error<Sema, "E0306", "return type {found} does not match expected {expected}">;
 // Warnings
 //def unusedVariable       : Warning<Sema, "unused-variable", "unused variable {name}">;

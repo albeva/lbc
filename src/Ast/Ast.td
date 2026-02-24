@@ -177,7 +177,7 @@ def Expr : Group<"expression", Root, [
 
 def CastExpr : Leaf<"Casting", Expr, [
     Arg<"AstExpr*", "expr", true>,
-    Arg<"AstExpr*", "typeExpr", true>,
+    Arg<"AstType*", "typeExpr", true>,
     Arg<"bool", "implicit", true>,
 ]>;
 
