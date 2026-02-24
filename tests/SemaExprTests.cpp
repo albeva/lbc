@@ -77,6 +77,23 @@ auto deduceTypedExpr(llvm::StringRef typeName, llvm::StringRef expr) -> const Ty
     return type;
 }
 
+/**
+ * Parse and analyse the source, expecting semantic analysis to fail.
+ */
+auto semaFails(llvm::StringRef source) -> bool {
+    Context context;
+    auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");
+    auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
+    Parser parser { context, id };
+    auto parsed = parser.parse();
+    EXPECT_TRUE(parsed.has_value()) << "parse failed";
+    auto* module = parsed.value_or(nullptr);
+    EXPECT_NE(module, nullptr);
+    if (module == nullptr) { return false; }
+    SemanticAnalyser sema { context };
+    return !sema.analyse(*module).has_value();
+}
+
 } // namespace
 
 // =============================================================================
@@ -163,6 +180,59 @@ TEST(SemaExprTests, NegateFloat) {
 TEST(SemaExprTests, LogicalNotBool) {
     const auto* type = deduceExpr("NOT true");
     EXPECT_TRUE(type->isBool());
+}
+
+// =============================================================================
+// Null semantics
+// =============================================================================
+
+TEST(SemaExprTests, NullAssignedToPointer) {
+    const auto* type = deduceTypedExpr("INTEGER PTR", "null");
+    EXPECT_TRUE(type->isPointer());
+}
+
+TEST(SemaExprTests, NullEqualNullDeducesBool) {
+    const auto* type = deduceExpr("null = null");
+    EXPECT_TRUE(type->isBool());
+}
+
+TEST(SemaExprTests, NullNotEqualNullDeducesBool) {
+    const auto* type = deduceExpr("null <> null");
+    EXPECT_TRUE(type->isBool());
+}
+
+TEST(SemaExprTests, NullComparedWithPointer) {
+    Context context;
+    auto* module = analyse(context, "DIM ip AS INTEGER PTR\nDIM b = ip = null");
+    ASSERT_NE(module, nullptr);
+    auto stmts = module->getStmtList()->getStmts();
+    ASSERT_EQ(stmts.size(), 2);
+    auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[1]);
+    ASSERT_NE(dim, nullptr);
+    EXPECT_TRUE(dim->getDecls().front()->getType()->isBool());
+}
+
+TEST(SemaExprTests, NullNotEqualPointer) {
+    Context context;
+    auto* module = analyse(context, "DIM ip AS INTEGER PTR\nDIM b = ip <> null");
+    ASSERT_NE(module, nullptr);
+    auto stmts = module->getStmtList()->getStmts();
+    ASSERT_EQ(stmts.size(), 2);
+    auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[1]);
+    ASSERT_NE(dim, nullptr);
+    EXPECT_TRUE(dim->getDecls().front()->getType()->isBool());
+}
+
+TEST(SemaExprTests, NullVariableRejected) {
+    EXPECT_TRUE(semaFails("DIM x = null"));
+}
+
+TEST(SemaExprTests, AddressOfNullRejected) {
+    EXPECT_TRUE(semaFails("DIM x AS INTEGER PTR = @null"));
+}
+
+TEST(SemaExprTests, NullToReferenceRejected) {
+    EXPECT_TRUE(semaFails("DIM x AS INTEGER REF = null"));
 }
 
 // =============================================================================

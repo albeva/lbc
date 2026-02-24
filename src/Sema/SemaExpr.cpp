@@ -151,7 +151,8 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         }
         ast.setType(operandType);
     } else if (op == TokenKind::AddressOf) {
-        if (operandType->isNull()) {
+        if (const auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast.getExpr());
+            literal != nullptr && literal->getValue().isNull()) {
             return diag(diagnostics::addressOfNull(), ast.getRange().Start, ast.getRange());
         }
         if (operandType->isReference()) {
