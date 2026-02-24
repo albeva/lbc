@@ -139,7 +139,7 @@ void AstCodePrinter::accept(const AstFuncDecl& ast) {
     m_output << ")";
 
     if (!isSub) {
-        m_output << " A ";
+        m_output << " AS ";
         visit(*ast.getRetTypeExpr());
     }
 }
