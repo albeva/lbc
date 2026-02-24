@@ -151,6 +151,9 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         }
         ast.setType(operandType);
     } else if (op == TokenKind::AddressOf) {
+        if (operandType->isNull()) {
+            return diag(diagnostics::addressOfNull(), ast.getRange().Start, ast.getRange());
+        }
         if (operandType->isReference()) {
             ast.setType(getTypeFactory().getPointer(operandType->getBaseType()));
         } else {

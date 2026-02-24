@@ -34,6 +34,8 @@ struct DiagKind final {
         uninitializedReference,
         referenceToReference,
         pointerToReference,
+        nullVariable,
+        addressOfNull,
     };
 
     /**
@@ -49,7 +51,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 16;
+    static constexpr std::size_t COUNT = 18;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -105,6 +107,8 @@ struct DiagKind final {
             case uninitializedReference:
             case referenceToReference:
             case pointerToReference:
+            case nullVariable:
+            case addressOfNull:
                 return Category::Sema;
         }
         std::unreachable();
@@ -131,6 +135,8 @@ struct DiagKind final {
             case uninitializedReference:
             case referenceToReference:
             case pointerToReference:
+            case nullVariable:
+            case addressOfNull:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -157,6 +163,8 @@ struct DiagKind final {
             case uninitializedReference: return "E0307";
             case referenceToReference: return "E0308";
             case pointerToReference: return "E0309";
+            case nullVariable: return "E0310";
+            case addressOfNull: return "E0311";
         }
         std::unreachable();
     }
@@ -164,8 +172,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 16> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, undeclaredIdentifier, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 18> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, undeclaredIdentifier, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, addressOfNull };
     }
 
 private:
@@ -290,6 +298,16 @@ namespace diagnostics {
     /// Create pointerToReference message
     [[nodiscard]] inline auto pointerToReference() -> DiagMessage {
         return { DiagKind::pointerToReference, "cannot create a pointer to a reference" };
+    }
+
+    /// Create nullVariable message
+    [[nodiscard]] inline auto nullVariable() -> DiagMessage {
+        return { DiagKind::nullVariable, "cannot declare a variable of type null" };
+    }
+
+    /// Create addressOfNull message
+    [[nodiscard]] inline auto addressOfNull() -> DiagMessage {
+        return { DiagKind::addressOfNull, "cannot take address of null" };
     }
 
 }

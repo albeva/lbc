@@ -90,6 +90,8 @@ def tooFewArguments        : Error<Sema, "E0306", "too few arguments: expected {
 def uninitializedReference : Error<Sema, "E0307", "reference variable {name} must be initialised">;
 def referenceToReference   : Error<Sema, "E0308", "cannot create a reference to a reference">;
 def pointerToReference     : Error<Sema, "E0309", "cannot create a pointer to a reference">;
+def nullVariable           : Error<Sema, "E0310", "cannot declare a variable of type null">;
+def addressOfNull          : Error<Sema, "E0311", "cannot take address of null">;
 //def returnTypeMismatch   : Error<Sema, "E0306", "return type {found} does not match expected {expected}">;
 // Warnings
 //def unusedVariable       : Warning<Sema, "unused-variable", "unused variable {name}">;
