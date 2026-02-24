@@ -11,13 +11,6 @@ class TypeFactory;
  * Pointer type that points to another type (e.g. INTEGER PTR).
  */
 class TypePointer final : public Type {
-protected:
-    friend class TypeFactory;
-
-    explicit constexpr TypePointer(const Type* base)
-    : Type(TypeKind::Pointer)
-    , m_base(base) { }
-
 public:
     /** Get the pointed-to type. */
     [[nodiscard]] auto getBaseType() const -> const Type* override { return m_base; }
@@ -26,6 +19,16 @@ public:
     [[nodiscard]] constexpr static auto classof(const Type* type) -> bool {
         return type->isPointer();
     }
+
+    /// Get type string
+    [[nodiscard]] auto string() const -> std::string override;
+
+protected:
+    friend class TypeFactory;
+
+    explicit constexpr TypePointer(const Type* base)
+    : Type(TypeKind::Pointer)
+    , m_base(base) { }
 
 private:
     /// The pointed-to type
@@ -36,13 +39,6 @@ private:
  * Reference type that refers to another type.
  */
 class TypeReference final : public Type {
-protected:
-    friend class TypeFactory;
-
-    explicit constexpr TypeReference(const Type* base)
-    : Type(TypeKind::Reference)
-    , m_base(base) { }
-
 public:
     /** Get the referred-to type. */
     [[nodiscard]] auto getBaseType() const -> const Type* override { return m_base; }
@@ -51,6 +47,16 @@ public:
     [[nodiscard]] constexpr static auto classof(const Type* type) -> bool {
         return type->isReference();
     }
+
+    /// Get type string
+    [[nodiscard]] auto string() const -> std::string override;
+
+protected:
+    friend class TypeFactory;
+
+    explicit constexpr TypeReference(const Type* base)
+    : Type(TypeKind::Reference)
+    , m_base(base) { }
 
 private:
     /// The referred-to type

@@ -410,6 +410,11 @@ public:
         return m_expr;
     }
 
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
+    }
+
 private:
     AstExpr* m_expr;
 };
@@ -505,6 +510,11 @@ public:
         return m_expr;
     }
 
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
+    }
+
 private:
     AstExpr* m_expr;
 };
@@ -565,9 +575,19 @@ public:
         return m_assignee;
     }
 
+    /// Set the assignee
+    void setAssignee(AstExpr* assignee) {
+        m_assignee = assignee;
+    }
+
     /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
+    }
+
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
     }
 
 private:
@@ -602,6 +622,11 @@ public:
     /// Get the condition
     [[nodiscard]] constexpr auto getCondition() const -> AstExpr* {
         return m_condition;
+    }
+
+    /// Set the condition
+    void setCondition(AstExpr* condition) {
+        m_condition = condition;
     }
 
     /// Get the thenStmt
@@ -708,6 +733,11 @@ public:
     /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
+    }
+
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
     }
 
 private:

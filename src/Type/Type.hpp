@@ -52,6 +52,8 @@ public:
         return true;
     }
 
+    [[nodiscard]] virtual auto string() const -> std::string;
+
 protected:
     friend class TypeFactory;
 
@@ -60,3 +62,14 @@ protected:
 };
 
 } // namespace lbc
+
+template <>
+struct std::formatter<lbc::Type, char> {
+    static constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const lbc::Type& value, std::format_context& ctx) {
+        return std::format_to(ctx.out(), "{}", value.string());
+    }
+};

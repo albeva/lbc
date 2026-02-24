@@ -276,12 +276,12 @@ namespace diagnostics {
     }
 
     /// Create tooManyArguments message
-    [[nodiscard]] inline auto tooManyArguments(const int expected, const int got) -> DiagMessage {
+    [[nodiscard]] inline auto tooManyArguments(const std::size_t expected, const std::size_t got) -> DiagMessage {
         return { DiagKind::tooManyArguments, std::format("too many arguments: expected {}, got {}", expected, got) };
     }
 
     /// Create tooFewArguments message
-    [[nodiscard]] inline auto tooFewArguments(const int expected, const int got) -> DiagMessage {
+    [[nodiscard]] inline auto tooFewArguments(const std::size_t expected, const std::size_t got) -> DiagMessage {
         return { DiagKind::tooFewArguments, std::format("too few arguments: expected {}, got {}", expected, got) };
     }
 

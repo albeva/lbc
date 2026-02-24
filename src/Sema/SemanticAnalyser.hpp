@@ -12,6 +12,23 @@ class Context;
 class SymbolTable;
 
 /**
+ * Analyse a child expression of an AST node and write the (possibly replaced)
+ * pointer back. The expression may be wrapped in an implicit AstCastExpr if
+ * type coercion is needed, so the parent must be updated with the new pointer.
+ *
+ * @param ast   Parent AST node that owns the expression child.
+ * @param name  Suffix for get/set accessors (e.g. `Expr` → `getExpr()` / `setExpr()`).
+ * @param type  Implicit target type for coercion, or `nullptr` if unconstrained.
+ */
+#define TRY_EXPRESSION(ast, name, type) \
+    TRY_EXPRESSION_IMPL(TRY_RESULT(try_expr_), ast, name, type)
+#define TRY_EXPRESSION_IMPL(id, ast, name, type)            \
+    {                                                       \
+        TRY_DECL(id, expression(*(ast).get##name(), type)); \
+        (ast).set##name(id);                                \
+    }
+
+/**
  * Semantic analyser. Implementation is split across multiple
  * .cpp files by concern: SemaDecl, SemaExpr, SemaStmt,
  * SemaType, and Sema.cpp for common utilities.
@@ -99,8 +116,20 @@ private:
     // Expressions (SemaExpr.cpp)
     // -------------------------------------------------------------------------
 
-    [[nodiscard]] auto expression(AstExpr& ast, const Type* implicitType) -> Result;
+    /**
+     * Analyse an expression, applying implicit type coercion if needed.
+     *
+     * Saves and restores m_implicitType / m_suggestedType via ValueRestorer.
+     * After the expression visitor runs, if the result type differs from
+     * @p implicitType the expression is wrapped in an implicit cast.
+     *
+     * @param ast          The expression AST node to analyse.
+     * @param implicitType Target type for coercion, or nullptr if unconstrained.
+     * @return The original or replaced (cast-wrapped) expression pointer.
+     */
+    [[nodiscard]] auto expression(AstExpr& ast, const Type* implicitType) -> DiagResult<AstExpr*>;
 
+    /** Analyse an explicit or implicit cast expression. */
     [[nodiscard]] auto accept(AstCastExpr& ast) -> Result;
 
     /** Analyse a variable reference expression. */
@@ -121,9 +150,32 @@ private:
     /** Analyse a member access expression. */
     [[nodiscard]] auto accept(AstMemberExpr& ast) -> Result;
 
+    /**
+     * Insert an implicit cast if the expression type is convertible to the target.
+     * Returns the expression unchanged if types already match, or a new
+     * AstCastExpr wrapping it. Diagnoses incompatible types.
+     */
     [[nodiscard]] auto coerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*>;
+
+    /**
+     * Try literal coercion first, then fall back to coerce().
+     * For literals this may simply re-type the node (no cast node needed);
+     * for non-literals it delegates to coerce() which inserts an implicit cast.
+     */
     [[nodiscard]] auto castOrCoerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*>;
+
+    /**
+     * Re-type a literal to match the target type within the same type family.
+     * Integral literals can adopt any integral type, float literals any float
+     * type, and null literals any pointer type. Cross-family coercion is rejected.
+     */
     [[nodiscard]] auto coerceLiteral(AstLiteralExpr* ast, const Type* targetType) -> Result;
+
+    /**
+     * Record a suggested type that propagates upward through binary expressions.
+     * Set once per expression tree — the first AS cast wins. Used to coerce
+     * sibling literal operands (e.g. `2 + 3 AS BYTE` types the 2 as BYTE).
+     */
     void setSuggestedType(const Type* implicitType);
 
     // -------------------------------------------------------------------------
@@ -142,14 +194,17 @@ private:
     // -------------------------------------------------------------------------
     // Data
     // -------------------------------------------------------------------------
+
     Context& m_context;
     SymbolTable* m_symbolTable = nullptr;
 
-    // During expression evaluation, expression will be cast or
-    // coerced to expected type, if one exists
+    /// Target type pushed down from the caller (e.g. `DIM x AS BYTE = <expr>`).
+    /// Literals adopt this type if compatible; non-literals are coerced after visit.
     const Type* m_implicitType = nullptr;
-    // Type that may propagate from expression during analyses
-    // "2 + 3 as byte" - result should be byte type
+
+    /// Type that propagates upward from an AS cast through binary expression chains.
+    /// `2 + 3 AS BYTE` sets this to BYTE so sibling literals are coerced to match.
+    /// First AS cast in the tree wins; subsequent ones are ignored.
     const Type* m_suggestedType = nullptr;
 };
 

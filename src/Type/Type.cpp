@@ -133,3 +133,19 @@ auto Type::common(const Type* other) const -> const Type* {
     }
     return nullptr;
 }
+
+auto Type::string() const -> std::string {
+    switch (getKind()) {
+    case TypeKind::Void:
+        return "VOID";
+    case TypeKind::Null:
+        return "NULL";
+    case TypeKind::Any:
+        return "ANY";
+    default:
+        if (const auto tkn = getTokenKind()) {
+            return tkn->string().str();
+        }
+        return "<invalid>";
+    }
+}

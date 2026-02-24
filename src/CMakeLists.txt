@@ -22,6 +22,9 @@ target_sources(lbc_lib
     Sema/SemaType.cpp
     Symbol/Symbol.cpp
     Symbol/SymbolTable.cpp
+    Type/Aggregate.cpp
+    Type/Compound.cpp
+    Type/Numeric.cpp
     Type/Type.cpp
     Type/TypeFactory.cpp
 

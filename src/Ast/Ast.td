@@ -111,7 +111,7 @@ def StmtList : Leaf<"List of statements", Stmt, [
 ]>;
 
 def ExprStmt : Leaf<"Expression statement", Stmt, [
-    Arg<"AstExpr*", "expr">
+    Arg<"AstExpr*", "expr", true>
 ]>;
 
 def DeclareStmt : Leaf<"Forward declaration statement", Stmt, [
@@ -124,7 +124,7 @@ def FuncStmt : Leaf<"Function or subroutine definition", Stmt, [
 ]>;
 
 def ReturnStmt : Leaf<"Return statement", Stmt, [
-    Arg<"AstExpr*", "expr">
+    Arg<"AstExpr*", "expr", true>
 ]>;
 
 def DimStmt : Leaf<"DIM variable declaration statement", Stmt, [
@@ -132,12 +132,12 @@ def DimStmt : Leaf<"DIM variable declaration statement", Stmt, [
 ]>;
 
 def AssignStmt : Leaf<"Assignment statement", Stmt, [
-    Arg<"AstExpr*", "assignee">,
-    Arg<"AstExpr*", "expr">
+    Arg<"AstExpr*", "assignee", true>,
+    Arg<"AstExpr*", "expr", true>
 ]>;
 
 def IfStmt : Leaf<"IF statement", Stmt, [
-    Arg<"AstExpr*", "condition">,
+    Arg<"AstExpr*", "condition", true>,
     Arg<"AstStmt*", "thenStmt">,
     Arg<"AstStmt*", "elseStmt">
 ]>;
@@ -154,7 +154,7 @@ def Decl : Group<"declaration", Root, [
 
 def VarDecl : Leaf<"Variable declaration", Decl, [
     Arg<"AstType*", "typeExpr">,
-    Arg<"AstExpr*", "expr">
+    Arg<"AstExpr*", "expr", true>
 ]>;
 
 def FuncDecl : Leaf<"Function or subroutine declaration", Decl, [

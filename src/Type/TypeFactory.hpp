@@ -37,7 +37,6 @@ public:
     [[nodiscard]] auto getContext() const -> Context& { return m_context; }
 
 private:
-
     /** Allocate raw memory from the arena. */
     [[nodiscard]] auto allocate(std::size_t size, std::size_t alignment) const -> void*;
 

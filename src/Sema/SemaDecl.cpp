@@ -52,7 +52,8 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
         type = ty->getType();
     }
     if (auto* expr = ast.getExpr()) {
-        TRY(expression(*expr, type));
+        TRY_DECL(repl, expression(*expr, type));
+        ast.setExpr(repl);
         type = expr->getType();
     }
     if (type != nullptr && type->isReference() && ast.getExpr() == nullptr) {
