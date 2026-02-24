@@ -87,4 +87,5 @@ def referenceToReference   : Error<Sema, "E0309", "cannot create a reference to 
 def pointerToReference     : Error<Sema, "E0310", "cannot create a pointer to a reference">;
 def nullVariable           : Error<Sema, "E0311", "cannot declare a variable of type null">;
 def nonAddressableExpr     : Error<Sema, "E0312", "cannot take address from expression">;
+def notCallable            : Error<Sema, "E0313", "expression not a callable">;
 

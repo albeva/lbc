@@ -172,9 +172,10 @@ private:
     [[nodiscard]] auto coerceLiteral(AstLiteralExpr* ast, const Type* targetType) -> Result;
 
     /**
-     * Record a suggested type that propagates upward through binary expressions.
-     * When multiple AS casts appear, the common type of all suggestions is used.
-     * Coerces sibling literal operands (e.g. `2 + 3 AS BYTE` types the 2 as BYTE).
+     * Record a type suggestion that propagates upward through the expression tree.
+     * Set by any typed sub-expression (variables, literals, casts, calls). When
+     * multiple suggestions compete, their common type is used. Guides literal
+     * coercion in parent binary expressions (e.g. `2 + b` where b is BYTE).
      */
     void setSuggestedType(const Type* implicitType);
 
@@ -208,9 +209,10 @@ private:
     /// Literals adopt this type if compatible; non-literals are coerced after visit.
     const Type* m_implicitType = nullptr;
 
-    /// Type that propagates upward from an AS cast through binary expression chains.
-    /// `2 + 3 AS BYTE` sets this to BYTE so sibling literals are coerced to match.
-    /// First AS cast in the tree wins; subsequent ones are ignored.
+    /// Type that propagates upward from typed sub-expressions (variables, casts,
+    /// calls, literals). Guides literal coercion in binary expressions: `2 + b`
+    /// where b is BYTE suggests BYTE, coercing the literal 2 to match.
+    /// When multiple suggestions compete, their common type is used.
     const Type* m_suggestedType = nullptr;
 };
 

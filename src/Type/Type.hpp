@@ -37,8 +37,32 @@ public:
     // Type comparison & conversions
     // -------------------------------------------------------------------------
 
+    /**
+     * Compare this type (target) against @p from (source) for implicit convertibility.
+     * Returns detailed flags describing the conversion (size change, sign change, etc.).
+     */
     [[nodiscard]] auto compare(const Type* from) const -> TypeComparisonResult;
+
+    /**
+     * Find the common type between this and @p other that both can convert to.
+     * References are stripped before comparison. Returns nullptr if incompatible.
+     */
     [[nodiscard]] auto common(const Type* other) const -> const Type*;
+
+    /**
+     * Check if @p from can be explicitly cast to this type (AS operator).
+     * More permissive than compare(): allows cross-size numeric conversions
+     * (e.g. INTEGER AS BYTE) and any pointer-to-pointer casts. Does not
+     * permit cross-family casts (e.g. numeric to pointer, bool to numeric).
+     */
+    [[nodiscard]] auto castable(const Type* from) const -> bool;
+
+    /**
+     * Strip the reference wrapper, returning the referent type.
+     * Returns this unchanged if not a reference type. Used by sema to
+     * work with value types — references are a storage/codegen concern.
+     */
+    [[nodiscard]] auto removeReference() const -> const Type*;
 
     // -------------------------------------------------------------------------
     // Utilities

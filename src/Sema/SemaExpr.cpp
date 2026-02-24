@@ -20,9 +20,10 @@ using namespace lbc;
 //   visitor completes, if the result type differs from the implicit type
 //   the expression is coerced or wrapped in an implicit cast.
 //
-// - m_suggestedType (bottom-up): set by an AS cast expression and propagated
-//   upward through binary operators. Allows `2 + 3 AS BYTE` to type-check
-//   the entire chain as BYTE rather than the default INTEGER.
+// - m_suggestedType (bottom-up): set by any typed sub-expression (variables,
+//   literals, casts, calls) and propagated upward through the expression tree.
+//   When multiple suggestions compete, their common type is used. Allows
+//   `2 + 3 AS BYTE` or `2 + b` (where b is BYTE) to type the literals as BYTE.
 //
 // Both are saved/restored per expression() call via ValueRestorer so nested
 // expression analyses (e.g. function arguments) don't leak state.
@@ -146,8 +147,9 @@ auto SemanticAnalyser::accept(AstLiteralExpr& ast) -> Result {
         TRY(coerceLiteral(&ast, m_suggestedType));
     } else if (m_implicitType != nullptr) {
         TRY(coerceLiteral(&ast, m_implicitType));
+    } else {
+        setSuggestedType(ast.getType());
     }
-
     return {};
 }
 
@@ -162,14 +164,15 @@ auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
     }
 
     ast.setSymbol(symbol);
-    ast.setType(symbol->getType());
+    ast.setType(symbol->getType()->removeReference());
+    setSuggestedType(ast.getType());
     return {};
 }
 
 // Validate the operand type for each unary operator:
 // - Negate: numeric types only
 // - LogicalNot: boolean only
-// - AddressOf: produces a pointer; strips reference if present; rejects null
+// - AddressOf: operand must be addressable (lvalue); produces a pointer
 // - Dereference: pointer types only; produces the pointee type
 auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
     TRY(visit(*ast.getExpr()));
@@ -189,12 +192,7 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         ast.setType(operandType);
     } else if (op == TokenKind::AddressOf) {
         TRY(ensureAddressable(*ast.getExpr()))
-
-        if (operandType->isReference()) {
-            ast.setType(getTypeFactory().getPointer(operandType->getBaseType()));
-        } else {
-            ast.setType(getTypeFactory().getPointer(operandType));
-        }
+        ast.setType(getTypeFactory().getPointer(operandType));
     } else if (op == TokenKind::Dereference) {
         if (!operandType->isPointer()) {
             return diag(diagnostics::invalidOperands(op, *operandType, *operandType), {}, ast.getRange());
@@ -202,6 +200,7 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         ast.setType(operandType->getBaseType());
     }
 
+    setSuggestedType(ast.getType());
     return {};
 }
 
@@ -273,7 +272,7 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
         }
         ast.setType(getTypeFactory().getBool());
     }
-
+    setSuggestedType(ast.getType());
     return {};
 }
 
@@ -282,11 +281,13 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
 auto SemanticAnalyser::accept(AstCastExpr& ast) -> Result {
     TRY(visit(*ast.getExpr()));
     TRY(visit(*ast.getTypeExpr()));
-
-    const auto* targetType = ast.getTypeExpr()->getType();
-    ast.setType(targetType);
-    setSuggestedType(targetType);
-
+    const auto* from = ast.getExpr()->getType();
+    const auto* to = ast.getTypeExpr()->getType();
+    if (!to->castable(from)) {
+        return diag(diagnostics::typeMismatch(*from, *to), {}, ast.getRange());
+    }
+    ast.setType(to);
+    setSuggestedType(to);
     return {};
 }
 
@@ -299,7 +300,7 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
     const auto* calleeType = ast.getCallee()->getType();
     const auto* funcType = llvm::dyn_cast<TypeFunction>(calleeType);
     if (funcType == nullptr) {
-        return diag(diagnostics::typeMismatch(*calleeType, TokenKind::Function), {}, ast.getRange());
+        return diag(diagnostics::notCallable(), {}, ast.getCallee()->getRange());
     }
 
     const auto params = funcType->getParams();
@@ -317,6 +318,7 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
     }
 
     ast.setType(funcType->getReturnType());
+    setSuggestedType(funcType->getReturnType());
     return {};
 }
 

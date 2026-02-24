@@ -123,8 +123,8 @@ auto Type::compare(const Type* from) const -> TypeComparisonResult {
 }
 
 auto Type::common(const Type* other) const -> const Type* {
-    auto [lhs, res1] = removeRef(this);
-    auto [rhs, res2] = removeRef(other);
+    const auto* lhs = removeReference();
+    const auto* rhs = other->removeReference();
     if (lhs->compare(rhs).result != TypeComparisonResult::Incompatible) {
         return lhs;
     }
@@ -132,6 +132,33 @@ auto Type::common(const Type* other) const -> const Type* {
         return rhs;
     }
     return nullptr;
+}
+
+/// Check if `from` type can be converted to `this` type
+auto Type::castable(const Type* from) const -> bool {
+    const auto* lhs = removeReference();
+    const auto* rhs = from->removeReference();
+    // same types
+    if (lhs == rhs) {
+        return true;
+    }
+    // number <- number
+    if (lhs->isNumeric() && rhs->isNumeric()) {
+        return true;
+    }
+    // pointer <- null | pointer
+    if (lhs->isPointer() && (rhs->isNull() || rhs->isPointer())) {
+        return true;
+    }
+    // no conversion possible
+    return false;
+}
+
+auto Type::removeReference() const -> const Type* {
+    if (const auto* ref = llvm::dyn_cast<TypeReference>(this)) {
+        return ref->getBaseType();
+    }
+    return this;
 }
 
 auto Type::string() const -> std::string {
