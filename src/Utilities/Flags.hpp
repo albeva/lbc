@@ -13,7 +13,7 @@
  */
 #define MARK_AS_FLAGS_ENUM(TYPE) \
     template <>                  \
-    struct ::lbc::flags::FlaggedEnum<TYPE> final : flags::Tag { }
+    struct flags::FlaggedEnum<TYPE> final : flags::Tag { }
 
 namespace lbc::flags {
 struct Tag { };
