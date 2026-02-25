@@ -155,21 +155,21 @@ private:
      * Returns the expression unchanged if types already match, or a new
      * AstCastExpr wrapping it. Diagnoses incompatible types.
      */
-    [[nodiscard]] auto coerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*>;
+    [[nodiscard]] auto coerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*>;
 
     /**
      * Try literal coercion first, then fall back to coerce().
      * For literals this may simply re-type the node (no cast node needed);
      * for non-literals it delegates to coerce() which inserts an implicit cast.
      */
-    [[nodiscard]] auto castOrCoerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*>;
+    [[nodiscard]] auto castOrCoerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*>;
 
     /**
      * Re-type a literal to match the target type within the same type family.
      * Integral literals can adopt any integral type, float literals any float
      * type, and null literals any pointer type. Cross-family coercion is rejected.
      */
-    [[nodiscard]] auto coerceLiteral(AstLiteralExpr* ast, const Type* targetType) -> Result;
+    [[nodiscard]] auto coerceLiteral(AstLiteralExpr& ast, const Type* targetType) -> Result;
 
     /**
      * Record a type suggestion that propagates upward through the expression tree.

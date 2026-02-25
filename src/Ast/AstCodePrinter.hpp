@@ -44,8 +44,7 @@ private:
 
     void space();
 
-    template<typename T>
-    void emitType(const T& node) {
+    void emitType(const auto& node) {
         if (const auto* type = node.getType()) {
             m_output << type->string();
         } else if (const auto* typeExpr = node.getTypeExpr()) {

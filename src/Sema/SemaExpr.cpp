@@ -34,7 +34,12 @@ auto SemanticAnalyser::expression(AstExpr& ast, const Type* implicitType) -> Dia
     m_suggestedType = nullptr;
     TRY(visit(ast));
     if (m_implicitType != nullptr && ast.getType() != m_implicitType) {
-        return castOrCoerce(&ast, m_implicitType);
+        return castOrCoerce(ast, m_implicitType);
+    }
+    if (m_suggestedType != nullptr) {
+        m_implicitType = m_suggestedType;
+        m_suggestedType = nullptr;
+        TRY(visit(ast));
     }
     return &ast;
 }
@@ -47,64 +52,61 @@ auto SemanticAnalyser::expression(AstExpr& ast, const Type* implicitType) -> Dia
 // inserting a cast node. This is valid because literals have no fixed storage
 // — their bit representation adapts to the target type at codegen time.
 
-auto SemanticAnalyser::coerceLiteral(AstLiteralExpr* ast, const Type* targetType) -> Result {
+auto SemanticAnalyser::coerceLiteral(AstLiteralExpr& ast, const Type* targetType) -> Result {
     // Already expected type?
-    if (ast->getType() == targetType) {
+    if (ast.getType() == targetType) {
         return {};
     }
 
-    const auto value = ast->getValue();
+    const auto value = ast.getValue();
 
     // Integral literal → any integral type
     if (value.isIntegral() && targetType->isIntegral()) {
-        ast->setType(targetType);
+        ast.setType(targetType);
         return {};
     }
 
     // Float literal → any float type
     if (value.isFloatingPoint() && targetType->isFloatingPoint()) {
-        ast->setType(targetType);
+        ast.setType(targetType);
         return {};
     }
 
     // Null literal → any pointer type
     if (value.isNull() && targetType->isPointer()) {
-        ast->setType(targetType);
+        ast.setType(targetType);
         return {};
     }
 
     // No cross-family coercion
-    return diag(diagnostics::typeMismatch(*ast->getType(), *targetType), {}, ast->getRange());
+    return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), {}, ast.getRange());
 }
 
-auto SemanticAnalyser::coerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*> {
-    if (ast->getType() == targetType) {
-        return ast;
+auto SemanticAnalyser::coerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*> {
+    if (ast.getType() == targetType) {
+        return &ast;
     }
 
-    auto cmp = targetType->compare(ast->getType());
+    auto cmp = targetType->compare(ast.getType());
     if (cmp.result != TypeComparisonResult::Incompatible) {
-        auto* cast = m_context.create<AstCastExpr>(ast->getRange(), ast, nullptr, true);
+        auto* cast = m_context.create<AstCastExpr>(ast.getRange(), &ast, nullptr, true);
         cast->setType(targetType);
         return cast;
     }
 
-    return diag(diagnostics::typeMismatch(*ast->getType(), *targetType), {}, ast->getRange());
+    return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), {}, ast.getRange());
 }
 
-auto SemanticAnalyser::castOrCoerce(AstExpr* ast, const Type* targetType) -> DiagResult<AstExpr*> {
-    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(ast)) {
-        if (coerceLiteral(literal, targetType).has_value()) {
-            return ast;
+auto SemanticAnalyser::castOrCoerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*> {
+    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(&ast)) {
+        if (coerceLiteral(*literal, targetType).has_value()) {
+            return &ast;
         }
     }
     return coerce(ast, targetType);
 }
 
 void SemanticAnalyser::setSuggestedType(const Type* type) {
-    if (type == nullptr || !type->isNumeric()) {
-        return;
-    }
     if (m_suggestedType == nullptr) {
         m_suggestedType = type;
     } else {
@@ -147,9 +149,9 @@ auto SemanticAnalyser::accept(AstLiteralExpr& ast) -> Result {
 
     // Try coercion to suggested or implicit type
     if (m_suggestedType != nullptr) {
-        TRY(coerceLiteral(&ast, m_suggestedType));
+        TRY(coerceLiteral(ast, m_suggestedType));
     } else if (m_implicitType != nullptr) {
-        TRY(coerceLiteral(&ast, m_implicitType));
+        TRY(coerceLiteral(ast, m_implicitType));
     } else {
         setSuggestedType(ast.getType());
     }
@@ -236,19 +238,19 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
         // If a suggested type appeared from a sub-expression, try coercing literal operands
         if (m_suggestedType != nullptr) {
             if (auto* lit = llvm::dyn_cast<AstLiteralExpr>(left)) {
-                TRY(coerceLiteral(lit, m_suggestedType));
+                TRY(coerceLiteral(*lit, m_suggestedType));
             }
             if (auto* lit = llvm::dyn_cast<AstLiteralExpr>(right)) {
-                TRY(coerceLiteral(lit, m_suggestedType));
+                TRY(coerceLiteral(*lit, m_suggestedType));
             }
         }
 
         // If types still differ and one is a literal, coerce the literal to match
         if (left->getType() != right->getType()) {
             if (auto* leftLit = llvm::dyn_cast<AstLiteralExpr>(left)) {
-                TRY(coerceLiteral(leftLit, right->getType()));
+                TRY(coerceLiteral(*leftLit, right->getType()));
             } else if (auto* rightLit = llvm::dyn_cast<AstLiteralExpr>(right)) {
-                TRY(coerceLiteral(rightLit, left->getType()));
+                TRY(coerceLiteral(*rightLit, left->getType()));
             }
         }
 
@@ -259,9 +261,9 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
         }
 
         // Coerce operands to common type
-        TRY_ASSIGN(left, coerce(left, commonType));
+        TRY_ASSIGN(left, coerce(*left, commonType));
         ast.setLeft(left);
-        TRY_ASSIGN(right, coerce(right, commonType));
+        TRY_ASSIGN(right, coerce(*right, commonType));
         ast.setRight(right);
 
         if (category == TokenKind::Category::Comparison) {
@@ -283,9 +285,16 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
 // in parent binary expressions adopt the cast's target type.
 auto SemanticAnalyser::accept(AstCastExpr& ast) -> Result {
     TRY(visit(*ast.getExpr()));
-    TRY(visit(*ast.getTypeExpr()));
     const auto* from = ast.getExpr()->getType();
-    const auto* to = ast.getTypeExpr()->getType();
+
+    const Type* to = nullptr;
+    if (const auto* type = ast.getType()) {
+        to = type;
+    } else {
+        TRY(visit(*ast.getTypeExpr()));
+        to = ast.getTypeExpr()->getType();
+    }
+
     if (!to->castable(from)) {
         return diag(diagnostics::typeMismatch(*from, *to), {}, ast.getRange());
     }
