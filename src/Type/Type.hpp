@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "Comparison.hpp"
 #include "TypeBase.hpp"
 namespace lbc {
 class Context;
@@ -38,24 +37,31 @@ public:
     // -------------------------------------------------------------------------
 
     /**
-     * Compare this type (target) against @p from (source) for implicit convertibility.
-     * Returns detailed flags describing the conversion (size change, sign change, etc.).
-     */
-    [[nodiscard]] auto compare(const Type* from) const -> TypeComparisonResult;
-
-    /**
-     * Find the common type between this and @p other that both can convert to.
-     * References are stripped before comparison. Returns nullptr if incompatible.
+     * Find the common type between this and @p other that both can implicitly
+     * convert to. Returns the wider type on success, nullptr if incompatible.
      */
     [[nodiscard]] auto common(const Type* other) const -> const Type*;
 
+    /** Conversion mode for convertible(). */
+    enum class Conversion : std::uint8_t {
+        /// Safe widening only (e.g. BYTE -> SHORT, ptr -> ANY PTR).
+        Implicit,
+        /// Explicit cast via AS operator (e.g. LONG -> BYTE, DOUBLE -> INTEGER).
+        Cast
+    };
+
     /**
-     * Check if @p from can be explicitly cast to this type (AS operator).
-     * More permissive than compare(): allows cross-size numeric conversions
-     * (e.g. INTEGER AS BYTE) and any pointer-to-pointer casts. Does not
-     * permit cross-family casts (e.g. numeric to pointer, bool to numeric).
+     * Check if @p from can be converted to this type under the given @p mode.
+     *
+     * Implicit: allows widening within the same numeric family and safe pointer
+     * conversions (null -> ptr, typed ptr -> ANY PTR).
+     *
+     * Cast: allows any numeric-to-numeric and any pointer-to-pointer conversion,
+     * but not cross-family (e.g. numeric to pointer).
+     *
+     * Identity (this == from) is always true regardless of mode.
      */
-    [[nodiscard]] auto castable(const Type* from) const -> bool;
+    [[nodiscard]] auto convertible(const Type* from, Conversion mode) const -> bool;
 
     /**
      * Strip the reference wrapper, returning the referent type.

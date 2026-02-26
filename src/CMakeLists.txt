@@ -43,7 +43,6 @@ target_sources(lbc_lib
     Symbol/Symbol.hpp
     Symbol/SymbolTable.hpp
     Type/Aggregate.hpp
-    Type/Comparison.hpp
     Type/Compound.hpp
     Type/Numeric.hpp
     Type/Type.hpp

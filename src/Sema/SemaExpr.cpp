@@ -115,8 +115,7 @@ auto SemanticAnalyser::castOrCoerce(AstExpr& ast, const Type* targetType) -> Dia
         return &ast;
     }
 
-    auto cmp = targetType->compare(ast.getType());
-    if (cmp.result == TypeComparisonResult::Convertible) {
+    if (targetType->convertible(ast.getType(), Type::Conversion::Implicit)) {
         return cast(ast, targetType);
     }
 
@@ -304,7 +303,7 @@ auto SemanticAnalyser::accept(AstCastExpr& ast) -> Result {
         to = ast.getTypeExpr()->getType();
     }
 
-    if (!to->castable(from)) {
+    if (!to->convertible(from, Type::Conversion::Cast)) {
         return diag(diagnostics::typeMismatch(*from, *to), {}, ast.getRange());
     }
     ast.setType(to);
