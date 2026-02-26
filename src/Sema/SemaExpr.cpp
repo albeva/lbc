@@ -34,20 +34,28 @@ auto SemanticAnalyser::expression(AstExpr& ast, const Type* explicitType) -> Dia
     m_suggestedType = nullptr;
 
     TRY(visit(ast));
+    AstExpr* res = &ast;
+
+    // strip unnecessary cast
+    if (auto* cast = llvm::dyn_cast<AstCastExpr>(res)) {
+        if (cast->getType() == cast->getExpr()->getType()) {
+            res = cast->getExpr();
+        }
+    }
 
     if (m_explicitType != nullptr) {
-        if (ast.getType() != m_explicitType) {
-            return castOrCoerce(ast, m_explicitType);
+        if (res->getType() != m_explicitType) {
+            return castOrCoerce(*res, m_explicitType);
         }
-        return &ast;
+        return res;
     }
 
     if (m_suggestedType != nullptr) {
-        m_explicitType = m_suggestedType;
-        m_suggestedType = nullptr;
-        TRY(visit(ast));
+        // re-examine the expression again, with new suggested type
+        return expression(*res, m_suggestedType);
     }
-    return &ast;
+
+    return res;
 }
 
 // =============================================================================
@@ -88,28 +96,31 @@ auto SemanticAnalyser::coerceLiteral(AstLiteralExpr& ast, const Type* targetType
     return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), {}, ast.getRange());
 }
 
-auto SemanticAnalyser::coerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*> {
+auto SemanticAnalyser::cast(AstExpr& ast, const Type* targetType) -> AstExpr* {
+    if (ast.getType() == targetType) {
+        return &ast;
+    }
+    auto* castExpr = m_context.create<AstCastExpr>(ast.getRange(), &ast, nullptr, true);
+    castExpr->setType(targetType);
+    return castExpr;
+}
+
+auto SemanticAnalyser::castOrCoerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*> {
     if (ast.getType() == targetType) {
         return &ast;
     }
 
+    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(&ast)) {
+        TRY(coerceLiteral(*literal, targetType))
+        return &ast;
+    }
+
     auto cmp = targetType->compare(ast.getType());
-    if (cmp.result != TypeComparisonResult::Incompatible) {
-        auto* cast = m_context.create<AstCastExpr>(ast.getRange(), &ast, nullptr, true);
-        cast->setType(targetType);
-        return cast;
+    if (cmp.result == TypeComparisonResult::Convertible) {
+        return cast(ast, targetType);
     }
 
     return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), {}, ast.getRange());
-}
-
-auto SemanticAnalyser::castOrCoerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*> {
-    if (auto* literal = llvm::dyn_cast<AstLiteralExpr>(&ast)) {
-        if (coerceLiteral(*literal, targetType).has_value()) {
-            return &ast;
-        }
-    }
-    return coerce(ast, targetType);
 }
 
 void SemanticAnalyser::setSuggestedType(const Type* type) {
@@ -190,7 +201,7 @@ auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
 // - AddressOf: operand must be addressable (lvalue); produces a pointer
 // - Dereference: pointer types only; produces the pointee type
 auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
-    TRY(visit(*ast.getExpr()));
+    TRY_EXPRESSION(ast, Expr, nullptr)
 
     const auto* operandType = ast.getExpr()->getType();
     const auto op = ast.getOp();
@@ -213,6 +224,9 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         if (!operandType->isPointer()) {
             return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
         }
+        if (operandType->isAnyPtr()) {
+            return diag(diagnostics::dereferencingAnyPtr(), {}, ast.getRange());
+        }
         ast.setType(operandType->getBaseType());
     } else {
         std::unreachable();
@@ -226,60 +240,45 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
 //
 // Arithmetic / Comparison:
 //   1. Analyse both operands
-//   2. Coerce literals to m_suggestedType (from AS cast) if available
-//   3. If types still differ, coerce the literal side to match the non-literal
-//   4. Find the common type; insert implicit casts for both operands if needed
-//   5. Result is the common type (arithmetic) or BOOL (comparison)
+//   2. If types differ and one is a literal, coerce the literal to match
+//   3. If types differ and neither is a literal, find the common type and
+//      insert implicit casts for both operands
+//   4. Result is the operand type (arithmetic) or BOOL (comparison)
 //
 // Logical (AND, OR):
 //   Both operands must be BOOL. Result is BOOL.
 auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
-    const auto op = ast.getOp();
-    const auto category = op.getCategory();
-
-    // Analyse operands
-    TRY(visit(*ast.getLeft()));
-    TRY(visit(*ast.getRight()));
+    TRY_EXPRESSION(ast, Left, nullptr)
+    TRY_EXPRESSION(ast, Right, nullptr)
 
     auto* left = ast.getLeft();
     auto* right = ast.getRight();
 
-    if (category == TokenKind::Category::Arithmetic || category == TokenKind::Category::Comparison) {
-        // If a suggested type appeared from a sub-expression, try coercing literal operands
-        if (m_suggestedType != nullptr) {
-            if (auto* lit = llvm::dyn_cast<AstLiteralExpr>(left)) {
-                TRY(coerceLiteral(*lit, m_suggestedType));
-            }
-            if (auto* lit = llvm::dyn_cast<AstLiteralExpr>(right)) {
-                TRY(coerceLiteral(*lit, m_suggestedType));
-            }
-        }
+    const auto op = ast.getOp();
+    const auto category = op.getCategory();
 
+    if (category == TokenKind::Category::Arithmetic || category == TokenKind::Category::Comparison) {
         // If types still differ and one is a literal, coerce the literal to match
         if (left->getType() != right->getType()) {
             if (auto* leftLit = llvm::dyn_cast<AstLiteralExpr>(left)) {
                 TRY(coerceLiteral(*leftLit, right->getType()));
             } else if (auto* rightLit = llvm::dyn_cast<AstLiteralExpr>(right)) {
                 TRY(coerceLiteral(*rightLit, left->getType()));
+            } else if (const auto* commonType = left->getType()->common(right->getType())) {
+                auto* lhs = cast(*left, commonType);
+                ast.setLeft(lhs);
+
+                auto* rhs = cast(*right, commonType);
+                ast.setRight(rhs);
+            } else {
+                return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), {}, ast.getRange());
             }
         }
-
-        // Find common type
-        const auto* commonType = left->getType()->common(right->getType());
-        if (commonType == nullptr) {
-            return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), {}, ast.getRange());
-        }
-
-        // Coerce operands to common type
-        TRY_ASSIGN(left, coerce(*left, commonType));
-        ast.setLeft(left);
-        TRY_ASSIGN(right, coerce(*right, commonType));
-        ast.setRight(right);
-
+        // comparison result is boolean
         if (category == TokenKind::Category::Comparison) {
             ast.setType(getTypeFactory().getBool());
         } else {
-            ast.setType(commonType);
+            ast.setType(ast.getLeft()->getType());
         }
     } else if (category == TokenKind::Category::Logical) {
         if (!left->getType()->isBool() || !right->getType()->isBool()) {
@@ -294,7 +293,7 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
 // Analyse an explicit AS cast. Sets m_suggestedType so that sibling literals
 // in parent binary expressions adopt the cast's target type.
 auto SemanticAnalyser::accept(AstCastExpr& ast) -> Result {
-    TRY(visit(*ast.getExpr()));
+    TRY_EXPRESSION(ast, Expr, nullptr)
     const auto* from = ast.getExpr()->getType();
 
     const Type* to = nullptr;
@@ -317,7 +316,7 @@ auto SemanticAnalyser::accept(AstCastExpr& ast) -> Result {
 // parameter count, and analyse each argument with its parameter type as
 // the implicit type for coercion.
 auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
-    TRY(visit(*ast.getCallee()));
+    TRY_EXPRESSION(ast, Callee, nullptr)
 
     const auto* calleeType = ast.getCallee()->getType();
     const auto* funcType = llvm::dyn_cast<TypeFunction>(calleeType);

@@ -151,18 +151,17 @@ private:
     [[nodiscard]] auto accept(AstMemberExpr& ast) -> Result;
 
     /**
-     * Insert an implicit cast if the expression type is convertible to the target.
-     * Returns the expression unchanged if types already match, or a new
-     * AstCastExpr wrapping it. Diagnoses incompatible types.
-     */
-    [[nodiscard]] auto coerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*>;
-
-    /**
-     * Try literal coercion first, then fall back to coerce().
+     * Try literal coercion first, then fall back to implicit cast.
      * For literals this may simply re-type the node (no cast node needed);
-     * for non-literals it delegates to coerce() which inserts an implicit cast.
+     * for non-literals it inserts an implicit cast if the types are convertible.
      */
     [[nodiscard]] auto castOrCoerce(AstExpr& ast, const Type* targetType) -> DiagResult<AstExpr*>;
+
+    /**
+     * Wrap the expression in an implicit AstCastExpr targeting the given type.
+     * Returns the expression unchanged if types already match.
+     */
+    [[nodiscard]] auto cast(AstExpr& ast, const Type* targetType) -> AstExpr*;
 
     /**
      * Re-type a literal to match the target type within the same type family.

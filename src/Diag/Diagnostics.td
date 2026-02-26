@@ -89,4 +89,5 @@ def nullVariable           : Error<Sema, "E0311", "cannot declare a variable of 
 def nonAddressableExpr     : Error<Sema, "E0312", "cannot take address from expression">;
 def notCallable            : Error<Sema, "E0313", "expression not a callable">;
 def invalidUnaryOperand    : Error<Sema, "E0314", "invalid operand to {op}: {type}">;
+def dereferencingAnyPtr    : Error<Sema, "E0315", "dereferencing any ptr">;
 
