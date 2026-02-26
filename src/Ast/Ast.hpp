@@ -410,6 +410,11 @@ public:
         return m_expr;
     }
 
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
+    }
+
 private:
     AstExpr* m_expr;
 };
@@ -505,6 +510,11 @@ public:
         return m_expr;
     }
 
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
+    }
+
 private:
     AstExpr* m_expr;
 };
@@ -565,9 +575,19 @@ public:
         return m_assignee;
     }
 
+    /// Set the assignee
+    void setAssignee(AstExpr* assignee) {
+        m_assignee = assignee;
+    }
+
     /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
+    }
+
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
     }
 
 private:
@@ -602,6 +622,11 @@ public:
     /// Get the condition
     [[nodiscard]] constexpr auto getCondition() const -> AstExpr* {
         return m_condition;
+    }
+
+    /// Set the condition
+    void setCondition(AstExpr* condition) {
+        m_condition = condition;
     }
 
     /// Get the thenStmt
@@ -708,6 +733,11 @@ public:
     /// Get the expr
     [[nodiscard]] constexpr auto getExpr() const -> AstExpr* {
         return m_expr;
+    }
+
+    /// Set the expr
+    void setExpr(AstExpr* expr) {
+        m_expr = expr;
     }
 
 private:
@@ -836,7 +866,7 @@ public:
     constexpr AstCastExpr(
         const llvm::SMRange range,
         AstExpr* expr,
-        AstExpr* typeExpr,
+        AstType* typeExpr,
         const bool implicit
     )
     : AstExpr(AstKind::CastExpr, range)
@@ -860,12 +890,12 @@ public:
     }
 
     /// Get the typeExpr
-    [[nodiscard]] constexpr auto getTypeExpr() const -> AstExpr* {
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
         return m_typeExpr;
     }
 
     /// Set the typeExpr
-    void setTypeExpr(AstExpr* typeExpr) {
+    void setTypeExpr(AstType* typeExpr) {
         m_typeExpr = typeExpr;
     }
 
@@ -881,7 +911,7 @@ public:
 
 private:
     AstExpr* m_expr;
-    AstExpr* m_typeExpr;
+    AstType* m_typeExpr;
     bool m_implicit;
 };
 

@@ -10,4 +10,3 @@ Symbol::Symbol(llvm::StringRef name, const Type* type, llvm::SMRange origin)
 , m_type(type)
 , m_range(origin)
 , m_visibility(SymbolVisibility::Private) { }
-

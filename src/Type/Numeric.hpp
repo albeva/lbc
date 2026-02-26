@@ -13,14 +13,6 @@ class TypeFactory;
  * Covers Byte, Short, Integer, Long and their unsigned variants.
  */
 class TypeIntegral final : public Type {
-protected:
-    friend class TypeFactory;
-
-    constexpr TypeIntegral(const TypeKind kind, const std::uint8_t size, const bool isSigned)
-    : Type(kind)
-    , m_size(size)
-    , m_signed(isSigned) { }
-
 public:
     /** Get the size of this type in bytes. */
     [[nodiscard]] constexpr auto getBytes() const -> std::size_t { return m_size; }
@@ -42,6 +34,14 @@ public:
         return type->isIntegral();
     }
 
+protected:
+    friend class TypeFactory;
+
+    constexpr TypeIntegral(const TypeKind kind, const std::uint8_t size, const bool isSigned)
+    : Type(kind)
+    , m_size(size)
+    , m_signed(isSigned) { }
+
 private:
     /// Size in bytes
     std::uint8_t m_size {};
@@ -53,13 +53,6 @@ private:
  * Floating point type representing Single and Double precision values.
  */
 class TypeFloatingPoint final : public Type {
-protected:
-    friend class TypeFactory;
-
-    constexpr TypeFloatingPoint(const TypeKind kind, const std::uint8_t size)
-    : Type(kind)
-    , m_size(size) { }
-
 public:
     /** Get the size of this type in bytes. */
     [[nodiscard]] constexpr auto getBytes() const -> std::size_t { return m_size; }
@@ -71,6 +64,13 @@ public:
     [[nodiscard]] constexpr static auto classof(const Type* type) -> bool {
         return type->isFloatingPoint();
     }
+
+protected:
+    friend class TypeFactory;
+
+    constexpr TypeFloatingPoint(const TypeKind kind, const std::uint8_t size)
+    : Type(kind)
+    , m_size(size) { }
 
 private:
     /// Size in bytes

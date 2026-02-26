@@ -16,7 +16,7 @@ auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
         ast.setSymbolTable(m_symbolTable);
     }
 
-    // seclare symbols
+    // declare symbols
     for (auto& decl : ast.getDecls()) {
         TRY(declare(*decl));
     }
@@ -38,7 +38,8 @@ auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
 }
 
 auto SemanticAnalyser::accept(AstExprStmt& ast) -> Result {
-    return expression(*ast.getExpr(), nullptr);
+    TRY_EXPRESSION(ast, Expr, nullptr)
+    return {};
 }
 
 auto SemanticAnalyser::accept(AstDeclareStmt& /*ast*/) -> Result {
@@ -63,7 +64,7 @@ auto SemanticAnalyser::accept(AstDimStmt& ast) -> Result {
 
 auto SemanticAnalyser::accept(AstAssignStmt& ast) -> Result {
     TRY(visit(*ast.getAssignee()))
-    TRY(expression(*ast.getExpr(), ast.getAssignee()->getType()))
+    TRY_EXPRESSION(ast, Expr, ast.getAssignee()->getType())
     return {};
 }
 

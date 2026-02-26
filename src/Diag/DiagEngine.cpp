@@ -74,6 +74,6 @@ void DiagEngine::print() const {
     for (const auto& message : m_messages) {
         m_context.getSourceMgr().PrintMessage(llvm::outs(), message.diagnostic, true);
         const auto& loc = m_messages.back().location;
-        llvm::outs() << std::format("{}", loc);
+        llvm::outs() << std::format("{}\n", loc);
     }
 }

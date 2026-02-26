@@ -24,8 +24,22 @@ struct DiagKind final {
         invalidNumber,
         unexpected,
         expected,
+        undeclaredIdentifier,
+        useBeforeDefinition,
         redefinition,
         circularDependency,
+        typeMismatch,
+        invalidOperands,
+        tooManyArguments,
+        tooFewArguments,
+        uninitializedReference,
+        referenceToReference,
+        pointerToReference,
+        nullVariable,
+        nonAddressableExpr,
+        notCallable,
+        invalidUnaryOperand,
+        dereferencingAnyPtr,
     };
 
     /**
@@ -41,7 +55,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 8;
+    static constexpr std::size_t COUNT = 22;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -87,8 +101,22 @@ struct DiagKind final {
             case unexpected:
             case expected:
                 return Category::Parse;
+            case undeclaredIdentifier:
+            case useBeforeDefinition:
             case redefinition:
             case circularDependency:
+            case typeMismatch:
+            case invalidOperands:
+            case tooManyArguments:
+            case tooFewArguments:
+            case uninitializedReference:
+            case referenceToReference:
+            case pointerToReference:
+            case nullVariable:
+            case nonAddressableExpr:
+            case notCallable:
+            case invalidUnaryOperand:
+            case dereferencingAnyPtr:
                 return Category::Sema;
         }
         std::unreachable();
@@ -105,8 +133,22 @@ struct DiagKind final {
             case invalidNumber:
             case unexpected:
             case expected:
+            case undeclaredIdentifier:
+            case useBeforeDefinition:
             case redefinition:
             case circularDependency:
+            case typeMismatch:
+            case invalidOperands:
+            case tooManyArguments:
+            case tooFewArguments:
+            case uninitializedReference:
+            case referenceToReference:
+            case pointerToReference:
+            case nullVariable:
+            case nonAddressableExpr:
+            case notCallable:
+            case invalidUnaryOperand:
+            case dereferencingAnyPtr:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -123,8 +165,22 @@ struct DiagKind final {
             case invalidNumber: return "E0102";
             case unexpected: return "E0200";
             case expected: return "E0201";
-            case redefinition: return "E0301";
-            case circularDependency: return "E0302";
+            case undeclaredIdentifier: return "E0300";
+            case useBeforeDefinition: return "E0301";
+            case redefinition: return "E0302";
+            case circularDependency: return "E0303";
+            case typeMismatch: return "E0304";
+            case invalidOperands: return "E0305";
+            case tooManyArguments: return "E0306";
+            case tooFewArguments: return "E0307";
+            case uninitializedReference: return "E0308";
+            case referenceToReference: return "E0309";
+            case pointerToReference: return "E0310";
+            case nullVariable: return "E0311";
+            case nonAddressableExpr: return "E0312";
+            case notCallable: return "E0313";
+            case invalidUnaryOperand: return "E0314";
+            case dereferencingAnyPtr: return "E0315";
         }
         std::unreachable();
     }
@@ -132,8 +188,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 8> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, redefinition, circularDependency };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 22> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr };
     }
 
 private:
@@ -210,6 +266,16 @@ namespace diagnostics {
     // Sema
     // -------------------------------------------------------------------------
 
+    /// Create undeclaredIdentifier message
+    [[nodiscard]] inline auto undeclaredIdentifier(const auto& name) -> DiagMessage {
+        return { DiagKind::undeclaredIdentifier, std::format("use of undeclared identifier {}", name) };
+    }
+
+    /// Create useBeforeDefinition message
+    [[nodiscard]] inline auto useBeforeDefinition(const auto& name) -> DiagMessage {
+        return { DiagKind::useBeforeDefinition, std::format("use of identifier before definition {}", name) };
+    }
+
     /// Create redefinition message
     [[nodiscard]] inline auto redefinition(const auto& name) -> DiagMessage {
         return { DiagKind::redefinition, std::format("redefinition of {}", name) };
@@ -218,6 +284,66 @@ namespace diagnostics {
     /// Create circularDependency message
     [[nodiscard]] inline auto circularDependency(const auto& name) -> DiagMessage {
         return { DiagKind::circularDependency, std::format("circular dependency on {}", name) };
+    }
+
+    /// Create typeMismatch message
+    [[nodiscard]] inline auto typeMismatch(const auto& from, const auto& to) -> DiagMessage {
+        return { DiagKind::typeMismatch, std::format("cannot convert {} to {}", from, to) };
+    }
+
+    /// Create invalidOperands message
+    [[nodiscard]] inline auto invalidOperands(const auto& op, const auto& left, const auto& right) -> DiagMessage {
+        return { DiagKind::invalidOperands, std::format("invalid operands to {}: {} and {}", op, left, right) };
+    }
+
+    /// Create tooManyArguments message
+    [[nodiscard]] inline auto tooManyArguments(const std::size_t expected, const std::size_t got) -> DiagMessage {
+        return { DiagKind::tooManyArguments, std::format("too many arguments: expected {}, got {}", expected, got) };
+    }
+
+    /// Create tooFewArguments message
+    [[nodiscard]] inline auto tooFewArguments(const std::size_t expected, const std::size_t got) -> DiagMessage {
+        return { DiagKind::tooFewArguments, std::format("too few arguments: expected {}, got {}", expected, got) };
+    }
+
+    /// Create uninitializedReference message
+    [[nodiscard]] inline auto uninitializedReference(const auto& name) -> DiagMessage {
+        return { DiagKind::uninitializedReference, std::format("reference variable {} must be initialised", name) };
+    }
+
+    /// Create referenceToReference message
+    [[nodiscard]] inline auto referenceToReference() -> DiagMessage {
+        return { DiagKind::referenceToReference, "cannot create a reference to a reference" };
+    }
+
+    /// Create pointerToReference message
+    [[nodiscard]] inline auto pointerToReference() -> DiagMessage {
+        return { DiagKind::pointerToReference, "cannot create a pointer to a reference" };
+    }
+
+    /// Create nullVariable message
+    [[nodiscard]] inline auto nullVariable() -> DiagMessage {
+        return { DiagKind::nullVariable, "cannot declare a variable of type null" };
+    }
+
+    /// Create nonAddressableExpr message
+    [[nodiscard]] inline auto nonAddressableExpr() -> DiagMessage {
+        return { DiagKind::nonAddressableExpr, "cannot take address from expression" };
+    }
+
+    /// Create notCallable message
+    [[nodiscard]] inline auto notCallable() -> DiagMessage {
+        return { DiagKind::notCallable, "expression not a callable" };
+    }
+
+    /// Create invalidUnaryOperand message
+    [[nodiscard]] inline auto invalidUnaryOperand(const auto& op, const auto& type) -> DiagMessage {
+        return { DiagKind::invalidUnaryOperand, std::format("invalid operand to {}: {}", op, type) };
+    }
+
+    /// Create dereferencingAnyPtr message
+    [[nodiscard]] inline auto dereferencingAnyPtr() -> DiagMessage {
+        return { DiagKind::dereferencingAnyPtr, "dereferencing any ptr" };
     }
 
 }

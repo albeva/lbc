@@ -24,6 +24,9 @@ public:
         return type->isFunction();
     }
 
+    /// Get type string representation
+    [[nodiscard]] auto string() const -> std::string override;
+
 protected:
     friend class TypeFactory;
 

@@ -2,7 +2,7 @@
 // Created by Albert Varaksin on 15/02/2026.
 //
 #include <gtest/gtest.h>
-#include "Ast/AstExprPrinter.hpp"
+#include "Ast/AstCodePrinter.hpp"
 
 using namespace lbc;
 
@@ -16,6 +16,9 @@ TEST(AstVisitorTests, ExprPrinterVisitsMultipleNodes) {
     AstExpr* args[] = { &binExpr };
     AstCallExpr callExpr({}, &callee, std::span(args));
 
-    AstExprPrinter printer;
-    EXPECT_EQ(printer.print(callExpr), "foo((x + 42))");
+    std::string output = "";
+    llvm::raw_string_ostream ss { output };
+    AstCodePrinter printer { ss };
+    printer.print(callExpr);
+    EXPECT_EQ(output, "foo((x + 42))");
 }
