@@ -28,16 +28,22 @@ using namespace lbc;
 // Both are saved/restored per expression() call via ValueRestorer so nested
 // expression analyses (e.g. function arguments) don't leak state.
 
-auto SemanticAnalyser::expression(AstExpr& ast, const Type* implicitType) -> DiagResult<AstExpr*> {
-    const ValueRestorer restore { m_implicitType, m_suggestedType };
-    m_implicitType = implicitType;
+auto SemanticAnalyser::expression(AstExpr& ast, const Type* explicitType) -> DiagResult<AstExpr*> {
+    const ValueRestorer restore { m_explicitType, m_suggestedType };
+    m_explicitType = explicitType;
     m_suggestedType = nullptr;
+
     TRY(visit(ast));
-    if (m_implicitType != nullptr && ast.getType() != m_implicitType) {
-        return castOrCoerce(ast, m_implicitType);
+
+    if (m_explicitType != nullptr) {
+        if (ast.getType() != m_explicitType) {
+            return castOrCoerce(ast, m_explicitType);
+        }
+        return &ast;
     }
+
     if (m_suggestedType != nullptr) {
-        m_implicitType = m_suggestedType;
+        m_explicitType = m_suggestedType;
         m_suggestedType = nullptr;
         TRY(visit(ast));
     }
@@ -107,6 +113,10 @@ auto SemanticAnalyser::castOrCoerce(AstExpr& ast, const Type* targetType) -> Dia
 }
 
 void SemanticAnalyser::setSuggestedType(const Type* type) {
+    if (m_explicitType != nullptr) {
+        return;
+    }
+
     if (m_suggestedType == nullptr) {
         m_suggestedType = type;
     } else {
@@ -148,10 +158,10 @@ auto SemanticAnalyser::accept(AstLiteralExpr& ast) -> Result {
     ast.setType(naturalType);
 
     // Try coercion to suggested or implicit type
-    if (m_suggestedType != nullptr) {
+    if (m_explicitType != nullptr) {
+        TRY(coerceLiteral(ast, m_explicitType));
+    } else if (m_suggestedType != nullptr) {
         TRY(coerceLiteral(ast, m_suggestedType));
-    } else if (m_implicitType != nullptr) {
-        TRY(coerceLiteral(ast, m_implicitType));
     } else {
         setSuggestedType(ast.getType());
     }

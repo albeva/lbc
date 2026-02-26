@@ -124,10 +124,10 @@ private:
      * @p implicitType the expression is wrapped in an implicit cast.
      *
      * @param ast          The expression AST node to analyse.
-     * @param implicitType Target type for coercion, or nullptr if unconstrained.
+     * @param explicitType Target type for coercion, or nullptr if unconstrained.
      * @return The original or replaced (cast-wrapped) expression pointer.
      */
-    [[nodiscard]] auto expression(AstExpr& ast, const Type* implicitType) -> DiagResult<AstExpr*>;
+    [[nodiscard]] auto expression(AstExpr& ast, const Type* explicitType) -> DiagResult<AstExpr*>;
 
     /** Analyse an explicit or implicit cast expression. */
     [[nodiscard]] auto accept(AstCastExpr& ast) -> Result;
@@ -207,7 +207,7 @@ private:
 
     /// Target type pushed down from the caller (e.g. `DIM x AS BYTE = <expr>`).
     /// Literals adopt this type if compatible; non-literals are coerced after visit.
-    const Type* m_implicitType = nullptr;
+    const Type* m_explicitType = nullptr;
 
     /// Type that propagates upward from typed sub-expressions (variables, casts,
     /// calls, literals). Guides literal coercion in binary expressions: `2 + b`

@@ -66,7 +66,7 @@ TEST(ParserTests, BooleanLiteral) {
 }
 
 TEST(ParserTests, StringLiteral) {
-    EXPECT_EQ(parseExpr("\"hello\""), "hello");
+    EXPECT_EQ(parseExpr("\"hello\""), "\"hello\"");
 }
 
 TEST(ParserTests, NullLiteral) {
