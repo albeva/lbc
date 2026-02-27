@@ -34,11 +34,11 @@ protected:
     [[nodiscard]] auto diag(
         this T& self,
         const DiagMessage& message,
-        const llvm::SMLoc loc = {},
         const llvm::ArrayRef<llvm::SMRange>& ranges = {},
+        const llvm::SMLoc loc = {},
         const std::source_location& location = std::source_location::current()
     ) -> DiagError {
-        return DiagError(self.getContext().getDiag().log(message, loc, ranges, location));
+        return DiagError(self.getContext().getDiag().log(message, ranges, loc, location));
     }
 
     /**

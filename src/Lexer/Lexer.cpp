@@ -156,7 +156,7 @@ auto Lexer::peek() -> DiagResult<Token> {
 // ------------------------------------
 
 auto Lexer::invalid() -> DiagError {
-    return diag(diagnostics::invalid(), range().Start, range());
+    return diag(diagnostics::invalid(), range());
 }
 
 auto Lexer::endOfFile() -> Token {
@@ -308,7 +308,7 @@ auto Lexer::stringLiteral() -> DiagResult<Token> {
 
     // unclosed string?
     if (hasError || m_input.current() != '"') {
-        return diag(diagnostics::unterminatedString(), m_start.loc(), range());
+        return diag(diagnostics::unterminatedString(), range());
     }
 
     const auto str = m_start.next().stringTo(m_input);
@@ -354,5 +354,5 @@ auto Lexer::numberLiteral() -> DiagResult<Token> {
             return token(TokenKind::IntegerLiteral, LiteralValue::from(*value));
         }
     }
-    return diag(diagnostics::invalidNumber(), m_start.loc(), range());
+    return diag(diagnostics::invalidNumber(), range());
 }

@@ -10,7 +10,7 @@ using namespace lbc;
 
 auto SemanticAnalyser::declare(AstDecl& ast) -> Result {
     if (m_symbolTable->contains(ast.getName(), false)) {
-        return diag(diagnostics::redefinition(ast.getName()), ast.getRange().Start, ast.getRange());
+        return diag(diagnostics::redefinition(ast.getName()), ast.getRange());
     }
 
     auto* symbol = m_context.create<Symbol>(ast.getName(), ast.getType(), ast.getRange());
@@ -34,7 +34,7 @@ auto SemanticAnalyser::define(AstDecl& ast) -> Result {
     }
 
     if (symbol->hasFlag(SymbolFlags::BeingDefined)) {
-        return diag(diagnostics::circularDependency(symbol->getName()), {}, symbol->getRange());
+        return diag(diagnostics::circularDependency(symbol->getName()), symbol->getRange());
     }
 
     symbol->setFlag(SymbolFlags::BeingDefined);
@@ -47,23 +47,35 @@ auto SemanticAnalyser::define(AstDecl& ast) -> Result {
 
 auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
     const Type* type = nullptr;
+    const Type* exprType = nullptr;
+
     if (auto* ty = ast.getTypeExpr()) {
         TRY(visit(*ty));
         type = ty->getType();
+        exprType = type->removeReference();
     }
     if (auto* expr = ast.getExpr()) {
-        TRY_DECL(repl, expression(*expr, type));
+        TRY_DECL(repl, expression(*expr, exprType));
         ast.setExpr(repl);
-        type = repl->getType();
+        if (type == nullptr) {
+            type = repl->getType();
+        }
     }
     assert(type != nullptr && "failed to infer type");
 
-    if (type->isReference() && ast.getExpr() == nullptr) {
-        return diag(diagnostics::uninitializedReference(ast.getName()), ast.getRange().Start, ast.getRange());
+    if (type->isReference()) {
+        if (ast.getExpr() == nullptr) {
+            return diag(diagnostics::uninitializedReference(ast.getName()), ast.getRange());
+        }
+        if (not llvm::isa<AstVarExpr>(ast.getExpr())) {
+            return diag(diagnostics::invalidReferenceInit(), ast.getRange());
+        }
     }
+
     if (type->isNull()) {
-        return diag(diagnostics::nullVariable(), ast.getRange().Start, ast.getRange());
+        return diag(diagnostics::nullVariable(), ast.getRange());
     }
+
     ast.setType(type);
     ast.getSymbol()->setType(type);
     return {};

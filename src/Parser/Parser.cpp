@@ -28,7 +28,7 @@ auto Parser::unexpected(const std::source_location& location) -> DiagError {
     if (m_deferredError.isValid()) {
         return DiagError(std::exchange(m_deferredError, {}));
     }
-    return diag(diagnostics::unexpected(m_token), m_token.getRange().Start, llvm::ArrayRef(m_token.getRange()), location);
+    return diag(diagnostics::unexpected(m_token), m_token.getRange(), {}, location);
 }
 
 auto Parser::advance() -> Result<void> {

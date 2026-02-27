@@ -90,4 +90,4 @@ def nonAddressableExpr     : Error<Sema, "E0312", "cannot take address from expr
 def notCallable            : Error<Sema, "E0313", "expression not a callable">;
 def invalidUnaryOperand    : Error<Sema, "E0314", "invalid operand to {op}: {type}">;
 def dereferencingAnyPtr    : Error<Sema, "E0315", "dereferencing any ptr">;
-
+def invalidReferenceInit   : Error<Sema, "E0316", "Cannot initialize reference from given expression">;

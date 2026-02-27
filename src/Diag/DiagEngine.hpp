@@ -111,8 +111,8 @@ public:
      */
     [[nodiscard]] auto log(
         const DiagMessage& message,
-        llvm::SMLoc loc = {},
         const llvm::ArrayRef<llvm::SMRange>& ranges = {},
+        llvm::SMLoc loc = {},
         const std::source_location& location = std::source_location::current()
     ) -> DiagIndex;
 

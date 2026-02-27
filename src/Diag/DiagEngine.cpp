@@ -46,8 +46,8 @@ auto DiagEngine::getLocation(const DiagIndex index) const -> const std::source_l
 
 auto DiagEngine::log(
     const DiagMessage& message,
-    const llvm::SMLoc loc,
     const llvm::ArrayRef<llvm::SMRange>& ranges,
+    const llvm::SMLoc loc,
     const std::source_location& location
 ) -> DiagIndex {
     const auto index = m_messages.size();

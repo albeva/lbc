@@ -93,7 +93,7 @@ auto SemanticAnalyser::coerceLiteral(AstLiteralExpr& ast, const Type* targetType
     }
 
     // No cross-family coercion
-    return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), {}, ast.getRange());
+    return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), ast.getRange());
 }
 
 auto SemanticAnalyser::cast(AstExpr& ast, const Type* targetType) -> AstExpr* {
@@ -119,7 +119,7 @@ auto SemanticAnalyser::castOrCoerce(AstExpr& ast, const Type* targetType) -> Dia
         return cast(ast, targetType);
     }
 
-    return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), {}, ast.getRange());
+    return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), ast.getRange());
 }
 
 void SemanticAnalyser::setSuggestedType(const Type* type) {
@@ -138,7 +138,7 @@ auto SemanticAnalyser::ensureAddressable(AstExpr& ast) -> Result {
     if (llvm::isa<AstVarExpr>(ast)) {
         return {};
     }
-    return diag(diagnostics::nonAddressableExpr(), {}, ast.getRange());
+    return diag(diagnostics::nonAddressableExpr(), ast.getRange());
 }
 
 // =============================================================================
@@ -181,11 +181,11 @@ auto SemanticAnalyser::accept(AstLiteralExpr& ast) -> Result {
 auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
     auto* symbol = m_symbolTable->find(ast.getName(), true);
     if (symbol == nullptr) {
-        return diag(diagnostics::undeclaredIdentifier(ast.getName()), {}, ast.getRange());
+        return diag(diagnostics::undeclaredIdentifier(ast.getName()), ast.getRange());
     }
 
     if (not symbol->hasFlag(SymbolFlags::Defined)) {
-        return diag(diagnostics::useBeforeDefinition(symbol->getName()), {}, ast.getRange());
+        return diag(diagnostics::useBeforeDefinition(symbol->getName()), ast.getRange());
     }
 
     ast.setSymbol(symbol);
@@ -208,12 +208,12 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
     if (op == TokenKind::Negate) {
         if (!(operandType->isSignedIntegral() || operandType->isFloatingPoint())) {
 
-            return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
+            return diag(diagnostics::invalidUnaryOperand(op, *operandType), ast.getRange());
         }
         ast.setType(operandType);
     } else if (op == TokenKind::LogicalNot) {
         if (!operandType->isBool()) {
-            return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
+            return diag(diagnostics::invalidUnaryOperand(op, *operandType), ast.getRange());
         }
         ast.setType(operandType);
     } else if (op == TokenKind::AddressOf) {
@@ -221,10 +221,10 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
         ast.setType(getTypeFactory().getPointer(operandType));
     } else if (op == TokenKind::Dereference) {
         if (!operandType->isPointer()) {
-            return diag(diagnostics::invalidUnaryOperand(op, *operandType), {}, ast.getRange());
+            return diag(diagnostics::invalidUnaryOperand(op, *operandType), ast.getRange());
         }
         if (operandType->isAnyPtr()) {
-            return diag(diagnostics::dereferencingAnyPtr(), {}, ast.getRange());
+            return diag(diagnostics::dereferencingAnyPtr(), ast.getRange());
         }
         ast.setType(operandType->getBaseType());
     } else {
@@ -266,11 +266,10 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
             } else if (const auto* commonType = left->getType()->common(right->getType())) {
                 auto* lhs = cast(*left, commonType);
                 ast.setLeft(lhs);
-
                 auto* rhs = cast(*right, commonType);
                 ast.setRight(rhs);
             } else {
-                return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), {}, ast.getRange());
+                return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), ast.getRange());
             }
         }
         // comparison result is boolean
@@ -281,7 +280,7 @@ auto SemanticAnalyser::accept(AstBinaryExpr& ast) -> Result {
         }
     } else if (category == TokenKind::Category::Logical) {
         if (!left->getType()->isBool() || !right->getType()->isBool()) {
-            return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), {}, ast.getRange());
+            return diag(diagnostics::invalidOperands(op, *left->getType(), *right->getType()), ast.getRange());
         }
         ast.setType(getTypeFactory().getBool());
     }
@@ -304,7 +303,7 @@ auto SemanticAnalyser::accept(AstCastExpr& ast) -> Result {
     }
 
     if (!to->convertible(from, Type::Conversion::Cast)) {
-        return diag(diagnostics::typeMismatch(*from, *to), {}, ast.getRange());
+        return diag(diagnostics::typeMismatch(*from, *to), ast.getRange());
     }
     ast.setType(to);
     setSuggestedType(to);
@@ -320,17 +319,17 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
     const auto* calleeType = ast.getCallee()->getType();
     const auto* funcType = llvm::dyn_cast<TypeFunction>(calleeType);
     if (funcType == nullptr) {
-        return diag(diagnostics::notCallable(), {}, ast.getCallee()->getRange());
+        return diag(diagnostics::notCallable(), ast.getCallee()->getRange());
     }
 
     const auto params = funcType->getParams();
     const auto args = ast.getArgs();
 
     if (args.size() > params.size()) {
-        return diag(diagnostics::tooManyArguments(params.size(), args.size()), {}, ast.getRange());
+        return diag(diagnostics::tooManyArguments(params.size(), args.size()), ast.getRange());
     }
     if (args.size() < params.size()) {
-        return diag(diagnostics::tooFewArguments(params.size(), args.size()), {}, ast.getRange());
+        return diag(diagnostics::tooFewArguments(params.size(), args.size()), ast.getRange());
     }
 
     for (std::size_t i = 0; i < args.size(); i++) {
