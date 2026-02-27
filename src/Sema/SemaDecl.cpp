@@ -49,11 +49,14 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
     const Type* type = nullptr;
     const Type* exprType = nullptr;
 
+    // explicit type
     if (auto* ty = ast.getTypeExpr()) {
         TRY(visit(*ty));
         type = ty->getType();
         exprType = type->removeReference();
     }
+
+    // init expression
     if (auto* expr = ast.getExpr()) {
         TRY_DECL(repl, expression(*expr, exprType));
         ast.setExpr(repl);
@@ -61,17 +64,19 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
             type = repl->getType();
         }
     }
+
+    // something wrong
     assert(type != nullptr && "failed to infer type");
 
+    // handle references
     if (type->isReference()) {
         if (ast.getExpr() == nullptr) {
             return diag(diagnostics::uninitializedReference(ast.getName()), ast.getRange());
         }
-        if (not llvm::isa<AstVarExpr>(ast.getExpr())) {
-            return diag(diagnostics::invalidReferenceInit(), ast.getRange());
-        }
+        TRY(ensureAddressable(*ast.getExpr()))
     }
 
+    // cannot create variable of nulltype
     if (type->isNull()) {
         return diag(diagnostics::nullVariable(), ast.getRange());
     }

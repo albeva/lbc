@@ -336,8 +336,9 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
         TRY_ASSIGN(args[i], expression(*args[i], params[i]));
     }
 
-    ast.setType(funcType->getReturnType());
-    setSuggestedType(funcType->getReturnType());
+    const Type* retType = funcType->getReturnType()->removeReference();
+    ast.setType(retType);
+    setSuggestedType(retType);
     return {};
 }
 
