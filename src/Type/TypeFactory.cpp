@@ -6,6 +6,11 @@
 #include "llvm/ADT/Hashing.h"
 using namespace lbc;
 
+namespace {
+template<typename T>
+std::uint8_t size = static_cast<std::uint8_t>(sizeof(T));
+}
+
 TypeFactory::TypeFactory(Context& context)
 : m_context(context) {
     createSingletonTypes();
@@ -44,8 +49,10 @@ auto TypeFactory::allocate(const std::size_t size, const std::size_t alignment) 
 }
 
 void TypeFactory::createSingletonTypes() {
+    // TODO: Derive type info from current compilation target data layouts.
     for (const auto kind : kSingletonKinds) {
         switch (kind) {
+        case TypeKind::Label:
         case TypeKind::Void:
         case TypeKind::Null:
         case TypeKind::Any:
@@ -54,34 +61,34 @@ void TypeFactory::createSingletonTypes() {
             setSingleton(create<Type>(kind));
             break;
         case TypeKind::UByte:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::uint8_t)), false));
+            setSingleton(create<TypeIntegral>(kind, size<std::uint8_t>, false));
             break;
         case TypeKind::UShort:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::uint16_t)), false));
+            setSingleton(create<TypeIntegral>(kind, size<std::uint16_t>, false));
             break;
         case TypeKind::UInteger:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::uint32_t)), false));
+            setSingleton(create<TypeIntegral>(kind, size<std::uint32_t>, false));
             break;
         case TypeKind::ULong:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::uint64_t)), false));
+            setSingleton(create<TypeIntegral>(kind, size<std::uint64_t>, false));
             break;
         case TypeKind::Byte:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::int8_t)), true));
+            setSingleton(create<TypeIntegral>(kind, size<std::int8_t>, true));
             break;
         case TypeKind::Short:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::int16_t)), true));
+            setSingleton(create<TypeIntegral>(kind, size<std::int16_t>, true));
             break;
         case TypeKind::Integer:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::int32_t)), true));
+            setSingleton(create<TypeIntegral>(kind, size<std::int32_t>, true));
             break;
         case TypeKind::Long:
-            setSingleton(create<TypeIntegral>(kind, static_cast<std::uint8_t>(sizeof(std::int64_t)), true));
+            setSingleton(create<TypeIntegral>(kind, size<std::int64_t>, true));
             break;
         case TypeKind::Single:
-            setSingleton(create<TypeFloatingPoint>(kind, static_cast<std::uint8_t>(sizeof(float))));
+            setSingleton(create<TypeFloatingPoint>(kind, size<float>));
             break;
         case TypeKind::Double:
-            setSingleton(create<TypeFloatingPoint>(kind, static_cast<std::uint8_t>(sizeof(double))));
+            setSingleton(create<TypeFloatingPoint>(kind, size<double>));
             break;
         case TypeKind::Pointer:
         case TypeKind::Reference:

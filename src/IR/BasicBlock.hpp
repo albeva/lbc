@@ -3,18 +3,18 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Block.hpp"
 #include "Instruction.hpp"
-#include "Operand.hpp"
+namespace lbc {
+class Context;
+}
 namespace lbc::ir {
 
-class BasicBlock final : public Operand, public llvm::ilist_node<BasicBlock> {
+class BasicBlock final : public Block {
 public:
-    BasicBlock(bool scoped, std::string label);
-    ~BasicBlock() override;
+    BasicBlock(Context& context, std::string label);
 
-    [[nodiscard]] auto isScoped() const -> bool { return m_scoped; }
     [[nodiscard]] auto body() -> llvm::ilist<Instruction>& { return m_body; }
-    [[nodiscard]] auto cleanup() -> llvm::ilist<Instruction>& { return m_cleanup; }
 
     [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
         return value->getKind() == Kind::BasicBlock;
@@ -22,8 +22,6 @@ public:
 
 private:
     llvm::ilist<Instruction> m_body;
-    llvm::ilist<Instruction> m_cleanup;
-    bool m_scoped;
 };
 
 } // namespace lbc::ir

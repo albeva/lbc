@@ -15,6 +15,7 @@ namespace lbc {
  * Enumerate type kinds
  */
 enum class TypeKind : std::uint8_t {
+    Label,
     Void,
     Null,
     Any,
@@ -53,8 +54,9 @@ public:
 
     /// Sentinel types
     [[nodiscard]] constexpr auto isSentinel() const -> bool {
-        return m_kind >= TypeKind::Void && m_kind <= TypeKind::Any;
+        return m_kind >= TypeKind::Label && m_kind <= TypeKind::Any;
     }
+    [[nodiscard]] constexpr auto isLabel() const -> bool { return m_kind == TypeKind::Label; }
     [[nodiscard]] constexpr auto isVoid() const -> bool { return m_kind == TypeKind::Void; }
     [[nodiscard]] constexpr auto isNull() const -> bool { return m_kind == TypeKind::Null; }
     [[nodiscard]] constexpr auto isAny() const -> bool { return m_kind == TypeKind::Any; }

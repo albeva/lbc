@@ -34,6 +34,10 @@ public:
     // Sentinel types
     // -------------------------------------------------------------------------
 
+    [[nodiscard]] auto getLabel() const -> const Type* {
+        return getSingleton(TypeKind::Label);
+    }
+
     [[nodiscard]] auto getVoid() const -> const Type* {
         return getSingleton(TypeKind::Void);
     }
@@ -164,9 +168,10 @@ protected:
     }
 
     /// Number of singleton types
-    static constexpr std::size_t COUNT = 15;
+    static constexpr std::size_t COUNT = 16;
     /// TypeKind values for all singleton types
     static constexpr std::array<TypeKind, COUNT> kSingletonKinds {
+        TypeKind::Label,
         TypeKind::Void,
         TypeKind::Null,
         TypeKind::Any,

@@ -14,7 +14,7 @@ target_sources(lbc_lib
     IR/Instruction.cpp
     IR/Literal.cpp
     IR/Module.cpp
-    IR/Operand.cpp
+    IR/NamedValue.cpp
     IR/Temporary.cpp
     IR/Value.cpp
     Lexer/Lexer.cpp
@@ -48,7 +48,7 @@ target_sources(lbc_lib
     IR/Instruction.hpp
     IR/Literal.hpp
     IR/Module.hpp
-    IR/Operand.hpp
+    IR/NamedValue.hpp
     IR/Temporary.hpp
     IR/Value.hpp
     Lexer/Character.hpp

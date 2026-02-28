@@ -9,13 +9,14 @@ namespace lbc::ir {
 
 class Literal : public Value {
 public:
-    constexpr Literal(const Type* type, const LiteralValue& value)
+    Literal(const Type* type, const LiteralValue& value)
     : Value(Kind::Literal, type)
     , m_value(value) {}
 
     [[nodiscard]] auto getValue() const -> const LiteralValue& { return m_value; }
+    auto setValue(const LiteralValue& value) { m_value = value; }
 
-    [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
+    [[nodiscard]] static auto classof(const Value* value) -> bool {
         return value->getKind() == Kind::Literal;
     }
 

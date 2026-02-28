@@ -3,29 +3,30 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "BasicBlock.hpp"
-#include "Operand.hpp"
+#include "Block.hpp"
+#include "NamedValue.hpp"
 namespace lbc {
+class Context;
 class Symbol;
 class TypeFunction;
 } // namespace lbc
 namespace lbc::ir {
 
-class Function : public Operand, public llvm::ilist_node<Function> {
+class Function : public NamedValue, public llvm::ilist_node<Function> {
 public:
-    Function(Symbol* symbol, std::string name);
+    Function(Context& context, Symbol* symbol, std::string name);
 
-    [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
+    [[nodiscard]] static auto classof(const Value* value) -> bool {
         return value->getKind() == Kind::Function;
     }
 
-    [[nodiscard]] auto blocks() noexcept -> llvm::ilist<BasicBlock>& { return m_blocks; }
+    [[nodiscard]] auto blocks() noexcept -> llvm::ilist<Block>& { return m_blocks; }
 
     [[nodiscard]] auto getSymbol() const -> Symbol* { return m_symbol; }
 
 private:
     Symbol* m_symbol;
-    llvm::ilist<BasicBlock> m_blocks;
+    llvm::ilist<Block> m_blocks;
 };
 
 } // namespace lbc::ir

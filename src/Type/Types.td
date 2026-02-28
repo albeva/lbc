@@ -91,6 +91,7 @@ def FunctionType : BaseType<Aggregate, "TypeFunction">;
 // Sentinel types
 // -----------------------------------------------------------------------------
 
-def VoidType : BaseType<Sentinel>;
-def NullType : BaseType<Sentinel>;
-def AnyType  : BaseType<Sentinel>;
+def LabelType : BaseType<Sentinel>;
+def VoidType  : BaseType<Sentinel>;
+def NullType  : BaseType<Sentinel>;
+def AnyType   : BaseType<Sentinel>;

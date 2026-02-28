@@ -15,24 +15,24 @@ public:
     NO_COPY_AND_MOVE(Value)
 
     enum class Kind : std::uint8_t {
-        // Operand
+        // Named values
         Temporary,
         Variable,
         Function,
+        // Block kinds
         BasicBlock,
-        // non operands
+        ScopedBlock,
+        // non-named values
         Literal
     };
 
-    constexpr explicit Value(const Kind kind, const Type* type)
+    Value(const Kind kind, const Type* type)
     : m_kind(kind)
     , m_type(type) {}
 
-    virtual ~Value() = default;
-
-    [[nodiscard]] constexpr auto getKind() const -> Kind { return m_kind; }
-    [[nodiscard]] constexpr auto getType() const -> const Type* { return m_type; }
-    [[nodiscard]] static constexpr auto classof(const Value* /*unused*/) -> bool { return true; }
+    [[nodiscard]] auto getKind() const -> Kind { return m_kind; }
+    [[nodiscard]] auto getType() const -> const Type* { return m_type; }
+    [[nodiscard]] static auto classof(const Value* /*unused*/) -> bool { return true; }
 
 private:
     Kind m_kind;

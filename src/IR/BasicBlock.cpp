@@ -4,8 +4,5 @@
 #include "BasicBlock.hpp"
 using namespace lbc::ir;
 
-BasicBlock::BasicBlock(const bool scoped, std::string label)
-: Operand(Kind::BasicBlock, label, nullptr)
-, m_scoped(scoped) {}
-
-BasicBlock::~BasicBlock() = default;
+BasicBlock::BasicBlock(Context& context, std::string label)
+: Block(Kind::BasicBlock, context, std::move(label)) {}
