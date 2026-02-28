@@ -11,6 +11,7 @@ FixNamespaceComments: true
 AlignTrailingComments: true
 AlignConsecutiveBitFields: true
 SortIncludes: CaseSensitive
+SpaceInEmptyBraces: Never
 IncludeCategories:
   - Priority: 1
     Regex: ^"pch\.hpp"

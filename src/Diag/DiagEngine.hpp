@@ -41,7 +41,7 @@ private:
 
     /// Construct a valid index pointing into DiagEngine storage.
     constexpr explicit DiagIndex(const Value value)
-    : m_value(value) { }
+    : m_value(value) {}
 
     /// Return the raw value. Asserts validity in debug builds.
     [[nodiscard]] constexpr auto get() const -> Value {

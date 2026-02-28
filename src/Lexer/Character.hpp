@@ -19,7 +19,7 @@ public:
      * Implicit conversion from char.
      */
     constexpr Character(const char ch) // NOLINT(*-explicit-conversions)
-    : m_char(ch) { }
+    : m_char(ch) {}
 
     /**
      * Return the underlying char value.

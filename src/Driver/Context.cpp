@@ -6,7 +6,7 @@ using namespace lbc;
 
 Context::Context()
 : m_diagEngine(*this)
-, m_typeFactory(*this) { }
+, m_typeFactory(*this) {}
 
 auto Context::retain(llvm::StringRef string) -> llvm::StringRef {
     return m_strings.insert(string).first->first();

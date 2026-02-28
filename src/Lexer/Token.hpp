@@ -13,7 +13,7 @@ public:
     /** Default-construct an Invalid sentinel token. */
     constexpr Token()
     : m_kind(TokenKind::Value::Invalid)
-    , m_value() { }
+    , m_value() {}
 
     /** Construct a token with a kind, source range, and optional literal value. */
     constexpr Token(

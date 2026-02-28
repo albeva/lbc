@@ -15,7 +15,7 @@ struct TypedFlags {
 
     constexpr TypedFlags() = default;
     constexpr explicit TypedFlags(const Enum flags) noexcept
-    : m_flags(flags) { }
+    : m_flags(flags) {}
 
     /**
      * Get the current flags as an enum type.

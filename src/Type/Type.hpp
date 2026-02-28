@@ -88,7 +88,7 @@ protected:
     friend class TypeFactory;
 
     constexpr explicit Type(const TypeKind kind)
-    : TypeBase(kind) { }
+    : TypeBase(kind) {}
 };
 
 } // namespace lbc

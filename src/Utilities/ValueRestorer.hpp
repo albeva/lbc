@@ -16,7 +16,7 @@ struct [[nodiscard]] ValueRestorer final {
 
     [[nodiscard]] constexpr explicit ValueRestorer(Ts&... values)
     : m_targets { values... }
-    , m_values { values... } { }
+    , m_values { values... } {}
 
     constexpr ~ValueRestorer() {
         restore(std::index_sequence_for<Ts...> {});

@@ -40,7 +40,7 @@ protected:
     constexpr TypeIntegral(const TypeKind kind, const std::uint8_t size, const bool isSigned)
     : Type(kind)
     , m_size(size)
-    , m_signed(isSigned) { }
+    , m_signed(isSigned) {}
 
 private:
     /// Size in bytes
@@ -70,7 +70,7 @@ protected:
 
     constexpr TypeFloatingPoint(const TypeKind kind, const std::uint8_t size)
     : Type(kind)
-    , m_size(size) { }
+    , m_size(size) {}
 
 private:
     /// Size in bytes

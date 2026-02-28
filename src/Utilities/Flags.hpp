@@ -13,14 +13,14 @@
  */
 #define MARK_AS_FLAGS_ENUM(TYPE) \
     template <>                  \
-    struct flags::FlaggedEnum<TYPE> final : flags::Tag { }
+    struct flags::FlaggedEnum<TYPE> final : flags::Tag {}
 
 namespace lbc::flags {
-struct Tag { };
+struct Tag {};
 
 template <typename T>
     requires std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>>
-struct FlaggedEnum { };
+struct FlaggedEnum {};
 
 template <typename T>
 concept IsFlagsEnum = std::is_base_of_v<Tag, FlaggedEnum<T>>;

@@ -129,7 +129,7 @@ public:
 private:
     template <typename T>
     constexpr explicit LiteralValue(const T value)
-    : m_value(value) { }
+    : m_value(value) {}
 
     template <typename T>
     [[nodiscard]] constexpr auto is() const -> bool {

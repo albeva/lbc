@@ -12,7 +12,7 @@ public:
     NO_COPY_AND_MOVE(AstCodePrinter)
 
     explicit AstCodePrinter(llvm::raw_ostream& output = llvm::outs())
-    : m_output(output) { }
+    : m_output(output) {}
 
     void print(const AstRoot&);
 

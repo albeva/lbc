@@ -36,7 +36,7 @@ protected:
     )
     : Type(TypeKind::Function)
     , m_params(params)
-    , m_returnType(returnType) { }
+    , m_returnType(returnType) {}
 
 private:
     /// Parameter types

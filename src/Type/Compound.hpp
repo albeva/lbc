@@ -28,7 +28,7 @@ protected:
 
     explicit constexpr TypePointer(const Type* base)
     : Type(TypeKind::Pointer)
-    , m_base(base) { }
+    , m_base(base) {}
 
 private:
     /// The pointed-to type
@@ -56,7 +56,7 @@ protected:
 
     explicit constexpr TypeReference(const Type* base)
     : Type(TypeKind::Reference)
-    , m_base(base) { }
+    , m_base(base) {}
 
 private:
     /// The referred-to type
