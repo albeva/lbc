@@ -38,48 +38,131 @@ enough to lower cleanly to LLVM IR.
 ### Abstraction Level
 
 The IR is **instruction-based** with **named variables** and **numbered
-temporaries**. It preserves structured control flow (no arbitrary gotos).
+temporaries**. Control flow uses **basic blocks with jumps** — all BASIC control
+flow constructs (IF/ELSE, DO/LOOP, WHILE/WEND, FOR/NEXT) are lowered into
+conditional and unconditional branches between labeled blocks.
 
 - Source-level variables appear as `var name: Type` declarations.
 - Expressions are decomposed into instructions that produce numbered temporaries
   (`%0`, `%1`, ...). Temp numbering resets per function.
-- Control flow is generalized: all BASIC loop forms (`DO/LOOP`, `WHILE/WEND`,
-  `FOR/NEXT`) lower to a single uniform `loop` construct. Similarly, all
-  conditional forms lower to a single `if` construct.
+- Control flow is lowered to basic blocks and branch instructions: conditional
+  branches (`cond_br`), unconditional branches (`br`), and returns (`ret`).
 
-### Two-Level Structure
+### Class Hierarchy
 
-The IR has two levels of structure:
+#### Values
 
-1. **Top-level containers** — hand-written C++ classes. Few in number,
-   structurally unique, each with distinct semantics:
-   - **Module** — root container, holds all top-level declarations.
-   - **Function** — name, parameters, return type, body (instruction list),
-     linkage/visibility. May be generic (uninstantiated).
-   - **Type declaration** — user-defined types/classes with full field names,
-     types, and methods.
-   - **External declaration** — imported C functions or other external symbols.
+All IR entities that can be referenced inherit from `Value`, which carries a
+`Kind` discriminator for LLVM-style RTTI and a `Type*` from the compiler's
+type system.
 
-2. **Instructions** — defined via TableGen (`.td`). Uniform shape (opcode,
-   operands, result), many of them, high payoff from generated code:
-   - Visitor dispatch
-   - Binary serialization / deserialization
-   - Text printer
-   - VM opcode mapping
+```
+Value (base — kind + type)
+├── NamedValue (adds a name — satisfies the Named concept)
+│   ├── Temporary (%0, %1, ...)
+│   ├── Variable (named locals/globals)
+│   ├── Function (name, symbol, block list)
+│   └── Block (abstract — labeled unit of control flow)
+│       ├── BasicBlock (flat instruction list)
+│       └── ScopedBlock (child blocks + cleanup + value table)
+└── Literal (unnamed compile-time constant)
+```
 
-This mirrors LLVM's own architecture: `Module`, `Function`, `BasicBlock` are
-hand-written, while the instruction set is TableGen-defined.
+#### Containers
+
+The IR has a layered container structure:
+
+```
+Module
+├── declarations (extern functions, global variables, type declarations)
+└── functions
+    └── blocks (BasicBlock | ScopedBlock)
+        └── instructions (flat, uniform — future TableGen candidates)
+```
+
+- **Module** — root container, holds all top-level declarations and functions.
+- **Function** — name, parameters, return type, body as a list of blocks. The
+  first block is the entry point.
+- **Block** — abstract base. Concrete subclasses:
+  - **BasicBlock** — a labeled, straight-line sequence of instructions ending
+    with a terminator (branch, conditional branch, or return).
+  - **ScopedBlock** — a group of child blocks sharing a lexical scope, with
+    an optional cleanup block and a ValueTable for named values. Used for
+    managing object lifetimes (retain/release, destructors).
+- **Instruction** — placeholder for individual IR instructions (future:
+  TableGen-defined with opcodes, operands, and visitor dispatch).
+
+### Scoped Blocks and Object Lifetimes
+
+Unlike LLVM IR, the LBC IR preserves lexical scope information. This is
+essential for:
+
+- **Reference counting** — retain/release are explicit IR instructions that
+  can be optimized (elide redundant pairs, sink releases, etc.).
+- **Destructors** — called implicitly at scope exit, derived from type
+  metadata. The IR does not emit explicit destructor calls; the VM and LLVM
+  lowering pass infer them from the scope structure and type information.
+- **Template instantiation** — scope structure is preserved through
+  serialization, allowing correct cleanup generation for instantiated types.
+
+A ScopedBlock provides three layers of cleanup:
+
+1. **Explicit retain/release** — instructions within the body blocks that
+   manipulate reference counts at specific program points.
+2. **Cleanup block** — an optional block of instructions (e.g. release
+   operations) that runs before any scope exit (return, branch to outer block).
+3. **Implicit destructor/dealloc** — at the scope boundary, the VM/lowering
+   pass walks the scope's variables and calls destructors for types that have
+   them.
+
+Example:
+
+```
+func foo(z: bool): integer {
+entry:
+    cond_br z, @true, @false
+
+scoped true: {
+    var obj: Object
+    obj = call getObj()
+    retain obj
+    %0 = field obj, res
+    ret %0
+} cleanup {
+    release obj
+}
+
+scoped false: {
+    var obj2: Object
+    obj2 = call getObj2()
+    retain obj2
+    %1 = field obj2, res
+    ret %1
+} cleanup {
+    release obj2
+}
+}
+```
+
+### Value Table
+
+Each ScopedBlock owns a `ValueTable` — a `SymbolTableBase<NamedValue>` that
+maps names to IR values within that scope. Value tables chain via parent
+pointers, mirroring the nesting of scoped blocks, so name lookups walk
+outward through enclosing scopes.
 
 ### Type System
 
 The IR reuses the compiler's existing type system (`Type`, `TypeIntegral`,
 `TypeFloatingPoint`, `TypePointer`, etc.) rather than defining its own. IR nodes
-carry `Type*` pointers from the same `TypeFactory`.
+carry `Type*` pointers from the same `TypeFactory`. The `Label` sentinel type
+is used for block values.
 
 ### Memory Model
 
-IR nodes are arena-allocated via `Context::create<T>()`, same as AST nodes.
-Top-level containers own their instruction sequences.
+IR nodes use `llvm::ilist` (intrusive linked lists) for ownership of functions,
+blocks, and instructions. This matches LLVM's own IR ownership model and
+provides efficient insertion, removal, and iteration.
 
 ### Textual Form
 
@@ -90,23 +173,26 @@ parser.
 declare func puts(msg: ZString)
 
 func main() {
+entry:
     var hello: ZString = "Hello "
     var world: ZString = "world"
     call puts(hello)
     call puts(world)
     call puts("!")
+    ret
 }
 ```
 
 Expressions decompose into instructions with temporaries:
 
 ```
-var a: Integer = 1
-var b: Integer = 2
-var c: Integer = 3
-%0 = mul b, c
-%1 = add a, %0
-var x: Integer = %1
+entry:
+    var a: Integer = 1
+    var b: Integer = 2
+    var c: Integer = 3
+    %0 = mul b, c
+    %1 = add a, %0
+    var x: Integer = %1
 ```
 
 ### Binary Serialization
@@ -130,7 +216,7 @@ TableGen backend(s) generate:
 - Binary serialization / deserialization code
 - Text printer support
 
-Top-level containers (`Module`, `Function`, `TypeDecl`, `ExternDecl`) are
+Top-level containers (`Module`, `Function`, `Block`, `ScopedBlock`) are
 hand-written, as there are only a few of them and each has unique structure.
 
 ## Compiler Pipeline Integration
@@ -147,9 +233,10 @@ An `AstVisitor`-based pass walks the semantically annotated AST and emits IR.
 This pass:
 
 - Decomposes expressions into instruction sequences with temporaries
-- Generalizes control flow (all loops → uniform `loop`, all conditionals → `if`)
+- Lowers all control flow to basic blocks and branch instructions
+- Wraps lexical scopes in ScopedBlocks with cleanup blocks
 - Preserves full type information on every value and instruction
-- Emits explicit retain/release for reference-counted types (future)
+- Emits explicit retain/release for reference-counted types
 
 ### Pass 2: IR → LLVM IR (Code Generation)
 
@@ -157,6 +244,8 @@ Walks IR containers and instructions, emitting LLVM IR:
 
 - Maps IR types to LLVM types
 - Maps IR instructions to LLVM instructions
+- Materializes cleanup blocks as real basic blocks with branch rewrites
+- Emits implicit destructor calls at scope boundaries
 - Sets up target machine, data layout, calling conventions
 - Emits object files or LLVM IR text (`.ll`) for debugging
 
@@ -172,14 +261,19 @@ The closest analogue in purpose. SIL (Swift Intermediate Language) preserves
 Swift's full type system, reference counting semantics (ARC), generic type
 parameters, and protocol witness tables. It exists in three forms: in-memory,
 textual (`.sil`), and binary (`.swiftmodule` for distributing inlineable/generic
-code). SIL is SSA-based with a CFG of basic blocks — unlike our IR, which uses
-named variables and structured control flow. SIL carries the heaviest
+code). SIL is SSA-based with a CFG of basic blocks. SIL carries the heaviest
 optimization burden in the Swift compiler: mandatory passes (definite
 initialization, memory promotion, ARC optimization), devirtualization, and
 generic specialization all happen at the SIL level before lowering to LLVM IR.
 Swift also has a limited SIL-based interpreter for compile-time constant
 evaluation. Instructions are defined via C++ classes with X-macro `.def` files,
 not TableGen.
+
+A key difference: SIL resolves scope information entirely during SILGen
+(AST → SIL lowering) using an internal `CleanupStack`. By the time SIL exists,
+all cleanup is explicit instructions — no scope boundaries remain. LBC IR
+preserves scope structure because the VM, template instantiation, and
+serialization benefit from knowing scope boundaries.
 
 ### Rust MIR
 
@@ -220,7 +314,8 @@ classes.
 | | SIL | MIR | Zig | Kotlin | **LBC** |
 |---|---|---|---|---|---|
 | SSA | Yes | No | Yes | No | **No** |
-| Control flow | CFG | CFG | Structured | Structured | **Structured** |
+| Control flow | CFG | CFG | Structured | Structured | **CFG** |
+| Scope info | No (resolved at gen) | No | No | Yes (tree) | **Yes (ScopedBlock)** |
 | Variables | Registers | Indexed | Indexed | Named (tree) | **Named + %temps** |
 | Serializable | Yes | Partial | Yes (ZIR) | Yes | **Yes** |
 | Interpretable | Limited | Yes (Miri) | Yes | No | **Yes (planned)** |
@@ -233,9 +328,10 @@ classes.
 - **Non-SSA is well-precedented.** Rust and Kotlin both chose against SSA for
   good reasons. Our motivations (VM interpretability, serialization simplicity,
   readability) are equally valid — LLVM constructs SSA anyway.
-- **Structured control flow** is the less common choice (only Zig and Kotlin),
-  but it is simpler to serialize, simpler to interpret in a VM, and maps
-  naturally to BASIC's control flow.
+- **CFG with scope preservation** is our unique combination. Unlike SIL/MIR
+  (pure CFG, no scopes) and Kotlin/Zig (structured, no CFG), we use basic
+  blocks for control flow but preserve scope boundaries via ScopedBlock for
+  object lifetime management.
 - **TableGen for instruction definitions** is unique among these compilers —
   everyone else hand-writes their IR nodes. Our existing TableGen infrastructure
   makes this a natural fit and yields generated visitors, serialization, and
@@ -249,35 +345,38 @@ classes.
 
 ## Implementation Plan
 
-### Phase 1: Foundation
+### Phase 1: Foundation (in progress)
 
-1. Design and implement hand-written top-level containers (`IRModule`,
-   `IRFunction`, `IRExternDecl`, `IRTypeDecl`).
-2. Design the instruction TableGen schema (`src/IR/Instructions.td`).
-3. Write tblgen backend(s) for instruction codegen (`--gen=lbc-ir-def`,
+1. ~~Design and implement hand-written containers (`Module`, `Function`,
+   `Block`, `BasicBlock`, `ScopedBlock`).~~ Done.
+2. ~~Value hierarchy (`Value`, `NamedValue`, `Temporary`, `Literal`).~~ Done.
+3. ~~ValueTable for scoped name resolution.~~ Done.
+4. ~~Label sentinel type for block values.~~ Done.
+5. Design the instruction TableGen schema (`src/IR/Instructions.td`).
+6. Write tblgen backend(s) for instruction codegen (`--gen=lbc-ir-def`,
    `--gen=lbc-ir-visitor`).
-4. Implement generated instruction nodes.
+7. Implement generated instruction nodes.
 
 ### Phase 2: AST → IR Lowering
 
-5. Implement the lowering pass (AstVisitor-based).
-6. Starting instruction set: function declaration, variable declaration,
+8. Implement the lowering pass (AstVisitor-based).
+9. Starting instruction set: function declaration, variable declaration,
    function call — enough for hello world.
-7. IR text printer for debugging.
+10. IR text printer for debugging.
 
 ### Phase 3: IR → LLVM IR
 
-8. Implement LLVM IR code generation pass.
-9. Type mapping (IR types → LLVM types).
-10. Target machine setup and object file emission.
-11. Wire into the compiler driver.
+11. Implement LLVM IR code generation pass.
+12. Type mapping (IR types → LLVM types).
+13. Target machine setup and object file emission.
+14. Wire into the compiler driver.
 
 ### Phase 4: Expansion (Post Hello World)
 
-12. Arithmetic / comparison instructions.
-13. Control flow instructions (`if`, `loop`).
-14. Reference counting (retain/release).
-15. Binary serialization (tblgen-generated for instructions, hand-written for
+15. Arithmetic / comparison instructions.
+16. Control flow instructions (branch, conditional branch).
+17. Reference counting (retain/release).
+18. Binary serialization (tblgen-generated for instructions, hand-written for
     containers).
-16. Module interface extraction.
-17. Template/generic support in IR form.
+19. Module interface extraction.
+20. Template/generic support in IR form.

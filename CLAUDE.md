@@ -81,9 +81,14 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 
 - **LLVM usage** — prefer std C++ where it's the natural fit, but freely use LLVM tools and libraries throughout the
   entire codebase (frontend, IR, backend). No artificial isolation boundaries.
-- **IR** — a typed, serializable, interpretable intermediate representation. Preserves semantic information (types,
-  generics, module interfaces) that LLVM IR discards. Serves as the central representation for module import/export,
-  compile-time evaluation, and template instantiation. No optimization passes — all optimization is delegated to LLVM.
+- **IR** — a typed, serializable, interpretable intermediate representation in `lbc::ir` namespace. Uses basic blocks
+  with branch instructions for control flow (not structured if/loop). Preserves semantic information (types, generics,
+  module interfaces) and lexical scope boundaries (via `ScopedBlock`) that LLVM IR discards. Retain/release are explicit
+  instructions; destructors are implicit at scope boundaries from type metadata. Value hierarchy: `Value` → `NamedValue`
+  → `Temporary`/`Variable`/`Function`/`Block`. Blocks are `BasicBlock` (flat instruction list) or `ScopedBlock` (child
+  blocks + cleanup + `ValueTable`). `SymbolTableBase<T>` is the generic name→value mapping used by both `SymbolTable`
+  (frontend, maps to `Symbol`) and `ValueTable` (IR, maps to `NamedValue`). Containers use `llvm::ilist` for ownership.
+  No optimization passes — all optimization is delegated to LLVM.
 
 ## Code Conventions
 
