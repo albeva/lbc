@@ -46,7 +46,7 @@ private:
     void astGroup(AstClass* cls);
     void astClass(AstClass* cls);
     void constructor(AstClass* cls);
-    void classof(AstClass* cls);
+    void classof(const AstClass* cls);
     void functions(AstClass* cls);
     void classArgs(AstClass* cls);
 

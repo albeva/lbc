@@ -43,8 +43,6 @@ const auto generatorOpt = cl::opt<Generator> {
 
 auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
     switch (generatorOpt) {
-    case Generator::TokensDef:
-        return tokens::TokensGen(os, records).run();
     case Generator::AstDef:
         return ast::AstGen(os, records).run();
     case Generator::AstFwdDecl:
@@ -53,12 +51,14 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return ast::AstVisitorGen(os, records).run();
     case Generator::DiagDef:
         return diag::DiagGen(os, records).run();
+    case Generator::IRInstDef:
+        return ir::IRInstGen(os, records).run();
+    case Generator::TokensDef:
+        return tokens::TokensGen(os, records).run();
     case Generator::TypeBase:
         return type::TypeBaseGen(os, records).run();
     case Generator::TypeFactory:
         return type::TypeFactoryGen(os, records).run();
-    case Generator::IRInstDef:
-        return ir::IRInstGen(os, records).run();
     default:
         std::unreachable();
     }

@@ -11,4 +11,107 @@
 #include "IR/Instruction.hpp"
 namespace lbc::ir {
 
+/**
+ * Instructions
+ */
+enum class InstrKind : std::uint8_t {
+    Jmp,
+    CondJmp,
+    Ret,
+    RetVal,
+    Neg,
+    Not,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    And,
+    Or,
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Var,
+    Cast,
+    Load,
+    Store,
+    AddrOf,
+    Retain,
+    Release,
+    Call,
+    CallVal,
+};
+/**
+ * base class for instructions
+ */
+class Instruction : public llvm::ilist_node<Instruction> {
+public:
+    NO_COPY_AND_MOVE(Instruction);
+
+    [[nodiscard]] constexpr auto getKind() const -> InstrKind { return m_kind; }
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* /*node*/) -> bool {
+        return true;
+    }
+
+protected:
+    explicit constexpr Instruction(const InstrKind kind)
+    : m_kind(kind) {}
+
+private:
+    InstrKind m_kind;
+};
+
+/**
+ * terminator instructions
+ */
+class [[nodiscard]] TerminatorInstruction final : Instruction {
+public:
+};
+
+/**
+ * unary instructions
+ */
+class [[nodiscard]] UnaryInstruction final : Instruction {
+public:
+};
+
+/**
+ * binary instructions
+ */
+class [[nodiscard]] BinaryInstruction : Instruction {
+public:
+};
+
+/**
+ * comparison instructions
+ */
+class [[nodiscard]] ComparisonInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * declaration instructions
+ */
+class [[nodiscard]] DeclarationInstruction final : Instruction {
+public:
+};
+
+/**
+ * memory instructions
+ */
+class [[nodiscard]] MemoryInstruction final : Instruction {
+public:
+};
+
+/**
+ * call instructions
+ */
+class [[nodiscard]] CallInstruction final : Instruction {
+public:
+};
 } // namespace lbc::ir

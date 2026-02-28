@@ -25,7 +25,7 @@ public:
     /**
      * Sort records by their definition order.
      */
-    [[nodiscard]] static auto sortedByDef(ArrayRef<const Record*> arr) -> std::vector<const Record*> {
+    [[nodiscard]] static auto sortedByDef(const ArrayRef<const Record*> arr) -> std::vector<const Record*> {
         std::vector<const Record*> result { arr };
         std::ranges::sort(result, [](const Record* one, const Record* two) {
             return one->getID() < two->getID();

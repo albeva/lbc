@@ -152,26 +152,21 @@ void AstGen::constructor(AstClass* cls) {
 /**
  * Generate classof method for llvm rtti support
  */
-void AstGen::classof(AstClass* cls) {
+void AstGen::classof(const AstClass* cls) {
     scope(Scope::Public);
 
     const auto range = cls->getLeafRange();
-    const bool hideParam = cls->isRoot() || !range.has_value();
 
-    comment("LLVM RTTI support to check if given node is "s + articulate(cls->getClassName()) + cls->getClassName());
-    block("[[nodiscard]] static constexpr auto classof(const "s + m_root->getClassName() + "* " + (hideParam ? "/* ast */" : "ast") + ") -> bool", [&] {
-        if (cls->isRoot()) {
-            line("return true");
-        } else if (range) {
-            if (range->first == range->second) {
-                line("return ast->getKind() == AstKind::" + range->first->getEnumName());
-            } else {
-                line("return ast->getKind() >= AstKind::" + range->first->getEnumName() + " && ast->getKind() <= AstKind::" + range->second->getEnumName());
-            }
+    if (cls->isRoot()) {
+        Builder::classof(m_root->getClassName(), "getKind", "");
+    } else if (range) {
+        if (range->first == range->second) {
+            Builder::classof(m_root->getClassName(), "getKind", "AstKind", range->first->getEnumName());
         } else {
-            line("return false");
+            Builder::classof(m_root->getClassName(), "getKind", "AstKind", range->first->getEnumName(), range->second->getEnumName());
         }
-    });
+    }
+
     newline();
 }
 

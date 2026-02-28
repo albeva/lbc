@@ -71,7 +71,14 @@ public:
         m_os << "\n";
     }
 
-    void getter(const llvm::StringRef name, const Streamable auto& type, bool isConstexpr = true, bool isConst = true) {
+    /**
+     * Generate a getter method
+     * @param name of the member to get. name -> getName
+     * @param type the value type
+     * @param isConstexpr generate constexpr method
+     * @param isConst generate const method
+     */
+    void getter(const StringRef name, const Streamable auto& type, const bool isConstexpr = true, const bool isConst = true) {
         space();
         m_os << "[[nodiscard]] ";
         if (isConstexpr) {
@@ -84,7 +91,14 @@ public:
         m_os << "-> " << type << " { return m_" << name << "; }\n";
     }
 
-    void predicate(const llvm::StringRef name, bool isConstexpr, const Streamable auto& expr) {
+    /**
+     * Generate a simple single linerer predicate function
+     *
+     * @param name of the method: name -> isName
+     * @param isConstexpr generate constexpr function
+     * @param expr expression body to return
+     */
+    void predicate(const StringRef name, const bool isConstexpr, const Streamable auto& expr) {
         space();
         m_os << "[[nodiscard]] ";
         if (isConstexpr) {
@@ -94,8 +108,16 @@ public:
         m_os << "{ return " << expr << "; }\n";
     }
 
+    /**
+     * Generate a complex predicate function
+     *
+     * @tparam Func callback function that generates function body
+     * @param name name of the method. name -> isName
+     * @param isConstexpr generate constexpr function
+     * @param func closure that generate the body
+     */
     template <std::invocable Func>
-    void predicate(const llvm::StringRef name, bool isConstexpr, Func&& func) {
+    void predicate(const StringRef name, const bool isConstexpr, Func&& func) {
         space();
         m_os << "[[nodiscard]] ";
         if (isConstexpr) {
@@ -106,12 +128,44 @@ public:
         m_os << "\n";
     }
 
+    /**
+     * Generate LLVM-RTTI classof method
+     *
+     * @param klass the root class
+     * @param getter getter function returning the kind
+     * @param kind Kind enum name
+     * @param first optional first value
+     * @param last optional second value for the range
+     */
+    void classof(
+        const StringRef klass,
+        const StringRef getter,
+        const StringRef kind,
+        const std::optional<StringRef>& first = std::nullopt,
+        const std::optional<StringRef>& last = std::nullopt
+    ) {
+        doc("LLVM RTTI support", true);
+        const auto* node = first || last ? "node" : "/*node*/";
+
+        block("[[nodiscard]] static constexpr auto classof(const " + klass + "* " + node + ") -> bool", [&] {
+            if (first && last) {
+                line("return node->" + getter + "() >= " + kind + "::" + *first + " && node->" + getter + "() <= " + kind + "::" + *last);
+            } else if (first) {
+                line("return node->" + getter + "() == " + kind + "::" + *first);
+            } else if (last) {
+                line("return node->" + getter + "() == " + kind + "::" + *last);
+            } else {
+                line("return true");
+            }
+        });
+    }
+
     void line(const Streamable auto& line, const StringRef terminator = ";") {
         space();
         m_os << line << terminator << "\n"; // NOLINT(*-pro-bounds-array-to-pointer-decay, *-no-array-decay)
     }
 
-    void lines(const std::string& lines, const StringRef sep = "\n") {
+    void lines(const std::string& lines, const StringRef sep = "\n") const {
         if (not lines.empty()) {
             space();
             for (const auto& ch : lines) {
@@ -139,7 +193,7 @@ public:
         bool quote = false;
     };
 
-    void list(const std::vector<std::string>& items, const ListOptions options) {
+    void list(const std::vector<std::string>& items, const ListOptions& options) const {
         for (std::size_t idx = 0; idx < items.size(); ++idx) {
             // indent
             space();
@@ -214,7 +268,7 @@ public:
         return str;
     }
 
-    void newline() {
+    void newline() const {
         if (m_isDoc) {
             space();
         }
@@ -252,17 +306,25 @@ public:
         m_os << "/// " << comment << "\n";
     }
 
-    void doc(const StringRef comment) {
+    void doc(const StringRef comment, const bool singleLiner = false) const {
         space();
-        m_os << "/**\n";
-        space();
-        m_os << " * ";
+        if (singleLiner) {
+            m_os << "/// ";
+        } else {
+            m_os << "/**\n";
+            space();
+            m_os << " * ";
+        }
         for (const auto& ch : comment) {
             switch (ch) {
             case '\n':
                 m_os << '\n';
                 space();
-                m_os << " * ";
+                if (singleLiner) {
+                    m_os << "/// ";
+                } else {
+                    m_os << " * ";
+                }
                 continue;
             case '\r':
             case '\v':
@@ -273,8 +335,10 @@ public:
             }
         }
         m_os << '\n';
-        space();
-        m_os << " */\n";
+        if (not singleLiner) {
+            space();
+            m_os << " */\n";
+        }
     }
 
     template <std::invocable Func>
@@ -286,7 +350,7 @@ public:
         m_os << m_space << " */\n";
     }
 
-    void section(const StringRef comment) {
+    void section(const StringRef comment) const {
         const std::size_t dashes = COLUMNS - 3 - (m_indent * 4);
 
         m_os << m_space << "// " << std::string(dashes, '-') << "\n";
@@ -309,14 +373,14 @@ public:
              << m_space << "// " << std::string(dashes, '-') << "\n\n";
     }
 
-    void space() {
+    void space() const {
         if (m_isDoc) {
             m_os << " * ";
         }
         m_os << m_space;
     }
 
-    void scope(Scope sc, const bool force = false) {
+    void scope(const Scope sc, const bool force = false) {
         if (force || m_scope != sc) {
             m_scope = sc;
             const auto tmp = m_indent;
@@ -357,7 +421,7 @@ private:
         m_os << "//\n";
         m_os << "// DO NOT MODIFY. This file is AUTO GENERATED.\n";
         m_os << "//\n";
-        m_os << "// This file is generated by " << quoted(m_generator) << " from " << quoted(llvm::sys::path::filename(m_file).str()) << "\n";
+        m_os << "// This file is generated by " << quoted(m_generator) << " from " << quoted(sys::path::filename(m_file).str()) << "\n";
         m_os << "// clang-format off\n";
         m_os << "#pragma once\n";
 

@@ -177,15 +177,16 @@ def Release : Memory<"release", "Decrement reference count", [
 // =============================================================================
 // Function calls
 // =============================================================================
+class Call<string mnemonic_, string desc_, list<Operand> operands_ = []> : Instruction<mnemonic_, desc_, operands_>;
 
 // call $callee, %arg0, %arg1, ...
-def Call : Instruction<"call", "Void function call", [
+def Call : Call<"call", "Void function call", [
     Arg<Function, "callee">,
     Args<Value, "arguments">,
 ]>;
 
 // %result = call $callee, %arg0, %arg1, ...
-def CallVal : Instruction<"call", "Function call with return value", [
+def CallVal : Call<"call", "Function call with return value", [
     Result<Value>,
     Arg<Function, "callee">,
     Args<Value, "arguments">,

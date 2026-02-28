@@ -12,6 +12,7 @@ add_executable(lbc-tblgen
     ast/AstVisitorGen.hpp
     diag/DiagGen.cpp
     diag/DiagGen.hpp
+    ir/Category.cpp
     ir/IRInstGen.cpp
     ir/IRInstGen.hpp
     tokens/TokensGen.cpp

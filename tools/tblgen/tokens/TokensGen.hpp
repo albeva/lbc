@@ -11,6 +11,6 @@ public:
 
     TokensGen(raw_ostream& os, const RecordKeeper& records);
 
-    [[nodiscard]] auto run() -> bool final;
+    [[nodiscard]] auto run() -> bool override;
 };
 } // namespace tokens
