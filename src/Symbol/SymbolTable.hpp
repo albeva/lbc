@@ -3,14 +3,13 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "Symbol.hpp"
 namespace lbc {
 
 /**
  * Concept for types that can be stored in a SymbolTableBase.
  * Requires a getName() method returning something convertible to llvm::StringRef.
  */
-template<typename T>
+template <typename T>
 concept Named = requires(const T& value) {
     { value.getName() } -> std::convertible_to<llvm::StringRef>;
 };
@@ -21,7 +20,7 @@ concept Named = requires(const T& value) {
  * Symbol tables form a chain via parent pointers, representing nested lexical scopes.
  * Lookups walk the chain upward by default, finding the innermost definition of a name.
  */
-template<Named T>
+template <Named T>
 class SymbolTableBase {
 public:
     NO_COPY_AND_MOVE(SymbolTableBase)
@@ -47,7 +46,7 @@ public:
      * @param recursive if true, search parent scopes as well.
      * @return the symbol, or nullptr if not found.
      */
-    [[nodiscard]] auto find(llvm::StringRef id, bool recursive = true) const -> T* {
+    [[nodiscard]] auto find(llvm::StringRef id, const bool recursive = true) const -> T* {
         if (const auto it = m_symbols.find(id); it != m_symbols.end()) {
             return it->second;
         }
@@ -73,12 +72,6 @@ private:
 
     SymbolTableBase* m_parent;
     Container m_symbols;
-};
-
-/** Symbol table for the frontend, mapping names to Symbols. */
-class SymbolTable final : public SymbolTableBase<Symbol> {
-public:
-    using SymbolTableBase::SymbolTableBase;
 };
 
 } // namespace lbc

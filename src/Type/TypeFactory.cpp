@@ -7,7 +7,7 @@
 using namespace lbc;
 
 namespace {
-template<typename T>
+template <typename T>
 std::uint8_t size = static_cast<std::uint8_t>(sizeof(T));
 }
 

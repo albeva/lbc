@@ -47,7 +47,7 @@ public:
     [[nodiscard]] static auto classof(const Value* /*unused*/) -> bool { return true; }
 
 private:
-    Kind m_kind;   ///< RTTI discriminator
+    Kind m_kind;        ///< RTTI discriminator
     const Type* m_type; ///< type of this value
 };
 

@@ -4,9 +4,9 @@
 #pragma once
 #include "pch.hpp"
 #include "LiteralValue.hpp"
+#include "SymbolTable.hpp"
 namespace lbc {
 class Type;
-class SymbolTable;
 
 /** Visibility of a symbol across module boundaries. */
 enum class SymbolVisibility : std::uint8_t {
@@ -81,6 +81,12 @@ private:
     SymbolVisibility m_visibility;       ///< visibility of the symbol
     std::optional<LiteralValue> m_value; ///< constant value associated with the symbol
     std::span<Symbol*> m_relatedSymbols; ///< related symbols, e.g. function parameters, or UDT members
+};
+
+/** Symbol table for the frontend, mapping names to Symbols. */
+class SymbolTable final : public SymbolTableBase<Symbol> {
+public:
+    using SymbolTableBase::SymbolTableBase;
 };
 
 } // namespace lbc

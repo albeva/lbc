@@ -35,7 +35,7 @@ public:
     [[nodiscard]] auto getSymbol() const -> Symbol* { return m_symbol; }
 
 private:
-    Symbol* m_symbol;          ///< frontend symbol with type and linkage info
+    Symbol* m_symbol;            ///< frontend symbol with type and linkage info
     llvm::ilist<Block> m_blocks; ///< blocks forming the function body
 };
 

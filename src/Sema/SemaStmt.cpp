@@ -2,7 +2,7 @@
 // Created by Albert Varaksin on 19/02/2026.
 //
 #include "SemanticAnalyser.hpp"
-#include "Symbol/SymbolTable.hpp"
+#include "Symbol/Symbol.hpp"
 using namespace lbc;
 
 auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {

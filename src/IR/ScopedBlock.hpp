@@ -44,8 +44,8 @@ public:
     }
 
 private:
-    ValueTable m_valueTable;         ///< named values in this scope
-    llvm::ilist<Block> m_blocks;     ///< child blocks within the scope
+    ValueTable m_valueTable;            ///< named values in this scope
+    llvm::ilist<Block> m_blocks;        ///< child blocks within the scope
     llvm::ilist<Instruction> m_cleanup; ///< cleanup instructions before scope exit
 };
 
