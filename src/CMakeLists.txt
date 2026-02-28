@@ -8,6 +8,15 @@ target_sources(lbc_lib
     Ast/AstCodePrinter.cpp
     Diag/DiagEngine.cpp
     Driver/Context.cpp
+    IR/BasicBlock.cpp
+    IR/Declaration.cpp
+    IR/Function.cpp
+    IR/Instruction.cpp
+    IR/Literal.cpp
+    IR/Module.cpp
+    IR/Operand.cpp
+    IR/Temporary.cpp
+    IR/Value.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/ParseDecl.cpp
@@ -33,6 +42,15 @@ target_sources(lbc_lib
     Diag/DiagEngine.hpp
     Diag/LogProvider.hpp
     Driver/Context.hpp
+    IR/BasicBlock.hpp
+    IR/Declaration.hpp
+    IR/Function.hpp
+    IR/Instruction.hpp
+    IR/Literal.hpp
+    IR/Module.hpp
+    IR/Operand.hpp
+    IR/Temporary.hpp
+    IR/Value.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
     Lexer/Lexer.hpp

@@ -31,6 +31,7 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/SMLoc.h>
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/ADT/ilist.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
