@@ -12,6 +12,13 @@ AlignTrailingComments: true
 AlignConsecutiveBitFields: true
 SortIncludes: CaseSensitive
 SpaceInEmptyBraces: Never
+BreakBeforeCloseBracketBracedList: true
+BreakBeforeCloseBracketFunction: true
+BreakBeforeCloseBracketIf: true
+BreakBeforeCloseBracketLoop: true
+BreakBeforeCloseBracketSwitch: true
+BreakBeforeTemplateCloser: true
+BreakBeforeTernaryOperators: true
 IncludeCategories:
   - Priority: 1
     Regex: ^"pch\.hpp"
