@@ -13,8 +13,8 @@ public:
     GeneratorBase(
         raw_ostream& os,
         const RecordKeeper& records,
-        StringRef generator,
-        StringRef ns = "lbc",
+        const StringRef generator,
+        const StringRef ns = "lbc",
         std::vector<StringRef> includes = { "\"pch.hpp\"" }
     )
     : Builder(os, records.getInputFilename(), generator, ns, std::move(includes))
@@ -61,7 +61,7 @@ public:
      */
     [[nodiscard]] static auto collect(
         const std::vector<const Record*>& records,
-        StringRef field,
+        const StringRef field,
         const Record* record
     ) -> std::vector<const Record*> {
         const auto pred = [&](const Record* rec) {

@@ -7,6 +7,7 @@
 #include "gens/ast/AstGen.hpp"
 #include "gens/ast/AstVisitorGen.hpp"
 #include "gens/diag/DiagGen.hpp"
+#include "gens/ir/IRInstGen.hpp"
 #include "gens/type/TypeBaseGen.hpp"
 #include "gens/type/TypeFactoryGen.hpp"
 using namespace llvm;
@@ -21,6 +22,7 @@ enum class Generator : std::uint8_t {
     DiagDef,
     TypeBase,
     TypeFactory,
+    IRInstDef,
 };
 
 const auto generatorOpt = cl::opt<Generator> {
@@ -34,7 +36,8 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::AstVisitor, AstVisitorGen::genName, "Generate AST visitor"),
         clEnumValN(Generator::DiagDef, DiagGen::genName, "Generate diagnostic definitions"),
         clEnumValN(Generator::TypeBase, TypeBaseGen::genName, "Generate type base definitions"),
-        clEnumValN(Generator::TypeFactory, TypeFactoryGen::genName, "Generate type factory")
+        clEnumValN(Generator::TypeFactory, TypeFactoryGen::genName, "Generate type factory"),
+        clEnumValN(Generator::IRInstDef, IRInstGen::genName, "Generate IR instruction definitions")
     )
 };
 
@@ -54,6 +57,8 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return TypeBaseGen(os, records).run();
     case Generator::TypeFactory:
         return TypeFactoryGen(os, records).run();
+    case Generator::IRInstDef:
+        return IRInstGen(os, records).run();
     default:
         std::unreachable();
     }

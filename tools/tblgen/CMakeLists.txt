@@ -15,6 +15,8 @@ add_executable(lbc-tblgen
     gens/ast/AstVisitorGen.hpp
     gens/diag/DiagGen.cpp
     gens/diag/DiagGen.hpp
+    gens/ir/IRInstGen.cpp
+    gens/ir/IRInstGen.hpp
     gens/type/Type.cpp
     gens/type/Type.hpp
     gens/type/TypeBaseGen.cpp
@@ -24,5 +26,5 @@ add_executable(lbc-tblgen
     main.cpp
 )
 configure_tblgen(lbc-tblgen)
+target_include_directories(lbc-tblgen PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(lbc-tblgen PRIVATE compiler_options compiler_warnings)
-

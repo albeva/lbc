@@ -587,17 +587,3 @@ struct std::formatter<lbc::TokenKind, char> final {
         return std::format_to(ctx.out(), "{}", value.string());
     }
 };
-
-/**
- * Support using TokenKind with std::print and std::format
- */
-template <>
-struct std::formatter<lbc::TokenKind::Value, char> final {
-    constexpr static auto parse(std::format_parse_context& ctx) {
-        return ctx.begin();
-    }
-
-    auto format(const lbc::TokenKind::Value& value, auto& ctx) const {
-        return std::format_to(ctx.out(), "{}", lbc::TokenKind(value).string());
-    }
-};
