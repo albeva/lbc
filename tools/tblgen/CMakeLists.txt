@@ -1,28 +1,28 @@
 add_executable(lbc-tblgen
-    Builder.hpp
     GeneratorBase.hpp
-    gens/ast/AstArg.cpp
-    gens/ast/AstArg.hpp
-    gens/ast/AstClass.cpp
-    gens/ast/AstClass.hpp
-    gens/ast/AstFwdDeclGen.cpp
-    gens/ast/AstFwdDeclGen.hpp
-    gens/ast/AstGen.cpp
-    gens/ast/AstGen.hpp
-    gens/ast/AstVisitorGen.cpp
-    gens/ast/AstVisitorGen.hpp
-    gens/diag/DiagGen.cpp
-    gens/diag/DiagGen.hpp
-    gens/ir/IRInstGen.cpp
-    gens/ir/IRInstGen.hpp
-    gens/tokens/TokensGen.cpp
-    gens/tokens/TokensGen.hpp
-    gens/type/Type.cpp
-    gens/type/Type.hpp
-    gens/type/TypeBaseGen.cpp
-    gens/type/TypeBaseGen.hpp
-    gens/type/TypeFactoryGen.cpp
-    gens/type/TypeFactoryGen.hpp
+    ast/AstArg.cpp
+    ast/AstArg.hpp
+    ast/AstClass.cpp
+    ast/AstClass.hpp
+    ast/AstFwdDeclGen.cpp
+    ast/AstFwdDeclGen.hpp
+    ast/AstGen.cpp
+    ast/AstGen.hpp
+    ast/AstVisitorGen.cpp
+    ast/AstVisitorGen.hpp
+    diag/DiagGen.cpp
+    diag/DiagGen.hpp
+    ir/IRInstGen.cpp
+    ir/IRInstGen.hpp
+    tokens/TokensGen.cpp
+    tokens/TokensGen.hpp
+    type/Type.cpp
+    type/Type.hpp
+    type/TypeBaseGen.cpp
+    type/TypeBaseGen.hpp
+    type/TypeFactoryGen.cpp
+    type/TypeFactoryGen.hpp
+    Builder.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)

@@ -2,14 +2,14 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/TableGen/Main.h>
 #include <llvm/TableGen/Record.h>
-#include "gens/ast/AstFwdDeclGen.hpp"
-#include "gens/ast/AstGen.hpp"
-#include "gens/ast/AstVisitorGen.hpp"
-#include "gens/diag/DiagGen.hpp"
-#include "gens/ir/IRInstGen.hpp"
-#include "gens/tokens/TokensGen.hpp"
-#include "gens/type/TypeBaseGen.hpp"
-#include "gens/type/TypeFactoryGen.hpp"
+#include "ast/AstFwdDeclGen.hpp"
+#include "ast/AstGen.hpp"
+#include "ast/AstVisitorGen.hpp"
+#include "diag/DiagGen.hpp"
+#include "ir/IRInstGen.hpp"
+#include "tokens/TokensGen.hpp"
+#include "type/TypeBaseGen.hpp"
+#include "type/TypeFactoryGen.hpp"
 using namespace llvm;
 
 namespace {
