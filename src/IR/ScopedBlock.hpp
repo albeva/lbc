@@ -5,6 +5,7 @@
 #include "pch.hpp"
 #include "Block.hpp"
 #include "Instruction.hpp"
+#include "ValueTable.hpp"
 namespace lbc {
 class Context;
 }
@@ -16,12 +17,14 @@ public:
 
     [[nodiscard]] auto blocks() -> llvm::ilist<Block>& { return m_blocks; }
     [[nodiscard]] auto cleanup() -> llvm::ilist<Instruction>& { return m_cleanup; }
+    [[nodiscard]] auto getValueTable() -> ValueTable& { return m_valueTable; }
 
     [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
         return value->getKind() == Kind::ScopedBlock;
     }
 
 private:
+    ValueTable m_valueTable;
     llvm::ilist<Block> m_blocks;
     llvm::ilist<Instruction> m_cleanup;
 };

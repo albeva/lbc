@@ -5,4 +5,5 @@
 using namespace lbc::ir;
 
 ScopedBlock::ScopedBlock(Context& context, std::string label)
-: Block(Kind::ScopedBlock, context, std::move(label)) {}
+: Block(Kind::ScopedBlock, context, std::move(label))
+, m_valueTable(nullptr) {}

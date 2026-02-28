@@ -3,24 +3,34 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "Symbol.hpp"
 namespace lbc {
-class Symbol;
-class Context;
 
 /**
- * A scoped mapping from names to symbols.
+ * Concept for types that can be stored in a SymbolTableBase.
+ * Requires a getName() method returning something convertible to llvm::StringRef.
+ */
+template<typename T>
+concept Named = requires(const T& value) {
+    { value.getName() } -> std::convertible_to<llvm::StringRef>;
+};
+
+/**
+ * A scoped mapping from names to named values.
  *
  * Symbol tables form a chain via parent pointers, representing nested lexical scopes.
  * Lookups walk the chain upward by default, finding the innermost definition of a name.
  */
-class SymbolTable final {
+template<Named T>
+class SymbolTableBase {
 public:
-    NO_COPY_AND_MOVE(SymbolTable)
-    explicit SymbolTable(SymbolTable* parent);
-    ~SymbolTable();
+    NO_COPY_AND_MOVE(SymbolTableBase)
+    explicit SymbolTableBase(SymbolTableBase* parent)
+    : m_parent(parent) {}
+    ~SymbolTableBase() = default;
 
     /** Get the enclosing scope, or nullptr for the outermost scope. */
-    [[nodiscard]] auto getParent() const -> SymbolTable* { return m_parent; }
+    [[nodiscard]] auto getParent() const -> SymbolTableBase* { return m_parent; }
 
     /**
      * Check whether a symbol with the given name exists.
@@ -37,16 +47,38 @@ public:
      * @param recursive if true, search parent scopes as well.
      * @return the symbol, or nullptr if not found.
      */
-    [[nodiscard]] auto find(llvm::StringRef id, bool recursive = true) const -> Symbol*;
+    [[nodiscard]] auto find(llvm::StringRef id, bool recursive = true) const -> T* {
+        if (const auto it = m_symbols.find(id); it != m_symbols.end()) {
+            return it->second;
+        }
 
-    /** Insert a symbol into this scope. */
-    void insert(Symbol* symbol);
+        if (!recursive) {
+            return nullptr;
+        }
+
+        if (m_parent != nullptr) {
+            return m_parent->find(id, true);
+        }
+
+        return nullptr;
+    }
+
+    /** Insert a value into this scope. */
+    void insert(T* value) {
+        m_symbols.try_emplace(value->getName(), value);
+    }
 
 private:
-    using Container = llvm::StringMap<Symbol*>;
+    using Container = llvm::StringMap<T*>;
 
-    SymbolTable* m_parent;
+    SymbolTableBase* m_parent;
     Container m_symbols;
+};
+
+/** Symbol table for the frontend, mapping names to Symbols. */
+class SymbolTable final : public SymbolTableBase<Symbol> {
+public:
+    using SymbolTableBase::SymbolTableBase;
 };
 
 } // namespace lbc
