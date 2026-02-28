@@ -7,7 +7,7 @@
 
 #define TRY_CONCAT_IMPL(x, y) x##y
 #define TRY_CONCAT(x, y) TRY_CONCAT_IMPL(x, y)
-#define TRY_RESULT(x) TRY_CONCAT(x, __COUNTER__)
+#define TRY_RESULT(x) TRY_CONCAT(x, __LINE__)
 
 /**
  * Evaluate a `std::expected` expression and propagate the error on failure.
