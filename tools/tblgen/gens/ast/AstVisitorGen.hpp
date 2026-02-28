@@ -2,9 +2,9 @@
 // Created by Albert Varaksin on 15/02/2026.
 //
 #pragma once
-#include "../../GeneratorBase.hpp"
 #include "AstGen.hpp"
-
+#include "GeneratorBase.hpp"
+namespace ast {
 /**
  * TableGen backend that reads Ast.td and emits AstVisitor.hpp.
  * Generates a CRTP-free visitor base class using C++23 deducing this,
@@ -32,3 +32,4 @@ private:
     void visitFunction();
     void caseForward(const AstClass* klass);
 };
+} // namespace ast

@@ -5,6 +5,7 @@
 #include <llvm/TableGen/Record.h>
 using namespace llvm;
 
+namespace type {
 class Type;
 class TypeBaseGen;
 
@@ -49,7 +50,7 @@ public:
     [[nodiscard]] auto getCategory() const -> const TypeCategory* { return m_category; }
 
     /** Get the enum name (e.g. "Void", "Integer", "Pointer"). */
-    [[nodiscard]] auto getEnumName() const -> llvm::StringRef { return m_enumName; }
+    [[nodiscard]] auto getEnumName() const -> StringRef { return m_enumName; }
 
     /** Get the backing C++ class name, if specified (e.g. "TypeIntegral"). */
     [[nodiscard]] auto getBackingClassName() const -> std::optional<llvm::StringRef>;
@@ -60,5 +61,6 @@ private:
     /// The owning category
     const TypeCategory* m_category;
     /// Enum name derived from the record name (with "Type" suffix stripped)
-    llvm::StringRef m_enumName;
+    StringRef m_enumName;
 };
+} // namespace type

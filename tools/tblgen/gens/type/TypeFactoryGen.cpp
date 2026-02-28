@@ -2,6 +2,7 @@
 // Reads Types.td and emits TypeFactoryBase.hpp
 #include "TypeFactoryGen.hpp"
 #include <llvm/ADT/StringSet.h>
+using namespace type;
 
 TypeFactoryGen::TypeFactoryGen(
     raw_ostream& os,

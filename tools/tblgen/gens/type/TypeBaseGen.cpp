@@ -1,6 +1,7 @@
 // Custom TableGen backend for generating type base definitions.
 // Reads Types.td and emits TypeBase.hpp
 #include "TypeBaseGen.hpp"
+using namespace type;
 
 TypeBaseGen::TypeBaseGen(
     raw_ostream& os,

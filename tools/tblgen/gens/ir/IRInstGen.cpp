@@ -1,6 +1,7 @@
 // Custom TableGen backend for generating IR instruction definitions.
 // Reads Instructions.td and emits Instructions.hpp
 #include "IRInstGen.hpp"
+using namespace ir;
 
 IRInstGen::IRInstGen(
     raw_ostream& os,

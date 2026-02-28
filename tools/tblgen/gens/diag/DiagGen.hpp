@@ -2,8 +2,8 @@
 // Created by Albert Varaksin on 16/02/2026.
 //
 #pragma once
-#include "../../GeneratorBase.hpp"
-
+#include "GeneratorBase.hpp"
+namespace diag {
 /**
  * TableGen backend that reads Diagnostics.td and emits Diagnostics.hpp.
  * Parses format string placeholders ({name} / {name:type}) to extract
@@ -41,3 +41,4 @@ private:
     std::vector<const Record*> m_severities;
     std::vector<const Record*> m_diagnostics;
 };
+} // namespace diag

@@ -3,12 +3,13 @@
 //
 #include "AstVisitorGen.hpp"
 using namespace std::string_literals;
+using namespace ast;
 
 AstVisitorGen::AstVisitorGen(
     raw_ostream& os,
     const RecordKeeper& records
 )
-: AstGen(os, records, genName, "lbc", { "pch.hpp", "Ast/Ast.hpp" }) { }
+: AstGen(os, records, genName, "lbc", { "pch.hpp", "Ast/Ast.hpp" }) {}
 
 auto AstVisitorGen::run() -> bool {
     visitorBaseClass();

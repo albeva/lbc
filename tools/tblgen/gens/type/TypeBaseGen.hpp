@@ -1,9 +1,9 @@
 // Custom TableGen backend for generating type base definitions.
 // Reads Types.td and emits TypeBase.hpp
 #pragma once
-#include "../../GeneratorBase.hpp"
+#include "GeneratorBase.hpp"
 #include "Type.hpp"
-
+namespace type {
 /**
  * TableGen backend that reads Types.td and emits TypeBase.hpp.
  *
@@ -78,3 +78,4 @@ private:
     /// Singleton types (non-owning references into categories)
     std::vector<const Type*> m_singles;
 };
+} // namespace type

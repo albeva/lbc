@@ -6,6 +6,7 @@
 #include <llvm/TableGen/Record.h>
 #include "AstGen.hpp"
 using namespace llvm;
+using namespace ast;
 
 AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
 : m_parent(parent)

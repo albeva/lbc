@@ -2,6 +2,7 @@
 // Reads Ast.td and emits Ast.hpp
 #include "AstGen.hpp"
 using namespace std::string_literals;
+using namespace ast;
 
 // -----------------------------------------------------------------------------
 // The generator

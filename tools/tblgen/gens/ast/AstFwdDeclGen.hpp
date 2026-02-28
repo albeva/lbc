@@ -3,7 +3,7 @@
 //
 #pragma once
 #include "AstGen.hpp"
-
+namespace ast {
 /**
  * TableGen backend that reads Ast.td and emits AstFwdDecl.hpp.
  * Generates forward declarations for all AST node classes.
@@ -19,3 +19,4 @@ public:
 
     [[nodiscard]] auto run() -> bool override;
 };
+} // namespace ast

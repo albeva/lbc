@@ -3,9 +3,9 @@
 //
 #pragma once
 #include <utility>
-#include "../../GeneratorBase.hpp"
 #include "AstClass.hpp"
-
+#include "GeneratorBase.hpp"
+namespace ast {
 // -----------------------------------------------------------------------------
 // The generator
 // -----------------------------------------------------------------------------
@@ -26,8 +26,7 @@ public:
         StringRef generator = genName,
         StringRef ns = "lbc",
         std::vector<StringRef> includes = {
-            "pch.hpp", "Symbol/LiteralValue.hpp", "Lexer/TokenKind.hpp"
-        }
+            "pch.hpp", "Symbol/LiteralValue.hpp", "Lexer/TokenKind.hpp" }
     );
 
     [[nodiscard]] auto run() -> bool override;
@@ -61,3 +60,4 @@ private:
     const Record* m_argClass;
     const Record* m_funcClass;
 };
+} // namespace ast

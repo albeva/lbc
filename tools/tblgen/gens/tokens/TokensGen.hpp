@@ -2,8 +2,8 @@
 // Created by Albert Varaksin on 14/02/2026.
 //
 #pragma once
-#include "../GeneratorBase.hpp"
-
+#include "GeneratorBase.hpp"
+namespace tokens {
 /** TableGen backend that reads TokenKind.td and emits TokenKind.hpp. */
 class TokensGen final : public GeneratorBase {
 public:
@@ -13,3 +13,4 @@ public:
 
     [[nodiscard]] auto run() -> bool final;
 };
+} // namespace tokens

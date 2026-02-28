@@ -9,14 +9,14 @@
 #include <optional>
 #include <string>
 #include <vector>
-
 #include "AstArg.hpp"
-
-class AstGen;
 
 namespace llvm {
 class Record;
 } // namespace llvm
+
+namespace ast {
+class AstGen;
 
 /**
  * Represents a node in the AST class hierarchy. Built recursively from the
@@ -92,3 +92,4 @@ private:
     std::vector<std::string> m_functions;
     Kind m_kind;
 };
+} // namespace ast

@@ -2,7 +2,7 @@
 // Reads Types.td and emits TypeFactory.hpp
 #pragma once
 #include "TypeBaseGen.hpp"
-
+namespace type {
 /**
  * TableGen backend that reads Types.td and emits TypeFactoryBase.hpp.
  *
@@ -35,3 +35,4 @@ private:
     /** Emit the getType(TokenKind) method that maps keyword tokens to types. */
     void keywordToType();
 };
+} // namespace type

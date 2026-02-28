@@ -8,6 +8,7 @@ namespace llvm {
 class Record;
 } // namespace llvm
 
+namespace ast {
 /**
  * Wraps a TableGen Member record. Determines whether the member is a
  * constructor parameter (no default value) or an initialized field, and
@@ -36,3 +37,4 @@ private:
     bool m_mutable;
     bool m_ctorParam;
 };
+} // namespace ast

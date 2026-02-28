@@ -3,6 +3,7 @@
 //
 #include "Type.hpp"
 #include "TypeBaseGen.hpp"
+using namespace type;
 
 TypeCategory::TypeCategory(const Record* record, const TypeBaseGen& gen)
 : m_record(record) {

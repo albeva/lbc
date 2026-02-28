@@ -1,6 +1,7 @@
 // Custom TableGen backend for generating token definitions.
 // Reads Tokens.td and emits TokenKinds.inc
 #include "TokensGen.hpp"
+using namespace tokens;
 
 TokensGen::TokensGen(raw_ostream& os, const RecordKeeper& records)
 : GeneratorBase(os, records, genName) {

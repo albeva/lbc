@@ -18,7 +18,7 @@ public:
         std::vector<StringRef> includes = { "\"pch.hpp\"" }
     )
     : Builder(os, records.getInputFilename(), generator, ns, std::move(includes))
-    , m_records(records) { }
+    , m_records(records) {}
 
     [[nodiscard]] virtual auto run() -> bool = 0;
 

@@ -1,6 +1,7 @@
 // Custom TableGen backend for generating diagnostic definitions.
 // Reads Diagnostics.td and emits Diagnostics.hpp
 #include "DiagGen.hpp"
+using namespace diag;
 
 DiagGen::DiagGen(
     raw_ostream& os,
