@@ -15,14 +15,14 @@ using namespace llvm;
 namespace {
 
 enum class Generator : std::uint8_t {
-    TokensDef,
     AstDef,
     AstFwdDecl,
     AstVisitor,
     DiagDef,
+    IRInstDef,
+    TokensDef,
     TypeBase,
     TypeFactory,
-    IRInstDef,
 };
 
 const auto generatorOpt = cl::opt<Generator> {
@@ -30,14 +30,14 @@ const auto generatorOpt = cl::opt<Generator> {
     cl::desc("Generator to run"),
     cl::Required,
     cl::values(
-        clEnumValN(Generator::TokensDef, tokens::TokensGen::genName, "Generate token definitions"),
         clEnumValN(Generator::AstDef, ast::AstGen::genName, "Generate AST node definitions"),
         clEnumValN(Generator::AstFwdDecl, ast::AstFwdDeclGen::genName, "Generate AST forward declarations"),
         clEnumValN(Generator::AstVisitor, ast::AstVisitorGen::genName, "Generate AST visitor"),
         clEnumValN(Generator::DiagDef, diag::DiagGen::genName, "Generate diagnostic definitions"),
+        clEnumValN(Generator::IRInstDef, ir::IRInstGen::genName, "Generate IR instruction definitions"),
+        clEnumValN(Generator::TokensDef, tokens::TokensGen::genName, "Generate token definitions"),
         clEnumValN(Generator::TypeBase, type::TypeBaseGen::genName, "Generate type base definitions"),
-        clEnumValN(Generator::TypeFactory, type::TypeFactoryGen::genName, "Generate type factory"),
-        clEnumValN(Generator::IRInstDef, ir::IRInstGen::genName, "Generate IR instruction definitions")
+        clEnumValN(Generator::TypeFactory, type::TypeFactoryGen::genName, "Generate type factory")
     )
 };
 
