@@ -9,7 +9,7 @@ class Context;
 /**
  * Satisfied by types that support intrusive singly-linked list chaining.
  */
-template <typename T>
+template<typename T>
 concept Sequencable = requires(T* node, T* next) {
     { node->setNext(next) } -> std::same_as<void>;
     { static_cast<T*>(node->getNext()) };
@@ -21,7 +21,7 @@ concept Sequencable = requires(T* node, T* next) {
  *
  * @tparam T The type of node that has setNext() method.
  */
-template <Sequencable T>
+template<Sequencable T>
 struct Sequencer final {
     /// Convenience alias for a pointer to the node type.
     using pointer = T*;
@@ -62,7 +62,7 @@ struct Sequencer final {
     /**
      * Append content of the span to this sequence
      */
-    template <std::convertible_to<pointer> U>
+    template<std::convertible_to<pointer> U>
     void append(std::span<U> nodes) {
         for (auto* node : nodes) {
             add(node);

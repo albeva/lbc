@@ -11,7 +11,7 @@
 
 using namespace llvm;
 
-template <typename T>
+template<typename T>
 concept Streamable = requires(raw_ostream& os, T val) {
     os << val;
 };
@@ -52,7 +52,7 @@ public:
         footer();
     }
 
-    template <std::invocable Func>
+    template<std::invocable Func>
     void block(const Streamable auto& line, Func&& func, const StringRef nolint = {}) {
         space();
         m_os << line << " ";
@@ -60,7 +60,7 @@ public:
         m_os << "\n";
     }
 
-    template <std::invocable Func>
+    template<std::invocable Func>
     void block(const Streamable auto& line, const bool terminate, Func&& func, const StringRef nolint = {}) {
         space();
         m_os << line << " ";
@@ -116,7 +116,7 @@ public:
      * @param isConstexpr generate constexpr function
      * @param func closure that generate the body
      */
-    template <std::invocable Func>
+    template<std::invocable Func>
     void predicate(const StringRef name, const bool isConstexpr, Func&& func) {
         space();
         m_os << "[[nodiscard]] ";
@@ -279,7 +279,7 @@ public:
         m_os << content;
     }
 
-    template <std::invocable Func>
+    template<std::invocable Func>
     void indent(const bool scoped, Func&& func, const StringRef nolint = {}) {
         if (scoped) {
             if (nolint.empty()) {
@@ -341,7 +341,7 @@ public:
         }
     }
 
-    template <std::invocable Func>
+    template<std::invocable Func>
     void doc(Func&& func) {
         m_os << m_space << "/**\n";
         m_isDoc = true;

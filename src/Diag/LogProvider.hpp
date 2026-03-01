@@ -30,7 +30,7 @@ protected:
      * @param location C++ call site, captured automatically
      * @return DiagError wrapping the logged DiagIndex
      */
-    template <ContextAware T>
+    template<ContextAware T>
     [[nodiscard]] auto diag(
         this T& self,
         const DiagMessage& message,
@@ -44,7 +44,7 @@ protected:
     /**
      * Create an error indicating unimplemented functionality.
      */
-    template <ContextAware T>
+    template<ContextAware T>
     [[nodiscard]] auto notImplemented(this T& self, const std::source_location& location = std::source_location::current()) -> DiagError {
         return DiagError(self.getContext().getDiag().log(diagnostics::notImplemented(), {}, {}, location));
     }

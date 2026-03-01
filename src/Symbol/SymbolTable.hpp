@@ -9,7 +9,7 @@ namespace lbc {
  * Concept for types that can be stored in a SymbolTableBase.
  * Requires a getName() method returning something convertible to llvm::StringRef.
  */
-template <typename T>
+template<typename T>
 concept Named = requires(const T& value) {
     { value.getName() } -> std::convertible_to<llvm::StringRef>;
 };
@@ -20,7 +20,7 @@ concept Named = requires(const T& value) {
  * Symbol tables form a chain via parent pointers, representing nested lexical scopes.
  * Lookups walk the chain upward by default, finding the innermost definition of a name.
  */
-template <Named T>
+template<Named T>
 class SymbolTableBase {
 public:
     NO_COPY_AND_MOVE(SymbolTableBase)

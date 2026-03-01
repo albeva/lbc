@@ -8,7 +8,7 @@
  * It uses a template parameter to define the underlying type for the flags.
  * The default type is `unsigned`, but it can be specialized for other types.
  */
-template <typename Enum>
+template<typename Enum>
     requires std::is_enum_v<Enum>
 struct TypedFlags {
     using FlagType = Enum;

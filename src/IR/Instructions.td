@@ -22,15 +22,10 @@ def Type     : OperandKind<"const Type*">;    /// compiler type
 class Operand;
 
 // Single named operand of a given type.
-class Arg<OperandKind kind_, string name_> : Operand {
+class Arg<OperandKind kind_, string name_, bit vararg_ = false> : Operand {
     OperandKind kind = kind_;
     string name = name_;
-}
-
-// Variadic operand — maps to std::span in generated code.
-class Args<OperandKind kind_, string name_> : Operand {
-    OperandKind kind = kind_;
-    string name = name_;
+    bit vararg = vararg_;
 }
 
 // Result operand — the output value produced by an instruction.
@@ -182,12 +177,12 @@ class Call<string mnemonic_, string desc_, list<Operand> operands_ = []> : Instr
 // call $callee, %arg0, %arg1, ...
 def Call : Call<"call", "Void function call", [
     Arg<Function, "callee">,
-    Args<Value, "arguments">,
+    Arg<Value, "arguments", true>,
 ]>;
 
 // %result = call $callee, %arg0, %arg1, ...
 def CallVal : Call<"call", "Function call with return value", [
     Result<Value>,
     Arg<Function, "callee">,
-    Args<Value, "arguments">,
+    Arg<Value, "arguments", true>,
 ]>;

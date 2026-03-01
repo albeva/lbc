@@ -2,7 +2,7 @@
 #include "pch.hpp"
 namespace lbc {
 
-template <typename... Base>
+template<typename... Base>
 struct Visitor : Base... {
     using Base::operator()...;
 };

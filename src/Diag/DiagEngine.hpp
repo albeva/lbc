@@ -57,7 +57,7 @@ private:
  * Result type for fallible operations that may produce diagnostics.
  * On failure, carries a DiagIndex handle into DiagEngine storage.
  */
-template <typename T>
+template<typename T>
 using DiagResult = std::expected<T, DiagIndex>;
 
 /**

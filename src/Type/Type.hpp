@@ -93,7 +93,7 @@ protected:
 
 } // namespace lbc
 
-template <>
+template<>
 struct std::formatter<lbc::Type, char> {
     static constexpr auto parse(std::format_parse_context& ctx) {
         return ctx.begin();

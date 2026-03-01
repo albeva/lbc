@@ -60,7 +60,7 @@ public:
     /** Find first and last child items. if nested is true, then recursievly find among sub childs */
     [[nodiscard]] auto getLeafRange() const -> std::optional<std::pair<const AstClass*, const AstClass*>>;
 
-    template <std::invocable<const AstClass*> Fn>
+    template<std::invocable<const AstClass*> Fn>
     void visit(Kind kind, Fn&& fn) const {
         if (getKind() == kind) {
             std::invoke(std::forward<Fn>(fn), this);
@@ -70,7 +70,7 @@ public:
         }
     }
 
-    template <std::invocable<const AstClass*> Fn>
+    template<std::invocable<const AstClass*> Fn>
     void visit(Fn&& fn) const {
         std::invoke(std::forward<Fn>(fn), this);
         for (const auto& child : m_children) {

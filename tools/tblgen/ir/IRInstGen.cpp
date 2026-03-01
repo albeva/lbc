@@ -1,6 +1,7 @@
 // Custom TableGen backend for generating IR instruction definitions.
 // Reads Instructions.td and emits Instructions.hpp
 #include "IRInstGen.hpp"
+#include "Category.hpp"
 using namespace ir;
 
 IRInstGen::IRInstGen(
@@ -9,56 +10,38 @@ IRInstGen::IRInstGen(
 )
 : GeneratorBase(os, records, genName, "lbc::ir", { "pch.hpp", "IR/Instruction.hpp" })
 , m_instrClass(records.getClass("Instruction"))
-, m_instructionRecords(sortedByDef(records.getAllDerivedDefinitions("Instruction"))) {
-    // construct categories
-    for (const auto& val : records.getClasses() | std::views::values) {
-        if (std::ranges::contains(val->getSuperClasses(), m_instrClass)) {
-            m_categoryClasses.emplace_back(val.get());
-        }
+, m_instructions(sortedByDef(records.getAllDerivedDefinitions("Instruction"))) {
+    // Get all the classes
+    for (const auto& klass : records.getClasses() | std::views::values) {
+        m_classes.emplace_back(klass.get());
     }
-    m_categoryClasses = sortedByDef(m_categoryClasses);
-    m_categories.reserve(m_categoryClasses.size());
+    std::ranges::sort(m_classes, [](const Record* one, const Record* two) static {
+        return one->getID() < two->getID();
+    });
 
-    const auto findParent = [&](const Record* record) -> Category* {
-        const auto klasses = record->getSuperClasses();
-        if (klasses.empty()) {
-            return nullptr;
-        }
-        for (const auto& cat : m_categories) {
-            if (cat->getRecord() == klasses.back()) {
-                return cat.get();
-            }
-        }
-        return nullptr;
-    };
-
-    for (const auto* klass : m_categoryClasses) {
-        auto* parent = findParent(klass);
-        auto& res = m_categories.emplace_back(std::make_unique<Category>(klass, parent, *this));
-        if (parent != nullptr) {
-            parent->getChildren().emplace_back(res.get());
+    // define categories
+    for (const Record* klass : m_classes) {
+        if (klass->hasDirectSuperClass(m_instrClass)) {
+            m_categories.emplace_back(std::make_unique<Category>(klass, nullptr, *this));
         }
     }
 }
 
+IRInstGen::~IRInstGen() = default;
+
 auto IRInstGen::run() -> bool {
     kindsEnum();
     instructionClass();
-    for (const auto& cat : m_categories) {
-        newline();
-        categoryClass(cat.get());
-    }
+    categoryClasses();
     return false;
 }
 
 void IRInstGen::kindsEnum() {
     doc("Instructions");
     block("enum class InstrKind : std::uint8_t", true, [&] {
-        for (const auto& cat : m_categories) {
-            for (const auto& instr : cat->getInstructions()) {
-                line(instr->getName(), ",");
-            }
-        }
+        visit([&](const Instruction* instr) {
+            line(instr->getName(), ",");
+        });
     });
 }
 
@@ -82,6 +65,13 @@ void IRInstGen::instructionClass() {
 
         scope(Scope::Private);
         line("InstrKind m_kind");
+    });
+}
+
+void IRInstGen::categoryClasses() {
+    visit([&](const Category* category) {
+        newline();
+        categoryClass(category);
     });
 }
 

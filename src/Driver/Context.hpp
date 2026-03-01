@@ -13,7 +13,7 @@ class Context;
  * returning `Context&`. Used by LogProvider to access the
  * diagnostic engine through deducing this.
  */
-template <typename T>
+template<typename T>
 concept ContextAware = requires(T& obj) {
     { obj.getContext() } -> std::same_as<Context&>;
 };
@@ -45,7 +45,7 @@ public:
      * @param count Number of elements
      * @return Span over the allocated buffer
      */
-    template <typename T>
+    template<typename T>
     [[nodiscard]] auto span(std::size_t count) -> std::span<T> {
         void* buffer = allocate(sizeof(T) * count, alignof(T)); // NOLINT(*-init-variables)
         return { static_cast<T*>(buffer), count };
@@ -56,7 +56,7 @@ public:
      * @tparam T object to create
      * @tparam Args arguments to pass to T constructor
      */
-    template <typename T, typename... Args>
+    template<typename T, typename... Args>
     [[nodiscard]] auto create(Args&&... args) -> T* {
         T* obj = static_cast<T*>(allocate(sizeof(T), alignof(T)));
         return std::construct_at<T>(obj, std::forward<Args>(args)...);

@@ -10,7 +10,7 @@ namespace lbc {
  * and restores them on destruction. Useful for temporary state changes
  * that must be reverted when leaving a scope.
  */
-template <std::copyable... Ts>
+template<std::copyable... Ts>
 struct [[nodiscard]] ValueRestorer final {
     NO_COPY_AND_MOVE(ValueRestorer)
 
@@ -23,7 +23,7 @@ struct [[nodiscard]] ValueRestorer final {
     }
 
 private:
-    template <std::size_t... Is>
+    template<std::size_t... Is>
     constexpr void restore(std::index_sequence<Is...> /* seq */) {
         ((std::get<Is>(m_targets) = std::move(std::get<Is>(m_values))), ...);
     }

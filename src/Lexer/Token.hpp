@@ -70,7 +70,7 @@ private:
 /**
  * Support using Token with std::print and std::format.
  */
-template <>
+template<>
 struct std::formatter<lbc::Token, char> final {
     constexpr static auto parse(std::format_parse_context& ctx) {
         return ctx.begin();

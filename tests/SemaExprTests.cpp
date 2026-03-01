@@ -89,7 +89,9 @@ auto semaFails(llvm::StringRef source) -> bool {
     EXPECT_TRUE(parsed.has_value()) << "parse failed";
     auto* module = parsed.value_or(nullptr);
     EXPECT_NE(module, nullptr);
-    if (module == nullptr) { return false; }
+    if (module == nullptr) {
+        return false;
+    }
     SemanticAnalyser sema { context };
     return !sema.analyse(*module).has_value();
 }

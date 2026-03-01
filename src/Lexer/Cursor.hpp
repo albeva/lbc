@@ -80,7 +80,7 @@ public:
     /**
      * Advance the cursor while the predicate holds for the current character.
      */
-    template <std::invocable<Character> F>
+    template<std::invocable<Character> F>
     constexpr void advanceWhile(F&& predicate) {
         while (std::invoke(std::forward<F>(predicate), current())) {
             advance();
@@ -90,7 +90,7 @@ public:
     /**
      * Advance the cursor while the predicate does not hold for the current character.
      */
-    template <std::invocable<Character> F>
+    template<std::invocable<Character> F>
     constexpr void advanceWhileNot(F&& predicate) {
         while (!std::invoke(std::forward<F>(predicate), current())) {
             advance();

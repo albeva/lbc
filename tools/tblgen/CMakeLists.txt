@@ -25,6 +25,7 @@ add_executable(lbc-tblgen
     type/TypeFactoryGen.hpp
     Builder.hpp
     main.cpp
+    ir/Category.hpp
 )
 configure_tblgen(lbc-tblgen)
 target_include_directories(lbc-tblgen PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

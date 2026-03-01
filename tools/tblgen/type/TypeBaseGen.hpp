@@ -47,7 +47,7 @@ public:
      *
      * @param func Callable invoked with each Type pointer.
      */
-    template <std::invocable<const Type*> Func>
+    template<std::invocable<const Type*> Func>
     void visit(Func&& func) {
         for (const auto& cat : m_categories) {
             for (const auto& type : cat->getTypes()) {

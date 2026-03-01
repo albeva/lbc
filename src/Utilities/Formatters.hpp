@@ -6,7 +6,7 @@
 /**
  * std::format and std::print support for std::source_location
  */
-template <>
+template<>
 struct std::formatter<std::source_location, char> final {
     static constexpr auto parse(std::format_parse_context& ctx) {
         return ctx.begin();
@@ -27,7 +27,7 @@ struct std::formatter<std::source_location, char> final {
 /**
  * Support using llvm::StringRef with std::print and std::format.
  */
-template <>
+template<>
 struct std::formatter<llvm::StringRef, char> final {
     static constexpr auto parse(std::format_parse_context& ctx) {
         return ctx.begin();

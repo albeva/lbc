@@ -111,7 +111,7 @@ private:
     /**
      * Parse the lexeme between m_start and m_input as a number.
      */
-    template <typename T>
+    template<typename T>
         requires std::is_arithmetic_v<T>
     [[nodiscard]] auto number() const -> std::optional<T> {
         T value;

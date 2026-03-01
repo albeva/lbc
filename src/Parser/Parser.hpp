@@ -43,7 +43,7 @@ public:
     /**
      * Lightweight result type for fallible parser operations.
      */
-    template <typename T>
+    template<typename T>
     using Result = DiagResult<T>;
 
     /**
@@ -174,13 +174,13 @@ private:
     // -------------------------------------------------------------------------
 
     /** Arena-allocate an AST node via the context. */
-    template <typename T, typename... Args>
+    template<typename T, typename... Args>
     auto make(Args&&... args) -> T* {
         return getContext().create<T>(std::forward<Args>(args)...);
     }
 
     /** Flatten a sequencer into a contiguous arena-allocated span. */
-    template <typename T>
+    template<typename T>
     [[nodiscard]] auto sequence(Sequencer<T>& seq) -> std::span<T*> {
         return seq.sequence(getContext());
     }

@@ -33,7 +33,7 @@ public:
      * Construct a LiteralValue from an arbitrary source type.
      * Integral types are widened to uint64_t, floating-point types to double.
      */
-    template <typename T>
+    template<typename T>
     [[nodiscard]] static constexpr auto from(const T& value) -> LiteralValue {
         if constexpr (std::is_same_v<T, bool>) { // NOLINT(*-branch-clone)
             return LiteralValue { value };
@@ -54,7 +54,7 @@ public:
      * Retrieve the stored value, casting from the canonical storage type to T.
      * The variant must currently hold the corresponding canonical type.
      */
-    template <typename T>
+    template<typename T>
     [[nodiscard]] constexpr auto get() const -> T {
         if constexpr (std::is_same_v<T, bool>) {
             return std::get<bool>(m_value);
@@ -75,7 +75,7 @@ public:
      * Replace the stored value. Accepts any supported source type,
      * as well as LiteralValue and Value for direct assignment.
      */
-    template <typename T>
+    template<typename T>
     constexpr void set(const T& value) {
         if constexpr (std::is_same_v<T, bool>) { // NOLINT(*-branch-clone)
             m_value = value;
@@ -97,7 +97,7 @@ public:
     }
 
     /** Try to retrieve the value as T, returning nullopt if the type doesn't match. */
-    template <typename T>
+    template<typename T>
     [[nodiscard]] constexpr auto as() const -> std::optional<T> {
         if (is<T>()) {
             return get<T>();
@@ -127,11 +127,11 @@ public:
     }
 
 private:
-    template <typename T>
+    template<typename T>
     constexpr explicit LiteralValue(const T value)
     : m_value(value) {}
 
-    template <typename T>
+    template<typename T>
     [[nodiscard]] constexpr auto is() const -> bool {
         if constexpr (std::is_same_v<T, bool>) {
             return std::holds_alternative<bool>(m_value);
@@ -153,7 +153,7 @@ private:
 
 } // namespace lbc
 
-template <>
+template<>
 struct std::formatter<lbc::LiteralValue, char> {
     static constexpr auto parse(std::format_parse_context& ctx) {
         return ctx.begin();

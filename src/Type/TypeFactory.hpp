@@ -45,7 +45,7 @@ private:
      *
      * Types are never individually freed; the arena owns their lifetime.
      */
-    template <std::derived_from<Type> T, typename... Args>
+    template<std::derived_from<Type> T, typename... Args>
     [[nodiscard]] auto create(Args&&... args) -> const T* {
         void* addr = allocate(sizeof(T), alignof(T));
         new (addr) T(std::forward<Args>(args)...);
@@ -75,7 +75,7 @@ private:
     // Compound type caches (keyed by base type pointer)
     // -------------------------------------------------------------------------
 
-    template <typename T>
+    template<typename T>
     using Map = std::unordered_map<const Type*, T>;
     Map<const TypePointer*> m_pointers;     ///< Cached pointer types
     Map<const TypeReference*> m_references; ///< Cached reference types
