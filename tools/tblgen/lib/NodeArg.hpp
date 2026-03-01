@@ -1,5 +1,5 @@
 //
-// Created by Albert Varaksin on 15/02/2026.
+// Created by Albert Varaksin on 01/03/2026.
 //
 #pragma once
 #include <string>
@@ -7,16 +7,15 @@
 namespace llvm {
 class Record;
 } // namespace llvm
-
-namespace ast {
+namespace lib {
 /**
  * Wraps a TableGen Member record. Determines whether the member is a
  * constructor parameter (no default value) or an initialized field, and
  * whether a setter should be generated (mutable bit).
  */
-class AstArg final {
+class NodeArg {
 public:
-    explicit AstArg(const llvm::Record* record);
+    explicit NodeArg(const llvm::Record* record);
 
     /// Whether this member generates a setter (mutable flag set in .td)
     [[nodiscard]] auto hasSetter() const -> bool { return m_mutable; }
@@ -37,4 +36,4 @@ private:
     bool m_mutable;
     bool m_ctorParam;
 };
-} // namespace ast
+} // namespace lib

@@ -1,8 +1,8 @@
 // Custom TableGen backend for generating type base definitions.
 // Reads Types.td and emits TypeBase.hpp
 #pragma once
-#include "GeneratorBase.hpp"
 #include "Type.hpp"
+#include "lib/GeneratorBase.hpp"
 namespace type {
 /**
  * TableGen backend that reads Types.td and emits TypeBase.hpp.
@@ -12,7 +12,7 @@ namespace type {
  * Singleton types are partitioned to the front of the category list
  * so their TypeKind ordinals form a contiguous range.
  */
-class TypeBaseGen : public GeneratorBase {
+class TypeBaseGen : public lib::GeneratorBase {
 public:
     /// Generator name used for CLI dispatch
     static constexpr auto genName = "lbc-type-base";

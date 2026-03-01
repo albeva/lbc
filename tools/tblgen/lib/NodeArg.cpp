@@ -1,12 +1,11 @@
 //
-// Created by Albert Varaksin on 15/02/2026.
+// Created by Albert Varaksin on 01/03/2026.
 //
-#include "IrArg.hpp"
+#include "NodeArg.hpp"
 #include <llvm/TableGen/Record.h>
-using namespace llvm;
-using namespace ir;
+using namespace lib;
 
-IrArg::IrArg(const Record* record)
+NodeArg::NodeArg(const llvm::Record* record)
 : m_name(record->getValueAsString("name"))
 , m_type(record->getValueAsString("type"))
 , m_default(record->getValueAsString("default"))

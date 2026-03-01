@@ -62,13 +62,16 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
   executable (`lbc`) that links against it.
 - `tests/` — Google Test suite, links against `lbc_lib`.
 - `tools/tblgen/` — Custom LLVM TableGen backends. Builds a single `lbc-tblgen` binary that
-  selects a generator via `--gen=<name>`. `Builder` provides C++ code-generation helpers;
-  `GeneratorBase` extends it with `RecordKeeper` access and common utilities (`sortedByDef`,
-  `findRange`, `collect`, `contains`). Concrete generators live in `gens/` and extend
-  `GeneratorBase`. Complex generators may use subdirectories (e.g., `gens/ast/` splits
-  `AstGen`, `AstClass`, and `AstArg` into separate files). Generated `.hpp` files are
-  emitted alongside their source `.td` files in the source tree (e.g.,
-  `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`) and are git-tracked.
+  selects a generator via `--gen=<name>`. Shared infrastructure lives in `lib/` (namespace `lib`):
+  `Builder` provides C++ code-generation helpers; `GeneratorBase` extends it with `RecordKeeper`
+  access and common utilities (`sortedByDef`, `findRange`, `collect`, `contains`); `NodeGenBase`
+  adds Node/Group/Leaf record lookups; `NodeGen<ClassT>` is a template that builds the in-memory
+  `NodeClass` tree from `.td` definitions (parameterized by prefix — `"Ast"`, `"Ir"` — for
+  generated class names); `NodeClass` and `NodeArg` model the hierarchy and member fields.
+  Concrete generators live in subdirectories (`ast/`, `ir/`, `diag/`, `tokens/`, `type/`) and
+  extend `GeneratorBase` or `NodeGen`. Generated `.hpp` files are emitted alongside their source
+  `.td` files in the source tree (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`)
+  and are git-tracked.
 - `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
   `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).

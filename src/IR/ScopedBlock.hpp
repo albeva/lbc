@@ -34,7 +34,7 @@ public:
     /** Get the child blocks within this scope. */
     [[nodiscard]] auto blocks() -> llvm::ilist<Block>& { return m_blocks; }
     /** Get the cleanup instructions that run before scope exit. */
-    [[nodiscard]] auto cleanup() -> llvm::ilist<Instruction>& { return m_cleanup; }
+    [[nodiscard]] auto cleanup() -> llvm::ilist<IrRoot>& { return m_cleanup; }
     /** Get the value table for named values declared in this scope. */
     [[nodiscard]] auto getValueTable() -> ValueTable& { return m_valueTable; }
 
@@ -46,7 +46,7 @@ public:
 private:
     ValueTable m_valueTable;            ///< named values in this scope
     llvm::ilist<Block> m_blocks;        ///< child blocks within the scope
-    llvm::ilist<Instruction> m_cleanup; ///< cleanup instructions before scope exit
+    llvm::ilist<IrRoot> m_cleanup; ///< cleanup instructions before scope exit
 };
 
 } // namespace lbc::ir

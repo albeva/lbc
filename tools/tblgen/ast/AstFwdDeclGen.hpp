@@ -4,6 +4,7 @@
 #pragma once
 #include "AstGen.hpp"
 namespace ast {
+using namespace llvm;
 /**
  * TableGen backend that reads Ast.td and emits AstFwdDecl.hpp.
  * Generates forward declarations for all AST node classes.

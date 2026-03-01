@@ -2,14 +2,16 @@
 // Created by Albert Varaksin on 16/02/2026.
 //
 #pragma once
-#include "GeneratorBase.hpp"
+#include "lib/GeneratorBase.hpp"
 namespace diag {
+using namespace llvm;
+
 /**
  * TableGen backend that reads Diagnostics.td and emits Diagnostics.hpp.
  * Parses format string placeholders ({name} / {name:type}) to extract
  * typed parameters for each diagnostic message.
  */
-class DiagGen : public GeneratorBase {
+class DiagGen : public lib::GeneratorBase {
 public:
     static constexpr auto genName = "lbc-diag-def";
 

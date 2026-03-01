@@ -15,22 +15,13 @@ AstGen::AstGen(
     StringRef ns,
     std::vector<StringRef> includes
 )
-: GeneratorBase(os, records, generator, ns, std::move(includes))
-, m_root(nullptr)
-, nodeRecords(sortedByDef(records.getAllDerivedDefinitions("Node")))
-, m_nodeClass(records.getClass("Node"))
-, m_leafClass(records.getClass("Leaf"))
-, m_groupClass(records.getClass("Group"))
-, m_argClass(records.getClass("Arg"))
-, m_funcClass(records.getClass("Func")) {
-    m_root = std::make_unique<AstClass>(nullptr, *this, records.getDef("Root"));
-}
+: NodeGen(os, records, generator, "Ast", ns, std::move(includes)) {}
 
 auto AstGen::run() -> bool {
     forwardDecls();
     astNodesEnum();
     astForwardDecls();
-    astGroup(m_root.get());
+    astGroup(getRoot());
     return false;
 }
 
@@ -50,7 +41,7 @@ void AstGen::forwardDecls() {
 void AstGen::astNodesEnum() {
     doc("Enumerates all concrete AST node kinds.\nValues are ordered by group for efficient range-based membership checks.");
     block("enum class AstKind : std::uint8_t", true, [&] {
-        m_root->visit(AstClass::Kind::Leaf, [&](const auto* node) {
+        getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const auto* node) {
             line(node->getEnumName(), ",");
         });
     });
@@ -62,7 +53,7 @@ void AstGen::astNodesEnum() {
  */
 void AstGen::astForwardDecls() {
     section("Forward Declarations");
-    m_root->visit([&](const auto* node) {
+    getRoot()->visit([&](const auto* node) {
         line("class " + node->getClassName());
     });
     newline();
@@ -71,7 +62,7 @@ void AstGen::astForwardDecls() {
 /**
  * Generate given class and all child classes.
  */
-void AstGen::astGroup(AstClass* cls) {
+void AstGen::astGroup(const lib::NodeClass* cls) {
     if (cls->isLeaf()) {
         astClass(cls);
     } else {
@@ -86,7 +77,7 @@ void AstGen::astGroup(AstClass* cls) {
 /**
  * Generate Ast class
  */
-void AstGen::astClass(AstClass* cls) {
+void AstGen::astClass(const lib::NodeClass* cls) {
     const auto base = cls->isRoot() ? "" : " : public " + cls->getParent()->getClassName();
     const auto* const final = cls->isLeaf() ? " final" : "";
 
@@ -114,7 +105,7 @@ void AstGen::astClass(AstClass* cls) {
 /**
  * Generate class constructor
  */
-void AstGen::constructor(AstClass* cls) {
+void AstGen::constructor(const lib::NodeClass* cls) {
     if (cls->isLeaf()) {
         scope(Scope::Public);
     } else {
@@ -152,18 +143,18 @@ void AstGen::constructor(AstClass* cls) {
 /**
  * Generate classof method for llvm rtti support
  */
-void AstGen::classof(const AstClass* cls) {
+void AstGen::classof(const lib::NodeClass* cls) {
     scope(Scope::Public);
 
     const auto range = cls->getLeafRange();
 
     if (cls->isRoot()) {
-        Builder::classof(m_root->getClassName(), "getKind", "");
+        Builder::classof(getRoot()->getClassName(), "getKind", "");
     } else if (range) {
         if (range->first == range->second) {
-            Builder::classof(m_root->getClassName(), "getKind", "AstKind", range->first->getEnumName());
+            Builder::classof(getRoot()->getClassName(), "getKind", "AstKind", range->first->getEnumName());
         } else {
-            Builder::classof(m_root->getClassName(), "getKind", "AstKind", range->first->getEnumName(), range->second->getEnumName());
+            Builder::classof(getRoot()->getClassName(), "getKind", "AstKind", range->first->getEnumName(), range->second->getEnumName());
         }
     }
 
@@ -173,7 +164,7 @@ void AstGen::classof(const AstClass* cls) {
 /**
  * Generate class methods
  */
-void AstGen::functions(AstClass* cls) {
+void AstGen::functions(const lib::NodeClass* cls) {
     const auto functions = cls->classFunctions();
     if (functions.empty() && !cls->isRoot()) {
         return;
@@ -181,7 +172,7 @@ void AstGen::functions(AstClass* cls) {
     scope(Scope::Public);
 
     std::size_t count = 0;
-    m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* /* cls */) {
+    getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* /* cls */) {
         count++;
     });
 
@@ -213,7 +204,7 @@ void AstGen::functions(AstClass* cls) {
 /**
  * Generate class data args
  */
-void AstGen::classArgs(AstClass* cls) {
+void AstGen::classArgs(const lib::NodeClass* cls) {
     const auto args = cls->classArgs();
     if (args.empty() && !cls->isRoot()) {
         return;
@@ -225,14 +216,14 @@ void AstGen::classArgs(AstClass* cls) {
     }
     list(args, {});
 
-    std::vector<std::string> m_classes;
-    m_root->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
-        m_classes.push_back(node->getClassName());
-    });
-
     if (cls->isRoot()) {
+        std::vector<std::string> classes;
+        getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* node) {
+            classes.push_back(node->getClassName());
+        });
+
         block("static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames", true, [&] {
-            list(m_classes, { .suffix = ",", .quote = true });
+            list(classes, { .suffix = ",", .quote = true });
         });
     }
 }

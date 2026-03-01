@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "AstGen.hpp"
-#include "GeneratorBase.hpp"
 namespace ast {
 /**
  * TableGen backend that reads Ast.td and emits AstVisitor.hpp.
@@ -24,12 +23,12 @@ public:
 private:
     void visitorBaseClass();
     void visitorClasses();
-    void visitorClass(const AstClass* ast);
-    void visit(const AstClass* klass);
-    void caseAccept(const AstClass* klass);
+    void visitorClass(const lib::NodeClass* ast);
+    void visit(const lib::NodeClass* klass);
+    void caseAccept(const lib::NodeClass* klass);
     void defaultCase();
 
     void visitFunction();
-    void caseForward(const AstClass* klass);
+    void caseForward(const lib::NodeClass* klass);
 };
 } // namespace ast

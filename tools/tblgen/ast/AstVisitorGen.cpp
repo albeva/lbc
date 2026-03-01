@@ -52,7 +52,7 @@ void AstVisitorGen::visitorBaseClass() {
  * Emit visitors for all ast groups
  */
 void AstVisitorGen::visitorClasses() {
-    getRoot()->visit([&](const AstClass* klass) {
+    getRoot()->visit([&](const lib::NodeClass* klass) {
         if (not klass->isLeaf()) {
             visitorClass(klass);
         }
@@ -62,7 +62,7 @@ void AstVisitorGen::visitorClasses() {
 /**
  * Generate visitor class for given group
  */
-void AstVisitorGen::visitorClass(const AstClass* ast) {
+void AstVisitorGen::visitorClass(const lib::NodeClass* ast) {
     const auto& visitorName = ast->getVisitorName();
     const auto& className = ast->getClassName();
     const auto sampleName = "Sample" + visitorName.substr(3);
@@ -91,7 +91,7 @@ void AstVisitorGen::visitorClass(const AstClass* ast) {
                 line("unhandled(ast)");
             });
             newline();
-            ast->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+            ast->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* node) {
                 line("// void accept(const " + node->getClassName() + "& ast) const");
             });
         });
@@ -109,14 +109,14 @@ void AstVisitorGen::visitorClass(const AstClass* ast) {
     newline();
 }
 
-void AstVisitorGen::visit(const AstClass* klass) {
+void AstVisitorGen::visit(const lib::NodeClass* klass) {
     if (klass->getChildren().empty()) {
         return;
     }
     doc("Dispatch to the appropriate accept() handler based on the node's AstKind.");
     block("constexpr auto visit(this auto& self, std::derived_from<" + klass->getClassName() + "> auto& ast) -> Result", [&] {
         block("switch (ast.getKind())", [&] {
-            klass->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+            klass->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* node) {
                 caseAccept(node);
             });
             defaultCase();
@@ -127,7 +127,7 @@ void AstVisitorGen::visit(const AstClass* klass) {
 /**
  * Generate case statement for given node
  */
-void AstVisitorGen::caseAccept(const AstClass* klass) {
+void AstVisitorGen::caseAccept(const lib::NodeClass* klass) {
     line("case AstKind::" + klass->getEnumName(), ":");
     line("    return self.accept(llvm::cast<" + klass->getClassName() + ">(ast))");
 }
@@ -145,7 +145,7 @@ void AstVisitorGen::defaultCase() {
  */
 void AstVisitorGen::visitFunction() {
     const auto* root = getRoot();
-    const auto childdoc = [&](const AstClass* child) {
+    const auto childdoc = [&](const lib::NodeClass* child) {
         if (child->isLeaf()) {
             line("[&](const " + child->getClassName() + "& ast) {}", ",");
         }
@@ -159,7 +159,7 @@ void AstVisitorGen::visitFunction() {
             for (const auto& child : root->getChildren()) {
                 childdoc(child.get());
             }
-            root->visit(AstClass::Kind::Group, [&](const AstClass* group) {
+            root->visit(lib::NodeClass::Kind::Group, [&](const lib::NodeClass* group) {
                 comment(group->getEnumName());
                 for (const auto& child : group->getChildren()) {
                     childdoc(child.get());
@@ -173,7 +173,7 @@ void AstVisitorGen::visitFunction() {
     line("template <typename Callable>", "");
     block("constexpr auto visit(std::derived_from<" + root->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
         block("switch (ast.getKind())", [&] {
-            root->visit(AstClass::Kind::Leaf, [&](const AstClass* node) {
+            root->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* node) {
                 caseForward(node);
             });
             defaultCase();
@@ -184,7 +184,7 @@ void AstVisitorGen::visitFunction() {
 /**
  * Generate case statement that forwards to the callable visitor
  */
-void AstVisitorGen::caseForward(const AstClass* klass) {
+void AstVisitorGen::caseForward(const lib::NodeClass* klass) {
     line("case AstKind::" + klass->getEnumName(), ":");
     line("    return std::forward<Callable>(callable)(llvm::cast<" + klass->getClassName() + ">(ast))");
 }

@@ -1,34 +1,33 @@
 //
-// Created by Albert Varaksin on 15/02/2026.
+// Created by Albert Varaksin on 01/03/2026.
 //
-#include "AstClass.hpp"
+#include "NodeClass.hpp"
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/TableGen/Record.h>
-#include "AstGen.hpp"
-using namespace llvm;
-using namespace ast;
+#include "GeneratorBase.hpp"
+#include "NodeGen.hpp"
+using namespace lib;
 
-AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
+NodeClass::NodeClass(NodeClass* parent, const NodeGenBase& ctx, const Record* record)
 : m_parent(parent)
-, m_record(record) {
-    m_className = ("Ast" + record->getName()).str();
-    m_enumName = record->getName();
+, m_record(record)
+, m_prefix(ctx.getPrefix()) {
+    m_enumName = record->getName().str();
+    m_className = (ctx.getPrefix() + record->getName()).str();
 
     // class children
-    if (record->hasDirectSuperClass(gen.getGroupClass())) {
+    if (record->hasDirectSuperClass(ctx.getGroupClass())) {
         m_kind = parent == nullptr ? Kind::Root : Kind::Group;
 
-        // child records
-        auto children = AstGen::collect(gen.getNodeRecords(), "parent", record);
+        const auto children = GeneratorBase::collect(ctx.getNodeRecords(), "parent", record);
 
-        // add to children
         m_children.reserve(children.size());
         for (const auto& child : children) {
-            m_children.emplace_back(std::make_unique<AstClass>(this, gen, child));
+            m_children.emplace_back(ctx.makeClass(this, child));
         }
 
         // pull leaves to top
-        std::ranges::stable_partition(m_children, [&](const std::unique_ptr<AstClass>& item) {
+        std::ranges::stable_partition(m_children, [](const std::unique_ptr<NodeClass>& item) {
             return item->isLeaf();
         });
     } else {
@@ -37,9 +36,9 @@ AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
 
     // class args
     for (const auto& member : record->getValueAsListOfDefs("members")) {
-        if (member->hasDirectSuperClass(gen.getArgClass())) {
-            m_args.emplace_back(std::make_unique<AstArg>(member));
-        } else if (member->hasDirectSuperClass(gen.getFuncClass())) {
+        if (member->hasDirectSuperClass(ctx.getArgClass())) {
+            m_args.emplace_back(ctx.makeArg(member));
+        } else if (member->hasDirectSuperClass(ctx.getFuncClass())) {
             m_functions.emplace_back(unindent(member->getValueAsString("func")));
         }
     }
@@ -49,7 +48,7 @@ AstClass::AstClass(AstClass* parent, const AstGen& gen, const Record* record)
  * In .td file, code may be too indented. Remove outermost
  * indentation along with leading and trailing blank lines.
  */
-auto AstClass::unindent(llvm::StringRef code) -> std::string {
+auto NodeClass::unindent(const StringRef code) -> std::string {
     SmallVector<StringRef, 16> lines;
     code.split(lines, '\n');
 
@@ -88,7 +87,7 @@ auto AstClass::unindent(llvm::StringRef code) -> std::string {
     return result;
 }
 
-auto AstClass::ctorParams() const -> std::vector<std::string> {
+auto NodeClass::ctorParams() const -> std::vector<std::string> {
     std::vector<std::string> params;
     if (const auto* parent = m_parent) {
         params.append_range(parent->ctorParams());
@@ -106,20 +105,20 @@ auto AstClass::ctorParams() const -> std::vector<std::string> {
     return params;
 }
 
-auto AstClass::ctorInitParams() const -> std::vector<std::string> {
+auto NodeClass::ctorInitParams() const -> std::vector<std::string> {
     std::vector<std::string> init;
 
     // super class args
     if (m_parent != nullptr) {
         std::string super;
-        const auto collect = [&](this auto&& self, const AstClass* klass) -> void {
+        const auto collect = [&](this auto&& self, const NodeClass* klass) -> void {
             if (const auto* parent = klass->getParent()) {
                 self(parent);
             } else {
                 if (isGroup()) {
                     super = "kind";
                 } else {
-                    super = "AstKind::" + getEnumName();
+                    super = m_prefix + "Kind::" + getEnumName();
                 }
             }
             for (const auto& arg : klass->m_args) {
@@ -143,7 +142,7 @@ auto AstClass::ctorInitParams() const -> std::vector<std::string> {
     return init;
 }
 
-auto AstClass::classArgs() const -> std::vector<std::string> {
+auto NodeClass::classArgs() const -> std::vector<std::string> {
     std::vector<std::string> args;
     for (const auto& arg : m_args) {
         std::string decl = arg->getType() + " m_" + arg->getName();
@@ -156,7 +155,7 @@ auto AstClass::classArgs() const -> std::vector<std::string> {
     return args;
 }
 
-auto AstClass::classFunctions() const -> std::vector<std::string> {
+auto NodeClass::classFunctions() const -> std::vector<std::string> {
     std::vector<std::string> funcs;
     funcs.reserve((m_args.size() * 2) + m_functions.size());
 
@@ -203,7 +202,7 @@ auto AstClass::classFunctions() const -> std::vector<std::string> {
     return funcs;
 }
 
-auto AstClass::hasOwnCtorParams() -> bool {
+auto NodeClass::hasOwnCtorParams() const -> bool {
     for (const auto& arg : m_args) {
         if (arg->hasCtorParam()) {
             return true;
@@ -212,18 +211,18 @@ auto AstClass::hasOwnCtorParams() -> bool {
     return false;
 }
 
-auto AstClass::getVisitorName() const -> std::string {
+auto NodeClass::getVisitorName() const -> std::string {
     if (isRoot()) {
-        return "AstVisitor";
+        return m_prefix + "Visitor";
     }
     return m_className + "Visitor";
 }
 
-auto AstClass::getLeafRange() const -> std::optional<std::pair<const AstClass*, const AstClass*>> {
-    const AstClass* first = nullptr;
-    const AstClass* last = nullptr;
+auto NodeClass::getLeafRange() const -> std::optional<std::pair<const NodeClass*, const NodeClass*>> {
+    const NodeClass* first = nullptr;
+    const NodeClass* last = nullptr;
 
-    visit(Kind::Leaf, [&](const AstClass* node) -> void {
+    visit(Kind::Leaf, [&](const NodeClass* node) -> void {
         if (first == nullptr) {
             first = node;
         }

@@ -3,9 +3,8 @@
 //
 #pragma once
 #include <llvm/TableGen/Record.h>
-using namespace llvm;
-
 namespace type {
+using namespace llvm;
 class Type;
 class TypeBaseGen;
 

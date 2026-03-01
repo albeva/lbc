@@ -1,5 +1,5 @@
 //
-// Created by Albert Varaksin on 15/02/2026.
+// Created by Albert Varaksin on 01/03/2026.
 //
 #pragma once
 #include <cstdint>
@@ -9,22 +9,21 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "IrArg.hpp"
+#include "NodeArg.hpp"
 
 namespace llvm {
 class Record;
 } // namespace llvm
-
-namespace ir {
-class IrGen;
+namespace lib {
+class NodeGenBase;
 
 /**
- * Represents a node in the AST class hierarchy. Built recursively from the
+ * Represents a node in the class hierarchy. Built recursively from
  * TableGen records -- Root has no parent, Groups have children, Leaves are
  * concrete final classes. Generates C++ code fragments: constructor parameters,
  * initializer lists, data members, and accessor functions.
  */
-class IrClass final {
+class NodeClass {
 public:
     enum class Kind : std::uint8_t {
         Root,
@@ -32,10 +31,10 @@ public:
         Leaf
     };
 
-    IrClass(IrClass* parent, const IrGen& gen, const llvm::Record* record);
+    NodeClass(NodeClass* parent, const NodeGenBase& ctx, const llvm::Record* record);
 
-    [[nodiscard]] auto getParent() const -> IrClass* { return m_parent; }
-    [[nodiscard]] auto getChildren() const -> const std::vector<std::unique_ptr<IrClass>>& { return m_children; }
+    [[nodiscard]] auto getParent() const -> NodeClass* { return m_parent; }
+    [[nodiscard]] auto getChildren() const -> const std::vector<std::unique_ptr<NodeClass>>& { return m_children; }
     [[nodiscard]] auto getClassName() const -> const std::string& { return m_className; }
     [[nodiscard]] auto getEnumName() const -> const std::string& { return m_enumName; }
     [[nodiscard]] auto getRecord() const -> const llvm::Record* { return m_record; }
@@ -54,13 +53,13 @@ public:
     [[nodiscard]] auto classFunctions() const -> std::vector<std::string>;
     /** Whether this class introduces any new constructor parameters beyond its parent. */
     [[nodiscard]] auto hasOwnCtorParams() const -> bool;
-    [[nodiscard]] auto getArgs() const -> const std::vector<std::unique_ptr<IrArg>>& { return m_args; }
+    [[nodiscard]] auto getArgs() const -> const std::vector<std::unique_ptr<NodeArg>>& { return m_args; }
     [[nodiscard]] auto getVisitorName() const -> std::string;
 
-    /** Find first and last child items. if nested is true, then recursievly find among sub childs */
-    [[nodiscard]] auto getLeafRange() const -> std::optional<std::pair<const IrClass*, const IrClass*>>;
+    /** Find first and last leaf nodes in this subtree. */
+    [[nodiscard]] auto getLeafRange() const -> std::optional<std::pair<const NodeClass*, const NodeClass*>>;
 
-    template<std::invocable<const IrClass*> Fn>
+    template<std::invocable<const NodeClass*> Fn>
     void visit(Kind kind, Fn&& fn) const {
         if (getKind() == kind) {
             std::invoke(std::forward<Fn>(fn), this);
@@ -70,7 +69,7 @@ public:
         }
     }
 
-    template<std::invocable<const IrClass*> Fn>
+    template<std::invocable<const NodeClass*> Fn>
     void visit(Fn&& fn) const {
         std::invoke(std::forward<Fn>(fn), this);
         for (const auto& child : m_children) {
@@ -81,15 +80,16 @@ public:
 private:
     [[nodiscard]] static auto unindent(llvm::StringRef code) -> std::string;
 
-    IrClass* m_parent;
+    NodeClass* m_parent;
     const llvm::Record* m_record;
-    /// C++ class name (e.g., "AstModule")
+    std::string m_prefix;
+    /// C++ class name (e.g., "AstModule", "IrStore")
     std::string m_className;
-    /// AstKind enum name (e.g., "Module")
+    /// Kind enum name (e.g., "Module", "Store")
     std::string m_enumName;
-    std::vector<std::unique_ptr<IrClass>> m_children;
-    std::vector<std::unique_ptr<IrArg>> m_args;
+    std::vector<std::unique_ptr<NodeClass>> m_children;
+    std::vector<std::unique_ptr<NodeArg>> m_args;
     std::vector<std::string> m_functions;
     Kind m_kind;
 };
-} // namespace ir
+} // namespace lib

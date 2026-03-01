@@ -11,7 +11,7 @@ AstFwdDeclGen::AstFwdDeclGen(
 : AstGen(os, records, genName, "lbc", {}) {}
 
 auto AstFwdDeclGen::run() -> bool {
-    getRoot()->visit([&](const AstClass* klass) {
+    getRoot()->visit([&](const lib::NodeClass* klass) {
         line("class " + klass->getClassName());
     });
     return false;

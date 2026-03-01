@@ -6,6 +6,7 @@
 #include <ranges>
 #include <vector>
 #include "Builder.hpp"
+namespace lib {
 using namespace llvm;
 
 class GeneratorBase : public Builder {
@@ -99,3 +100,4 @@ public:
 protected:
     const RecordKeeper& m_records; // NOLINT(*-avoid-const-or-ref-data-members, *-non-private-member-variables-in-classes)
 };
+} // namespace lib

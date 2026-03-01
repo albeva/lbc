@@ -7,8 +7,8 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
-#include "../../src/Utilities/NoCopy.hpp"
-
+#include "../../../src/Utilities/NoCopy.hpp"
+namespace lib {
 using namespace llvm;
 
 template<typename T>
@@ -453,3 +453,4 @@ private:
     bool m_closed = false;
     bool m_isDoc = false;
 };
+} // namespace lib

@@ -1,8 +1,4 @@
 add_executable(lbc-tblgen
-    ast/AstArg.cpp
-    ast/AstArg.hpp
-    ast/AstClass.cpp
-    ast/AstClass.hpp
     ast/AstFwdDeclGen.cpp
     ast/AstFwdDeclGen.hpp
     ast/AstGen.cpp
@@ -13,10 +9,6 @@ add_executable(lbc-tblgen
     diag/DiagGen.hpp
     ir/IrGen.cpp
     ir/IrGen.hpp
-    ir/IrArg.cpp
-    ir/IrArg.hpp
-    ir/IrClass.cpp
-    ir/IrClass.hpp
     tokens/TokensGen.cpp
     tokens/TokensGen.hpp
     type/Type.cpp
@@ -25,8 +17,13 @@ add_executable(lbc-tblgen
     type/TypeBaseGen.hpp
     type/TypeFactoryGen.cpp
     type/TypeFactoryGen.hpp
-    GeneratorBase.hpp
-    Builder.hpp
+    lib/NodeArg.cpp
+    lib/NodeArg.hpp
+    lib/NodeClass.cpp
+    lib/NodeClass.hpp
+    lib/NodeGen.hpp
+    lib/GeneratorBase.hpp
+    lib/Builder.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)
