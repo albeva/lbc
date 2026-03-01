@@ -1,14 +1,14 @@
 //
 // Created by Albert Varaksin on 01/03/2026.
 //
-#include "NodeClass.hpp"
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/TableGen/Record.h>
 #include "GeneratorBase.hpp"
-#include "NodeGen.hpp"
+#include "TreeGen.hpp"
+#include "TreeNode.hpp"
 using namespace lib;
 
-NodeClass::NodeClass(NodeClass* parent, const NodeGenBase& ctx, const Record* record)
+TreeNode::TreeNode(TreeNode* parent, const TreeGenBase& ctx, const Record* record)
 : m_parent(parent)
 , m_record(record)
 , m_prefix(ctx.getPrefix()) {
@@ -23,11 +23,11 @@ NodeClass::NodeClass(NodeClass* parent, const NodeGenBase& ctx, const Record* re
 
         m_children.reserve(children.size());
         for (const auto& child : children) {
-            m_children.emplace_back(ctx.makeClass(this, child));
+            m_children.emplace_back(ctx.makeNode(this, child));
         }
 
         // pull leaves to top
-        std::ranges::stable_partition(m_children, [](const std::unique_ptr<NodeClass>& item) {
+        std::ranges::stable_partition(m_children, [](const std::unique_ptr<TreeNode>& item) {
             return item->isLeaf();
         });
     } else {
@@ -48,7 +48,7 @@ NodeClass::NodeClass(NodeClass* parent, const NodeGenBase& ctx, const Record* re
  * In .td file, code may be too indented. Remove outermost
  * indentation along with leading and trailing blank lines.
  */
-auto NodeClass::unindent(const StringRef code) -> std::string {
+auto TreeNode::unindent(const StringRef code) -> std::string {
     SmallVector<StringRef, 16> lines;
     code.split(lines, '\n');
 
@@ -87,7 +87,7 @@ auto NodeClass::unindent(const StringRef code) -> std::string {
     return result;
 }
 
-auto NodeClass::ctorParams() const -> std::vector<std::string> {
+auto TreeNode::ctorParams() const -> std::vector<std::string> {
     std::vector<std::string> params;
     if (const auto* parent = m_parent) {
         params.append_range(parent->ctorParams());
@@ -105,13 +105,13 @@ auto NodeClass::ctorParams() const -> std::vector<std::string> {
     return params;
 }
 
-auto NodeClass::ctorInitParams() const -> std::vector<std::string> {
+auto TreeNode::ctorInitParams() const -> std::vector<std::string> {
     std::vector<std::string> init;
 
     // super class args
     if (m_parent != nullptr) {
         std::string super;
-        const auto collect = [&](this auto&& self, const NodeClass* klass) -> void {
+        const auto collect = [&](this auto&& self, const TreeNode* klass) -> void {
             if (const auto* parent = klass->getParent()) {
                 self(parent);
             } else {
@@ -142,7 +142,7 @@ auto NodeClass::ctorInitParams() const -> std::vector<std::string> {
     return init;
 }
 
-auto NodeClass::classArgs() const -> std::vector<std::string> {
+auto TreeNode::classArgs() const -> std::vector<std::string> {
     std::vector<std::string> args;
     for (const auto& arg : m_args) {
         std::string decl = arg->getType() + " m_" + arg->getName();
@@ -155,7 +155,7 @@ auto NodeClass::classArgs() const -> std::vector<std::string> {
     return args;
 }
 
-auto NodeClass::classFunctions() const -> std::vector<std::string> {
+auto TreeNode::classFunctions() const -> std::vector<std::string> {
     std::vector<std::string> funcs;
     funcs.reserve((m_args.size() * 2) + m_functions.size());
 
@@ -202,7 +202,7 @@ auto NodeClass::classFunctions() const -> std::vector<std::string> {
     return funcs;
 }
 
-auto NodeClass::hasOwnCtorParams() const -> bool {
+auto TreeNode::hasOwnCtorParams() const -> bool {
     for (const auto& arg : m_args) {
         if (arg->hasCtorParam()) {
             return true;
@@ -211,18 +211,18 @@ auto NodeClass::hasOwnCtorParams() const -> bool {
     return false;
 }
 
-auto NodeClass::getVisitorName() const -> std::string {
+auto TreeNode::getVisitorName() const -> std::string {
     if (isRoot()) {
         return m_prefix + "Visitor";
     }
     return m_className + "Visitor";
 }
 
-auto NodeClass::getLeafRange() const -> std::optional<std::pair<const NodeClass*, const NodeClass*>> {
-    const NodeClass* first = nullptr;
-    const NodeClass* last = nullptr;
+auto TreeNode::getLeafRange() const -> std::optional<std::pair<const TreeNode*, const TreeNode*>> {
+    const TreeNode* first = nullptr;
+    const TreeNode* last = nullptr;
 
-    visit(Kind::Leaf, [&](const NodeClass* node) -> void {
+    visit(Kind::Leaf, [&](const TreeNode* node) -> void {
         if (first == nullptr) {
             first = node;
         }

@@ -2,17 +2,17 @@
 // Created by Albert Varaksin on 28/02/2026.
 //
 #pragma once
-#include "lib/NodeGen.hpp"
+#include "lib/TreeGen.hpp"
 namespace ir {
 using namespace llvm;
 
-class IrNodeClass final : public lib::NodeClass {
+class IrNodeClass final : public lib::TreeNode {
 public:
-    using NodeClass::NodeClass;
+    using TreeNode::TreeNode;
 };
 
 /** TableGen backend that reads Instructions.td and emits Instructions.hpp. */
-class IrGen final : public lib::NodeGen<IrNodeClass, lib::NodeArg> {
+class IrGen final : public lib::TreeGen<IrNodeClass, lib::TreeNodeArg> {
 public:
     static constexpr auto genName = "lbc-ir-inst-def";
 
@@ -22,11 +22,11 @@ public:
 
     void forwardDecls();
     void irNodesEnum();
-    void irGroup(const lib::NodeClass* cls);
-    void irClass(const lib::NodeClass* cls);
-    void constructor(const lib::NodeClass* cls);
-    void classof(const lib::NodeClass* cls);
-    void functions(const lib::NodeClass* cls);
-    void classArgs(const lib::NodeClass* cls);
+    void irGroup(const lib::TreeNode* cls);
+    void irClass(const lib::TreeNode* cls);
+    void constructor(const lib::TreeNode* cls);
+    void classof(const lib::TreeNode* cls);
+    void functions(const lib::TreeNode* cls);
+    void classArgs(const lib::TreeNode* cls);
 };
 } // namespace ir

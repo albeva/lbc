@@ -23,12 +23,12 @@ public:
 private:
     void visitorBaseClass();
     void visitorClasses();
-    void visitorClass(const lib::NodeClass* ast);
-    void visit(const lib::NodeClass* klass);
-    void caseAccept(const lib::NodeClass* klass);
+    void visitorClass(const lib::TreeNode* ast);
+    void visit(const lib::TreeNode* klass);
+    void caseAccept(const lib::TreeNode* klass);
     void defaultCase();
 
     void visitFunction();
-    void caseForward(const lib::NodeClass* klass);
+    void caseForward(const lib::TreeNode* klass);
 };
 } // namespace ast

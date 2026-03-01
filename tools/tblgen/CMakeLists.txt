@@ -17,11 +17,11 @@ add_executable(lbc-tblgen
     type/TypeBaseGen.hpp
     type/TypeFactoryGen.cpp
     type/TypeFactoryGen.hpp
-    lib/NodeArg.cpp
-    lib/NodeArg.hpp
-    lib/NodeClass.cpp
-    lib/NodeClass.hpp
-    lib/NodeGen.hpp
+    lib/TreeNodeArg.cpp
+    lib/TreeNodeArg.hpp
+    lib/TreeNode.cpp
+    lib/TreeNode.hpp
+    lib/TreeGen.hpp
     lib/GeneratorBase.hpp
     lib/Builder.hpp
     main.cpp

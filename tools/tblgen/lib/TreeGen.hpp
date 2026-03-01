@@ -4,11 +4,11 @@
 #pragma once
 #include <concepts>
 #include "GeneratorBase.hpp"
-#include "NodeClass.hpp"
+#include "TreeNode.hpp"
 namespace lib {
-class NodeGenBase : public GeneratorBase {
+class TreeGenBase : public GeneratorBase {
 public:
-    NodeGenBase(
+    TreeGenBase(
         raw_ostream& os,
         const RecordKeeper& records,
         const StringRef generator,
@@ -32,13 +32,13 @@ public:
     [[nodiscard]] auto getGroupClass() const -> const Record* { return m_groupClass; }
     [[nodiscard]] auto getArgClass() const -> const Record* { return m_argClass; }
     [[nodiscard]] auto getFuncClass() const -> const Record* { return m_funcClass; }
-    [[nodiscard]] auto getRoot() const -> const NodeClass* { return m_root.get(); }
+    [[nodiscard]] auto getRoot() const -> const TreeNode* { return m_root.get(); }
 
-    virtual auto makeClass(NodeClass* parent, const Record* record) const -> std::unique_ptr<NodeClass> = 0;
-    virtual auto makeArg(const Record* record) const -> std::unique_ptr<NodeArg> = 0;
+    virtual auto makeNode(TreeNode* parent, const Record* record) const -> std::unique_ptr<TreeNode> = 0;
+    virtual auto makeArg(const Record* record) const -> std::unique_ptr<TreeNodeArg> = 0;
 
 protected:
-    void setRoot(std::unique_ptr<NodeClass> root) { m_root = std::move(root); }
+    void setRoot(std::unique_ptr<TreeNode> root) { m_root = std::move(root); }
 
 private:
     StringRef m_prefix;
@@ -48,17 +48,17 @@ private:
     const Record* m_groupClass;
     const Record* m_argClass;
     const Record* m_funcClass;
-    std::unique_ptr<NodeClass> m_root;
+    std::unique_ptr<TreeNode> m_root;
 };
 
 /**
  * TableGen backend base class that loads a structured Node/Group/Leaf
  * tree from RecordKeeper. Templated on Class and Arg types.
  */
-template<std::derived_from<NodeClass> ClassT, std::derived_from<NodeArg> ArgT>
-class NodeGen : public NodeGenBase {
+template<std::derived_from<TreeNode> ClassT, std::derived_from<TreeNodeArg> ArgT>
+class TreeGen : public TreeGenBase {
 public:
-    NodeGen(
+    TreeGen(
         raw_ostream& os,
         const RecordKeeper& records,
         const StringRef generator,
@@ -66,15 +66,15 @@ public:
         const StringRef ns = "lbc",
         std::vector<StringRef> includes = { "pch.hpp" }
     )
-    : NodeGenBase(os, records, generator, prefix, ns, includes) {
-        setRoot(NodeGen::makeClass(nullptr, records.getDef("Root")));
+    : TreeGenBase(os, records, generator, prefix, ns, includes) {
+        setRoot(TreeGen::makeNode(nullptr, records.getDef("Root")));
     }
 
-    [[nodiscard]] auto makeClass(NodeClass* parent, const Record* record) const -> std::unique_ptr<NodeClass> override {
+    [[nodiscard]] auto makeNode(TreeNode* parent, const Record* record) const -> std::unique_ptr<TreeNode> override {
         return std::make_unique<ClassT>(parent, *this, record);
     }
 
-    [[nodiscard]] auto makeArg(const Record* record) const -> std::unique_ptr<NodeArg> override {
+    [[nodiscard]] auto makeArg(const Record* record) const -> std::unique_ptr<TreeNodeArg> override {
         return std::make_unique<ArgT>(record);
     }
 };

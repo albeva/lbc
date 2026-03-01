@@ -1,11 +1,11 @@
 //
 // Created by Albert Varaksin on 01/03/2026.
 //
-#include "NodeArg.hpp"
 #include <llvm/TableGen/Record.h>
+#include "TreeNodeArg.hpp"
 using namespace lib;
 
-NodeArg::NodeArg(const llvm::Record* record)
+TreeNodeArg::TreeNodeArg(const llvm::Record* record)
 : m_name(record->getValueAsString("name"))
 , m_type(record->getValueAsString("type"))
 , m_default(record->getValueAsString("default"))

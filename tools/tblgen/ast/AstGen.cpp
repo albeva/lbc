@@ -15,7 +15,7 @@ AstGen::AstGen(
     StringRef ns,
     std::vector<StringRef> includes
 )
-: NodeGen(os, records, generator, "Ast", ns, std::move(includes)) {}
+: TreeGen(os, records, generator, "Ast", ns, std::move(includes)) {}
 
 auto AstGen::run() -> bool {
     forwardDecls();
@@ -41,7 +41,7 @@ void AstGen::forwardDecls() {
 void AstGen::astNodesEnum() {
     doc("Enumerates all concrete AST node kinds.\nValues are ordered by group for efficient range-based membership checks.");
     block("enum class AstKind : std::uint8_t", true, [&] {
-        getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const auto* node) {
+        getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const auto* node) {
             line(node->getEnumName(), ",");
         });
     });
@@ -62,7 +62,7 @@ void AstGen::astForwardDecls() {
 /**
  * Generate given class and all child classes.
  */
-void AstGen::astGroup(const lib::NodeClass* cls) {
+void AstGen::astGroup(const lib::TreeNode* cls) {
     if (cls->isLeaf()) {
         astClass(cls);
     } else {
@@ -77,7 +77,7 @@ void AstGen::astGroup(const lib::NodeClass* cls) {
 /**
  * Generate Ast class
  */
-void AstGen::astClass(const lib::NodeClass* cls) {
+void AstGen::astClass(const lib::TreeNode* cls) {
     const auto base = cls->isRoot() ? "" : " : public " + cls->getParent()->getClassName();
     const auto* const final = cls->isLeaf() ? " final" : "";
 
@@ -105,7 +105,7 @@ void AstGen::astClass(const lib::NodeClass* cls) {
 /**
  * Generate class constructor
  */
-void AstGen::constructor(const lib::NodeClass* cls) {
+void AstGen::constructor(const lib::TreeNode* cls) {
     if (cls->isLeaf()) {
         scope(Scope::Public);
     } else {
@@ -143,7 +143,7 @@ void AstGen::constructor(const lib::NodeClass* cls) {
 /**
  * Generate classof method for llvm rtti support
  */
-void AstGen::classof(const lib::NodeClass* cls) {
+void AstGen::classof(const lib::TreeNode* cls) {
     scope(Scope::Public);
 
     const auto range = cls->getLeafRange();
@@ -164,7 +164,7 @@ void AstGen::classof(const lib::NodeClass* cls) {
 /**
  * Generate class methods
  */
-void AstGen::functions(const lib::NodeClass* cls) {
+void AstGen::functions(const lib::TreeNode* cls) {
     const auto functions = cls->classFunctions();
     if (functions.empty() && !cls->isRoot()) {
         return;
@@ -172,7 +172,7 @@ void AstGen::functions(const lib::NodeClass* cls) {
     scope(Scope::Public);
 
     std::size_t count = 0;
-    getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* /* cls */) {
+    getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* /* cls */) {
         count++;
     });
 
@@ -204,7 +204,7 @@ void AstGen::functions(const lib::NodeClass* cls) {
 /**
  * Generate class data args
  */
-void AstGen::classArgs(const lib::NodeClass* cls) {
+void AstGen::classArgs(const lib::TreeNode* cls) {
     const auto args = cls->classArgs();
     if (args.empty() && !cls->isRoot()) {
         return;
@@ -218,7 +218,7 @@ void AstGen::classArgs(const lib::NodeClass* cls) {
 
     if (cls->isRoot()) {
         std::vector<std::string> classes;
-        getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* node) {
+        getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
             classes.push_back(node->getClassName());
         });
 

@@ -3,7 +3,7 @@
 //
 #pragma once
 #include <utility>
-#include "lib/NodeGen.hpp"
+#include "lib/TreeGen.hpp"
 namespace ast {
 using namespace llvm;
 // -----------------------------------------------------------------------------
@@ -16,7 +16,7 @@ using namespace llvm;
  * generate: AstKind enum, forward declarations, and complete C++ class
  * definitions with constructors, accessors, and data members.
  */
-class AstGen : public lib::NodeGen<lib::NodeClass, lib::NodeArg> {
+class AstGen : public lib::TreeGen<lib::TreeNode, lib::TreeNodeArg> {
 public:
     static constexpr auto genName = "lbc-ast-def";
 
@@ -35,11 +35,11 @@ private:
     void forwardDecls();
     void astNodesEnum();
     void astForwardDecls();
-    void astGroup(const lib::NodeClass* cls);
-    void astClass(const lib::NodeClass* cls);
-    void constructor(const lib::NodeClass* cls);
-    void classof(const lib::NodeClass* cls);
-    void functions(const lib::NodeClass* cls);
-    void classArgs(const lib::NodeClass* cls);
+    void astGroup(const lib::TreeNode* cls);
+    void astClass(const lib::TreeNode* cls);
+    void constructor(const lib::TreeNode* cls);
+    void classof(const lib::TreeNode* cls);
+    void functions(const lib::TreeNode* cls);
+    void classArgs(const lib::TreeNode* cls);
 };
 } // namespace ast

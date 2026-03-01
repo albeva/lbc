@@ -8,7 +8,7 @@ IrGen::IrGen(
     raw_ostream& os,
     const RecordKeeper& records
 )
-: NodeGen(os, records, genName, "Ir", "lbc::ir", { "pch.hpp", "IR/Instruction.hpp" }) {}
+: TreeGen(os, records, genName, "Ir", "lbc::ir", { "pch.hpp", "IR/Instruction.hpp" }) {}
 
 auto IrGen::run() -> bool {
     forwardDecls();
@@ -27,7 +27,7 @@ void IrGen::forwardDecls() {
 void IrGen::irNodesEnum() {
     doc("Enumerates all concrete IR node kinds.\nValues are ordered by group for efficient range-based membership checks.");
     block("enum class IrKind : std::uint8_t", true, [&] {
-        getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const auto* node) {
+        getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const auto* node) {
             line(node->getEnumName(), ",");
         });
     });
@@ -37,7 +37,7 @@ void IrGen::irNodesEnum() {
 /**
  * Generate given class and all child classes.
  */
-void IrGen::irGroup(const lib::NodeClass* cls) {
+void IrGen::irGroup(const lib::TreeNode* cls) {
     if (cls->isLeaf()) {
         irClass(cls);
     } else {
@@ -52,7 +52,7 @@ void IrGen::irGroup(const lib::NodeClass* cls) {
 /**
  * Generate IR class
  */
-void IrGen::irClass(const lib::NodeClass* cls) {
+void IrGen::irClass(const lib::TreeNode* cls) {
     const auto base = cls->isRoot() ? " : public llvm::ilist_node<" + cls->getClassName() + ">" : " : public " + cls->getParent()->getClassName();
     const auto* const final = cls->isLeaf() ? " final" : "";
 
@@ -80,7 +80,7 @@ void IrGen::irClass(const lib::NodeClass* cls) {
 /**
  * Generate class constructor
  */
-void IrGen::constructor(const lib::NodeClass* cls) {
+void IrGen::constructor(const lib::TreeNode* cls) {
     if (cls->isLeaf()) {
         scope(Scope::Public);
     } else {
@@ -118,7 +118,7 @@ void IrGen::constructor(const lib::NodeClass* cls) {
 /**
  * Generate classof method for llvm rtti support
  */
-void IrGen::classof(const lib::NodeClass* cls) {
+void IrGen::classof(const lib::TreeNode* cls) {
     scope(Scope::Public);
 
     const auto range = cls->getLeafRange();
@@ -137,7 +137,7 @@ void IrGen::classof(const lib::NodeClass* cls) {
 /**
  * Generate class methods
  */
-void IrGen::functions(const lib::NodeClass* cls) {
+void IrGen::functions(const lib::TreeNode* cls) {
     const auto functions = cls->classFunctions();
     if (functions.empty() && !cls->isRoot()) {
         return;
@@ -146,7 +146,7 @@ void IrGen::functions(const lib::NodeClass* cls) {
     scope(Scope::Public);
 
     std::size_t count = 0;
-    getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* /* cls */) {
+    getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* /* cls */) {
         count++;
     });
 
@@ -185,7 +185,7 @@ void IrGen::functions(const lib::NodeClass* cls) {
 /**
  * Generate class data args
  */
-void IrGen::classArgs(const lib::NodeClass* cls) {
+void IrGen::classArgs(const lib::TreeNode* cls) {
     const auto args = cls->classArgs();
     if (args.empty() && !cls->isRoot()) {
         return;
@@ -200,7 +200,7 @@ void IrGen::classArgs(const lib::NodeClass* cls) {
     if (cls->isRoot()) {
         std::vector<std::string> classes;
         std::vector<std::string> mnemonics;
-        getRoot()->visit(lib::NodeClass::Kind::Leaf, [&](const lib::NodeClass* node) {
+        getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
             classes.push_back(node->getClassName());
             mnemonics.push_back(node->getRecord()->getValueAsString("mnemonic").str());
         });

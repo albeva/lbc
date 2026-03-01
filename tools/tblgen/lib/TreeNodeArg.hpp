@@ -13,9 +13,9 @@ namespace lib {
  * constructor parameter (no default value) or an initialized field, and
  * whether a setter should be generated (mutable bit).
  */
-class NodeArg {
+class TreeNodeArg {
 public:
-    explicit NodeArg(const llvm::Record* record);
+    explicit TreeNodeArg(const llvm::Record* record);
 
     /// Whether this member generates a setter (mutable flag set in .td)
     [[nodiscard]] auto hasSetter() const -> bool { return m_mutable; }

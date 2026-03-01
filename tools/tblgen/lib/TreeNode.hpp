@@ -9,13 +9,13 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "NodeArg.hpp"
+#include "TreeNodeArg.hpp"
 
 namespace llvm {
 class Record;
 } // namespace llvm
 namespace lib {
-class NodeGenBase;
+class TreeGenBase;
 
 /**
  * Represents a node in the class hierarchy. Built recursively from
@@ -23,7 +23,7 @@ class NodeGenBase;
  * concrete final classes. Generates C++ code fragments: constructor parameters,
  * initializer lists, data members, and accessor functions.
  */
-class NodeClass {
+class TreeNode {
 public:
     enum class Kind : std::uint8_t {
         Root,
@@ -31,10 +31,10 @@ public:
         Leaf
     };
 
-    NodeClass(NodeClass* parent, const NodeGenBase& ctx, const llvm::Record* record);
+    TreeNode(TreeNode* parent, const TreeGenBase& ctx, const llvm::Record* record);
 
-    [[nodiscard]] auto getParent() const -> NodeClass* { return m_parent; }
-    [[nodiscard]] auto getChildren() const -> const std::vector<std::unique_ptr<NodeClass>>& { return m_children; }
+    [[nodiscard]] auto getParent() const -> TreeNode* { return m_parent; }
+    [[nodiscard]] auto getChildren() const -> const std::vector<std::unique_ptr<TreeNode>>& { return m_children; }
     [[nodiscard]] auto getClassName() const -> const std::string& { return m_className; }
     [[nodiscard]] auto getEnumName() const -> const std::string& { return m_enumName; }
     [[nodiscard]] auto getRecord() const -> const llvm::Record* { return m_record; }
@@ -53,13 +53,13 @@ public:
     [[nodiscard]] auto classFunctions() const -> std::vector<std::string>;
     /** Whether this class introduces any new constructor parameters beyond its parent. */
     [[nodiscard]] auto hasOwnCtorParams() const -> bool;
-    [[nodiscard]] auto getArgs() const -> const std::vector<std::unique_ptr<NodeArg>>& { return m_args; }
+    [[nodiscard]] auto getArgs() const -> const std::vector<std::unique_ptr<TreeNodeArg>>& { return m_args; }
     [[nodiscard]] auto getVisitorName() const -> std::string;
 
     /** Find first and last leaf nodes in this subtree. */
-    [[nodiscard]] auto getLeafRange() const -> std::optional<std::pair<const NodeClass*, const NodeClass*>>;
+    [[nodiscard]] auto getLeafRange() const -> std::optional<std::pair<const TreeNode*, const TreeNode*>>;
 
-    template<std::invocable<const NodeClass*> Fn>
+    template<std::invocable<const TreeNode*> Fn>
     void visit(Kind kind, Fn&& fn) const {
         if (getKind() == kind) {
             std::invoke(std::forward<Fn>(fn), this);
@@ -69,7 +69,7 @@ public:
         }
     }
 
-    template<std::invocable<const NodeClass*> Fn>
+    template<std::invocable<const TreeNode*> Fn>
     void visit(Fn&& fn) const {
         std::invoke(std::forward<Fn>(fn), this);
         for (const auto& child : m_children) {
@@ -80,15 +80,15 @@ public:
 private:
     [[nodiscard]] static auto unindent(llvm::StringRef code) -> std::string;
 
-    NodeClass* m_parent;
+    TreeNode* m_parent;
     const llvm::Record* m_record;
     std::string m_prefix;
     /// C++ class name (e.g., "AstModule", "IrStore")
     std::string m_className;
     /// Kind enum name (e.g., "Module", "Store")
     std::string m_enumName;
-    std::vector<std::unique_ptr<NodeClass>> m_children;
-    std::vector<std::unique_ptr<NodeArg>> m_args;
+    std::vector<std::unique_ptr<TreeNode>> m_children;
+    std::vector<std::unique_ptr<TreeNodeArg>> m_args;
     std::vector<std::string> m_functions;
     Kind m_kind;
 };
