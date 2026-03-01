@@ -15,34 +15,6 @@ namespace lbc::ir {
  * Instructions
  */
 enum class InstrKind : std::uint8_t {
-    Jmp,
-    CondJmp,
-    Ret,
-    RetVal,
-    Neg,
-    Not,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-    And,
-    Or,
-    Eq,
-    Ne,
-    Lt,
-    Le,
-    Gt,
-    Ge,
-    Var,
-    Cast,
-    Load,
-    Store,
-    AddrOf,
-    Retain,
-    Release,
-    Call,
-    CallVal,
 };
 /**
  * base class for instructions
@@ -69,14 +41,56 @@ private:
 /**
  * terminator instructions
  */
-class [[nodiscard]] TerminatorInstruction final : Instruction {
+class [[nodiscard]] TerminatorInstruction : Instruction {
+public:
+};
+
+/**
+ * jmp instructions
+ */
+class [[nodiscard]] JmpInstruction final : TerminatorInstruction {
+public:
+};
+
+/**
+ * condjmp instructions
+ */
+class [[nodiscard]] CondJmpInstruction final : TerminatorInstruction {
+public:
+};
+
+/**
+ * ret instructions
+ */
+class [[nodiscard]] RetInstruction final : TerminatorInstruction {
+public:
+};
+
+/**
+ * retval instructions
+ */
+class [[nodiscard]] RetValInstruction final : TerminatorInstruction {
 public:
 };
 
 /**
  * unary instructions
  */
-class [[nodiscard]] UnaryInstruction final : Instruction {
+class [[nodiscard]] UnaryInstruction : Instruction {
+public:
+};
+
+/**
+ * neg instructions
+ */
+class [[nodiscard]] NegInstruction final : UnaryInstruction {
+public:
+};
+
+/**
+ * not instructions
+ */
+class [[nodiscard]] NotInstruction final : UnaryInstruction {
 public:
 };
 
@@ -90,28 +104,161 @@ public:
 /**
  * comparison instructions
  */
-class [[nodiscard]] ComparisonInstruction final : BinaryInstruction {
+class [[nodiscard]] ComparisonInstruction : BinaryInstruction {
+public:
+};
+
+/**
+ * eq instructions
+ */
+class [[nodiscard]] EqInstruction final : ComparisonInstruction {
+public:
+};
+
+/**
+ * ne instructions
+ */
+class [[nodiscard]] NeInstruction final : ComparisonInstruction {
+public:
+};
+
+/**
+ * lt instructions
+ */
+class [[nodiscard]] LtInstruction final : ComparisonInstruction {
+public:
+};
+
+/**
+ * le instructions
+ */
+class [[nodiscard]] LeInstruction final : ComparisonInstruction {
+public:
+};
+
+/**
+ * gt instructions
+ */
+class [[nodiscard]] GtInstruction final : ComparisonInstruction {
+public:
+};
+
+/**
+ * ge instructions
+ */
+class [[nodiscard]] GeInstruction final : ComparisonInstruction {
+public:
+};
+
+/**
+ * add instructions
+ */
+class [[nodiscard]] AddInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * sub instructions
+ */
+class [[nodiscard]] SubInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * mul instructions
+ */
+class [[nodiscard]] MulInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * div instructions
+ */
+class [[nodiscard]] DivInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * mod instructions
+ */
+class [[nodiscard]] ModInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * and instructions
+ */
+class [[nodiscard]] AndInstruction final : BinaryInstruction {
+public:
+};
+
+/**
+ * or instructions
+ */
+class [[nodiscard]] OrInstruction final : BinaryInstruction {
 public:
 };
 
 /**
  * declaration instructions
  */
-class [[nodiscard]] DeclarationInstruction final : Instruction {
+class [[nodiscard]] DeclarationInstruction : Instruction {
+public:
+};
+
+/**
+ * var instructions
+ */
+class [[nodiscard]] VarInstruction final : DeclarationInstruction {
 public:
 };
 
 /**
  * memory instructions
  */
-class [[nodiscard]] MemoryInstruction final : Instruction {
+class [[nodiscard]] MemoryInstruction : Instruction {
 public:
 };
 
 /**
- * call instructions
+ * cast instructions
  */
-class [[nodiscard]] CallInstruction final : Instruction {
+class [[nodiscard]] CastInstruction final : MemoryInstruction {
+public:
+};
+
+/**
+ * load instructions
+ */
+class [[nodiscard]] LoadInstruction final : MemoryInstruction {
+public:
+};
+
+/**
+ * store instructions
+ */
+class [[nodiscard]] StoreInstruction final : MemoryInstruction {
+public:
+};
+
+/**
+ * addrof instructions
+ */
+class [[nodiscard]] AddrOfInstruction final : MemoryInstruction {
+public:
+};
+
+/**
+ * retain instructions
+ */
+class [[nodiscard]] RetainInstruction final : MemoryInstruction {
+public:
+};
+
+/**
+ * release instructions
+ */
+class [[nodiscard]] ReleaseInstruction final : MemoryInstruction {
 public:
 };
 } // namespace lbc::ir

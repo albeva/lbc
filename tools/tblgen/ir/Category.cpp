@@ -47,9 +47,10 @@ Category::Category(const Record* record, const Category* parent, const IRInstGen
 
     // owned instructions
     for (const Record* instr : gen.getInstructions()) {
-        if (instr->hasDirectSuperClass(record)) {
-            m_instructions.emplace_back(std::make_unique<Instruction>(instr, this, gen));
+        if (not instr->hasDirectSuperClass(record)) {
+            continue;
         }
+        m_children.emplace_back(std::make_unique<Category>(instr, this, gen));
     }
 }
 

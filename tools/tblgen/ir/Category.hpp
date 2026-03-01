@@ -43,6 +43,11 @@ private:
 /// represent instructions category
 class Category final {
 public:
+    enum class Kind : std::uint8_t {
+        Group,
+        Instruction
+    };
+
     Category(const Record* record, const Category* parent, const IRInstGen& gen);
 
     [[nodiscard]] auto getName() const -> std::string;
@@ -51,6 +56,7 @@ public:
     [[nodiscard]] auto getInstructions() const -> const auto& { return m_instructions; }
     [[nodiscard]] auto getParent() const -> const Category* { return m_parent; }
     [[nodiscard]] auto getChildren() const -> const auto& { return m_children; }
+    [[nodiscard]] auto getArgs() const -> const auto& { return m_args; }
 
     template<std::invocable<const Category*> Func>
     void visit(Func&& func) {
@@ -75,5 +81,6 @@ private:
     const Category* m_parent;
     std::vector<std::unique_ptr<Instruction>> m_instructions;
     std::vector<std::unique_ptr<Category>> m_children;
+    std::vector<std::unique_ptr<Arg>> m_args;
 };
 } // namespace ir

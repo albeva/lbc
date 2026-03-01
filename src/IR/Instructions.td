@@ -2,7 +2,7 @@
 // Processed by lbc-tblgen --gen=lbc-ir-def
 
 // =============================================================================
-// Operand types — encode C++ types for type-safe operand access
+// Operands
 // =============================================================================
 
 class OperandKind<string cpp_> {
@@ -13,10 +13,6 @@ def Value    : OperandKind<"Value*">;         /// any IR value
 def Block    : OperandKind<"Block*">;         /// block reference (@label)
 def Function : OperandKind<"Function*">;      /// function reference
 def Type     : OperandKind<"const Type*">;    /// compiler type
-
-// =============================================================================
-// Operand definitions
-// =============================================================================
 
 // Base class for instruction operands.
 class Operand;
@@ -34,97 +30,125 @@ class Result<OperandKind kind_> : Operand {
 }
 
 // =============================================================================
-// Instruction base class
+// Tree data structure
 // =============================================================================
 
-// Base class for all IR instructions.
-// mnemonic: textual name used in IR printing (may be shared across instructions)
-// desc: human-readable description
-// category: shared operand pattern (or ? for standalone instructions)
-// operands: additional instruction-specific operands
-class Instruction<string mnemonic_, string desc_, list<Operand> operands_ = []> {
-    string mnemonic = mnemonic_;
+// Group node
+class Group;
+
+// -----------------------------------------------------------------------------
+// Base node.
+// -----------------------------------------------------------------------------
+class Node<string desc_ = "", Group parent_, list<Operand> operands_ = []> {
     string desc = desc_;
+    Group parent = parent_;
     list<Operand> operands = operands_;
 }
 
-//=============================================================================
+// -----------------------------------------------------------------------------
+// Group node — an abstract intermediate that concrete nodes inherit from.
+// Groups define shared members and form the parent in the hierarchy.
+// -----------------------------------------------------------------------------
+class Group<
+    string desc_,
+    Group parent_,
+    list<Operand> operands_ = []
+> : Node<desc_, parent_, operands_>;
+
+// -----------------------------------------------------------------------------
+// Leaf node — a concrete instruction class
+// -----------------------------------------------------------------------------
+class Instr<
+    string mnemonic_,
+    string desc_,
+    Group parent_,
+    list<Operand> operand_ = []
+> : Node<desc_, parent_, operand_> {
+    string mnemonic = mnemonic_;
+}
+
+// =============================================================================
+// Root node
+// =============================================================================
+def Root : Group<"The root of IR instructions", ?>;
+
+// =============================================================================
 // Terminators
 // =============================================================================
-class Terminator<string mnemonic_, string desc_, list<Operand> operands_ = []> : Instruction<mnemonic_, desc_, operands_>;
+def Terminator : Group<"Terminating instructions", Root>;
 
 // jmp @destination
-def Jmp : Terminator<"jmp", "Unconditional branch", [
+def Jmp : Instr<"jmp", "Unconditional branch", Terminator, [
     Arg<Block, "destination">,
 ]>;
 
 // jmp %condition, @trueBlock, @falseBlock
-def CondJmp : Terminator<"jmp", "Conditional branch", [
+def CondJmp : Instr<"jmp", "Conditional branch", Terminator, [
     Arg<Value, "condition">,
     Arg<Block, "trueBlock">,
     Arg<Block, "falseBlock">,
 ]>;
 
 // ret
-def Ret : Terminator<"ret", "Return void">;
+def Ret : Instr<"ret", "Return void", Terminator>;
 
 // ret %value
-def RetVal : Terminator<"ret", "Return value", [
+def RetVal : Instr<"ret", "Return value", Terminator, [
     Arg<Value, "value">,
 ]>;
 
 // =============================================================================
 // Unary operations
 // =============================================================================
-class Unary<string mnemonic_, string desc_> : Instruction<mnemonic_, desc_, [
+def Unary : Group<"Unary expressions", Root, [
     Result<Value>,
     Arg<Value, "operand">,
 ]>;
 
 // %result = neg %operand
-def Neg : Unary<"neg", "Arithmetic negation">;
+def Neg : Instr<"neg", "Arithmetic negation", Unary>;
 
 // %result = not %operand
-def Not : Unary<"not", "Logical NOT">;
+def Not : Instr<"not", "Logical NOT", Unary>;
 
 // =============================================================================
 // Binary arithmetic
 // =============================================================================
-class Binary<string mnemonic_, string desc_> : Instruction<mnemonic_, desc_, [
+def Binary : Group<"Unary expressions", Root, [
     Result<Value>,
     Arg<Value, "lhs">,
     Arg<Value, "rhs">,
 ]>;
 
 // %result = add %lhs, %rhs
-def Add : Binary<"add", "Addition">;
-def Sub : Binary<"sub", "Subtraction">;
-def Mul : Binary<"mul", "Multiplication">;
-def Div : Binary<"div", "Division">;
-def Mod : Binary<"mod", "Modulo">;
-def And : Binary<"and", "Logical AND">;
-def Or  : Binary<"or",  "Logical OR">;
+def Add : Instr<"add", "Addition", Binary>;
+def Sub : Instr<"sub", "Subtraction", Binary>;
+def Mul : Instr<"mul", "Multiplication", Binary>;
+def Div : Instr<"div", "Division", Binary>;
+def Mod : Instr<"mod", "Modulo", Binary>;
+def And : Instr<"and", "Logical AND", Binary>;
+def Or  : Instr<"or",  "Logical OR", Binary>;
 
 // =============================================================================
 // Comparisons
 // =============================================================================
-class Comparison<string mnemonic_, string desc_> : Binary<mnemonic_, desc_>;
+def Comparison : Group<"Comparison expressions", Binary>;
 
 // %result = eq %lhs, %rhs
-def Eq : Comparison<"eq", "Equal">;
-def Ne : Comparison<"ne", "Not equal">;
-def Lt : Comparison<"lt", "Less than">;
-def Le : Comparison<"le", "Less than or equal">;
-def Gt : Comparison<"gt", "Greater than">;
-def Ge : Comparison<"ge", "Greater than or equal">;
+def Eq : Instr<"eq", "Equal", Comparison>;
+def Ne : Instr<"ne", "Not equal", Comparison>;
+def Lt : Instr<"lt", "Less than", Comparison>;
+def Le : Instr<"le", "Less than or equal", Comparison>;
+def Gt : Instr<"gt", "Greater than", Comparison>;
+def Ge : Instr<"ge", "Greater than or equal", Comparison>;
 
 // =============================================================================
 // Declarations
 // =============================================================================
-class Declaration<string mnemonic_, string desc_, list<Operand> operands_ = []> : Instruction<mnemonic_, desc_, operands_>;
+def Declaration : Group<"Declaration instructions", Root>;
 
 // $result = var type
-def Var : Declaration<"var", "Variable declaration", [
+def Var : Instr<"var", "Variable declaration", Declaration, [
     Result<Value>,
     Arg<Type, "type">,
 ]>;
@@ -132,57 +156,48 @@ def Var : Declaration<"var", "Variable declaration", [
 // =============================================================================
 // Memory operations
 // =============================================================================
-class Memory<string mnemonic_, string desc_, list<Operand> operands_ = []> : Instruction<mnemonic_, desc_, operands_>;
+def Memory : Group<"Declaration instructions", Root>;
 
 // %result = cast type, %operand
-def Cast : Memory<"cast", "Type conversion", [
+def Cast : Instr<"cast", "Type conversion", Memory, [
     Result<Value>,
     Arg<Type, "targetType">,
     Arg<Value, "operand">,
 ]>;
 
 // %result = load %source
-def Load : Memory<"load", "Load value through pointer", [
+def Load : Instr<"load", "Load value through pointer", Memory, [
     Result<Value>,
     Arg<Value, "source">,
 ]>;
 
 // store %destination, %source
-def Store : Memory<"store", "Store value through pointer", [
+def Store : Instr<"store", "Store value through pointer", Memory, [
     Arg<Value, "destination">,
     Arg<Value, "source">,
 ]>;
 
 // %result = addrof $operand
-def AddrOf : Memory<"addrof", "Take address of a variable", [
+def AddrOf : Instr<"addrof", "Take address of a variable", Memory, [
     Result<Value>,
     Arg<Value, "operand">,
 ]>;
 
 // retain %operand
-def Retain  : Memory<"retain",  "Increment reference count", [
+def Retain  : Instr<"retain",  "Increment reference count", Memory, [
     Arg<Value, "operand">,
 ]>;
 
 // release %operand
-def Release : Memory<"release", "Decrement reference count", [
+def Release : Instr<"release", "Decrement reference count", Memory, [
     Arg<Value, "operand">,
 ]>;
 
 // =============================================================================
 // Function calls
 // =============================================================================
-class Call<string mnemonic_, string desc_, list<Operand> operands_ = []> : Instruction<mnemonic_, desc_, operands_>;
 
-// call $callee, %arg0, %arg1, ...
-def Call : Call<"call", "Void function call", [
-    Arg<Function, "callee">,
-    Arg<Value, "arguments", true>,
-]>;
-
-// %result = call $callee, %arg0, %arg1, ...
-def CallVal : Call<"call", "Function call with return value", [
-    Result<Value>,
+def Call : Instr<"call", "Void function call", Root, [
     Arg<Function, "callee">,
     Arg<Value, "arguments", true>,
 ]>;
