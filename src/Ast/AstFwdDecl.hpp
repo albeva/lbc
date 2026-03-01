@@ -9,6 +9,10 @@
 #pragma once
 namespace lbc {
 
+// -----------------------------------------------------------------------------
+// Forward Declarations
+// -----------------------------------------------------------------------------
+
 class AstRoot;
 class AstModule;
 class AstType;
@@ -36,4 +40,5 @@ class AstLiteralExpr;
 class AstUnaryExpr;
 class AstBinaryExpr;
 class AstMemberExpr;
+
 } // namespace lbc

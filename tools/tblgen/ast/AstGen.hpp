@@ -11,12 +11,12 @@ using namespace llvm;
 // -----------------------------------------------------------------------------
 
 /**
- * TableGen backend that reads Ast.td and emits Ast.hpp. Builds an in-memory
- * NodeClass tree mirroring the Node/Group/Leaf hierarchy, then walks it to
- * generate: AstKind enum, forward declarations, and complete C++ class
- * definitions with constructors, accessors, and data members.
+ * TableGen backend that reads Ast.td and emits Ast.hpp. Uses default
+ * TreeGen tree-loading and code generation for: AstKind enum, forward
+ * declarations, and complete C++ class definitions with constructors,
+ * accessors, and data members. Only adds AST-specific forward declarations.
  */
-class AstGen : public lib::TreeGen<lib::TreeNode, lib::TreeNodeArg> {
+class AstGen : public lib::TreeGen<> {
 public:
     static constexpr auto genName = "lbc-ast-def";
 
@@ -33,13 +33,5 @@ public:
 
 private:
     void forwardDecls();
-    void astNodesEnum();
-    void astForwardDecls();
-    void astGroup(const lib::TreeNode* cls);
-    void astClass(const lib::TreeNode* cls);
-    void constructor(const lib::TreeNode* cls);
-    void classof(const lib::TreeNode* cls);
-    void functions(const lib::TreeNode* cls);
-    void classArgs(const lib::TreeNode* cls);
 };
 } // namespace ast

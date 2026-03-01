@@ -9,6 +9,14 @@ add_executable(lbc-tblgen
     diag/DiagGen.hpp
     ir/IrGen.cpp
     ir/IrGen.hpp
+    lib/Builder.hpp
+    lib/GeneratorBase.hpp
+    lib/TreeGen.cpp
+    lib/TreeGen.hpp
+    lib/TreeNode.cpp
+    lib/TreeNode.hpp
+    lib/TreeNodeArg.cpp
+    lib/TreeNodeArg.hpp
     tokens/TokensGen.cpp
     tokens/TokensGen.hpp
     type/Type.cpp
@@ -17,13 +25,6 @@ add_executable(lbc-tblgen
     type/TypeBaseGen.hpp
     type/TypeFactoryGen.cpp
     type/TypeFactoryGen.hpp
-    lib/TreeNodeArg.cpp
-    lib/TreeNodeArg.hpp
-    lib/TreeNode.cpp
-    lib/TreeNode.hpp
-    lib/TreeGen.hpp
-    lib/GeneratorBase.hpp
-    lib/Builder.hpp
     main.cpp
 )
 configure_tblgen(lbc-tblgen)

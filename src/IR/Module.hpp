@@ -5,7 +5,7 @@
 #include "pch.hpp"
 #include "Function.hpp"
 namespace lbc::ir {
-class Declaration;
+class IrDeclaration;
 
 /**
  * The root IR container.
@@ -19,13 +19,13 @@ public:
     Module() = default;
 
     /** Get the top-level declarations (externs, globals, types). */
-    [[nodiscard]] auto declarations() -> std::vector<Declaration*>& { return m_declarations; }
+    [[nodiscard]] auto declarations() -> std::vector<IrDeclaration*>& { return m_declarations; }
     /** Get the function definitions. */
     [[nodiscard]] auto functions() -> llvm::ilist<Function>& { return m_functions; }
 
 private:
-    std::vector<Declaration*> m_declarations; ///< top-level declarations
-    llvm::ilist<Function> m_functions;        ///< function definitions
+    std::vector<IrDeclaration*> m_declarations; ///< top-level declarations
+    llvm::ilist<Function> m_functions;          ///< function definitions
 };
 
 } // namespace lbc::ir

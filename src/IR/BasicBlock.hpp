@@ -4,7 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Block.hpp"
-#include "Instruction.hpp"
+#include "Instructions.hpp"
 namespace lbc {
 class Context;
 }
@@ -22,7 +22,7 @@ public:
     BasicBlock(Context& context, std::string label);
 
     /** Get the instruction list for this block. */
-    [[nodiscard]] auto body() -> llvm::ilist<IrRoot>& { return m_body; }
+    [[nodiscard]] auto body() -> llvm::ilist<Instruction>& { return m_body; }
 
     /** LLVM RTTI support. */
     [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    llvm::ilist<IrRoot> m_body; ///< instructions in this block
+    llvm::ilist<Instruction> m_body; ///< instructions in this block
 };
 
 } // namespace lbc::ir

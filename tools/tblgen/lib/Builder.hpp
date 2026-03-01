@@ -71,6 +71,33 @@ public:
         m_os << "\n";
     }
 
+    struct ClassOptions final {
+        StringRef extends = "";
+        bool noDiscard = true;
+        bool isFinal = false;
+    };
+
+    template<std::invocable Func>
+    void klass(const StringRef name, const ClassOptions options, Func&& func) {
+        space();
+        add("class ");
+        if (options.noDiscard) {
+            add("[[nodiscard]] ");
+        }
+        add(name);
+        add(" ");
+        if (options.isFinal) {
+            add("final ");
+        }
+        if (not options.extends.empty()) {
+            add(": public ");
+            add(options.extends);
+            add(" ");
+        }
+        indent(true, std::forward<Func>(func));
+        m_os << ";\n";
+    }
+
     /**
      * Generate a getter method
      * @param name of the member to get. name -> getName

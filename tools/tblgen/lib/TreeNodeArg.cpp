@@ -1,8 +1,8 @@
 //
 // Created by Albert Varaksin on 01/03/2026.
 //
-#include <llvm/TableGen/Record.h>
 #include "TreeNodeArg.hpp"
+#include <llvm/TableGen/Record.h>
 using namespace lib;
 
 TreeNodeArg::TreeNodeArg(const llvm::Record* record)

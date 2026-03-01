@@ -11,8 +11,6 @@ AstFwdDeclGen::AstFwdDeclGen(
 : AstGen(os, records, genName, "lbc", {}) {}
 
 auto AstFwdDeclGen::run() -> bool {
-    getRoot()->visit([&](const lib::TreeNode* klass) {
-        line("class " + klass->getClassName());
-    });
+    treeForwardDeclare();
     return false;
 }

@@ -17,8 +17,7 @@ class SymbolTable;
 class Symbol;
 
 /**
- * Enumerates all concrete AST node kinds.
- * Values are ordered by group for efficient range-based membership checks.
+ * Enumerates all concrete tree nodes
  */
 enum class AstKind : std::uint8_t {
     Module,
@@ -92,7 +91,7 @@ protected:
     /**
      * Construct an AstRoot node
      */
-    constexpr AstRoot(
+    constexpr explicit AstRoot(
         const AstKind kind,
         const llvm::SMRange range
     )
@@ -105,7 +104,7 @@ public:
         return true;
     }
 
-    /// Number of AST leaf nodes
+    /// Number of leaf nodes
     static constexpr std::size_t NODE_COUNT = 22;
 
     /// Get the kind discriminator for this node
@@ -113,7 +112,7 @@ public:
         return m_kind;
     }
 
-    /// Get ast node class name
+    /// Get node class name
     [[nodiscard]] constexpr auto getClassName() const -> llvm::StringRef {
         const auto index = static_cast<std::size_t>(m_kind);
         return kClassNames.at(index);
@@ -334,7 +333,6 @@ public:
     [[nodiscard]] static constexpr auto classof(const AstRoot* node) -> bool {
         return node->getKind() >= AstKind::StmtList && node->getKind() <= AstKind::IfStmt;
     }
-
 };
 
 /**

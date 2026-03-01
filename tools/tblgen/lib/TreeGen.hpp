@@ -25,6 +25,7 @@ public:
     , m_argClass(records.getClass("Arg"))
     , m_funcClass(records.getClass("Func")) {}
 
+    [[nodiscard]] auto getKindEnumName() const -> std::string { return (m_prefix + "Kind").str(); }
     [[nodiscard]] auto getPrefix() const -> StringRef { return m_prefix; }
     [[nodiscard]] auto getNodeRecords() const -> const std::vector<const Record*>& { return m_nodeRecords; }
     [[nodiscard]] auto getNodeClass() const -> const Record* { return m_nodeClass; }
@@ -39,6 +40,15 @@ public:
 
 protected:
     void setRoot(std::unique_ptr<TreeNode> root) { m_root = std::move(root); }
+
+    virtual void treeKindEnum();
+    virtual void treeForwardDeclare();
+    virtual void treeGroups(const TreeNode* node);
+    virtual void treeNode(const TreeNode* node);
+    virtual void treeNodeConstructor(const TreeNode* node);
+    virtual void treeNodeClassOf(const TreeNode* node);
+    virtual void treeNodeMethods(const TreeNode* node);
+    virtual void treeNodeData(const TreeNode* node);
 
 private:
     StringRef m_prefix;
@@ -55,7 +65,7 @@ private:
  * TableGen backend base class that loads a structured Node/Group/Leaf
  * tree from RecordKeeper. Templated on Class and Arg types.
  */
-template<std::derived_from<TreeNode> ClassT, std::derived_from<TreeNodeArg> ArgT>
+template<std::derived_from<TreeNode> ClassT = TreeNode, std::derived_from<TreeNodeArg> ArgT = TreeNodeArg>
 class TreeGen : public TreeGenBase {
 public:
     TreeGen(
@@ -70,11 +80,11 @@ public:
         setRoot(TreeGen::makeNode(nullptr, records.getDef("Root")));
     }
 
-    [[nodiscard]] auto makeNode(TreeNode* parent, const Record* record) const -> std::unique_ptr<TreeNode> override {
+    [[nodiscard]] auto makeNode(TreeNode* parent, const Record* record) const -> std::unique_ptr<TreeNode> final {
         return std::make_unique<ClassT>(parent, *this, record);
     }
 
-    [[nodiscard]] auto makeArg(const Record* record) const -> std::unique_ptr<TreeNodeArg> override {
+    [[nodiscard]] auto makeArg(const Record* record) const -> std::unique_ptr<TreeNodeArg> final {
         return std::make_unique<ArgT>(record);
     }
 };

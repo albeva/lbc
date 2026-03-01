@@ -64,14 +64,17 @@ Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
 - `tools/tblgen/` — Custom LLVM TableGen backends. Builds a single `lbc-tblgen` binary that
   selects a generator via `--gen=<name>`. Shared infrastructure lives in `lib/` (namespace `lib`):
   `Builder` provides C++ code-generation helpers; `GeneratorBase` extends it with `RecordKeeper`
-  access and common utilities (`sortedByDef`, `findRange`, `collect`, `contains`); `NodeGenBase`
-  adds Node/Group/Leaf record lookups; `NodeGen<ClassT>` is a template that builds the in-memory
-  `NodeClass` tree from `.td` definitions (parameterized by prefix — `"Ast"`, `"Ir"` — for
-  generated class names); `NodeClass` and `NodeArg` model the hierarchy and member fields.
-  Concrete generators live in subdirectories (`ast/`, `ir/`, `diag/`, `tokens/`, `type/`) and
-  extend `GeneratorBase` or `NodeGen`. Generated `.hpp` files are emitted alongside their source
-  `.td` files in the source tree (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`)
-  and are git-tracked.
+  access and common utilities (`sortedByDef`, `findRange`, `collect`, `contains`). `TreeGenBase`
+  handles Node/Group/Leaf record lookups and shared code generation (kind enum, forward
+  declarations, class definitions with constructors, RTTI classof, accessors, and data members);
+  `TreeGen<ClassT, ArgT>` is a template that builds the in-memory `TreeNode` tree from `.td`
+  definitions via virtual factory methods (`makeNode`, `makeArg`). `TreeNode` and `TreeNodeArg`
+  model the hierarchy and member fields; `TreeNode::getClassName()` and `getBaseClassName()` are
+  virtual, allowing subclasses (e.g., `IrNodeClass`) to override naming conventions. Concrete
+  generators live in subdirectories (`ast/`, `ir/`, `diag/`, `tokens/`, `type/`) and extend
+  `GeneratorBase` or `TreeGen`. Generated `.hpp` files are emitted alongside their source `.td`
+  files in the source tree (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`) and
+  are git-tracked.
 - `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
   `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
 - `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).

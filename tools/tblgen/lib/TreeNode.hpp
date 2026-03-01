@@ -32,10 +32,11 @@ public:
     };
 
     TreeNode(TreeNode* parent, const TreeGenBase& ctx, const llvm::Record* record);
+    virtual ~TreeNode() = default;
 
     [[nodiscard]] auto getParent() const -> TreeNode* { return m_parent; }
     [[nodiscard]] auto getChildren() const -> const std::vector<std::unique_ptr<TreeNode>>& { return m_children; }
-    [[nodiscard]] auto getClassName() const -> const std::string& { return m_className; }
+    [[nodiscard]] virtual auto getClassName() const -> std::string { return m_className; }
     [[nodiscard]] auto getEnumName() const -> const std::string& { return m_enumName; }
     [[nodiscard]] auto getRecord() const -> const llvm::Record* { return m_record; }
     [[nodiscard]] auto getKind() const -> Kind { return m_kind; }
@@ -55,6 +56,8 @@ public:
     [[nodiscard]] auto hasOwnCtorParams() const -> bool;
     [[nodiscard]] auto getArgs() const -> const std::vector<std::unique_ptr<TreeNodeArg>>& { return m_args; }
     [[nodiscard]] auto getVisitorName() const -> std::string;
+
+    [[nodiscard]] virtual auto getBaseClassName() const -> std::string;
 
     /** Find first and last leaf nodes in this subtree. */
     [[nodiscard]] auto getLeafRange() const -> std::optional<std::pair<const TreeNode*, const TreeNode*>>;

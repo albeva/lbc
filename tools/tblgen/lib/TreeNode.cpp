@@ -1,11 +1,11 @@
 //
 // Created by Albert Varaksin on 01/03/2026.
 //
+#include "TreeNode.hpp"
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/TableGen/Record.h>
 #include "GeneratorBase.hpp"
 #include "TreeGen.hpp"
-#include "TreeNode.hpp"
 using namespace lib;
 
 TreeNode::TreeNode(TreeNode* parent, const TreeGenBase& ctx, const Record* record)
@@ -216,6 +216,13 @@ auto TreeNode::getVisitorName() const -> std::string {
         return m_prefix + "Visitor";
     }
     return m_className + "Visitor";
+}
+
+auto TreeNode::getBaseClassName() const -> std::string {
+    if (m_parent == nullptr) {
+        return "";
+    }
+    return m_parent->getClassName();
 }
 
 auto TreeNode::getLeafRange() const -> std::optional<std::pair<const TreeNode*, const TreeNode*>> {

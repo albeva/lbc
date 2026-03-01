@@ -9,9 +9,7 @@ target_sources(lbc_lib
     Diag/DiagEngine.cpp
     Driver/Context.cpp
     IR/BasicBlock.cpp
-    IR/Declaration.cpp
     IR/Function.cpp
-    IR/Instruction.cpp
     IR/Literal.cpp
     IR/Module.cpp
     IR/NamedValue.cpp
@@ -43,9 +41,7 @@ target_sources(lbc_lib
     Diag/LogProvider.hpp
     Driver/Context.hpp
     IR/BasicBlock.hpp
-    IR/Declaration.hpp
     IR/Function.hpp
-    IR/Instruction.hpp
     IR/Literal.hpp
     IR/Module.hpp
     IR/NamedValue.hpp
