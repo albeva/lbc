@@ -504,11 +504,11 @@ public:
     constexpr CallInstr(
         NamedValue* result,
         NamedValue* callee,
-        Value* arguments
+        const std::span<Value*> args
     )
     : IrExpression(IrKind::Call, result)
     , m_callee(callee)
-    , m_arguments(arguments) {}
+    , m_args(args) {}
 
     /// LLVM RTTI support
     [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
@@ -520,19 +520,14 @@ public:
         return m_callee;
     }
 
-    /// Get the arguments
-    [[nodiscard]] constexpr auto getArguments() const -> Value* {
-        return m_arguments;
-    }
-
-    /// Set the arguments
-    void setArguments(Value* arguments) {
-        m_arguments = arguments;
+    /// Get the args
+    [[nodiscard]] constexpr auto getArgs() const -> std::span<Value*> {
+        return m_args;
     }
 
 private:
     NamedValue* m_callee;
-    Value* m_arguments;
+    std::span<Value*> m_args;
 };
 
 // -----------------------------------------------------------------------------
