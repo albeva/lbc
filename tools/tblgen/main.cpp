@@ -6,7 +6,7 @@
 #include "ast/AstGen.hpp"
 #include "ast/AstVisitorGen.hpp"
 #include "diag/DiagGen.hpp"
-#include "ir/IRInstGen.hpp"
+#include "ir/IrGen.hpp"
 #include "tokens/TokensGen.hpp"
 #include "type/TypeBaseGen.hpp"
 #include "type/TypeFactoryGen.hpp"
@@ -34,7 +34,7 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::AstFwdDecl, ast::AstFwdDeclGen::genName, "Generate AST forward declarations"),
         clEnumValN(Generator::AstVisitor, ast::AstVisitorGen::genName, "Generate AST visitor"),
         clEnumValN(Generator::DiagDef, diag::DiagGen::genName, "Generate diagnostic definitions"),
-        clEnumValN(Generator::IRInstDef, ir::IRInstGen::genName, "Generate IR instruction definitions"),
+        clEnumValN(Generator::IRInstDef, ir::IrGen::genName, "Generate IR instruction definitions"),
         clEnumValN(Generator::TokensDef, tokens::TokensGen::genName, "Generate token definitions"),
         clEnumValN(Generator::TypeBase, type::TypeBaseGen::genName, "Generate type base definitions"),
         clEnumValN(Generator::TypeFactory, type::TypeFactoryGen::genName, "Generate type factory")
@@ -52,7 +52,7 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
     case Generator::DiagDef:
         return diag::DiagGen(os, records).run();
     case Generator::IRInstDef:
-        return ir::IRInstGen(os, records).run();
+        return ir::IrGen(os, records).run();
     case Generator::TokensDef:
         return tokens::TokensGen(os, records).run();
     case Generator::TypeBase:

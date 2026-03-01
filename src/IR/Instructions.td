@@ -2,31 +2,27 @@
 // Processed by lbc-tblgen --gen=lbc-ir-def
 
 // =============================================================================
-// Operands
+// Args
 // =============================================================================
 
-class OperandKind<string cpp_> {
-    string cpp = cpp_;
-}
+// base class for ir class data
+class Member;
 
-def Value    : OperandKind<"Value*">;         /// any IR value
-def Block    : OperandKind<"Block*">;         /// block reference (@label)
-def Function : OperandKind<"Function*">;      /// function reference
-def Type     : OperandKind<"const Type*">;    /// compiler type
-
-// Base class for instruction operands.
-class Operand;
-
-// Single named operand of a given type.
-class Arg<OperandKind kind_, string name_, bit vararg_ = false> : Operand {
-    OperandKind kind = kind_;
+// -----------------------------------------------------------------------------
+// Data field, has setter and getter, passed through ctor (if no default value)
+// -----------------------------------------------------------------------------
+class Arg<string type_, string name_, bit mutable_ = false, string default_ = "">: Member {
+    string type = type_;
     string name = name_;
-    bit vararg = vararg_;
+    bit mutable = mutable_;
+    string default = default_;
 }
 
-// Result operand — the output value produced by an instruction.
-class Result<OperandKind kind_> : Operand {
-    OperandKind kind = kind_;
+// -----------------------------------------------------------------------------
+// Function allows specifying custom code that gets emitted into generated ast
+// -----------------------------------------------------------------------------
+class Func<code func_>: Member {
+    code func = func_;
 }
 
 // =============================================================================
@@ -39,10 +35,10 @@ class Group;
 // -----------------------------------------------------------------------------
 // Base node.
 // -----------------------------------------------------------------------------
-class Node<string desc_ = "", Group parent_, list<Operand> operands_ = []> {
+class Node<string desc_ = "", Group parent_, list<Member> members_ = []> {
     string desc = desc_;
     Group parent = parent_;
-    list<Operand> operands = operands_;
+    list<Member> members = members_;
 }
 
 // -----------------------------------------------------------------------------
@@ -52,18 +48,18 @@ class Node<string desc_ = "", Group parent_, list<Operand> operands_ = []> {
 class Group<
     string desc_,
     Group parent_,
-    list<Operand> operands_ = []
-> : Node<desc_, parent_, operands_>;
+    list<Member> members_ = []
+> : Node<desc_, parent_, members_>;
 
 // -----------------------------------------------------------------------------
 // Leaf node — a concrete instruction class
 // -----------------------------------------------------------------------------
-class Instr<
+class Leaf<
     string mnemonic_,
     string desc_,
     Group parent_,
-    list<Operand> operand_ = []
-> : Node<desc_, parent_, operand_> {
+    list<Member> members_ = []
+> : Node<desc_, parent_, members_> {
     string mnemonic = mnemonic_;
 }
 
@@ -78,126 +74,130 @@ def Root : Group<"The root of IR instructions", ?>;
 def Terminator : Group<"Terminating instructions", Root>;
 
 // jmp @destination
-def Jmp : Instr<"jmp", "Unconditional branch", Terminator, [
-    Arg<Block, "destination">,
+def Jmp : Leaf<"jmp", "Unconditional branch", Terminator, [
+    Arg<"Block*", "destination">,
 ]>;
 
 // jmp %condition, @trueBlock, @falseBlock
-def CondJmp : Instr<"jmp", "Conditional branch", Terminator, [
-    Arg<Value, "condition">,
-    Arg<Block, "trueBlock">,
-    Arg<Block, "falseBlock">,
+def CondJmp : Leaf<"jmp", "Conditional branch", Terminator, [
+    Arg<"Value*", "condition">,
+    Arg<"Block*", "trueBlock">,
+    Arg<"Block*", "falseBlock">,
 ]>;
-
-// ret
-def Ret : Instr<"ret", "Return void", Terminator>;
 
 // ret %value
-def RetVal : Instr<"ret", "Return value", Terminator, [
-    Arg<Value, "value">,
+def Ret : Leaf<"ret", "Return value", Terminator, [
+    Arg<"Value*", "value">,
 ]>;
 
 // =============================================================================
-// Unary operations
+// Expressions
 // =============================================================================
-def Unary : Group<"Unary expressions", Root, [
-    Result<Value>,
-    Arg<Value, "operand">,
+
+def Expression : Group<"Expression returning a result", Root, [
+    Arg<"NamedValue*", "result">,
+]>;
+
+// -----------------------------------------------------------------------------
+// Unary operations
+// -----------------------------------------------------------------------------
+
+def Unary : Group<"Unary expressions", Expression, [
+    Arg<"Value*", "operand">,
 ]>;
 
 // %result = neg %operand
-def Neg : Instr<"neg", "Arithmetic negation", Unary>;
+def Neg : Leaf<"neg", "Arithmetic negation", Unary>;
 
 // %result = not %operand
-def Not : Instr<"not", "Logical NOT", Unary>;
+def Not : Leaf<"not", "Logical NOT", Unary>;
 
-// =============================================================================
-// Binary arithmetic
-// =============================================================================
-def Binary : Group<"Unary expressions", Root, [
-    Result<Value>,
-    Arg<Value, "lhs">,
-    Arg<Value, "rhs">,
+// -----------------------------------------------------------------------------
+// Binary operations
+// -----------------------------------------------------------------------------
+
+def Binary : Group<"Unary expressions", Expression, [
+    Arg<"Value*", "lhs">,
+    Arg<"Value*", "rhs">,
 ]>;
 
 // %result = add %lhs, %rhs
-def Add : Instr<"add", "Addition", Binary>;
-def Sub : Instr<"sub", "Subtraction", Binary>;
-def Mul : Instr<"mul", "Multiplication", Binary>;
-def Div : Instr<"div", "Division", Binary>;
-def Mod : Instr<"mod", "Modulo", Binary>;
-def And : Instr<"and", "Logical AND", Binary>;
-def Or  : Instr<"or",  "Logical OR", Binary>;
+def Add : Leaf<"add", "Addition", Binary>;
+def Sub : Leaf<"sub", "Subtraction", Binary>;
+def Mul : Leaf<"mul", "Multiplication", Binary>;
+def Div : Leaf<"div", "Division", Binary>;
+def Mod : Leaf<"mod", "Modulo", Binary>;
+def And : Leaf<"and", "Logical AND", Binary>;
+def Or  : Leaf<"or",  "Logical OR", Binary>;
 
-// =============================================================================
+// -----------------------------------------------------------------------------
 // Comparisons
-// =============================================================================
+// -----------------------------------------------------------------------------
+
 def Comparison : Group<"Comparison expressions", Binary>;
 
 // %result = eq %lhs, %rhs
-def Eq : Instr<"eq", "Equal", Comparison>;
-def Ne : Instr<"ne", "Not equal", Comparison>;
-def Lt : Instr<"lt", "Less than", Comparison>;
-def Le : Instr<"le", "Less than or equal", Comparison>;
-def Gt : Instr<"gt", "Greater than", Comparison>;
-def Ge : Instr<"ge", "Greater than or equal", Comparison>;
+def Eq : Leaf<"eq", "Equal", Comparison>;
+def Ne : Leaf<"ne", "Not equal", Comparison>;
+def Lt : Leaf<"lt", "Less than", Comparison>;
+def Le : Leaf<"le", "Less than or equal", Comparison>;
+def Gt : Leaf<"gt", "Greater than", Comparison>;
+def Ge : Leaf<"ge", "Greater than or equal", Comparison>;
+
+// -----------------------------------------------------------------------------
+// Misc expressions
+// -----------------------------------------------------------------------------
+
+// %result = cast type, %operand
+def Cast : Leaf<"cast", "Type conversion", Expression, [
+    Arg<"const Type*", "targetType">,
+    Arg<"Value*", "operand">,
+]>;
+
+// %result = load %source
+def Load : Leaf<"load", "Load value through pointer", Expression, [
+    Arg<"Value*", "source">,
+]>;
+
+// %result = addrof $operand
+def AddrOf : Leaf<"addrof", "Take address of a variable", Expression, [
+    Arg<"Value*", "operand">,
+]>;
+
+def Call : Leaf<"call", "Void function call", Expression, [
+    Arg<"NamedValue*", "callee">,
+    Arg<"Value*", "arguments", true>,
+]>;
 
 // =============================================================================
 // Declarations
 // =============================================================================
-def Declaration : Group<"Declaration instructions", Root>;
+
+def Declaration : Group<"Declaration instructions", Root, [
+    Arg<"NamedValue*", "result">,
+]>;
 
 // $result = var type
-def Var : Instr<"var", "Variable declaration", Declaration, [
-    Result<Value>,
-    Arg<Type, "type">,
+def Var : Leaf<"var", "Variable declaration", Declaration, [
+    Arg<"const Type*", "type">,
 ]>;
 
 // =============================================================================
-// Memory operations
+// Misc
 // =============================================================================
-def Memory : Group<"Declaration instructions", Root>;
-
-// %result = cast type, %operand
-def Cast : Instr<"cast", "Type conversion", Memory, [
-    Result<Value>,
-    Arg<Type, "targetType">,
-    Arg<Value, "operand">,
-]>;
-
-// %result = load %source
-def Load : Instr<"load", "Load value through pointer", Memory, [
-    Result<Value>,
-    Arg<Value, "source">,
-]>;
 
 // store %destination, %source
-def Store : Instr<"store", "Store value through pointer", Memory, [
-    Arg<Value, "destination">,
-    Arg<Value, "source">,
-]>;
-
-// %result = addrof $operand
-def AddrOf : Instr<"addrof", "Take address of a variable", Memory, [
-    Result<Value>,
-    Arg<Value, "operand">,
+def Store : Leaf<"store", "Store value through pointer", Root, [
+    Arg<"NamedValue*", "dest">,
+    Arg<"Value*", "src">,
 ]>;
 
 // retain %operand
-def Retain  : Instr<"retain",  "Increment reference count", Memory, [
-    Arg<Value, "operand">,
+def Retain : Leaf<"retain",  "Increment reference count", Root, [
+    Arg<"NamedValue*", "operand">,
 ]>;
 
 // release %operand
-def Release : Instr<"release", "Decrement reference count", Memory, [
-    Arg<Value, "operand">,
-]>;
-
-// =============================================================================
-// Function calls
-// =============================================================================
-
-def Call : Instr<"call", "Void function call", Root, [
-    Arg<Function, "callee">,
-    Arg<Value, "arguments", true>,
+def Release : Leaf<"release", "Decrement reference count", Root, [
+    Arg<"NamedValue*", "operand">,
 ]>;

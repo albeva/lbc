@@ -11,254 +11,1000 @@
 #include "IR/Instruction.hpp"
 namespace lbc::ir {
 
+class Block;
+class NamedValue;
+class Type;
+class Value;
 /**
- * Instructions
+ * Enumerates all concrete IR node kinds.
+ * Values are ordered by group for efficient range-based membership checks.
  */
-enum class InstrKind : std::uint8_t {
+enum class IrKind : std::uint8_t {
+    Store,
+    Retain,
+    Release,
+    Jmp,
+    CondJmp,
+    Ret,
+    Cast,
+    Load,
+    AddrOf,
+    Call,
+    Neg,
+    Not,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    And,
+    Or,
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Var,
 };
+
+// -----------------------------------------------------------------------------
+// Root nodes
+// -----------------------------------------------------------------------------
+
 /**
- * base class for instructions
+ * The root of IR instructions
  */
-class Instruction : public llvm::ilist_node<Instruction> {
+class [[nodiscard]] Instruction : public llvm::ilist_node<Instruction> {
 public:
-    NO_COPY_AND_MOVE(Instruction);
+    NO_COPY_AND_MOVE(Instruction)
 
-    [[nodiscard]] constexpr auto getKind() const -> InstrKind { return m_kind; }
+protected:
+    /**
+     * Construct an Instruction node
+     */
+    constexpr explicit Instruction(
+        const IrKind kind
+    )
+    : m_kind(kind) {}
 
+public:
     /// LLVM RTTI support
     [[nodiscard]] static constexpr auto classof(const Instruction* /*node*/) -> bool {
         return true;
     }
 
-protected:
-    explicit constexpr Instruction(const InstrKind kind)
-    : m_kind(kind) {}
+    /// Number of AST leaf nodes
+    static constexpr std::size_t NODE_COUNT = 26;
+
+    /// Get the kind discriminator for this node
+    [[nodiscard]] constexpr auto getKind() const -> IrKind {
+        return m_kind;
+    }
+
+    /// Get IR node class name
+    [[nodiscard]] constexpr auto getClassName() const -> llvm::StringRef {
+        const auto index = static_cast<std::size_t>(m_kind);
+        return kClassNames.at(index);
+    }
+
+    /// Get instruction mnemonic
+    [[nodiscard]] constexpr auto getMnemonic() const -> llvm::StringRef {
+        const auto index = static_cast<std::size_t>(m_kind);
+        return kMnemonics.at(index);
+    }
 
 private:
-    InstrKind m_kind;
+    IrKind m_kind;
+    static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames {
+        "StoreInstr",
+        "RetainInstr",
+        "ReleaseInstr",
+        "JmpInstr",
+        "CondJmpInstr",
+        "RetInstr",
+        "CastInstr",
+        "LoadInstr",
+        "AddrOfInstr",
+        "CallInstr",
+        "NegInstr",
+        "NotInstr",
+        "AddInstr",
+        "SubInstr",
+        "MulInstr",
+        "DivInstr",
+        "ModInstr",
+        "AndInstr",
+        "OrInstr",
+        "EqInstr",
+        "NeInstr",
+        "LtInstr",
+        "LeInstr",
+        "GtInstr",
+        "GeInstr",
+        "VarInstr"
+    };
+    static constexpr std::array<llvm::StringRef, NODE_COUNT> kMnemonics {
+        "store",
+        "retain",
+        "release",
+        "jmp",
+        "jmp",
+        "ret",
+        "cast",
+        "load",
+        "addrof",
+        "call",
+        "neg",
+        "not",
+        "add",
+        "sub",
+        "mul",
+        "div",
+        "mod",
+        "and",
+        "or",
+        "eq",
+        "ne",
+        "lt",
+        "le",
+        "gt",
+        "ge",
+        "var"
+    };
 };
 
 /**
- * terminator instructions
+ * Store value through pointer
  */
-class [[nodiscard]] TerminatorInstruction : Instruction {
+class [[nodiscard]] StoreInstr final : public Instruction {
 public:
+    /**
+     * Construct a StoreInstr node
+     */
+    constexpr StoreInstr(
+        NamedValue* dest,
+        Value* src
+    )
+    : Instruction(IrKind::Store)
+    , m_dest(dest)
+    , m_src(src) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Store;
+    }
+
+    /// Get the dest
+    [[nodiscard]] constexpr auto getDest() const -> NamedValue* {
+        return m_dest;
+    }
+
+    /// Get the src
+    [[nodiscard]] constexpr auto getSrc() const -> Value* {
+        return m_src;
+    }
+
+private:
+    NamedValue* m_dest;
+    Value* m_src;
 };
 
 /**
- * jmp instructions
+ * Increment reference count
  */
-class [[nodiscard]] JmpInstruction final : TerminatorInstruction {
+class [[nodiscard]] RetainInstr final : public Instruction {
 public:
+    /**
+     * Construct a RetainInstr node
+     */
+    constexpr explicit RetainInstr(
+        NamedValue* operand
+    )
+    : Instruction(IrKind::Retain)
+    , m_operand(operand) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Retain;
+    }
+
+    /// Get the operand
+    [[nodiscard]] constexpr auto getOperand() const -> NamedValue* {
+        return m_operand;
+    }
+
+private:
+    NamedValue* m_operand;
 };
 
 /**
- * condjmp instructions
+ * Decrement reference count
  */
-class [[nodiscard]] CondJmpInstruction final : TerminatorInstruction {
+class [[nodiscard]] ReleaseInstr final : public Instruction {
 public:
+    /**
+     * Construct a ReleaseInstr node
+     */
+    constexpr explicit ReleaseInstr(
+        NamedValue* operand
+    )
+    : Instruction(IrKind::Release)
+    , m_operand(operand) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Release;
+    }
+
+    /// Get the operand
+    [[nodiscard]] constexpr auto getOperand() const -> NamedValue* {
+        return m_operand;
+    }
+
+private:
+    NamedValue* m_operand;
+};
+
+// -----------------------------------------------------------------------------
+// Terminator nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Abstract base for all Terminating instructions nodes
+ */
+class [[nodiscard]] IrTerminator : public Instruction {
+protected:
+    using Instruction::Instruction;
+
+public:
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() >= IrKind::Jmp && node->getKind() <= IrKind::Ret;
+    }
 };
 
 /**
- * ret instructions
+ * Unconditional branch
  */
-class [[nodiscard]] RetInstruction final : TerminatorInstruction {
+class [[nodiscard]] JmpInstr final : public IrTerminator {
 public:
+    /**
+     * Construct a JmpInstr node
+     */
+    constexpr explicit JmpInstr(
+        Block* destination
+    )
+    : IrTerminator(IrKind::Jmp)
+    , m_destination(destination) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Jmp;
+    }
+
+    /// Get the destination
+    [[nodiscard]] constexpr auto getDestination() const -> Block* {
+        return m_destination;
+    }
+
+private:
+    Block* m_destination;
 };
 
 /**
- * retval instructions
+ * Conditional branch
  */
-class [[nodiscard]] RetValInstruction final : TerminatorInstruction {
+class [[nodiscard]] CondJmpInstr final : public IrTerminator {
 public:
+    /**
+     * Construct a CondJmpInstr node
+     */
+    constexpr CondJmpInstr(
+        Value* condition,
+        Block* trueBlock,
+        Block* falseBlock
+    )
+    : IrTerminator(IrKind::CondJmp)
+    , m_condition(condition)
+    , m_trueBlock(trueBlock)
+    , m_falseBlock(falseBlock) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::CondJmp;
+    }
+
+    /// Get the condition
+    [[nodiscard]] constexpr auto getCondition() const -> Value* {
+        return m_condition;
+    }
+
+    /// Get the trueBlock
+    [[nodiscard]] constexpr auto getTrueBlock() const -> Block* {
+        return m_trueBlock;
+    }
+
+    /// Get the falseBlock
+    [[nodiscard]] constexpr auto getFalseBlock() const -> Block* {
+        return m_falseBlock;
+    }
+
+private:
+    Value* m_condition;
+    Block* m_trueBlock;
+    Block* m_falseBlock;
 };
 
 /**
- * unary instructions
+ * Return value
  */
-class [[nodiscard]] UnaryInstruction : Instruction {
+class [[nodiscard]] RetInstr final : public IrTerminator {
 public:
+    /**
+     * Construct a RetInstr node
+     */
+    constexpr explicit RetInstr(
+        Value* value
+    )
+    : IrTerminator(IrKind::Ret)
+    , m_value(value) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Ret;
+    }
+
+    /// Get the value
+    [[nodiscard]] constexpr auto getValue() const -> Value* {
+        return m_value;
+    }
+
+private:
+    Value* m_value;
+};
+
+// -----------------------------------------------------------------------------
+// Expression nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Abstract base for all Expression returning a result nodes
+ */
+class [[nodiscard]] IrExpression : public Instruction {
+protected:
+    /**
+     * Construct an IrExpression node
+     */
+    constexpr explicit IrExpression(
+        const IrKind kind,
+        NamedValue* result
+    )
+    : Instruction(kind)
+    , m_result(result) {}
+
+public:
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() >= IrKind::Cast && node->getKind() <= IrKind::Ge;
+    }
+
+    /// Get the result
+    [[nodiscard]] constexpr auto getResult() const -> NamedValue* {
+        return m_result;
+    }
+
+private:
+    NamedValue* m_result;
 };
 
 /**
- * neg instructions
+ * Type conversion
  */
-class [[nodiscard]] NegInstruction final : UnaryInstruction {
+class [[nodiscard]] CastInstr final : public IrExpression {
 public:
+    /**
+     * Construct a CastInstr node
+     */
+    constexpr CastInstr(
+        NamedValue* result,
+        const Type* targetType,
+        Value* operand
+    )
+    : IrExpression(IrKind::Cast, result)
+    , m_targetType(targetType)
+    , m_operand(operand) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Cast;
+    }
+
+    /// Get the targetType
+    [[nodiscard]] constexpr auto getTargetType() const -> const Type* {
+        return m_targetType;
+    }
+
+    /// Get the operand
+    [[nodiscard]] constexpr auto getOperand() const -> Value* {
+        return m_operand;
+    }
+
+private:
+    const Type* m_targetType;
+    Value* m_operand;
 };
 
 /**
- * not instructions
+ * Load value through pointer
  */
-class [[nodiscard]] NotInstruction final : UnaryInstruction {
+class [[nodiscard]] LoadInstr final : public IrExpression {
 public:
+    /**
+     * Construct a LoadInstr node
+     */
+    constexpr LoadInstr(
+        NamedValue* result,
+        Value* source
+    )
+    : IrExpression(IrKind::Load, result)
+    , m_source(source) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Load;
+    }
+
+    /// Get the source
+    [[nodiscard]] constexpr auto getSource() const -> Value* {
+        return m_source;
+    }
+
+private:
+    Value* m_source;
 };
 
 /**
- * binary instructions
+ * Take address of a variable
  */
-class [[nodiscard]] BinaryInstruction : Instruction {
+class [[nodiscard]] AddrOfInstr final : public IrExpression {
 public:
+    /**
+     * Construct an AddrOfInstr node
+     */
+    constexpr AddrOfInstr(
+        NamedValue* result,
+        Value* operand
+    )
+    : IrExpression(IrKind::AddrOf, result)
+    , m_operand(operand) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::AddrOf;
+    }
+
+    /// Get the operand
+    [[nodiscard]] constexpr auto getOperand() const -> Value* {
+        return m_operand;
+    }
+
+private:
+    Value* m_operand;
 };
 
 /**
- * comparison instructions
+ * Void function call
  */
-class [[nodiscard]] ComparisonInstruction : BinaryInstruction {
+class [[nodiscard]] CallInstr final : public IrExpression {
 public:
+    /**
+     * Construct a CallInstr node
+     */
+    constexpr CallInstr(
+        NamedValue* result,
+        NamedValue* callee,
+        Value* arguments
+    )
+    : IrExpression(IrKind::Call, result)
+    , m_callee(callee)
+    , m_arguments(arguments) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Call;
+    }
+
+    /// Get the callee
+    [[nodiscard]] constexpr auto getCallee() const -> NamedValue* {
+        return m_callee;
+    }
+
+    /// Get the arguments
+    [[nodiscard]] constexpr auto getArguments() const -> Value* {
+        return m_arguments;
+    }
+
+    /// Set the arguments
+    void setArguments(Value* arguments) {
+        m_arguments = arguments;
+    }
+
+private:
+    NamedValue* m_callee;
+    Value* m_arguments;
+};
+
+// -----------------------------------------------------------------------------
+// Unary nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Abstract base for all Unary expressions nodes
+ */
+class [[nodiscard]] IrUnary : public IrExpression {
+protected:
+    /**
+     * Construct an IrUnary node
+     */
+    constexpr IrUnary(
+        const IrKind kind,
+        NamedValue* result,
+        Value* operand
+    )
+    : IrExpression(kind, result)
+    , m_operand(operand) {}
+
+public:
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() >= IrKind::Neg && node->getKind() <= IrKind::Not;
+    }
+
+    /// Get the operand
+    [[nodiscard]] constexpr auto getOperand() const -> Value* {
+        return m_operand;
+    }
+
+private:
+    Value* m_operand;
 };
 
 /**
- * eq instructions
+ * Arithmetic negation
  */
-class [[nodiscard]] EqInstruction final : ComparisonInstruction {
+class [[nodiscard]] NegInstr final : public IrUnary {
 public:
+    /**
+     * Construct a NegInstr node
+     */
+    constexpr NegInstr(
+        NamedValue* result,
+        Value* operand
+    )
+    : IrUnary(IrKind::Neg, result, operand) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Neg;
+    }
 };
 
 /**
- * ne instructions
+ * Logical NOT
  */
-class [[nodiscard]] NeInstruction final : ComparisonInstruction {
+class [[nodiscard]] NotInstr final : public IrUnary {
 public:
+    /**
+     * Construct a NotInstr node
+     */
+    constexpr NotInstr(
+        NamedValue* result,
+        Value* operand
+    )
+    : IrUnary(IrKind::Not, result, operand) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Not;
+    }
+};
+
+// -----------------------------------------------------------------------------
+// Binary nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Abstract base for all Unary expressions nodes
+ */
+class [[nodiscard]] IrBinary : public IrExpression {
+protected:
+    /**
+     * Construct an IrBinary node
+     */
+    constexpr IrBinary(
+        const IrKind kind,
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrExpression(kind, result)
+    , m_lhs(lhs)
+    , m_rhs(rhs) {}
+
+public:
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() >= IrKind::Add && node->getKind() <= IrKind::Ge;
+    }
+
+    /// Get the lhs
+    [[nodiscard]] constexpr auto getLhs() const -> Value* {
+        return m_lhs;
+    }
+
+    /// Get the rhs
+    [[nodiscard]] constexpr auto getRhs() const -> Value* {
+        return m_rhs;
+    }
+
+private:
+    Value* m_lhs;
+    Value* m_rhs;
 };
 
 /**
- * lt instructions
+ * Addition
  */
-class [[nodiscard]] LtInstruction final : ComparisonInstruction {
+class [[nodiscard]] AddInstr final : public IrBinary {
 public:
+    /**
+     * Construct an AddInstr node
+     */
+    constexpr AddInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::Add, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Add;
+    }
 };
 
 /**
- * le instructions
+ * Subtraction
  */
-class [[nodiscard]] LeInstruction final : ComparisonInstruction {
+class [[nodiscard]] SubInstr final : public IrBinary {
 public:
+    /**
+     * Construct a SubInstr node
+     */
+    constexpr SubInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::Sub, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Sub;
+    }
 };
 
 /**
- * gt instructions
+ * Multiplication
  */
-class [[nodiscard]] GtInstruction final : ComparisonInstruction {
+class [[nodiscard]] MulInstr final : public IrBinary {
 public:
+    /**
+     * Construct a MulInstr node
+     */
+    constexpr MulInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::Mul, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Mul;
+    }
 };
 
 /**
- * ge instructions
+ * Division
  */
-class [[nodiscard]] GeInstruction final : ComparisonInstruction {
+class [[nodiscard]] DivInstr final : public IrBinary {
 public:
+    /**
+     * Construct a DivInstr node
+     */
+    constexpr DivInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::Div, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Div;
+    }
 };
 
 /**
- * add instructions
+ * Modulo
  */
-class [[nodiscard]] AddInstruction final : BinaryInstruction {
+class [[nodiscard]] ModInstr final : public IrBinary {
 public:
+    /**
+     * Construct a ModInstr node
+     */
+    constexpr ModInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::Mod, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Mod;
+    }
 };
 
 /**
- * sub instructions
+ * Logical AND
  */
-class [[nodiscard]] SubInstruction final : BinaryInstruction {
+class [[nodiscard]] AndInstr final : public IrBinary {
 public:
+    /**
+     * Construct an AndInstr node
+     */
+    constexpr AndInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::And, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::And;
+    }
 };
 
 /**
- * mul instructions
+ * Logical OR
  */
-class [[nodiscard]] MulInstruction final : BinaryInstruction {
+class [[nodiscard]] OrInstr final : public IrBinary {
 public:
+    /**
+     * Construct an OrInstr node
+     */
+    constexpr OrInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrBinary(IrKind::Or, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Or;
+    }
+};
+
+// -----------------------------------------------------------------------------
+// Comparison nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Abstract base for all Comparison expressions nodes
+ */
+class [[nodiscard]] IrComparison : public IrBinary {
+protected:
+    using IrBinary::IrBinary;
+
+public:
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() >= IrKind::Eq && node->getKind() <= IrKind::Ge;
+    }
 };
 
 /**
- * div instructions
+ * Equal
  */
-class [[nodiscard]] DivInstruction final : BinaryInstruction {
+class [[nodiscard]] EqInstr final : public IrComparison {
 public:
+    /**
+     * Construct an EqInstr node
+     */
+    constexpr EqInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrComparison(IrKind::Eq, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Eq;
+    }
 };
 
 /**
- * mod instructions
+ * Not equal
  */
-class [[nodiscard]] ModInstruction final : BinaryInstruction {
+class [[nodiscard]] NeInstr final : public IrComparison {
 public:
+    /**
+     * Construct a NeInstr node
+     */
+    constexpr NeInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrComparison(IrKind::Ne, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Ne;
+    }
 };
 
 /**
- * and instructions
+ * Less than
  */
-class [[nodiscard]] AndInstruction final : BinaryInstruction {
+class [[nodiscard]] LtInstr final : public IrComparison {
 public:
+    /**
+     * Construct a LtInstr node
+     */
+    constexpr LtInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrComparison(IrKind::Lt, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Lt;
+    }
 };
 
 /**
- * or instructions
+ * Less than or equal
  */
-class [[nodiscard]] OrInstruction final : BinaryInstruction {
+class [[nodiscard]] LeInstr final : public IrComparison {
 public:
+    /**
+     * Construct a LeInstr node
+     */
+    constexpr LeInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrComparison(IrKind::Le, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Le;
+    }
 };
 
 /**
- * declaration instructions
+ * Greater than
  */
-class [[nodiscard]] DeclarationInstruction : Instruction {
+class [[nodiscard]] GtInstr final : public IrComparison {
 public:
+    /**
+     * Construct a GtInstr node
+     */
+    constexpr GtInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrComparison(IrKind::Gt, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Gt;
+    }
 };
 
 /**
- * var instructions
+ * Greater than or equal
  */
-class [[nodiscard]] VarInstruction final : DeclarationInstruction {
+class [[nodiscard]] GeInstr final : public IrComparison {
 public:
+    /**
+     * Construct a GeInstr node
+     */
+    constexpr GeInstr(
+        NamedValue* result,
+        Value* lhs,
+        Value* rhs
+    )
+    : IrComparison(IrKind::Ge, result, lhs, rhs) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Ge;
+    }
+};
+
+// -----------------------------------------------------------------------------
+// Declaration nodes
+// -----------------------------------------------------------------------------
+
+/**
+ * Abstract base for all Declaration instructions nodes
+ */
+class [[nodiscard]] IrDeclaration : public Instruction {
+protected:
+    /**
+     * Construct an IrDeclaration node
+     */
+    constexpr explicit IrDeclaration(
+        const IrKind kind,
+        NamedValue* result
+    )
+    : Instruction(kind)
+    , m_result(result) {}
+
+public:
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Var;
+    }
+
+    /// Get the result
+    [[nodiscard]] constexpr auto getResult() const -> NamedValue* {
+        return m_result;
+    }
+
+private:
+    NamedValue* m_result;
 };
 
 /**
- * memory instructions
+ * Variable declaration
  */
-class [[nodiscard]] MemoryInstruction : Instruction {
+class [[nodiscard]] VarInstr final : public IrDeclaration {
 public:
+    /**
+     * Construct a VarInstr node
+     */
+    constexpr VarInstr(
+        NamedValue* result,
+        const Type* type
+    )
+    : IrDeclaration(IrKind::Var, result)
+    , m_type(type) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
+        return node->getKind() == IrKind::Var;
+    }
+
+    /// Get the type
+    [[nodiscard]] constexpr auto getType() const -> const Type* {
+        return m_type;
+    }
+
+private:
+    const Type* m_type;
 };
 
-/**
- * cast instructions
- */
-class [[nodiscard]] CastInstruction final : MemoryInstruction {
-public:
-};
-
-/**
- * load instructions
- */
-class [[nodiscard]] LoadInstruction final : MemoryInstruction {
-public:
-};
-
-/**
- * store instructions
- */
-class [[nodiscard]] StoreInstruction final : MemoryInstruction {
-public:
-};
-
-/**
- * addrof instructions
- */
-class [[nodiscard]] AddrOfInstruction final : MemoryInstruction {
-public:
-};
-
-/**
- * retain instructions
- */
-class [[nodiscard]] RetainInstruction final : MemoryInstruction {
-public:
-};
-
-/**
- * release instructions
- */
-class [[nodiscard]] ReleaseInstruction final : MemoryInstruction {
-public:
-};
 } // namespace lbc::ir

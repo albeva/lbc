@@ -1,5 +1,4 @@
 add_executable(lbc-tblgen
-    GeneratorBase.hpp
     ast/AstArg.cpp
     ast/AstArg.hpp
     ast/AstClass.cpp
@@ -12,9 +11,12 @@ add_executable(lbc-tblgen
     ast/AstVisitorGen.hpp
     diag/DiagGen.cpp
     diag/DiagGen.hpp
-    ir/Category.cpp
-    ir/IRInstGen.cpp
-    ir/IRInstGen.hpp
+    ir/IrGen.cpp
+    ir/IrGen.hpp
+    ir/IrArg.cpp
+    ir/IrArg.hpp
+    ir/IrClass.cpp
+    ir/IrClass.hpp
     tokens/TokensGen.cpp
     tokens/TokensGen.hpp
     type/Type.cpp
@@ -23,9 +25,9 @@ add_executable(lbc-tblgen
     type/TypeBaseGen.hpp
     type/TypeFactoryGen.cpp
     type/TypeFactoryGen.hpp
+    GeneratorBase.hpp
     Builder.hpp
     main.cpp
-    ir/Category.hpp
 )
 configure_tblgen(lbc-tblgen)
 target_include_directories(lbc-tblgen PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
