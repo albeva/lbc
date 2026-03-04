@@ -23,11 +23,24 @@ auto IrNodeClass::getBaseClassName() const -> std::string {
     return TreeNode::getBaseClassName();
 }
 
+auto IrNodeClass::getMnemonic() const -> StringRef {
+    return getRecord()->getValueAsString("mnemonic");
+}
+
 IrGen::IrGen(
     raw_ostream& os,
     const RecordKeeper& records
 )
 : TreeGen(os, records, genName, "Ir", "lbc::ir") {}
+
+IrGen::IrGen(
+    raw_ostream& os,
+    const RecordKeeper& records,
+    const StringRef generator,
+    const StringRef ns,
+    std::vector<StringRef> includes
+)
+: TreeGen(os, records, generator, "Ir", ns, std::move(includes)) {}
 
 auto IrGen::run() -> bool {
     forwardDecls();

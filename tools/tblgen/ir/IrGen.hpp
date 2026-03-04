@@ -11,12 +11,13 @@ public:
     using TreeNode::TreeNode;
     [[nodiscard]] auto getClassName() const -> std::string override;
     [[nodiscard]] auto getBaseClassName() const -> std::string override;
+    [[nodiscard]] auto getMnemonic() const -> StringRef;
 };
 
 /**
  * TableGen backend that reads Instructions.td and emits Instructions.hpp.
  */
-class IrGen final : public lib::TreeGen<IrNodeClass> {
+class IrGen : public lib::TreeGen<IrNodeClass> {
 public:
     static constexpr auto genName = "lbc-ir-inst-def";
 
@@ -24,9 +25,16 @@ public:
 
     [[nodiscard]] auto run() -> bool override;
 
-    void forwardDecls();
-
 protected:
+    IrGen(
+        raw_ostream& os,
+        const RecordKeeper& records,
+        StringRef generator,
+        StringRef ns,
+        std::vector<StringRef> includes
+    );
+
+    void forwardDecls();
     void treeNodeMethods(const lib::TreeNode* node) override;
     void treeNodeData(const lib::TreeNode* node) override;
 };

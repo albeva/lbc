@@ -77,6 +77,7 @@ add_tblgen(lbc_lib lbc-tblgen
     GENERATOR lbc-ast-fwd-decl INPUT Ast/Ast.td OUTPUT AstFwdDecl.hpp
     GENERATOR lbc-ast-visitor INPUT Ast/Ast.td OUTPUT AstVisitor.hpp
     GENERATOR lbc-diag-def INPUT Diag/Diagnostics.td
+    GENERATOR lbc-ir-builder INPUT IR/Instructions.td OUTPUT Builder.hpp
     GENERATOR lbc-ir-inst-def INPUT IR/Instructions.td
     GENERATOR lbc-tokens-def INPUT Lexer/TokenKind.td
     GENERATOR lbc-type-base INPUT Type/Types.td OUTPUT TypeBase.hpp

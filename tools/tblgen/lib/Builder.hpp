@@ -16,6 +16,11 @@ concept Streamable = requires(raw_ostream& os, T val) {
     os << val;
 };
 
+template<typename T, typename U = std::remove_cvref_t<T>>
+concept StringAppendibleRange = std::ranges::range<U> && requires(std::string& str, const std::ranges::range_reference_t<U>& item) {
+    str += item;
+};
+
 /// Simple abstraction to generate C++ code
 class Builder { // NOLINT(*-special-member-functions)
 public:
@@ -293,6 +298,19 @@ public:
             str.front() = static_cast<char>(std::toupper(str.front()));
         }
         return str;
+    }
+
+    static auto join(const StringAppendibleRange auto& range, const StringRef glue = ", ") -> std::string {
+        std::string res;
+        bool first = true;
+
+        for (const auto& item : range) {
+            if (!std::exchange(first, false)) {
+                res += glue;
+            }
+            res += item;
+        }
+        return res;
     }
 
     void newline() const {

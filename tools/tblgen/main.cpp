@@ -6,6 +6,7 @@
 #include "ast/AstGen.hpp"
 #include "ast/AstVisitorGen.hpp"
 #include "diag/DiagGen.hpp"
+#include "ir/IrBuilderGen.hpp"
 #include "ir/IrGen.hpp"
 #include "tokens/TokensGen.hpp"
 #include "type/TypeBaseGen.hpp"
@@ -19,6 +20,7 @@ enum class Generator : std::uint8_t {
     AstFwdDecl,
     AstVisitor,
     DiagDef,
+    IRBuilder,
     IRInstDef,
     TokensDef,
     TypeBase,
@@ -34,6 +36,7 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::AstFwdDecl, ast::AstFwdDeclGen::genName, "Generate AST forward declarations"),
         clEnumValN(Generator::AstVisitor, ast::AstVisitorGen::genName, "Generate AST visitor"),
         clEnumValN(Generator::DiagDef, diag::DiagGen::genName, "Generate diagnostic definitions"),
+        clEnumValN(Generator::IRBuilder, ir::IrBuilderGen::genName, "Generate IR builder"),
         clEnumValN(Generator::IRInstDef, ir::IrGen::genName, "Generate IR instruction definitions"),
         clEnumValN(Generator::TokensDef, tokens::TokensGen::genName, "Generate token definitions"),
         clEnumValN(Generator::TypeBase, type::TypeBaseGen::genName, "Generate type base definitions"),
@@ -51,6 +54,8 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return ast::AstVisitorGen(os, records).run();
     case Generator::DiagDef:
         return diag::DiagGen(os, records).run();
+    case Generator::IRBuilder:
+        return ir::IrBuilderGen(os, records).run();
     case Generator::IRInstDef:
         return ir::IrGen(os, records).run();
     case Generator::TokensDef:

@@ -105,6 +105,19 @@ auto TreeNode::ctorParams() const -> std::vector<std::string> {
     return params;
 }
 
+auto TreeNode::ctorArgs() const -> std::vector<std::string> {
+    std::vector<std::string> args;
+    if (const auto* parent = m_parent) {
+        args.append_range(parent->ctorArgs());
+    }
+    for (const auto& arg : m_args) {
+        if (arg->hasCtorParam()) {
+            args.emplace_back(arg->getName());
+        }
+    }
+    return args;
+}
+
 auto TreeNode::ctorInitParams() const -> std::vector<std::string> {
     std::vector<std::string> init;
 

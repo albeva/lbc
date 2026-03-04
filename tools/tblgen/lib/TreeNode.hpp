@@ -46,6 +46,7 @@ public:
 
     /** Collect constructor parameter strings, recursing through parent chain. */
     [[nodiscard]] auto ctorParams() const -> std::vector<std::string>;
+    [[nodiscard]] auto ctorArgs() const -> std::vector<std::string>;
     /** Generate constructor initializer list entries (base class delegation + own members). */
     [[nodiscard]] auto ctorInitParams() const -> std::vector<std::string>;
     /** Generate private data member declarations. */
