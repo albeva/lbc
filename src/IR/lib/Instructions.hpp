@@ -8,7 +8,7 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 class Block;
 class NamedValue;
@@ -1001,4 +1001,4 @@ private:
     const Type* m_type;
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

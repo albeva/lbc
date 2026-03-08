@@ -5,7 +5,7 @@
 #include "pch.hpp"
 #include "NamedValue.hpp"
 #include "Symbol/SymbolTable.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /** Maps names to IR NamedValues within a scope. */
 class ValueTable final : public SymbolTableBase<NamedValue> {

@@ -8,7 +8,7 @@ IrBuilderGen::IrBuilderGen(
     raw_ostream& os,
     const RecordKeeper& records
 )
-: IrGen(os, records, genName, "lbc::ir", { "pch.hpp", "Driver/Context.hpp", "Instructions.hpp" }) {}
+: IrGen(os, records, genName, "lbc::ir::lib", { "pch.hpp", "Driver/Context.hpp", "Instructions.hpp" }) {}
 
 auto IrBuilderGen::run() -> bool {
     builderClass();

@@ -9,7 +9,7 @@
 namespace lbc {
 class Context;
 }
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * A scoped block — a group of blocks sharing a lexical scope.

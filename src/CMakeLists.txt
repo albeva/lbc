@@ -8,14 +8,19 @@ target_sources(lbc_lib
     Ast/AstCodePrinter.cpp
     Diag/DiagEngine.cpp
     Driver/Context.cpp
-    IR/BasicBlock.cpp
-    IR/Function.cpp
-    IR/Literal.cpp
-    IR/Module.cpp
-    IR/NamedValue.cpp
-    IR/Temporary.cpp
-    IR/Value.cpp
-    IR/Variable.cpp
+    IR/gen/Gen.cpp
+    IR/gen/GenDecl.cpp
+    IR/gen/GenExpr.cpp
+    IR/gen/GenStmt.cpp
+    IR/gen/GenType.cpp
+    IR/lib/BasicBlock.cpp
+    IR/lib/Function.cpp
+    IR/lib/Literal.cpp
+    IR/lib/Module.cpp
+    IR/lib/NamedValue.cpp
+    IR/lib/Temporary.cpp
+    IR/lib/Value.cpp
+    IR/lib/Variable.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/ParseDecl.cpp
@@ -41,14 +46,15 @@ target_sources(lbc_lib
     Diag/DiagEngine.hpp
     Diag/LogProvider.hpp
     Driver/Context.hpp
-    IR/BasicBlock.hpp
-    IR/Function.hpp
-    IR/Literal.hpp
-    IR/Module.hpp
-    IR/NamedValue.hpp
-    IR/Temporary.hpp
-    IR/Value.hpp
-    IR/Variable.hpp
+    IR/gen/IrGenerator.hpp
+    IR/lib/BasicBlock.hpp
+    IR/lib/Function.hpp
+    IR/lib/Literal.hpp
+    IR/lib/Module.hpp
+    IR/lib/NamedValue.hpp
+    IR/lib/Temporary.hpp
+    IR/lib/Value.hpp
+    IR/lib/Variable.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
     Lexer/Lexer.hpp
@@ -79,8 +85,8 @@ add_tblgen(lbc_lib lbc-tblgen
     GENERATOR lbc-ast-fwd-decl INPUT Ast/Ast.td OUTPUT AstFwdDecl.hpp
     GENERATOR lbc-ast-visitor INPUT Ast/Ast.td OUTPUT AstVisitor.hpp
     GENERATOR lbc-diag-def INPUT Diag/Diagnostics.td
-    GENERATOR lbc-ir-builder INPUT IR/Instructions.td OUTPUT Builder.hpp
-    GENERATOR lbc-ir-inst-def INPUT IR/Instructions.td
+    GENERATOR lbc-ir-builder INPUT IR/lib/Instructions.td OUTPUT Builder.hpp
+    GENERATOR lbc-ir-inst-def INPUT IR/lib/Instructions.td
     GENERATOR lbc-tokens-def INPUT Lexer/TokenKind.td
     GENERATOR lbc-type-base INPUT Type/Types.td OUTPUT TypeBase.hpp
     GENERATOR lbc-type-factory INPUT Type/Types.td OUTPUT TypeFactoryBase.hpp

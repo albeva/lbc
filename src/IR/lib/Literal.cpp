@@ -3,4 +3,4 @@
 //
 
 #include "Literal.hpp"
-using namespace lbc::ir;
+using namespace lbc::ir::lib;

@@ -5,7 +5,7 @@
 #include "Driver/Context.hpp"
 #include "Symbol/Symbol.hpp"
 #include "Type/Aggregate.hpp"
-using namespace lbc::ir;
+using namespace lbc::ir::lib;
 
 Function::Function([[maybe_unused]] Context& /*context*/, Symbol* symbol, std::string name)
 : NamedValue(Kind::Function, std::move(name), symbol->getType())

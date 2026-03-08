@@ -10,7 +10,7 @@
 #include "pch.hpp"
 #include "Driver/Context.hpp"
 #include "Instructions.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * Build IR instructions
@@ -157,4 +157,4 @@ public:
 private:
     Context& m_context;
 };
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

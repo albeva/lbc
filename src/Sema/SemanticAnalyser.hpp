@@ -41,7 +41,7 @@ public:
      * Construct a semantic analyser for the given context.
      */
     explicit SemanticAnalyser(Context& context);
-    ~SemanticAnalyser() final;
+    ~SemanticAnalyser() override;
 
     /**
      * Run semantic analysis on the given AST module.
@@ -51,7 +51,7 @@ public:
     /**
      * Get associated context object.
      */
-    [[nodiscard]] auto getContext() -> Context& { return m_context; }
+    [[nodiscard]] auto getContext() const -> Context& { return m_context; }
 
 private:
     friend AstVisitor;

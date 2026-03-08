@@ -5,7 +5,7 @@
 #include "Driver/Context.hpp"
 #include "Type/Type.hpp"
 #include "Type/TypeFactory.hpp"
-using namespace lbc::ir;
+using namespace lbc::ir::lib;
 
 Block::Block(const Kind kind, Context& context, std::string label)
 : NamedValue(kind, std::move(label), context.getTypeFactory().getLabel()) {}

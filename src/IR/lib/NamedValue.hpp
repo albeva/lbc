@@ -4,7 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Value.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * A Value with a name.

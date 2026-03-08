@@ -8,7 +8,7 @@ namespace lbc {
 class Type;
 }
 
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * Base class for all IR values.

@@ -7,7 +7,7 @@
 namespace lbc {
 class Symbol;
 } // namespace lbc
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * A user-declared variable (DIM x AS INTEGER).

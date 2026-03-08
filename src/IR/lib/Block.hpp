@@ -7,7 +7,7 @@
 namespace lbc {
 class Context;
 }
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * Abstract base for IR blocks.

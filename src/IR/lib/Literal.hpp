@@ -5,7 +5,7 @@
 #include "pch.hpp"
 #include "Symbol/LiteralValue.hpp"
 #include "Value.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * A compile-time literal value (integer, float, bool, string, null).

@@ -10,7 +10,7 @@ class Context;
 class Symbol;
 class TypeFunction;
 } // namespace lbc
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * An IR function.

@@ -4,7 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "NamedValue.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * A numbered temporary value (%0, %1, ...).

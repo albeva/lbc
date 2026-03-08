@@ -8,7 +8,7 @@
 namespace lbc {
 class Context;
 }
-namespace lbc::ir {
+namespace lbc::ir::lib {
 
 /**
  * A basic block — a labeled, straight-line sequence of instructions.

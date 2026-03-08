@@ -31,7 +31,7 @@ IrGen::IrGen(
     raw_ostream& os,
     const RecordKeeper& records
 )
-: TreeGen(os, records, genName, "Ir", "lbc::ir") {}
+: TreeGen(os, records, genName, "Ir", "lbc::ir::lib") {}
 
 IrGen::IrGen(
     raw_ostream& os,

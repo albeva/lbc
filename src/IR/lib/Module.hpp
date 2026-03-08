@@ -4,7 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Function.hpp"
-namespace lbc::ir {
+namespace lbc::ir::lib {
 class IrDeclaration;
 
 /**
