@@ -18,9 +18,7 @@ namespace lbc::ir::lib {
  */
 class Variable final : public NamedValue {
 public:
-    Variable(Symbol* symbol, std::string name, const Type* type)
-    : NamedValue(Kind::Variable, std::move(name), type)
-    , m_symbol(symbol) {}
+    Variable(Symbol* symbol);
 
     /** LLVM RTTI support. */
     [[nodiscard]] static auto classof(const Value* value) -> bool {

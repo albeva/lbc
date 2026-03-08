@@ -21,7 +21,7 @@ namespace lbc::ir::lib {
  */
 class Function : public NamedValue, public llvm::ilist_node<Function> {
 public:
-    Function(Context& context, Symbol* symbol, std::string name);
+    Function(Context& context, Symbol* symbol);
 
     /** LLVM RTTI support. */
     [[nodiscard]] static auto classof(const Value* value) -> bool {
