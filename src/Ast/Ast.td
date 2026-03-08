@@ -66,15 +66,7 @@ class Leaf<
 
 def Root : Group<"The root AST node", ?, [
     Arg<"llvm::SMRange", "range">,
-    Arg<"AstRoot*", "next", true, "nullptr">,
-    Func<[{
-        /**
-         * Test function
-         */
-         [[nodiscard]] auto hasNextSet() const -> bool {
-             return m_next != nullptr;
-         }
-    }]>
+    Arg<"AstRoot*", "next", true, "nullptr">
 ]>;
 
 def Module : Leaf<"Program module node", Root, [

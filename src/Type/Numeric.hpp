@@ -23,12 +23,6 @@ public:
     /** Check if this is a signed integral type. */
     [[nodiscard]] constexpr auto isSigned() const -> bool { return m_signed; }
 
-    /** Get the signed counterpart of this integral type. */
-    [[nodiscard]] /* constexpr */ auto getSigned() const -> const TypeIntegral*;
-
-    /** Get the unsigned counterpart of this integral type. */
-    [[nodiscard]] /* constexpr */ auto getUnsigned() const -> const TypeIntegral*;
-
     /// LLVM RTTI support
     [[nodiscard]] constexpr static auto classof(const Type* type) -> bool {
         return type->isIntegral();

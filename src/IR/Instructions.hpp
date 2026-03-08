@@ -493,7 +493,7 @@ private:
 };
 
 /**
- * Void function call
+ * Call a function
  */
 class [[nodiscard]] CallInstr final : public IrExpression {
 public:
@@ -609,7 +609,7 @@ public:
 // -----------------------------------------------------------------------------
 
 /**
- * Abstract base for all Unary expressions nodes
+ * Abstract base for all Binary expressions nodes
  */
 class [[nodiscard]] IrBinary : public IrExpression {
 protected:

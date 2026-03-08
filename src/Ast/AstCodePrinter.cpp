@@ -15,7 +15,7 @@ void AstCodePrinter::accept(const AstModule& ast) {
     accept(*ast.getStmtList());
 }
 
-void AstCodePrinter::accept(const AstBuiltInType& ast) {
+void AstCodePrinter::accept(const AstBuiltInType& ast) const {
     if (const auto* type = ast.getType()) {
         m_output << type->string();
     } else {
@@ -54,6 +54,7 @@ void AstCodePrinter::accept(const AstFuncStmt& ast) {
     m_indent++;
     accept(*ast.getStmtList());
     m_indent--;
+    space();
     m_output << "END "s + (ast.getDecl()->getRetTypeExpr() == nullptr ? "SUB" : "FUNCTION");
 }
 
@@ -93,6 +94,7 @@ void AstCodePrinter::accept(const AstIfStmt& ast) {
     m_indent -= 1;
 
     if (const auto* elseStmt = ast.getElseStmt()) {
+        space();
         m_output << "ELSE";
         if (const auto* elseIfStmt = llvm::dyn_cast<AstIfStmt>(elseStmt)) {
             m_output << " ";
@@ -104,6 +106,7 @@ void AstCodePrinter::accept(const AstIfStmt& ast) {
         visit(*elseStmt);
         m_indent -= 1;
     }
+    space();
     m_output << "END IF";
 }
 
@@ -161,7 +164,7 @@ void AstCodePrinter::accept(const AstCastExpr& ast) {
     m_output << ")";
 }
 
-void AstCodePrinter::accept(const AstVarExpr& ast) {
+void AstCodePrinter::accept(const AstVarExpr& ast) const {
     m_output << ast.getName();
 }
 
@@ -180,7 +183,7 @@ void AstCodePrinter::accept(const AstCallExpr& ast) {
     m_output << ")";
 }
 
-void AstCodePrinter::accept(const AstLiteralExpr& ast) {
+void AstCodePrinter::accept(const AstLiteralExpr& ast) const {
     const auto visitor = Visitor {
         [&](const std::monostate& /* value */) {
             m_output << "null";
@@ -244,6 +247,6 @@ void AstCodePrinter::accept(const AstMemberExpr& ast) {
     visit(*ast.getRight());
 }
 
-void AstCodePrinter::space() {
+void AstCodePrinter::space() const {
     m_output << std::string(m_indent * 4, ' ');
 }

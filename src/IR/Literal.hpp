@@ -22,7 +22,7 @@ public:
     /** Get the literal value. */
     [[nodiscard]] auto getValue() const -> const LiteralValue& { return m_value; }
     /** Set the literal value. */
-    auto setValue(const LiteralValue& value) { m_value = value; }
+    void setValue(const LiteralValue& value) { m_value = value; }
 
     /** LLVM RTTI support. */
     [[nodiscard]] static auto classof(const Value* value) -> bool {

@@ -133,13 +133,6 @@ public:
         m_next = next;
     }
 
-    /**
-     * Test function
-     */
-     [[nodiscard]] auto hasNextSet() const -> bool {
-         return m_next != nullptr;
-     }
-
 private:
     AstKind m_kind;
     llvm::SMRange m_range;

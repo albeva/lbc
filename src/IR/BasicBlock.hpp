@@ -22,7 +22,7 @@ public:
     BasicBlock(Context& context, std::string label);
 
     /** Get the instruction list for this block. */
-    [[nodiscard]] auto body() -> llvm::ilist<Instruction>& { return m_body; }
+    [[nodiscard]] auto getBody() -> llvm::ilist<Instruction>& { return m_body; }
 
     /** LLVM RTTI support. */
     [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {

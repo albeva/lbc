@@ -29,7 +29,7 @@ public:
     }
 
     /** Get the block list forming the function body. */
-    [[nodiscard]] auto blocks() noexcept -> llvm::ilist<Block>& { return m_blocks; }
+    [[nodiscard]] auto getBlocks() noexcept -> llvm::ilist<Block>& { return m_blocks; }
 
     /** Get the frontend symbol associated with this function. */
     [[nodiscard]] auto getSymbol() const -> Symbol* { return m_symbol; }

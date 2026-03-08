@@ -23,9 +23,9 @@ auto TypeFunction::string() const -> std::string {
     }
 
     if (m_returnType->isVoid()) {
-        out = ")";
+        out += ")";
     } else {
-        out = ") AS ";
+        out += ") AS ";
         out += m_returnType->string();
     }
 

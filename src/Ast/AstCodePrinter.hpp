@@ -20,7 +20,7 @@ private:
     friend AstVisitor;
 
     void accept(const AstModule& ast);
-    void accept(const AstBuiltInType& ast);
+    void accept(const AstBuiltInType& ast) const;
     void accept(const AstPointerType& ast);
     void accept(const AstReferenceType& ast);
     void accept(const AstStmtList& ast);
@@ -35,14 +35,14 @@ private:
     void accept(const AstFuncDecl& ast);
     void accept(const AstFuncParamDecl& ast);
     void accept(const AstCastExpr& ast);
-    void accept(const AstVarExpr& ast);
+    void accept(const AstVarExpr& ast) const;
     void accept(const AstCallExpr& ast);
-    void accept(const AstLiteralExpr& ast);
+    void accept(const AstLiteralExpr& ast) const;
     void accept(const AstUnaryExpr& ast);
     void accept(const AstBinaryExpr& ast);
     void accept(const AstMemberExpr& ast);
 
-    void space();
+    void space() const;
 
     void emitType(const auto& node) {
         if (const auto* type = node.getType()) {

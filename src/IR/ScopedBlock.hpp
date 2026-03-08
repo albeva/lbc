@@ -29,14 +29,16 @@ namespace lbc::ir {
  */
 class ScopedBlock final : public Block {
 public:
-    ScopedBlock(Context& context, std::string label);
+    ScopedBlock(Context& context, std::string label, ScopedBlock* parent = nullptr);
 
     /** Get the child blocks within this scope. */
-    [[nodiscard]] auto blocks() -> llvm::ilist<Block>& { return m_blocks; }
+    [[nodiscard]] auto getBlocks() -> llvm::ilist<Block>& { return m_blocks; }
     /** Get the cleanup instructions that run before scope exit. */
-    [[nodiscard]] auto cleanup() -> llvm::ilist<Instruction>& { return m_cleanup; }
+    [[nodiscard]] auto getCleanup() -> llvm::ilist<Instruction>& { return m_cleanup; }
+    /** Get parent scope */
+    [[nodiscard]] auto getParent() const -> ScopedBlock* { return m_parent; }
     /** Get the value table for named values declared in this scope. */
-    [[nodiscard]] auto getValueTable() -> ValueTable& { return m_valueTable; }
+    [[nodiscard]] auto getValueTable() -> ValueTable* { return &m_valueTable; }
 
     /** LLVM RTTI support. */
     [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
@@ -44,6 +46,7 @@ public:
     }
 
 private:
+    ScopedBlock* m_parent;
     ValueTable m_valueTable;            ///< named values in this scope
     llvm::ilist<Block> m_blocks;        ///< child blocks within the scope
     llvm::ilist<Instruction> m_cleanup; ///< cleanup instructions before scope exit

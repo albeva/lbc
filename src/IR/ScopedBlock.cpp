@@ -4,6 +4,7 @@
 #include "ScopedBlock.hpp"
 using namespace lbc::ir;
 
-ScopedBlock::ScopedBlock(Context& context, std::string label)
+ScopedBlock::ScopedBlock(Context& context, std::string label, ScopedBlock* parent)
 : Block(Kind::ScopedBlock, context, std::move(label))
-, m_valueTable(nullptr) {}
+, m_parent(parent)
+, m_valueTable(parent != nullptr ? parent->getValueTable() : nullptr) {}

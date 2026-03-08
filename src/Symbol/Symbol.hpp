@@ -19,11 +19,10 @@ enum class SymbolFlags : std::uint8_t {
     None = 0,
     BeingDefined = 1U << 0U, ///< Symbol is being defined, this is used to prevent circular dependencies
     Defined = 1U << 1U,      ///< Symbol has been defined, but may not yet be usable
-    Declared = 1U << 2U,     ///< Symbol has been fully declared and can be used in expressions
-    Function = 1U << 3U,     ///< Symbol is a function
-    Variable = 1U << 4U,     ///< The symbol is a variable
-    Constant = 1U << 5U,     ///< The symbol is a constant
-    Type = 1U << 6U,         ///< The symbol is a type
+    Function = 1U << 2U,     ///< Symbol is a function
+    Variable = 1U << 3U,     ///< The symbol is a variable
+    Constant = 1U << 4U,     ///< The symbol is a constant
+    Type = 1U << 5U,         ///< The symbol is a type
 };
 
 /**

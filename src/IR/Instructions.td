@@ -116,7 +116,7 @@ def Not : Leaf<"not", "Logical NOT", Unary>;
 // Binary operations
 // -----------------------------------------------------------------------------
 
-def Binary : Group<"Unary expressions", Expression, [
+def Binary : Group<"Binary expressions", Expression, [
     Arg<"Value*", "lhs">,
     Arg<"Value*", "rhs">,
 ]>;
@@ -164,7 +164,7 @@ def AddrOf : Leaf<"addrof", "Take address of a variable", Expression, [
     Arg<"Value*", "operand">,
 ]>;
 
-def Call : Leaf<"call", "Void function call", Expression, [
+def Call : Leaf<"call", "Call a function", Expression, [
     Arg<"NamedValue*", "callee">,
     Arg<"std::span<Value*>", "args">,
 ]>;

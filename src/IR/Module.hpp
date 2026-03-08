@@ -19,9 +19,9 @@ public:
     Module() = default;
 
     /** Get the top-level declarations (externs, globals, types). */
-    [[nodiscard]] auto declarations() -> std::vector<IrDeclaration*>& { return m_declarations; }
+    [[nodiscard]] auto getDeclarations() -> std::vector<IrDeclaration*>& { return m_declarations; }
     /** Get the function definitions. */
-    [[nodiscard]] auto functions() -> llvm::ilist<Function>& { return m_functions; }
+    [[nodiscard]] auto getFunctions() -> llvm::ilist<Function>& { return m_functions; }
 
 private:
     std::vector<IrDeclaration*> m_declarations; ///< top-level declarations
