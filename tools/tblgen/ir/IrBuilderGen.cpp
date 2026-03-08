@@ -47,7 +47,7 @@ void IrBuilderGen::builder(const IrNodeClass* node) {
     const auto name = "make" + ucfirst(node->getMnemonic());
     const auto params = join(node->ctorParams());
 
-    doc(node->getRecord()->getValueAsString("desc"));
+    doc(node->getRecord()->getValueAsString("desc"), true);
     block("[[nodiscard]] auto " + name + "(" + params + ") const -> " + node->getClassName() + "*", [&] {
         const auto args = join(node->ctorArgs());
         line("return m_context.create<" + node->getClassName() + ">(" + args + ")");

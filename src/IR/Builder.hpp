@@ -24,184 +24,132 @@ public:
 
     [[nodiscard]] auto getContext() const -> Context& { return m_context; }
 
-    /**
-     * Store value through pointer
-     */
+    /// Store value through pointer
     [[nodiscard]] auto makeStore(NamedValue* dest, Value* src) const -> StoreInstr* {
         return m_context.create<StoreInstr>(dest, src);
     }
 
-    /**
-     * Increment reference count
-     */
+    /// Increment reference count
     [[nodiscard]] auto makeRetain(NamedValue* operand) const -> RetainInstr* {
         return m_context.create<RetainInstr>(operand);
     }
 
-    /**
-     * Decrement reference count
-     */
+    /// Decrement reference count
     [[nodiscard]] auto makeRelease(NamedValue* operand) const -> ReleaseInstr* {
         return m_context.create<ReleaseInstr>(operand);
     }
 
-    /**
-     * Unconditional branch
-     */
+    /// Unconditional branch
     [[nodiscard]] auto makeJmp(Block* destination) const -> JmpInstr* {
         return m_context.create<JmpInstr>(destination);
     }
 
-    /**
-     * Conditional branch
-     */
+    /// Conditional branch
     [[nodiscard]] auto makeJmp(Value* condition, Block* trueBlock, Block* falseBlock) const -> CondJmpInstr* {
         return m_context.create<CondJmpInstr>(condition, trueBlock, falseBlock);
     }
 
-    /**
-     * Return value
-     */
+    /// Return value
     [[nodiscard]] auto makeRet(Value* value) const -> RetInstr* {
         return m_context.create<RetInstr>(value);
     }
 
-    /**
-     * Type conversion
-     */
+    /// Type conversion
     [[nodiscard]] auto makeCast(NamedValue* result, const Type* targetType, Value* operand) const -> CastInstr* {
         return m_context.create<CastInstr>(result, targetType, operand);
     }
 
-    /**
-     * Load value through pointer
-     */
+    /// Load value through pointer
     [[nodiscard]] auto makeLoad(NamedValue* result, Value* source) const -> LoadInstr* {
         return m_context.create<LoadInstr>(result, source);
     }
 
-    /**
-     * Take address of a variable
-     */
+    /// Take address of a variable
     [[nodiscard]] auto makeAddrof(NamedValue* result, Value* operand) const -> AddrOfInstr* {
         return m_context.create<AddrOfInstr>(result, operand);
     }
 
-    /**
-     * Void function call
-     */
+    /// Void function call
     [[nodiscard]] auto makeCall(NamedValue* result, NamedValue* callee, const std::span<Value*> args) const -> CallInstr* {
         return m_context.create<CallInstr>(result, callee, args);
     }
 
-    /**
-     * Arithmetic negation
-     */
+    /// Arithmetic negation
     [[nodiscard]] auto makeNeg(NamedValue* result, Value* operand) const -> NegInstr* {
         return m_context.create<NegInstr>(result, operand);
     }
 
-    /**
-     * Logical NOT
-     */
+    /// Logical NOT
     [[nodiscard]] auto makeNot(NamedValue* result, Value* operand) const -> NotInstr* {
         return m_context.create<NotInstr>(result, operand);
     }
 
-    /**
-     * Addition
-     */
+    /// Addition
     [[nodiscard]] auto makeAdd(NamedValue* result, Value* lhs, Value* rhs) const -> AddInstr* {
         return m_context.create<AddInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Subtraction
-     */
+    /// Subtraction
     [[nodiscard]] auto makeSub(NamedValue* result, Value* lhs, Value* rhs) const -> SubInstr* {
         return m_context.create<SubInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Multiplication
-     */
+    /// Multiplication
     [[nodiscard]] auto makeMul(NamedValue* result, Value* lhs, Value* rhs) const -> MulInstr* {
         return m_context.create<MulInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Division
-     */
+    /// Division
     [[nodiscard]] auto makeDiv(NamedValue* result, Value* lhs, Value* rhs) const -> DivInstr* {
         return m_context.create<DivInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Modulo
-     */
+    /// Modulo
     [[nodiscard]] auto makeMod(NamedValue* result, Value* lhs, Value* rhs) const -> ModInstr* {
         return m_context.create<ModInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Logical AND
-     */
+    /// Logical AND
     [[nodiscard]] auto makeAnd(NamedValue* result, Value* lhs, Value* rhs) const -> AndInstr* {
         return m_context.create<AndInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Logical OR
-     */
+    /// Logical OR
     [[nodiscard]] auto makeOr(NamedValue* result, Value* lhs, Value* rhs) const -> OrInstr* {
         return m_context.create<OrInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Equal
-     */
+    /// Equal
     [[nodiscard]] auto makeEq(NamedValue* result, Value* lhs, Value* rhs) const -> EqInstr* {
         return m_context.create<EqInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Not equal
-     */
+    /// Not equal
     [[nodiscard]] auto makeNe(NamedValue* result, Value* lhs, Value* rhs) const -> NeInstr* {
         return m_context.create<NeInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Less than
-     */
+    /// Less than
     [[nodiscard]] auto makeLt(NamedValue* result, Value* lhs, Value* rhs) const -> LtInstr* {
         return m_context.create<LtInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Less than or equal
-     */
+    /// Less than or equal
     [[nodiscard]] auto makeLe(NamedValue* result, Value* lhs, Value* rhs) const -> LeInstr* {
         return m_context.create<LeInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Greater than
-     */
+    /// Greater than
     [[nodiscard]] auto makeGt(NamedValue* result, Value* lhs, Value* rhs) const -> GtInstr* {
         return m_context.create<GtInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Greater than or equal
-     */
+    /// Greater than or equal
     [[nodiscard]] auto makeGe(NamedValue* result, Value* lhs, Value* rhs) const -> GeInstr* {
         return m_context.create<GeInstr>(result, lhs, rhs);
     }
 
-    /**
-     * Variable declaration
-     */
+    /// Variable declaration
     [[nodiscard]] auto makeVar(NamedValue* result, const Type* type) const -> VarInstr* {
         return m_context.create<VarInstr>(result, type);
     }
