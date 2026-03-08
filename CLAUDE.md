@@ -87,14 +87,19 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
 
 - **LLVM usage** — prefer std C++ where it's the natural fit, but freely use LLVM tools and libraries throughout the
   entire codebase (frontend, IR, backend). No artificial isolation boundaries.
-- **IR** — a typed, serializable, interpretable intermediate representation in `lbc::ir` namespace. Uses basic blocks
-  with branch instructions for control flow (not structured if/loop). Preserves semantic information (types, generics,
-  module interfaces) and lexical scope boundaries (via `ScopedBlock`) that LLVM IR discards. Retain/release are explicit
-  instructions; destructors are implicit at scope boundaries from type metadata. Value hierarchy: `Value` → `NamedValue`
-  → `Temporary`/`Variable`/`Function`/`Block`. Blocks are `BasicBlock` (flat instruction list) or `ScopedBlock` (child
-  blocks + cleanup + `ValueTable`). `SymbolTableBase<T>` is the generic name→value mapping used by both `SymbolTable`
-  (frontend, maps to `Symbol`) and `ValueTable` (IR, maps to `NamedValue`). Containers use `llvm::ilist` for ownership.
-  No optimization passes — all optimization is delegated to LLVM.
+- **IR** — a typed, serializable, interpretable intermediate representation. Organised under `src/IR/` with two
+  subdirectories: `lib/` (namespace `lbc::ir::lib`) contains the core IR classes — values, blocks, instructions,
+  builder, and module; `gen/` (namespace `lbc::ir::gen`) contains the `IrGenerator` that lowers the analysed AST
+  into IR. Uses basic blocks with branch instructions for control flow (not structured if/loop). Preserves semantic
+  information (types, generics, module interfaces) and lexical scope boundaries (via `ScopedBlock`) that LLVM IR
+  discards. Retain/release are explicit instructions; destructors are implicit at scope boundaries from type metadata.
+  Value hierarchy: `Value` → `NamedValue` → `Temporary`/`Variable`/`Function`/`Block`. `Variable` and `Function`
+  hold a `Symbol*` back-reference for debug/diagnostic purposes. Blocks are `BasicBlock` (flat instruction list) or
+  `ScopedBlock` (child blocks + cleanup + `ValueTable`; parent-chained for scope resolution).
+  `SymbolTableBase<T>` is the generic name→value mapping used by both `SymbolTable` (frontend, maps to `Symbol`) and
+  `ValueTable` (IR, maps to `NamedValue`). Containers use `llvm::ilist` for ownership. Instruction classes and the
+  `Builder` are generated from `src/IR/lib/Instructions.td` via `lbc-tblgen`. No optimization passes — all
+  optimization is delegated to LLVM.
 
 ## Code Conventions
 
@@ -139,6 +144,10 @@ Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR →
   (`Sema.cpp`, `SemaDecl.cpp`, `SemaExpr.cpp`, `SemaStmt.cpp`, `SemaType.cpp`). Inherits `LogProvider` for
   diagnostics and `AstVisitor<DiagResult<void>>` for dispatch. Each AST node type has a corresponding `accept()`
   handler. Entry point is `analyse(AstModule&)`.
+- IR Generator: `IrGenerator` class in `lbc::ir::gen`, same split-file pattern (`Gen.cpp`, `GenDecl.cpp`,
+  `GenExpr.cpp`, `GenStmt.cpp`, `GenType.cpp`). Inherits `AstVisitor<DiagResult<void>>` for AST traversal,
+  `ir::lib::Builder` for instruction creation, and `LogProvider` for diagnostics. Entry point is
+  `generate(const AstModule&) -> DiagResult<lib::Module*>`.
 - AST: node classes are generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. The TableGen schema
   uses three class types: `Node` (base), `Group` (abstract intermediate — types, statements, declarations,
   expressions), and `Leaf` (concrete instantiable nodes). Each node has a `list<Member>` with two subtypes:
