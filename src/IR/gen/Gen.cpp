@@ -5,13 +5,15 @@
 using namespace lbc::ir::gen;
 
 IrGenerator::IrGenerator(Context& context)
-: Builder(context) {
+: Builder(context)
+, m_module(nullptr) {
 }
 
 IrGenerator::~IrGenerator() = default;
 
-auto IrGenerator::generate(const AstModule& ast) -> Result {
-    return accept(ast);
+auto IrGenerator::generate(const AstModule& ast) -> DiagResult<lib::Module*> {
+    TRY(accept(ast));
+    return m_module;
 }
 
 auto IrGenerator::accept(const AstModule& ast) -> Result {

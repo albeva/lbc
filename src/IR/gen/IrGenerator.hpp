@@ -8,6 +8,9 @@
 #include "Diag/DiagEngine.hpp"
 #include "Diag/LogProvider.hpp"
 #include "IR/lib/Builder.hpp"
+namespace lbc::ir::lib {
+class Module;
+}
 namespace lbc::ir::gen {
 
 /**
@@ -16,7 +19,7 @@ namespace lbc::ir::gen {
  * Implementation is split across multiple .cpp files by concern:
  * GenDecl, GenExpr, GenStmt, GenType, and Gen.cpp for common utilities.
  */
-class IrGenerator final : LogProvider, AstVisitor<DiagResult<void>>, lib::Builder {
+class IrGenerator final : AstVisitor<DiagResult<void>>, lib::Builder, LogProvider {
 public:
     NO_COPY_AND_MOVE(IrGenerator)
 
@@ -29,7 +32,7 @@ public:
     /**
      * Generate IR from the given AST module.
      */
-    [[nodiscard]] auto generate(const AstModule& ast) -> Result;
+    [[nodiscard]] auto generate(const AstModule& ast) -> DiagResult<lib::Module*>;
 
     /**
      * Get associated context object.
@@ -120,6 +123,11 @@ private:
 
     /** Generate IR for a reference type expression. */
     [[nodiscard]] auto accept(const AstReferenceType& ast) -> Result;
+
+    // -------------------------------------------------------------------------
+    // Data
+    // -------------------------------------------------------------------------
+    lib::Module* m_module;
 };
 
 } // namespace lbc::ir::gen
