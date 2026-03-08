@@ -15,6 +15,7 @@ target_sources(lbc_lib
     IR/NamedValue.cpp
     IR/Temporary.cpp
     IR/Value.cpp
+    IR/Variable.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/ParseDecl.cpp
@@ -47,6 +48,7 @@ target_sources(lbc_lib
     IR/NamedValue.hpp
     IR/Temporary.hpp
     IR/Value.hpp
+    IR/Variable.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
     Lexer/Lexer.hpp
