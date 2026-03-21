@@ -20,7 +20,7 @@ namespace lbc::ir::lib {
 class Block : public NamedValue, public llvm::ilist_node<Block> {
 public:
     /** LLVM RTTI support. */
-    [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
+    [[nodiscard]] static auto classof(const Value* value) -> bool {
         return value->getKind() >= Kind::BasicBlock && value->getKind() <= Kind::ScopedBlock;
     }
 

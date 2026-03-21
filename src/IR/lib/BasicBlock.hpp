@@ -25,7 +25,7 @@ public:
     [[nodiscard]] auto getBody() -> llvm::ilist<Instruction>& { return m_body; }
 
     /** LLVM RTTI support. */
-    [[nodiscard]] static constexpr auto classof(const Value* value) -> bool {
+    [[nodiscard]] static auto classof(const Value* value) -> bool {
         return value->getKind() == Kind::BasicBlock;
     }
 
