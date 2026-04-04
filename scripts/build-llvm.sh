@@ -1,4 +1,4 @@
-VERSION="llvm-project-22.1.0-rc3"
+VERSION="llvm-project-22.1.2"
 SRC_DIR="$VERSION.src/llvm"
 BUILD_DIR="$VERSION.build"
 DIST_DIR="$VERSION.dst"
