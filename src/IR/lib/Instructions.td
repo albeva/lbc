@@ -11,11 +11,12 @@ class Member;
 // -----------------------------------------------------------------------------
 // Data field, has setter and getter, passed through ctor (if no default value)
 // -----------------------------------------------------------------------------
-class Arg<string type_, string name_, bit mutable_ = false, string default_ = "">: Member {
+class Arg<string type_, string name_, bit mutable_ = false, string default_ = "", bit reference_ = false>: Member {
     string type = type_;
     string name = name_;
     bit mutable = mutable_;
     string default = default_;
+    bit reference = reference_;
 }
 
 // -----------------------------------------------------------------------------

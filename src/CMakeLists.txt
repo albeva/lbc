@@ -72,6 +72,7 @@ target_sources(lbc_lib
     Utilities/BaseFlags.hpp
     Utilities/Flags.hpp
     Utilities/Formatters.hpp
+    Utilities/Joiner.hpp
     Utilities/NoCopy.hpp
     Utilities/Sequencer.hpp
     Utilities/Try.hpp

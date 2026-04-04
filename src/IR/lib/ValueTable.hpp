@@ -13,4 +13,4 @@ public:
     using SymbolTableBase::SymbolTableBase;
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

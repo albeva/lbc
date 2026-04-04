@@ -19,5 +19,6 @@ auto Token::lexeme() const -> llvm::StringRef {
     const char* start = m_range.Start.getPointer();
     const char* end = m_range.End.getPointer();
     const auto len = static_cast<std::size_t>(end - start);
+    // ReSharper disable once CppDFALocalValueEscapesFunction
     return { start, len };
 }

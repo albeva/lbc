@@ -12,13 +12,9 @@ auto TypeFunction::string() const -> std::string {
         out = "FUNCTION(";
     }
 
-    bool first = true;
+    Joiner commas { out };
     for (const auto* param : m_params) {
-        if (first) {
-            first = false;
-        } else {
-            out += ", ";
-        }
+        commas();
         out += param->string();
     }
 

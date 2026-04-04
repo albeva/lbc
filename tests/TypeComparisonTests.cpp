@@ -32,19 +32,19 @@ protected:
 
     using C = Type::Conversion;
 
-    void expectImplicit(const Type* to, const Type* from) {
+    static void expectImplicit(const Type* to, const Type* from) {
         EXPECT_TRUE(to->convertible(from, C::Implicit)) << "expected implicitly convertible";
     }
 
-    void expectNotImplicit(const Type* to, const Type* from) {
+    static void expectNotImplicit(const Type* to, const Type* from) {
         EXPECT_FALSE(to->convertible(from, C::Implicit)) << "expected not implicitly convertible";
     }
 
-    void expectCast(const Type* to, const Type* from) {
+    static void expectCast(const Type* to, const Type* from) {
         EXPECT_TRUE(to->convertible(from, C::Cast)) << "expected cast convertible";
     }
 
-    void expectNotCast(const Type* to, const Type* from) {
+    static void expectNotCast(const Type* to, const Type* from) {
         EXPECT_FALSE(to->convertible(from, C::Cast)) << "expected not cast convertible";
     }
 };

@@ -14,7 +14,7 @@ class Context;
  * diagnostic engine through deducing this.
  */
 template<typename T>
-concept ContextAware = requires(T& obj) {
+concept ContextAware = requires(const T& obj) {
     { obj.getContext() } -> std::same_as<Context&>;
 };
 

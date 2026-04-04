@@ -178,7 +178,7 @@ auto Lexer::make(const TokenKind kind, const std::size_t len) -> Token {
     return Token { kind, range() };
 }
 
-auto Lexer::token(const TokenKind kind, const LiteralValue value) -> Token {
+auto Lexer::token(const TokenKind kind, const LiteralValue& value) -> Token {
     m_hasStatement = true;
     return Token { kind, range(), value };
 }

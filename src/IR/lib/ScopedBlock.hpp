@@ -52,4 +52,4 @@ private:
     llvm::ilist<Instruction> m_cleanup; ///< cleanup instructions before scope exit
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

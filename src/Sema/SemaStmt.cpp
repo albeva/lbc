@@ -17,7 +17,7 @@ auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
     }
 
     // declare symbols
-    for (auto& decl : ast.getDecls()) {
+    for (const auto& decl : ast.getDecls()) {
         TRY(declare(*decl));
     }
 
@@ -55,7 +55,7 @@ auto SemanticAnalyser::accept(AstReturnStmt& /*ast*/) -> Result {
     return notImplemented();
 }
 
-auto SemanticAnalyser::accept(AstDimStmt& ast) -> Result {
+auto SemanticAnalyser::accept(const AstDimStmt& ast) -> Result {
     for (auto* decl : ast.getDecls()) {
         TRY(define(*decl));
     }

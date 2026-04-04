@@ -104,7 +104,7 @@ private:
     [[nodiscard]] auto accept(AstReturnStmt& ast) -> Result;
 
     /** Analyse a DIM statement. */
-    [[nodiscard]] auto accept(AstDimStmt& ast) -> Result;
+    [[nodiscard]] auto accept(const AstDimStmt& ast) -> Result;
 
     /** Analyse an assignment statement. */
     [[nodiscard]] auto accept(AstAssignStmt& ast) -> Result;
@@ -161,7 +161,7 @@ private:
      * Wrap the expression in an implicit AstCastExpr targeting the given type.
      * Returns the expression unchanged if types already match.
      */
-    [[nodiscard]] auto cast(AstExpr& ast, const Type* targetType) -> AstExpr*;
+    [[nodiscard]] auto cast(AstExpr& ast, const Type* targetType) const -> AstExpr*;
 
     /**
      * Re-type a literal to match the target type within the same type family.
@@ -182,14 +182,14 @@ private:
      * Verify that an expression is addressable (can have its address taken).
      * Currently only variable references are addressable.
      */
-    [[nodiscard]] auto ensureAddressable(AstExpr& ast) -> Result;
+    [[nodiscard]] auto ensureAddressable(const AstExpr& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Types (SemaType.cpp)
     // -------------------------------------------------------------------------
 
     /** Analyse a built-in type expression. */
-    [[nodiscard]] auto accept(AstBuiltInType& ast) -> Result;
+    [[nodiscard]] auto accept(AstBuiltInType& ast) const -> Result;
 
     /** Analyse a pointer type expression. */
     [[nodiscard]] auto accept(AstPointerType& ast) -> Result;

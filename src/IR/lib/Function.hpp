@@ -39,4 +39,4 @@ private:
     llvm::ilist<Block> m_blocks; ///< blocks forming the function body
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

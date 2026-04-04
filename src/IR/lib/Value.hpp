@@ -51,4 +51,4 @@ private:
     const Type* m_type; ///< type of this value
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

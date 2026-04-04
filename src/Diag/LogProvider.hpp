@@ -32,7 +32,7 @@ protected:
      */
     template<ContextAware T>
     [[nodiscard]] auto diag(
-        this T& self,
+        this const T& self,
         const DiagMessage& message,
         const llvm::ArrayRef<llvm::SMRange>& ranges = {},
         const llvm::SMLoc loc = {},
@@ -45,7 +45,7 @@ protected:
      * Create an error indicating unimplemented functionality.
      */
     template<ContextAware T>
-    [[nodiscard]] auto notImplemented(this T& self, const std::source_location& location = std::source_location::current()) -> DiagError {
+    [[nodiscard]] auto notImplemented(this const T& self, const std::source_location& location = std::source_location::current()) -> DiagError {
         return DiagError(self.getContext().getDiag().log(diagnostics::notImplemented(), {}, {}, location));
     }
 };

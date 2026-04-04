@@ -37,7 +37,7 @@ auto SemanticAnalyser::expression(AstExpr& ast, const Type* explicitType) -> Dia
     AstExpr* res = &ast;
 
     // strip unnecessary cast
-    if (auto* cast = llvm::dyn_cast<AstCastExpr>(res)) {
+    if (const auto* cast = llvm::dyn_cast<AstCastExpr>(res)) {
         if (cast->getType() == cast->getExpr()->getType()) {
             res = cast->getExpr();
         }
@@ -96,7 +96,7 @@ auto SemanticAnalyser::coerceLiteral(AstLiteralExpr& ast, const Type* targetType
     return diag(diagnostics::typeMismatch(*ast.getType(), *targetType), ast.getRange());
 }
 
-auto SemanticAnalyser::cast(AstExpr& ast, const Type* targetType) -> AstExpr* {
+auto SemanticAnalyser::cast(AstExpr& ast, const Type* targetType) const -> AstExpr* {
     if (ast.getType() == targetType) {
         return &ast;
     }
@@ -134,7 +134,7 @@ void SemanticAnalyser::setSuggestedType(const Type* type) {
     }
 }
 
-auto SemanticAnalyser::ensureAddressable(AstExpr& ast) -> Result {
+auto SemanticAnalyser::ensureAddressable(const AstExpr& ast) -> Result {
     if (llvm::isa<AstVarExpr>(ast)) {
         return {};
     }
@@ -149,7 +149,7 @@ auto SemanticAnalyser::ensureAddressable(AstExpr& ast) -> Result {
 // suggested type (from an AS cast) or implicit type (from the caller).
 // Coercion only succeeds within the same type family.
 auto SemanticAnalyser::accept(AstLiteralExpr& ast) -> Result {
-    auto& factory = getTypeFactory();
+    const auto& factory = getTypeFactory();
     const auto value = ast.getValue();
 
     const Type* naturalType = nullptr;

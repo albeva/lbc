@@ -32,4 +32,4 @@ private:
     std::string m_name; ///< the name of this value
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

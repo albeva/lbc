@@ -10,4 +10,5 @@ TreeNodeArg::TreeNodeArg(const llvm::Record* record)
 , m_type(record->getValueAsString("type"))
 , m_default(record->getValueAsString("default"))
 , m_mutable(record->getValueAsBit("mutable"))
+, m_reference(record->getValueAsBit("reference"))
 , m_ctorParam(m_default.empty()) {}

@@ -98,7 +98,11 @@ auto TreeNode::ctorParams() const -> std::vector<std::string> {
             if (arg->passAsConst()) {
                 param += "const ";
             }
-            param += arg->getType() + " " + arg->getName();
+            param += arg->getType();
+            if (arg->passAsRef()) {
+                param += "&";
+            }
+            param += " " + arg->getName();
             params.emplace_back(std::move(param));
         }
     }
@@ -184,27 +188,37 @@ auto TreeNode::classFunctions() const -> std::vector<std::string> {
 
     for (const auto& arg : m_args) {
         // getter
-        funcs.emplace_back(
-            "/// Get the "
-            + (arg->getName() + "\n")
-            + "[[nodiscard]] constexpr auto get"
-            + capitalizeFirst(arg->getName())
-            + "() const -> " + arg->getType() + " {\n"
-            + "    return m_" + arg->getName() + ";\n"
-            + "}"
-        );
+        std::string getFunc;
+        getFunc = "/// Get the "
+                + (arg->getName() + "\n")
+                + "[[nodiscard]] constexpr auto get"
+                + capitalizeFirst(arg->getName())
+                + "() const -> ";
+        if (arg->passAsRef()) {
+            getFunc += "const " + arg->getType() + "&";
+        } else {
+            getFunc += arg->getType();
+        }
+        getFunc += " {\n    return m_" + arg->getName() + ";\n}";
+        funcs.emplace_back(std::move(getFunc));
 
         // setter
         if (arg->hasSetter()) {
-            funcs.emplace_back(
-                "/// Set the "
-                + (arg->getName() + "\n")
-                + "void set"
-                + capitalizeFirst(arg->getName()) + "("
-                + (arg->passAsConst() ? "const " : "") + arg->getType() + " " + arg->getName() + ") {\n"
-                + "    m_" + arg->getName() + " = " + arg->getName() + ";\n"
-                + "}"
-            );
+            std::string setfunc;
+            // funcs.emplace_back(
+            setfunc = "/// Set the "
+                    + (arg->getName() + "\n")
+                    + "void set"
+                    + capitalizeFirst(arg->getName()) + "("
+                    + (arg->passAsConst() ? "const " : "") + arg->getType();
+            if (arg->passAsRef()) {
+                setfunc += "&";
+            }
+            setfunc += " " + arg->getName() + ") {\n"
+                     + "    m_" + arg->getName() + " = " + arg->getName() + ";\n"
+                     + "}";
+            // );
+            funcs.emplace_back(std::move(setfunc));
         }
     }
 

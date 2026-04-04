@@ -28,4 +28,4 @@ private:
     llvm::ilist<Function> m_functions;          ///< function definitions
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

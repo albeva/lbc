@@ -28,4 +28,4 @@ protected:
     Block(Kind kind, Context& context, std::string label);
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

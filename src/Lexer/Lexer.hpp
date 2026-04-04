@@ -36,7 +36,7 @@ public:
     /**
      * Get associated context object
      */
-    [[nodiscard]] auto getContext() -> Context& { return m_context; }
+    [[nodiscard]] auto getContext() const -> Context& { return m_context; }
 
     /**
      * Return the source range from m_start to m_input.
@@ -69,7 +69,7 @@ private:
     /**
      * Create a token with an associated literal value.
      */
-    [[nodiscard]] auto token(TokenKind kind, LiteralValue value = {}) -> Token;
+    [[nodiscard]] auto token(TokenKind kind, const LiteralValue& value = {}) -> Token;
 
     /**
      * Skip characters until a line ending or end of file.

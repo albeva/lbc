@@ -32,4 +32,4 @@ private:
     Symbol* m_symbol; ///< frontend symbol with type and debug info
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

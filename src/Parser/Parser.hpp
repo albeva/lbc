@@ -47,7 +47,7 @@ public:
     using Result = DiagResult<T>;
 
     /**
-     * Construct a parser for the source buffer identified by @param id.
+     * Construct a parser for the source buffer identified by @param context @param id @param
      */
     Parser(Context& context, unsigned id);
     ~Parser();
@@ -60,7 +60,7 @@ public:
     /**
      * Get associated context object
      */
-    [[nodiscard]] auto getContext() -> Context& { return m_lexer.getContext(); }
+    [[nodiscard]] auto getContext() const -> Context& { return m_lexer.getContext(); }
 
 private:
     // --------------------------------
@@ -254,7 +254,7 @@ private:
     /** Construct the appropriate binary or member-access AST node. */
     [[nodiscard]] auto binaryExpr(AstExpr* lhs, AstExpr* rhs, TokenKind tkn) -> Result<AstExpr*>;
 
-    /** Precedence-climbing loop. Parses binary and suffix operators at or above @param precedence. */
+    /** Precedence-climbing loop. Parses binary and suffix operators at or above @param lhs @param precedence */
     [[nodiscard]] auto climb(AstExpr* lhs, int precedence = 1) -> Result<AstExpr*>;
 
     /** Check whether expression parsing should stop before the current token. */

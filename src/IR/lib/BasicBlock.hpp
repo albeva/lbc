@@ -33,4 +33,4 @@ private:
     llvm::ilist<Instruction> m_body; ///< instructions in this block
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

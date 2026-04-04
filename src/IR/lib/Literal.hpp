@@ -33,4 +33,4 @@ private:
     LiteralValue m_value; ///< the literal value
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib

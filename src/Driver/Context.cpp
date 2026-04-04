@@ -8,6 +8,6 @@ Context::Context()
 : m_diagEngine(*this)
 , m_typeFactory(*this) {}
 
-auto Context::retain(llvm::StringRef string) -> llvm::StringRef {
+auto Context::retain(const llvm::StringRef string) -> llvm::StringRef {
     return m_strings.insert(string).first->first();
 }

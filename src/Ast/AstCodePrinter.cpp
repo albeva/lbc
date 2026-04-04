@@ -68,13 +68,9 @@ void AstCodePrinter::accept(const AstReturnStmt& ast) {
 
 void AstCodePrinter::accept(const AstDimStmt& ast) {
     m_output << "DIM ";
-    bool first = true;
+    Joiner commas(m_output);
     for (const auto* var : ast.getDecls()) {
-        if (first) {
-            first = false;
-        } else {
-            m_output << ", ";
-        }
+        commas();
         accept(*var);
     }
 }
@@ -130,13 +126,9 @@ void AstCodePrinter::accept(const AstFuncDecl& ast) {
     }
 
     m_output << "(";
-    bool first = true;
+    Joiner commas(m_output);
     for (const auto* param : ast.getParams()) {
-        if (first) {
-            first = false;
-        } else {
-            m_output << ", ";
-        }
+        commas();
         accept(*param);
     }
     m_output << ")";
@@ -171,13 +163,9 @@ void AstCodePrinter::accept(const AstVarExpr& ast) const {
 void AstCodePrinter::accept(const AstCallExpr& ast) {
     visit(*ast.getCallee());
     m_output << "(";
-    bool first = true;
+    Joiner commas(m_output);
     for (const auto& arg : ast.getArgs()) {
-        if (first) {
-            first = false;
-        } else {
-            m_output << ", ";
-        }
+        commas();
         visit(*arg);
     }
     m_output << ")";

@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.hpp"
 
-#include "../Symbol/LiteralValue.hpp"
+#include "Symbol/LiteralValue.hpp"
 #include "TokenKind.hpp"
 namespace lbc {
 
@@ -12,14 +12,13 @@ class Token final {
 public:
     /** Default-construct an Invalid sentinel token. */
     constexpr Token()
-    : m_kind(TokenKind::Value::Invalid)
-    , m_value() {}
+    : m_kind(TokenKind::Value::Invalid) {}
 
     /** Construct a token with a kind, source range, and optional literal value. */
     constexpr Token(
         const TokenKind kind,
         const llvm::SMRange range,
-        const LiteralValue value = {}
+        const LiteralValue& value = {}
     )
     : m_kind(kind)
     , m_range(range)
@@ -72,7 +71,7 @@ private:
  */
 template<>
 struct std::formatter<lbc::Token, char> final {
-    constexpr static auto parse(std::format_parse_context& ctx) {
+    constexpr static auto parse(const std::format_parse_context& ctx) {
         return ctx.begin();
     }
 

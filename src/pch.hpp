@@ -32,6 +32,7 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/SMLoc.h>
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/raw_ostream.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -44,6 +45,8 @@
 #include "Utilities/Try.hpp"
 #include "Utilities/ValueRestorer.hpp"
 #include "Utilities/Visitor.hpp"
+
+#include "Utilities/Joiner.hpp"
 
 namespace lbc {
 using namespace std::string_view_literals;

@@ -28,12 +28,14 @@ public:
     [[nodiscard]] auto passAsConst() const -> bool {
         return m_type.back() != '*';
     }
+    [[nodiscard]] auto passAsRef() const -> bool { return m_reference; }
 
 private:
     std::string m_name;
     std::string m_type;
     std::string m_default;
     bool m_mutable;
+    bool m_reference;
     bool m_ctorParam;
 };
 } // namespace lib

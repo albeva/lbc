@@ -998,7 +998,7 @@ public:
      */
     constexpr AstLiteralExpr(
         const llvm::SMRange range,
-        const LiteralValue value
+        const LiteralValue& value
     )
     : AstExpr(AstKind::LiteralExpr, range)
     , m_value(value) {}
@@ -1009,7 +1009,7 @@ public:
     }
 
     /// Get the value
-    [[nodiscard]] constexpr auto getValue() const -> LiteralValue {
+    [[nodiscard]] constexpr auto getValue() const -> const LiteralValue& {
         return m_value;
     }
 

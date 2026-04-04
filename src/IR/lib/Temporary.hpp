@@ -24,4 +24,4 @@ public:
     }
 };
 
-} // namespace lbc::ir
+} // namespace lbc::ir::lib
