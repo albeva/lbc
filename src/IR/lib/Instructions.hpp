@@ -10,9 +10,12 @@
 #include "pch.hpp"
 namespace lbc::ir::lib {
 
+} // namespace lbc::ir::lib
+namespace lbc { class Type; }
+namespace lbc::ir::lib {
+
 class Block;
 class NamedValue;
-class Type;
 class Value;
 
 /**

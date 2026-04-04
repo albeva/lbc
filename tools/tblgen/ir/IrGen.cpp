@@ -54,9 +54,13 @@ auto IrGen::run() -> bool {
 }
 
 void IrGen::forwardDecls() {
+    // Type lives in namespace lbc, not lbc::ir::lib.
+    // Close the current namespace, forward-declare it, and reopen.
+    m_os << "} // namespace lbc::ir::lib\n";
+    m_os << "namespace lbc { class Type; }\n";
+    m_os << "namespace lbc::ir::lib {\n\n";
     line("class Block");
     line("class NamedValue");
-    line("class Type");
     line("class Value");
 }
 
