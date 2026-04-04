@@ -119,7 +119,7 @@ private:
     /**
      * Analyse an expression, applying implicit type coercion if needed.
      *
-     * Saves and restores m_implicitType / m_suggestedType via ValueRestorer.
+     * Saves and restores m_explicitType / m_suggestedType via ValueRestorer.
      * After the expression visitor runs, if the result type differs from
      * @p implicitType the expression is wrapped in an implicit cast.
      *

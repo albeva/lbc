@@ -15,9 +15,9 @@ using namespace lbc;
 
 // Expression analysis uses two type propagation mechanisms:
 //
-// - m_implicitType (top-down): pushed from the caller, e.g. the declared
+// - m_explicitType (top-down): pushed from the caller, e.g. the declared
 //   type of a variable in `DIM x AS BYTE = <expr>`. After the expression
-//   visitor completes, if the result type differs from the implicit type
+//   visitor completes, if the result type differs from the explicit type
 //   the expression is coerced or wrapped in an implicit cast.
 //
 // - m_suggestedType (bottom-up): set by any typed sub-expression (variables,

@@ -127,7 +127,7 @@ private:
         std::source_location location;
     };
 
-    [[maybe_unused]] Context& m_context;
+    Context& m_context;
     std::vector<Entry> m_messages;
     bool m_autoPrint = true;
 };
