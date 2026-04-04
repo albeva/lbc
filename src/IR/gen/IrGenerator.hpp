@@ -162,12 +162,12 @@ private:
     // -------------------------------------------------------------------------
     // Data
     // -------------------------------------------------------------------------
-    lib::Module* m_module = nullptr;          ///< the IR module being generated
-    lib::Function* m_function = nullptr;      ///< current function
-    lib::BasicBlock* m_block = nullptr;       ///< current insertion point
-    lib::ScopedBlock* m_scope = nullptr;      ///< current lexical scope
-    lib::Value* m_lastValue = nullptr;        ///< last value from expression visitor
-    unsigned m_tempCounter = 0;               ///< temporary numbering (resets per function)
+    lib::Module* m_module = nullptr;     ///< the IR module being generated
+    lib::Function* m_function = nullptr; ///< current function
+    lib::BasicBlock* m_block = nullptr;  ///< current insertion point
+    lib::ScopedBlock* m_scope = nullptr; ///< current lexical scope
+    lib::Value* m_lastValue = nullptr;   ///< last value from expression visitor
+    unsigned m_tempCounter = 0;          ///< temporary numbering (resets per function)
 };
 
 } // namespace lbc::ir::gen

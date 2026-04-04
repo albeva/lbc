@@ -1,11 +1,11 @@
 //
 // Created by Albert Varaksin on 08/03/2026.
 //
-#include "IrGenerator.hpp"
 #include "IR/lib/BasicBlock.hpp"
 #include "IR/lib/Module.hpp"
 #include "IR/lib/ScopedBlock.hpp"
 #include "IR/lib/Temporary.hpp"
+#include "IrGenerator.hpp"
 using namespace lbc::ir::gen;
 
 IrGenerator::IrGenerator(Context& context)
