@@ -42,7 +42,16 @@ IrGen::IrGen(
 )
 : TreeGen(os, records, generator, "Ir", ns, std::move(includes)) {}
 
+void IrGen::preNamespace() {
+    newline();
+    block("namespace lbc", [&] {
+        line("class Type");
+    });
+    newline();
+}
+
 auto IrGen::run() -> bool {
+    header();
     forwardDecls();
     newline();
 
@@ -50,15 +59,11 @@ auto IrGen::run() -> bool {
     newline();
 
     treeGroups(getRoot());
+    footer();
     return false;
 }
 
 void IrGen::forwardDecls() {
-    // Type lives in namespace lbc, not lbc::ir::lib.
-    // Close the current namespace, forward-declare it, and reopen.
-    m_os << "} // namespace lbc::ir::lib\n";
-    m_os << "namespace lbc { class Type; }\n";
-    m_os << "namespace lbc::ir::lib {\n\n";
     line("class Block");
     line("class NamedValue");
     line("class Value");

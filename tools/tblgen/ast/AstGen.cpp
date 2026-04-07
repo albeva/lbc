@@ -18,11 +18,13 @@ AstGen::AstGen(
 : TreeGen(os, records, generator, "Ast", ns, std::move(includes)) {}
 
 auto AstGen::run() -> bool {
+    header();
     forwardDecls();
     treeKindEnum();
     newline();
     treeForwardDeclare();
     treeGroups(getRoot());
+    footer();
     return false;
 }
 

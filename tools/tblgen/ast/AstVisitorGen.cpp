@@ -12,9 +12,11 @@ AstVisitorGen::AstVisitorGen(
 : AstGen(os, records, genName, "lbc", { "pch.hpp", "Ast/Ast.hpp" }) {}
 
 auto AstVisitorGen::run() -> bool {
+    header();
     visitorBaseClass();
     visitorClasses();
     visitFunction();
+    footer();
     return false;
 }
 

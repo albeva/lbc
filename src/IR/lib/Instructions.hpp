@@ -8,10 +8,11 @@
 // clang-format off
 #pragma once
 #include "pch.hpp"
-namespace lbc::ir::lib {
 
-} // namespace lbc::ir::lib
-namespace lbc { class Type; }
+namespace lbc {
+    class Type;
+}
+
 namespace lbc::ir::lib {
 
 class Block;

@@ -11,6 +11,8 @@ AstFwdDeclGen::AstFwdDeclGen(
 : AstGen(os, records, genName, "lbc", {}) {}
 
 auto AstFwdDeclGen::run() -> bool {
+    header();
     treeForwardDeclare();
+    footer();
     return false;
 }

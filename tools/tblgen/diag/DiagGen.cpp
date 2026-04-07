@@ -17,6 +17,7 @@ DiagGen::DiagGen(
 }
 
 auto DiagGen::run() -> bool {
+    header();
     diagKind();
     newline();
 
@@ -28,6 +29,7 @@ auto DiagGen::run() -> bool {
 
     // Manually close the reopened namespace (closeNamespace() already ran in diagKind)
     m_os << "} // namespace lbc\n";
+    footer();
     return false;
 }
 
