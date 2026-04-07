@@ -12,7 +12,7 @@ using namespace lbc;
 
 TEST(TypeFactoryTests, SentinelTypes) {
     Context context;
-    auto& tf = context.getTypeFactory();
+    const auto& tf = context.getTypeFactory();
 
     EXPECT_TRUE(tf.getVoid()->isVoid());
     EXPECT_TRUE(tf.getNull()->isNull());
@@ -62,7 +62,7 @@ TEST(TypeFactoryTests, IntegralTypes) {
 
 TEST(TypeFactoryTests, FloatingPointTypes) {
     Context context;
-    auto& tf = context.getTypeFactory();
+    const auto& tf = context.getTypeFactory();
 
     EXPECT_TRUE(tf.getSingle()->isFloatingPoint());
     EXPECT_TRUE(tf.getDouble()->isFloatingPoint());
@@ -72,7 +72,7 @@ TEST(TypeFactoryTests, FloatingPointTypes) {
 
 TEST(TypeFactoryTests, SingletonStability) {
     Context context;
-    auto& tf = context.getTypeFactory();
+    const auto& tf = context.getTypeFactory();
 
     EXPECT_EQ(tf.getInteger(), tf.getInteger());
     EXPECT_EQ(tf.getVoid(), tf.getVoid());

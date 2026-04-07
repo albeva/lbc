@@ -133,13 +133,13 @@ private:
     // -------------------------------------------------------------------------
 
     /** Append an instruction to the current basic block's body. */
-    void emit(lib::Instruction* instr);
+    void emit(lib::Instruction* instr) const;
 
     /**
      * Create a new BasicBlock in the current function.
      * Does NOT change the insertion point.
      */
-    [[nodiscard]] auto createBlock(llvm::StringRef name) -> lib::BasicBlock*;
+    [[nodiscard]] auto createBlock(llvm::StringRef name) const -> lib::BasicBlock*;
 
     /** Set the current basic block as the insertion point. */
     void setInsertPoint(lib::BasicBlock* block);

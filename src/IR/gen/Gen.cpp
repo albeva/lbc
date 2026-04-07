@@ -28,11 +28,11 @@ auto IrGenerator::accept(const AstModule& ast) -> Result {
 // Helpers
 // -----------------------------------------------------------------------------
 
-void IrGenerator::emit(lib::Instruction* instr) {
+void IrGenerator::emit(lib::Instruction* instr) const {
     m_block->getBody().push_back(instr);
 }
 
-auto IrGenerator::createBlock(llvm::StringRef name) -> lib::BasicBlock* {
+auto IrGenerator::createBlock(const llvm::StringRef name) const -> lib::BasicBlock* {
     auto* block = getContext().create<lib::BasicBlock>(getContext(), name.str());
     m_function->getBlocks().push_back(block);
     return block;

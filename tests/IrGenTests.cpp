@@ -17,19 +17,18 @@ namespace {
  * Run the full pipeline (parse → sema → IR gen) and return
  * whether IR generation succeeded or failed.
  */
-auto irGenSucceeds(llvm::StringRef source) -> bool {
+auto irGenSucceeds(const llvm::StringRef source) -> bool {
     Context context;
     auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");
-    auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
+    const auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
     Parser parser { context, id };
 
-    auto parsed = parser.parse();
+    const auto parsed = parser.parse();
     if (!parsed.has_value()) {
         return false;
     }
 
-    SemanticAnalyser sema { context };
-    if (!sema.analyse(**parsed)) {
+    if (SemanticAnalyser sema { context }; !sema.analyse(**parsed)) {
         return false;
     }
 

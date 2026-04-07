@@ -10,16 +10,16 @@ namespace {
 /**
  * Create a lexer from a source string.
  */
-auto makeLexer(Context& context, llvm::StringRef source) -> Lexer {
+auto makeLexer(Context& context, const llvm::StringRef source) -> Lexer {
     auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");
-    auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
+    const auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
     return Lexer { context, id };
 }
 
 /**
  * Unwrap a DiagResult<Token>, failing the test on error.
  */
-auto tok(DiagResult<Token> result) -> Token {
+auto tok(const DiagResult<Token>& result) -> Token {
     EXPECT_TRUE(result.has_value()) << "expected a valid token, got an error";
     return result.value_or(Token {});
 }
