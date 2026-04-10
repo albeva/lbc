@@ -31,6 +31,16 @@ void IrGenerator::emit(lib::Instruction* instr) const {
     m_block->getBody().push_back(instr);
 }
 
+void IrGenerator::terminate(lib::BasicBlock* target) const {
+    if (not isTerminated()) {
+        if (target != nullptr) {
+            emit(makeJmp(target));
+        } else {
+            emit(makeRet(nullptr));
+        }
+    }
+}
+
 auto IrGenerator::createBlock(const llvm::StringRef name) const -> lib::BasicBlock* {
     return getContext().create<lib::BasicBlock>(getContext(), name.str());
 }

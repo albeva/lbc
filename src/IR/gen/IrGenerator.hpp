@@ -12,7 +12,6 @@ namespace lbc::ir::lib {
 class BasicBlock;
 class Function;
 class Module;
-class ScopedBlock;
 class Temporary;
 } // namespace lbc::ir::lib
 namespace lbc::ir::gen {
@@ -135,6 +134,9 @@ private:
     /** Append an instruction to the current basic block's body. */
     void emit(lib::Instruction* instr) const;
 
+    /** append terminating instruction only if current block is not terminated **/
+    void terminate(lib::BasicBlock* target) const;
+
     /**
      * Create a new BasicBlock
      * Does NOT change the insertion point.
@@ -142,7 +144,7 @@ private:
     [[nodiscard]] auto createBlock(llvm::StringRef name) const -> lib::BasicBlock*;
 
     /**
-     * Set given blcok as active
+     * Set given block as active
      */
     void setBlock(lib::BasicBlock* block);
 
@@ -162,7 +164,7 @@ private:
     lib::Function* m_function = nullptr; ///< current function
     lib::BasicBlock* m_block = nullptr;  ///< current insertion point
     unsigned m_tempCounter = 0;          ///< temporary numbering (resets per function)
-    unsigned m_ifCounter = 0;
+    unsigned m_ifCounter = 0;            ///< if statement counter (resets per function)
 };
 
 } // namespace lbc::ir::gen

@@ -116,7 +116,7 @@ void AstVisitorGen::visit(const lib::TreeNode* klass) {
         return;
     }
     doc("Dispatch to the appropriate accept() handler based on the node's AstKind.");
-    block("constexpr auto visit(this auto& self, std::derived_from<" + klass->getClassName() + "> auto& ast) -> Result", [&] {
+    block("[[nodiscard]] constexpr auto visit(this auto& self, std::derived_from<" + klass->getClassName() + "> auto& ast) -> Result", [&] {
         block("switch (ast.getKind())", [&] {
             klass->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
                 caseAccept(node);
@@ -173,7 +173,7 @@ void AstVisitorGen::visitFunction() {
     });
 
     line("template <typename Callable>", "");
-    block("constexpr auto visit(std::derived_from<" + root->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
+    block("[[nodiscard]] constexpr auto visit(std::derived_from<" + root->getClassName() + "> auto& ast, Callable&& callable) -> decltype(auto)", [&] {
         block("switch (ast.getKind())", [&] {
             root->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
                 caseForward(node);

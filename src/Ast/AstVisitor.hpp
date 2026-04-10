@@ -87,7 +87,7 @@ public:
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstRoot> auto& ast) -> Result {
+    [[nodiscard]] constexpr auto visit(this auto& self, std::derived_from<AstRoot> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::Module:
                 return self.accept(llvm::cast<AstModule>(ast));
@@ -174,7 +174,7 @@ public:
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstType> auto& ast) -> Result {
+    [[nodiscard]] constexpr auto visit(this auto& self, std::derived_from<AstType> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::BuiltInType:
                 return self.accept(llvm::cast<AstBuiltInType>(ast));
@@ -228,7 +228,7 @@ public:
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstStmt> auto& ast) -> Result {
+    [[nodiscard]] constexpr auto visit(this auto& self, std::derived_from<AstStmt> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::StmtList:
                 return self.accept(llvm::cast<AstStmtList>(ast));
@@ -287,7 +287,7 @@ public:
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstDecl> auto& ast) -> Result {
+    [[nodiscard]] constexpr auto visit(this auto& self, std::derived_from<AstDecl> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::VarDecl:
                 return self.accept(llvm::cast<AstVarDecl>(ast));
@@ -340,7 +340,7 @@ public:
     /**
      * Dispatch to the appropriate accept() handler based on the node's AstKind.
      */
-    constexpr auto visit(this auto& self, std::derived_from<AstExpr> auto& ast) -> Result {
+    [[nodiscard]] constexpr auto visit(this auto& self, std::derived_from<AstExpr> auto& ast) -> Result {
         switch (ast.getKind()) {
             case AstKind::CastExpr:
                 return self.accept(llvm::cast<AstCastExpr>(ast));
@@ -399,7 +399,7 @@ public:
  * @endcode
  */
 template <typename Callable>
-constexpr auto visit(std::derived_from<AstRoot> auto& ast, Callable&& callable) -> decltype(auto) {
+[[nodiscard]] constexpr auto visit(std::derived_from<AstRoot> auto& ast, Callable&& callable) -> decltype(auto) {
     switch (ast.getKind()) {
         case AstKind::Module:
             return std::forward<Callable>(callable)(llvm::cast<AstModule>(ast));

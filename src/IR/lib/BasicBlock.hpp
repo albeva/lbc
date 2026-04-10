@@ -11,12 +11,7 @@ class Context;
 namespace lbc::ir::lib {
 
 /**
- * Abstract base for IR blocks.
- *
  * A Block is a labeled unit within a function's control flow graph.
- * Concrete subclasses are BasicBlock (a flat sequence of instructions)
- * and ScopedBlock (a group of blocks sharing a lexical scope with an
- * optional cleanup block). Blocks use the Label sentinel type.
  */
 class BasicBlock : public NamedValue, public llvm::ilist_node<BasicBlock> {
 public:

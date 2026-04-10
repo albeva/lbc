@@ -76,14 +76,14 @@ def Terminator : Group<"Terminating instructions", Root>;
 
 // jmp @destination
 def Jmp : Leaf<"jmp", "Unconditional branch", Terminator, [
-    Arg<"Block*", "destination">,
+    Arg<"BasicBlock*", "destination">,
 ]>;
 
 // jmp %condition, @trueBlock, @falseBlock
 def CondJmp : Leaf<"jmp", "Conditional branch", Terminator, [
     Arg<"Value*", "condition">,
-    Arg<"Block*", "trueBlock">,
-    Arg<"Block*", "falseBlock">,
+    Arg<"BasicBlock*", "trueBlock">,
+    Arg<"BasicBlock*", "falseBlock">,
 ]>;
 
 // ret %value

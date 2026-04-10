@@ -50,9 +50,7 @@ auto IrGenerator::accept(const AstFuncStmt& ast) -> Result {
     TRY(accept(*ast.getStmtList()));
 
     // Ensure function is terminated
-    if (!isTerminated()) {
-        emit(makeRet(nullptr));
-    }
+    terminate(nullptr);
 
     return {};
 }
@@ -114,10 +112,8 @@ auto IrGenerator::accept(const AstIfStmt& ast) -> Result {
 
         // Emit THEN block
         m_block = thenBlock;
-        visit(*ifStmt->getThenStmt());
-        if (!isTerminated()) {
-            emit(makeJmp(endBlock));
-        }
+        TRY(visit(*ifStmt->getThenStmt()));
+        terminate(endBlock);
 
         // Handle ELSE
         if (elseStmt != nullptr) {
@@ -129,8 +125,8 @@ auto IrGenerator::accept(const AstIfStmt& ast) -> Result {
             }
 
             setBlock(falseBlock);
-            visit(*elseStmt);
-            emit(makeJmp(endBlock));
+            TRY(visit(*elseStmt));
+            terminate(endBlock);
         }
         break;
     }

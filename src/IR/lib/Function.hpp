@@ -16,8 +16,7 @@ namespace lbc::ir::lib {
  * An IR function.
  *
  * Holds the function's name, type (via Symbol), and a list of blocks that
- * form the function body. The block list may contain both BasicBlocks and
- * ScopedBlocks. The first block is the entry point.
+ * form the function body.
  */
 class Function : public NamedValue, public llvm::ilist_node<Function> {
 public:
