@@ -5,13 +5,16 @@
 using namespace lbc::ir::gen;
 
 auto IrGenerator::accept(const AstBuiltInType& /*ast*/) -> Result {
-    return notImplemented();
+    // Types are resolved during semantic analysis; nothing to emit.
+    return {};
 }
 
 auto IrGenerator::accept(const AstPointerType& /*ast*/) -> Result {
-    return notImplemented();
+    // Types are resolved during semantic analysis; nothing to emit.
+    return {};
 }
 
 auto IrGenerator::accept(const AstReferenceType& /*ast*/) -> Result {
-    return notImplemented();
+    // Types are resolved during semantic analysis; nothing to emit.
+    return {};
 }

@@ -1,31 +1,31 @@
 #include "pch.hpp"
 #include <llvm/Support/InitLLVM.h>
 #include "Ast/AstCodePrinter.hpp"
+#include "Diag/DiagEngine.hpp"
 #include "Driver/Context.hpp"
+#include "IR/gen/IrGenerator.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/SemanticAnalyser.hpp"
 
-auto main(int argc, const char* argv[]) -> int {
-    llvm::InitLLVM const init { argc, argv };
-
+auto build(const std::string& source) -> lbc::DiagResult<void> {
     lbc::Context context;
     std::string included;
-    const auto id = context.getSourceMgr().AddIncludeFile("samples/hello.bas", {}, included);
-    lbc::Parser parser { context, id };
+    const auto id = context.getSourceMgr().AddIncludeFile(source, {}, included);
 
-    const auto module = parser.parse();
-    if (not module) {
-        return EXIT_FAILURE;
-    }
+    lbc::Parser parser { context, id };
+    TRY_DECL(module, parser.parse())
 
     lbc::SemanticAnalyser sema { context };
-    if (not sema.analyse(*module.value())) {
-        return EXIT_FAILURE;
-    }
+    TRY(sema.analyse(*module))
 
-    lbc::AstCodePrinter printer;
-    printer.print(*module.value());
+    lbc::ir::gen::IrGenerator irGenerator { context };
+    TRY_DECL(ir, irGenerator.generate(*module));
 
-    return EXIT_SUCCESS;
+    return {};
+}
+
+auto main(int argc, const char* argv[]) -> int {
+    llvm::InitLLVM const init { argc, argv };
+    MUST(build("samples/hello.bas"))
 }

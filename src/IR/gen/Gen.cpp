@@ -19,7 +19,7 @@ auto IrGenerator::generate(const AstModule& ast) -> DiagResult<lib::Module*> {
 }
 
 auto IrGenerator::accept(const AstModule& ast) -> Result {
-    m_module = getContext().create<lib::Module>();
+    m_module = getContext().create<lib::Module>(getContext());
     return accept(*ast.getStmtList());
 }
 
@@ -28,7 +28,13 @@ auto IrGenerator::accept(const AstModule& ast) -> Result {
 // -----------------------------------------------------------------------------
 
 void IrGenerator::emit(lib::Instruction* instr) const {
-    m_block->getBody().push_back(instr);
+    if (m_function != nullptr) {
+        m_block->getBody().push_back(instr);
+    } else if (auto* decl = llvm::dyn_cast<lib::IrDeclaration>(instr)) {
+        m_module->getDeclarations().push_back(decl);
+    } else {
+        m_module->getGlobalInitBlock()->getBody().push_back(instr);
+    }
 }
 
 void IrGenerator::terminate(lib::BasicBlock* target) const {

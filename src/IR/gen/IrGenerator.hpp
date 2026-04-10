@@ -56,10 +56,10 @@ private:
     [[nodiscard]] auto accept(const AstVarDecl& ast) -> Result;
 
     /** Generate IR for a function declaration. */
-    [[nodiscard]] auto accept(const AstFuncDecl& ast) -> Result;
+    [[nodiscard]] auto accept(const AstFuncDecl& ast) const -> Result;
 
     /** Generate IR for a function parameter declaration. */
-    [[nodiscard]] auto accept(const AstFuncParamDecl& ast) -> Result;
+    [[nodiscard]] auto accept(const AstFuncParamDecl& ast) const -> Result;
 
     // -------------------------------------------------------------------------
     // Statements (GenStmt.cpp)
@@ -119,13 +119,13 @@ private:
     // -------------------------------------------------------------------------
 
     /** Generate IR for a built-in type expression. */
-    [[nodiscard]] auto accept(const AstBuiltInType& ast) -> Result;
+    [[nodiscard]] static auto accept(const AstBuiltInType& ast) -> Result;
 
     /** Generate IR for a pointer type expression. */
-    [[nodiscard]] auto accept(const AstPointerType& ast) -> Result;
+    [[nodiscard]] static auto accept(const AstPointerType& ast) -> Result;
 
     /** Generate IR for a reference type expression. */
-    [[nodiscard]] auto accept(const AstReferenceType& ast) -> Result;
+    [[nodiscard]] static auto accept(const AstReferenceType& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Helpers

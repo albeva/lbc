@@ -4,6 +4,9 @@
 #pragma once
 #include "pch.hpp"
 #include "Function.hpp"
+namespace lbc {
+class Context;
+}
 namespace lbc::ir::lib {
 class IrDeclaration;
 
@@ -16,16 +19,19 @@ class IrDeclaration;
  */
 class Module final {
 public:
-    Module() = default;
+    Module(Context&);
 
     /** Get the top-level declarations (externs, globals, types). */
     [[nodiscard]] auto getDeclarations() -> std::vector<IrDeclaration*>& { return m_declarations; }
     /** Get the function definitions. */
     [[nodiscard]] auto getFunctions() -> llvm::ilist<Function>& { return m_functions; }
+    /** get global init block */
+    [[nodiscard]] auto getGlobalInitBlock() const -> BasicBlock* { return m_globalInitBlock; }
 
 private:
     std::vector<IrDeclaration*> m_declarations; ///< top-level declarations
     llvm::ilist<Function> m_functions;          ///< function definitions
+    BasicBlock* m_globalInitBlock;              ///< block where global init instructions are stored
 };
 
 } // namespace lbc::ir::lib
