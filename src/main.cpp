@@ -7,6 +7,7 @@
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/SemanticAnalyser.hpp"
+#include "IR/printer/IrPrinter.hpp"
 
 auto build(const std::string& source) -> lbc::DiagResult<void> {
     lbc::Context context;
@@ -21,6 +22,9 @@ auto build(const std::string& source) -> lbc::DiagResult<void> {
 
     lbc::ir::gen::IrGenerator irGenerator { context };
     TRY_DECL(ir, irGenerator.generate(*module));
+
+    const lbc::ir::printer::IrPrinter printer{};
+    printer.print(*ir);
 
     return {};
 }

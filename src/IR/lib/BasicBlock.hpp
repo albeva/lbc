@@ -19,6 +19,7 @@ public:
 
     /** Get the instruction list for this block. */
     [[nodiscard]] auto getBody() -> llvm::ilist<Instruction>& { return m_body; }
+    [[nodiscard]] auto getBody() const -> const llvm::ilist<Instruction>& { return m_body; }
 
     /** LLVM RTTI support. */
     [[nodiscard]] static auto classof(const Value* value) -> bool {

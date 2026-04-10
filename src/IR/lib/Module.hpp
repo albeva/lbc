@@ -23,8 +23,10 @@ public:
 
     /** Get the top-level declarations (externs, globals, types). */
     [[nodiscard]] auto getDeclarations() -> std::vector<IrDeclaration*>& { return m_declarations; }
+    [[nodiscard]] auto getDeclarations() const -> const std::vector<IrDeclaration*>& { return m_declarations; }
     /** Get the function definitions. */
     [[nodiscard]] auto getFunctions() -> llvm::ilist<Function>& { return m_functions; }
+    [[nodiscard]] auto getFunctions() const -> const llvm::ilist<Function>& { return m_functions; }
     /** get global init block */
     [[nodiscard]] auto getGlobalInitBlock() const -> BasicBlock* { return m_globalInitBlock; }
 

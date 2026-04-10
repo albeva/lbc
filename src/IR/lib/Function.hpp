@@ -29,6 +29,7 @@ public:
 
     /** Get the block list forming the function body. */
     [[nodiscard]] auto getBlocks() -> llvm::ilist<BasicBlock>& { return m_blocks; }
+    [[nodiscard]] auto getBlocks() const -> const llvm::ilist<BasicBlock>& { return m_blocks; }
 
     /** Get the frontend symbol associated with this function. */
     [[nodiscard]] auto getSymbol() const -> Symbol* { return m_symbol; }
