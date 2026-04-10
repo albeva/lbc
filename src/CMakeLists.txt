@@ -54,7 +54,6 @@ target_sources(lbc_lib
     IR/lib/NamedValue.hpp
     IR/lib/Temporary.hpp
     IR/lib/Value.hpp
-    IR/lib/ValueTable.hpp
     IR/lib/Variable.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
