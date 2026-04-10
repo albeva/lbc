@@ -24,6 +24,7 @@ public:
     IrGen(raw_ostream& os, const RecordKeeper& records);
 
     [[nodiscard]] auto run() -> bool override;
+    void preNamespace() override;
 
 protected:
     IrGen(

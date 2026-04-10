@@ -14,7 +14,7 @@ namespace {
 /**
  * Parse "DIM x = <expr>" and return the printed expression string.
  */
-auto parseExpr(llvm::StringRef expr) -> std::string {
+auto parseExpr(const llvm::StringRef expr) -> std::string {
     Context context;
     auto source = ("DIM x = " + expr).str();
     auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");

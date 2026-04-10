@@ -15,7 +15,9 @@ TypeFactoryGen::TypeFactoryGen(
 }
 
 auto TypeFactoryGen::run() -> bool {
+    header();
     factoryClass();
+    footer();
     return false;
 }
 

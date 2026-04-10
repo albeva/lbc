@@ -14,6 +14,7 @@ auto TokensGen::run() -> bool {
     const auto operators = sortedByDef(m_records.getAllDerivedDefinitions("Operator"));
 
     // TokenKind struct
+    header();
     doc("TokenKind represents the value of a scanned token");
     block("struct TokenKind final", true, [&] {
         // --------------------------------------------------------------------
@@ -336,6 +337,7 @@ auto TokensGen::run() -> bool {
             line("return std::format_to(ctx.out(), \"{}\", value.string())");
         });
     });
+    footer();
 
     return false;
 }

@@ -10,6 +10,11 @@
 #include "pch.hpp"
 #include "Driver/Context.hpp"
 #include "Instructions.hpp"
+
+namespace lbc {
+    class Type;
+}
+
 namespace lbc::ir::lib {
 
 /**

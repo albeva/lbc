@@ -15,19 +15,19 @@ namespace {
  * Parse and analyse the source, returning the module AST.
  * Returns nullptr on failure (test will have recorded a GTest failure).
  */
-auto analyse(Context& context, llvm::StringRef source) -> AstModule* {
+auto analyse(Context& context, const llvm::StringRef source) -> AstModule* {
     auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");
-    auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
+    const auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
     Parser parser { context, id };
 
-    auto parsed = parser.parse();
+    const auto parsed = parser.parse();
     EXPECT_TRUE(parsed.has_value()) << "parse failed";
 
     auto* module = parsed.value_or(nullptr);
     EXPECT_NE(module, nullptr) << "missing ast";
 
     SemanticAnalyser sema { context };
-    auto result = sema.analyse(*module);
+    const auto result = sema.analyse(*module);
     EXPECT_TRUE(result.has_value()) << "sema failed";
 
     return module;
@@ -36,18 +36,18 @@ auto analyse(Context& context, llvm::StringRef source) -> AstModule* {
 /**
  * Parse "DIM x = <expr>", analyse, and return the type of x.
  */
-auto deduceExpr(llvm::StringRef expr) -> const Type* {
+auto deduceExpr(const llvm::StringRef expr) -> const Type* {
     Context context;
-    auto source = ("DIM x = " + expr).str();
+    const auto source = ("DIM x = " + expr).str();
     auto* module = analyse(context, source);
     EXPECT_NE(module, nullptr);
 
-    auto stmts = module->getStmtList()->getStmts();
+    const auto stmts = module->getStmtList()->getStmts();
     EXPECT_EQ(stmts.size(), 1);
     auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[0]);
     EXPECT_NE(dim, nullptr);
 
-    auto decls = dim->getDecls();
+    const auto decls = dim->getDecls();
     EXPECT_EQ(decls.size(), 1);
 
     const Type* type = decls.front()->getType();
@@ -58,18 +58,18 @@ auto deduceExpr(llvm::StringRef expr) -> const Type* {
 /**
  * Parse "DIM x AS <typeName> = <expr>", analyse, and return the type of x.
  */
-auto deduceTypedExpr(llvm::StringRef typeName, llvm::StringRef expr) -> const Type* {
+auto deduceTypedExpr(const llvm::StringRef typeName, const llvm::StringRef expr) -> const Type* {
     Context context;
-    auto source = ("DIM x AS " + typeName + " = " + expr).str();
+    const auto source = ("DIM x AS " + typeName + " = " + expr).str();
     auto* module = analyse(context, source);
     EXPECT_NE(module, nullptr);
 
-    auto stmts = module->getStmtList()->getStmts();
+    const auto stmts = module->getStmtList()->getStmts();
     EXPECT_EQ(stmts.size(), 1);
     auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[0]);
     EXPECT_NE(dim, nullptr);
 
-    auto decls = dim->getDecls();
+    const auto decls = dim->getDecls();
     EXPECT_EQ(decls.size(), 1);
 
     const Type* type = decls.front()->getType();
@@ -80,12 +80,12 @@ auto deduceTypedExpr(llvm::StringRef typeName, llvm::StringRef expr) -> const Ty
 /**
  * Parse and analyse the source, expecting semantic analysis to fail.
  */
-auto semaFails(llvm::StringRef source) -> bool {
+auto semaFails(const llvm::StringRef source) -> bool {
     Context context;
     auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");
-    auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
+    const auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
     Parser parser { context, id };
-    auto parsed = parser.parse();
+    const auto parsed = parser.parse();
     EXPECT_TRUE(parsed.has_value()) << "parse failed";
     auto* module = parsed.value_or(nullptr);
     EXPECT_NE(module, nullptr);
@@ -215,8 +215,8 @@ TEST(SemaExprTests, NullComparedWithPointer) {
 
 TEST(SemaExprTests, NullNotEqualPointer) {
     Context context;
-    auto* module = analyse(context, "DIM ip AS INTEGER PTR\nDIM b = ip <> null");
-    auto stmts = module->getStmtList()->getStmts();
+    const auto* module = analyse(context, "DIM ip AS INTEGER PTR\nDIM b = ip <> null");
+    const auto stmts = module->getStmtList()->getStmts();
     ASSERT_EQ(stmts.size(), 2);
     auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[1]);
     ASSERT_NE(dim, nullptr);

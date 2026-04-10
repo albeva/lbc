@@ -4,8 +4,14 @@
 #include "IrGenerator.hpp"
 using namespace lbc::ir::gen;
 
-auto IrGenerator::accept(const AstStmtList& /*ast*/) -> Result {
-    return notImplemented();
+auto IrGenerator::accept(const AstStmtList& ast) -> Result {
+    for (auto* decl : ast.getDecls()) {
+        TRY(visit(*decl));
+    }
+    for (auto* stmt : ast.getStmts()) {
+        TRY(visit(*stmt));
+    }
+    return {};
 }
 
 auto IrGenerator::accept(const AstExprStmt& /*ast*/) -> Result {

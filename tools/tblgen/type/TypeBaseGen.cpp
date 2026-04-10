@@ -30,8 +30,10 @@ TypeBaseGen::TypeBaseGen(
 }
 
 auto TypeBaseGen::run() -> bool {
+    header();
     typeKind();
     typeBaseClass();
+    footer();
     return false;
 }
 

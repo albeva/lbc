@@ -13,6 +13,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(tests
     AstVisitorTests.cpp
     BasicTests.cpp
+    IrGenTests.cpp
     LexerTests.cpp
     ParserTests.cpp
     SemaExprTests.cpp

@@ -14,10 +14,12 @@ target_sources(lbc_lib
     IR/gen/GenStmt.cpp
     IR/gen/GenType.cpp
     IR/lib/BasicBlock.cpp
+    IR/lib/Block.cpp
     IR/lib/Function.cpp
     IR/lib/Literal.cpp
     IR/lib/Module.cpp
     IR/lib/NamedValue.cpp
+    IR/lib/ScopedBlock.cpp
     IR/lib/Temporary.cpp
     IR/lib/Value.cpp
     IR/lib/Variable.cpp
@@ -48,12 +50,15 @@ target_sources(lbc_lib
     Driver/Context.hpp
     IR/gen/IrGenerator.hpp
     IR/lib/BasicBlock.hpp
+    IR/lib/Block.hpp
     IR/lib/Function.hpp
     IR/lib/Literal.hpp
     IR/lib/Module.hpp
     IR/lib/NamedValue.hpp
+    IR/lib/ScopedBlock.hpp
     IR/lib/Temporary.hpp
     IR/lib/Value.hpp
+    IR/lib/ValueTable.hpp
     IR/lib/Variable.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp

@@ -9,8 +9,12 @@
 #include "Diag/LogProvider.hpp"
 #include "IR/lib/Builder.hpp"
 namespace lbc::ir::lib {
+class BasicBlock;
+class Function;
 class Module;
-}
+class ScopedBlock;
+class Temporary;
+} // namespace lbc::ir::lib
 namespace lbc::ir::gen {
 
 /**
@@ -125,9 +129,45 @@ private:
     [[nodiscard]] auto accept(const AstReferenceType& ast) -> Result;
 
     // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /** Append an instruction to the current basic block's body. */
+    void emit(lib::Instruction* instr) const;
+
+    /**
+     * Create a new BasicBlock in the current function.
+     * Does NOT change the insertion point.
+     */
+    [[nodiscard]] auto createBlock(llvm::StringRef name) const -> lib::BasicBlock*;
+
+    /** Set the current basic block as the insertion point. */
+    void setInsertPoint(lib::BasicBlock* block);
+
+    /** Check if the current block already ends with a terminator. */
+    [[nodiscard]] auto isTerminated() const -> bool;
+
+    /**
+     * Create a numbered temporary value for expression results.
+     * Numbering resets per function.
+     */
+    [[nodiscard]] auto createTemporary(const Type* type) -> lib::Temporary*;
+
+    /** Get the last value produced by an expression handler. */
+    [[nodiscard]] auto getLastValue() const -> lib::Value* { return m_lastValue; }
+
+    /** Set the last value (called by expression handlers). */
+    void setLastValue(lib::Value* value) { m_lastValue = value; }
+
+    // -------------------------------------------------------------------------
     // Data
     // -------------------------------------------------------------------------
-    lib::Module* m_module;
+    lib::Module* m_module = nullptr;     ///< the IR module being generated
+    lib::Function* m_function = nullptr; ///< current function
+    lib::BasicBlock* m_block = nullptr;  ///< current insertion point
+    lib::ScopedBlock* m_scope = nullptr; ///< current lexical scope
+    lib::Value* m_lastValue = nullptr;   ///< last value from expression visitor
+    unsigned m_tempCounter = 0;          ///< temporary numbering (resets per function)
 };
 
 } // namespace lbc::ir::gen

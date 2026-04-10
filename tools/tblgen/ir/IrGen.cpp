@@ -42,7 +42,16 @@ IrGen::IrGen(
 )
 : TreeGen(os, records, generator, "Ir", ns, std::move(includes)) {}
 
+void IrGen::preNamespace() {
+    newline();
+    block("namespace lbc", [&] {
+        line("class Type");
+    });
+    newline();
+}
+
 auto IrGen::run() -> bool {
+    header();
     forwardDecls();
     newline();
 
@@ -50,13 +59,13 @@ auto IrGen::run() -> bool {
     newline();
 
     treeGroups(getRoot());
+    footer();
     return false;
 }
 
 void IrGen::forwardDecls() {
     line("class Block");
     line("class NamedValue");
-    line("class Type");
     line("class Value");
 }
 
