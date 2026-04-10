@@ -45,9 +45,8 @@ TEST(IrGenTests, StubbedDeclareStmtFails) {
     EXPECT_FALSE(irGenSucceeds("DECLARE SUB foo()\n"));
 }
 
-TEST(IrGenTests, StubbedDimStmtFails) {
-    // DimStmt handler is notImplemented
-    EXPECT_FALSE(irGenSucceeds("DIM x AS INTEGER\n"));
+TEST(IrGenTests, DimStmtSucceeds) {
+    EXPECT_TRUE(irGenSucceeds("DIM x AS INTEGER\n"));
 }
 
 TEST(IrGenTests, StubbedFuncStmtFails) {

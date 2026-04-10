@@ -8,44 +8,35 @@ IrPrinterGen::IrPrinterGen(
     raw_ostream& os,
     const RecordKeeper& records
 )
-: IrGen(os, records, genName, "lbc::ir::printer", {}) {}
+: IrGen(os, records, genName, "lbc::ir::printer", { "\"Printer.hpp\"", "\"IR/lib/BasicBlock.hpp\"", "\"IR/lib/Function.hpp\"", "\"IR/lib/Literal.hpp\"", "\"IR/lib/Temporary.hpp\"", "\"IR/lib/Variable.hpp\"", "\"Type/Type.hpp\"", "\"Utilities/Joiner.hpp\"" }) {}
 
 auto IrPrinterGen::run() -> bool {
-    m_os << "//\n";
-    m_os << "// DO NOT MODIFY. This file is AUTO GENERATED.\n";
-    m_os << "//\n";
-    m_os << "// clang-format off\n";
-    m_os << "#include \"Printer.hpp\"\n";
-    m_os << "#include \"IR/lib/BasicBlock.hpp\"\n";
-    m_os << "#include \"IR/lib/Function.hpp\"\n";
-    m_os << "#include \"IR/lib/Literal.hpp\"\n";
-    m_os << "#include \"IR/lib/Temporary.hpp\"\n";
-    m_os << "#include \"IR/lib/Variable.hpp\"\n";
-    m_os << "#include \"Type/Type.hpp\"\n";
-    m_os << "#include \"Utilities/Joiner.hpp\"\n";
-    m_os << "using namespace lbc::ir::printer;\n";
-    m_os << "using namespace lbc::ir::lib;\n";
-    m_os << "\n";
+    header({ .pragmaOnce = false, .openNamespace = false });
+    line("using namespace lbc::ir::printer");
+    line("using namespace lbc::ir::lib");
+    newline();
 
-    // Forward declarations of per-instruction helpers
-    m_os << "namespace {\n";
-    getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
-        const auto* ir = static_cast<const IrNodeClass*>(node); // NOLINT(*-static-cast-downcast)
-        m_os << "void print" << ir->getEnumName() << "(const Printer&, const " << ir->getClassName() << "&);\n";
+    // Anonymous namespace with forward declarations and implementations
+    block("namespace", [&] {
+        // Forward declarations
+        getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
+            const auto* ir = static_cast<const IrNodeClass*>(node); // NOLINT(*-static-cast-downcast)
+            line("void print" + ir->getEnumName() + "(const Printer&, const " + ir->getClassName() + "&)");
+        });
     });
-    m_os << "} // namespace\n\n";
+    newline();
 
     // Dispatch method
     dispatch();
+    newline();
 
-    // Per-instruction free functions
-    m_os << "\nnamespace {\n";
-    getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
-        m_os << "\n";
-        printInstruction(static_cast<const IrNodeClass*>(node)); // NOLINT(*-static-cast-downcast)
+    // Per-instruction implementations in anonymous namespace
+    block("namespace", [&] {
+        getRoot()->visit(lib::TreeNode::Kind::Leaf, [&](const lib::TreeNode* node) {
+            newline();
+            printInstruction(static_cast<const IrNodeClass*>(node)); // NOLINT(*-static-cast-downcast)
+        });
     });
-    m_os << "\n} // namespace\n";
-
     return false;
 }
 
@@ -119,7 +110,7 @@ void IrPrinterGen::printInstruction(const IrNodeClass* node) {
 }
 
 auto IrPrinterGen::hasResult(const lib::TreeNode* node) -> bool {
-    for (const auto* current = node; current != nullptr; current = current->getParent()) {
+    for (const lib::TreeNode* current = node; current != nullptr; current = current->getParent()) {
         for (const auto& arg : current->getArgs()) {
             if (arg->getName() == "result") {
                 return true;

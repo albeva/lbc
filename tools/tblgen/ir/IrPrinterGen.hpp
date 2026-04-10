@@ -19,6 +19,7 @@ public:
     );
 
     [[nodiscard]] auto run() -> bool override;
+    void preNamespace() override {}
 
 private:
     void dispatch();
