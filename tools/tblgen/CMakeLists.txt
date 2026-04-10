@@ -11,6 +11,8 @@ add_executable(lbc-tblgen
     ir/IrBuilderGen.hpp
     ir/IrGen.cpp
     ir/IrGen.hpp
+    ir/IrPrinterGen.cpp
+    ir/IrPrinterGen.hpp
     lib/Builder.hpp
     lib/GeneratorBase.hpp
     lib/TreeGen.cpp

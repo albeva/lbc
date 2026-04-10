@@ -4,7 +4,7 @@
 #include "Diag/DiagEngine.hpp"
 #include "Driver/Context.hpp"
 #include "IR/gen/IrGenerator.hpp"
-#include "IR/printer/PrinterBase.hpp"
+#include "IR/printer/Printer.hpp"
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/SemanticAnalyser.hpp"
@@ -23,7 +23,7 @@ auto build(const std::string& source) -> lbc::DiagResult<void> {
     lbc::ir::gen::IrGenerator irGenerator { context };
     TRY_DECL(ir, irGenerator.generate(*module));
 
-    const lbc::ir::printer::PrinterBase printer{};
+    const lbc::ir::printer::Printer printer{};
     printer.print(*ir);
 
     return {};

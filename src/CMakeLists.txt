@@ -21,7 +21,8 @@ target_sources(lbc_lib
     IR/lib/Temporary.cpp
     IR/lib/Value.cpp
     IR/lib/Variable.cpp
-    IR/printer/PrinterBase.cpp
+    IR/printer/PrintInstr.cpp
+    IR/printer/Printer.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/ParseDecl.cpp
@@ -56,7 +57,7 @@ target_sources(lbc_lib
     IR/lib/Temporary.hpp
     IR/lib/Value.hpp
     IR/lib/Variable.hpp
-    IR/printer/PrinterBase.hpp
+    IR/printer/Printer.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
     Lexer/Lexer.hpp
@@ -90,6 +91,7 @@ add_tblgen(lbc_lib lbc-tblgen
     GENERATOR lbc-diag-def INPUT Diag/Diagnostics.td
     GENERATOR lbc-ir-builder INPUT IR/lib/Instructions.td OUTPUT Builder.hpp
     GENERATOR lbc-ir-inst-def INPUT IR/lib/Instructions.td
+    GENERATOR lbc-ir-printer INPUT IR/lib/Instructions.td OUTPUT ../printer/PrintInstr.cpp
     GENERATOR lbc-tokens-def INPUT Lexer/TokenKind.td
     GENERATOR lbc-type-base INPUT Type/Types.td OUTPUT TypeBase.hpp
     GENERATOR lbc-type-factory INPUT Type/Types.td OUTPUT TypeFactoryBase.hpp

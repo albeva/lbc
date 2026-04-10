@@ -1,0 +1,368 @@
+//
+// DO NOT MODIFY. This file is AUTO GENERATED.
+//
+// clang-format off
+#include "Printer.hpp"
+#include "IR/lib/BasicBlock.hpp"
+#include "IR/lib/Function.hpp"
+#include "IR/lib/Literal.hpp"
+#include "IR/lib/Temporary.hpp"
+#include "IR/lib/Variable.hpp"
+#include "Type/Type.hpp"
+#include "Utilities/Joiner.hpp"
+using namespace lbc::ir::printer;
+using namespace lbc::ir::lib;
+
+namespace {
+void printStore(const Printer&, const StoreInstr&);
+void printRetain(const Printer&, const RetainInstr&);
+void printRelease(const Printer&, const ReleaseInstr&);
+void printJmp(const Printer&, const JmpInstr&);
+void printCondJmp(const Printer&, const CondJmpInstr&);
+void printRet(const Printer&, const RetInstr&);
+void printCast(const Printer&, const CastInstr&);
+void printLoad(const Printer&, const LoadInstr&);
+void printAddrOf(const Printer&, const AddrOfInstr&);
+void printCall(const Printer&, const CallInstr&);
+void printNeg(const Printer&, const NegInstr&);
+void printNot(const Printer&, const NotInstr&);
+void printAdd(const Printer&, const AddInstr&);
+void printSub(const Printer&, const SubInstr&);
+void printMul(const Printer&, const MulInstr&);
+void printDiv(const Printer&, const DivInstr&);
+void printMod(const Printer&, const ModInstr&);
+void printAnd(const Printer&, const AndInstr&);
+void printOr(const Printer&, const OrInstr&);
+void printEq(const Printer&, const EqInstr&);
+void printNe(const Printer&, const NeInstr&);
+void printLt(const Printer&, const LtInstr&);
+void printLe(const Printer&, const LeInstr&);
+void printGt(const Printer&, const GtInstr&);
+void printGe(const Printer&, const GeInstr&);
+void printVar(const Printer&, const VarInstr&);
+} // namespace
+
+void Printer::printInstruction(const Instruction& instr) const {
+    switch (instr.getKind()) {
+        case IrKind::Store:
+            printStore(*this, llvm::cast<StoreInstr>(instr));
+            break;
+        case IrKind::Retain:
+            printRetain(*this, llvm::cast<RetainInstr>(instr));
+            break;
+        case IrKind::Release:
+            printRelease(*this, llvm::cast<ReleaseInstr>(instr));
+            break;
+        case IrKind::Jmp:
+            printJmp(*this, llvm::cast<JmpInstr>(instr));
+            break;
+        case IrKind::CondJmp:
+            printCondJmp(*this, llvm::cast<CondJmpInstr>(instr));
+            break;
+        case IrKind::Ret:
+            printRet(*this, llvm::cast<RetInstr>(instr));
+            break;
+        case IrKind::Cast:
+            printCast(*this, llvm::cast<CastInstr>(instr));
+            break;
+        case IrKind::Load:
+            printLoad(*this, llvm::cast<LoadInstr>(instr));
+            break;
+        case IrKind::AddrOf:
+            printAddrOf(*this, llvm::cast<AddrOfInstr>(instr));
+            break;
+        case IrKind::Call:
+            printCall(*this, llvm::cast<CallInstr>(instr));
+            break;
+        case IrKind::Neg:
+            printNeg(*this, llvm::cast<NegInstr>(instr));
+            break;
+        case IrKind::Not:
+            printNot(*this, llvm::cast<NotInstr>(instr));
+            break;
+        case IrKind::Add:
+            printAdd(*this, llvm::cast<AddInstr>(instr));
+            break;
+        case IrKind::Sub:
+            printSub(*this, llvm::cast<SubInstr>(instr));
+            break;
+        case IrKind::Mul:
+            printMul(*this, llvm::cast<MulInstr>(instr));
+            break;
+        case IrKind::Div:
+            printDiv(*this, llvm::cast<DivInstr>(instr));
+            break;
+        case IrKind::Mod:
+            printMod(*this, llvm::cast<ModInstr>(instr));
+            break;
+        case IrKind::And:
+            printAnd(*this, llvm::cast<AndInstr>(instr));
+            break;
+        case IrKind::Or:
+            printOr(*this, llvm::cast<OrInstr>(instr));
+            break;
+        case IrKind::Eq:
+            printEq(*this, llvm::cast<EqInstr>(instr));
+            break;
+        case IrKind::Ne:
+            printNe(*this, llvm::cast<NeInstr>(instr));
+            break;
+        case IrKind::Lt:
+            printLt(*this, llvm::cast<LtInstr>(instr));
+            break;
+        case IrKind::Le:
+            printLe(*this, llvm::cast<LeInstr>(instr));
+            break;
+        case IrKind::Gt:
+            printGt(*this, llvm::cast<GtInstr>(instr));
+            break;
+        case IrKind::Ge:
+            printGe(*this, llvm::cast<GeInstr>(instr));
+            break;
+        case IrKind::Var:
+            printVar(*this, llvm::cast<VarInstr>(instr));
+            break;
+    }
+    m_output << '\n';
+}
+
+namespace {
+
+void printStore(const Printer& p, const StoreInstr& instr) {
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getDest());
+    p.output() << ", ";
+    p.emitValue(*instr.getSrc());
+}
+
+void printRetain(const Printer& p, const RetainInstr& instr) {
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getOperand());
+}
+
+void printRelease(const Printer& p, const ReleaseInstr& instr) {
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getOperand());
+}
+
+void printJmp(const Printer& p, const JmpInstr& instr) {
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitLabel(llvm::cast<BasicBlock>(*instr.getDestination()));
+}
+
+void printCondJmp(const Printer& p, const CondJmpInstr& instr) {
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getCondition());
+    p.output() << ", ";
+    p.emitLabel(llvm::cast<BasicBlock>(*instr.getTrueBlock()));
+    p.output() << ", ";
+    p.emitLabel(llvm::cast<BasicBlock>(*instr.getFalseBlock()));
+}
+
+void printRet(const Printer& p, const RetInstr& instr) {
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getValue());
+}
+
+void printCast(const Printer& p, const CastInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitType(instr.getTargetType());
+    p.output() << ", ";
+    p.emitValue(*instr.getOperand());
+}
+
+void printLoad(const Printer& p, const LoadInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getSource());
+}
+
+void printAddrOf(const Printer& p, const AddrOfInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getOperand());
+}
+
+void printCall(const Printer& p, const CallInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitGlobal(*instr.getCallee());
+    p.output() << '(';
+    lbc::Joiner joiner(p.output());
+    for (const auto* arg : instr.getArgs()) {
+        joiner();
+        p.emitValue(*arg);
+    }
+    p.output() << ')';
+}
+
+void printNeg(const Printer& p, const NegInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getOperand());
+}
+
+void printNot(const Printer& p, const NotInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getOperand());
+}
+
+void printAdd(const Printer& p, const AddInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printSub(const Printer& p, const SubInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printMul(const Printer& p, const MulInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printDiv(const Printer& p, const DivInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printMod(const Printer& p, const ModInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printAnd(const Printer& p, const AndInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printOr(const Printer& p, const OrInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printEq(const Printer& p, const EqInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printNe(const Printer& p, const NeInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printLt(const Printer& p, const LtInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printLe(const Printer& p, const LeInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printGt(const Printer& p, const GtInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printGe(const Printer& p, const GeInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitValue(*instr.getLhs());
+    p.output() << ", ";
+    p.emitValue(*instr.getRhs());
+}
+
+void printVar(const Printer& p, const VarInstr& instr) {
+    p.emitValue(*instr.getResult());
+    p.output() << " = ";
+    p.emitMnemonic(instr);
+    p.output() << ' ';
+    p.emitType(instr.getType());
+}
+
+} // namespace

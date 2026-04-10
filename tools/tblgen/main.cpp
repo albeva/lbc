@@ -8,6 +8,7 @@
 #include "diag/DiagGen.hpp"
 #include "ir/IrBuilderGen.hpp"
 #include "ir/IrGen.hpp"
+#include "ir/IrPrinterGen.hpp"
 #include "tokens/TokensGen.hpp"
 #include "type/TypeBaseGen.hpp"
 #include "type/TypeFactoryGen.hpp"
@@ -22,6 +23,7 @@ enum class Generator : std::uint8_t {
     DiagDef,
     IRBuilder,
     IRInstDef,
+    IRPrinter,
     TokensDef,
     TypeBase,
     TypeFactory,
@@ -38,6 +40,7 @@ const auto generatorOpt = cl::opt<Generator> {
         clEnumValN(Generator::DiagDef, diag::DiagGen::genName, "Generate diagnostic definitions"),
         clEnumValN(Generator::IRBuilder, ir::IrBuilderGen::genName, "Generate IR builder"),
         clEnumValN(Generator::IRInstDef, ir::IrGen::genName, "Generate IR instruction definitions"),
+        clEnumValN(Generator::IRPrinter, ir::IrPrinterGen::genName, "Generate IR printer"),
         clEnumValN(Generator::TokensDef, tokens::TokensGen::genName, "Generate token definitions"),
         clEnumValN(Generator::TypeBase, type::TypeBaseGen::genName, "Generate type base definitions"),
         clEnumValN(Generator::TypeFactory, type::TypeFactoryGen::genName, "Generate type factory")
@@ -58,6 +61,8 @@ auto dispatch(raw_ostream& os, const RecordKeeper& records) -> bool {
         return ir::IrBuilderGen(os, records).run();
     case Generator::IRInstDef:
         return ir::IrGen(os, records).run();
+    case Generator::IRPrinter:
+        return ir::IrPrinterGen(os, records).run();
     case Generator::TokensDef:
         return tokens::TokensGen(os, records).run();
     case Generator::TypeBase:
