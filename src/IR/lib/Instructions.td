@@ -166,7 +166,7 @@ def AddrOf : Leaf<"addrof", "Take address of a variable", Expression, [
 ]>;
 
 def Call : Leaf<"call", "Call a function", Expression, [
-    Arg<"NamedValue*", "callee">,
+    Arg<"Function*", "callee">,
     Arg<"std::span<Value*>", "args">,
 ]>;
 

@@ -66,6 +66,7 @@ auto IrGen::run() -> bool {
 void IrGen::forwardDecls() {
     line("class BasicBlock");
     line("class NamedValue");
+    line("class Function");
     line("class Value");
 }
 

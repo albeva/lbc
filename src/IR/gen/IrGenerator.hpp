@@ -94,25 +94,25 @@ private:
     // -------------------------------------------------------------------------
 
     /** Generate IR for a cast expression. */
-    [[nodiscard]] auto accept(const AstCastExpr& ast) -> Result;
+    [[nodiscard]] auto accept(AstCastExpr& ast) -> Result;
 
     /** Generate IR for a variable reference expression. */
-    [[nodiscard]] auto accept(const AstVarExpr& ast) -> Result;
+    [[nodiscard]] static auto accept(AstVarExpr& ast) -> Result;
 
     /** Generate IR for a function/subroutine call expression. */
-    [[nodiscard]] auto accept(const AstCallExpr& ast) -> Result;
+    [[nodiscard]] auto accept(AstCallExpr& ast) -> Result;
 
     /** Generate IR for a literal expression. */
-    [[nodiscard]] auto accept(const AstLiteralExpr& ast) -> Result;
+    [[nodiscard]] auto accept(AstLiteralExpr& ast) const -> Result;
 
     /** Generate IR for a unary expression. */
-    [[nodiscard]] auto accept(const AstUnaryExpr& ast) -> Result;
+    [[nodiscard]] auto accept(AstUnaryExpr& ast) -> Result;
 
     /** Generate IR for a binary expression. */
-    [[nodiscard]] auto accept(const AstBinaryExpr& ast) -> Result;
+    [[nodiscard]] auto accept(AstBinaryExpr& ast) -> Result;
 
     /** Generate IR for a member access expression. */
-    [[nodiscard]] auto accept(const AstMemberExpr& ast) -> Result;
+    [[nodiscard]] auto accept(AstMemberExpr& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Types (GenType.cpp)

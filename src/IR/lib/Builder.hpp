@@ -75,7 +75,7 @@ public:
     }
 
     /// Call a function
-    [[nodiscard]] auto makeCall(NamedValue* result, NamedValue* callee, const std::span<Value*> args) const -> CallInstr* {
+    [[nodiscard]] auto makeCall(NamedValue* result, Function* callee, const std::span<Value*> args) const -> CallInstr* {
         return m_context.create<CallInstr>(result, callee, args);
     }
 

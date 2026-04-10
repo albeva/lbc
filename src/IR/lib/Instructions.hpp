@@ -17,6 +17,7 @@ namespace lbc::ir::lib {
 
 class BasicBlock;
 class NamedValue;
+class Function;
 class Value;
 
 /**
@@ -506,7 +507,7 @@ public:
      */
     constexpr CallInstr(
         NamedValue* result,
-        NamedValue* callee,
+        Function* callee,
         const std::span<Value*> args
     )
     : IrExpression(IrKind::Call, result)
@@ -519,7 +520,7 @@ public:
     }
 
     /// Get the callee
-    [[nodiscard]] constexpr auto getCallee() const -> NamedValue* {
+    [[nodiscard]] constexpr auto getCallee() const -> Function* {
         return m_callee;
     }
 
@@ -529,7 +530,7 @@ public:
     }
 
 private:
-    NamedValue* m_callee;
+    Function* m_callee;
     std::span<Value*> m_args;
 };
 
