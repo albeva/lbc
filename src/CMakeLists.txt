@@ -21,7 +21,7 @@ target_sources(lbc_lib
     IR/lib/Temporary.cpp
     IR/lib/Value.cpp
     IR/lib/Variable.cpp
-    IR/printer/IrPrinter.cpp
+    IR/printer/PrinterBase.cpp
     Lexer/Lexer.cpp
     Lexer/Token.cpp
     Parser/ParseDecl.cpp
@@ -56,7 +56,7 @@ target_sources(lbc_lib
     IR/lib/Temporary.hpp
     IR/lib/Value.hpp
     IR/lib/Variable.hpp
-    IR/printer/IrPrinter.hpp
+    IR/printer/PrinterBase.hpp
     Lexer/Character.hpp
     Lexer/Cursor.hpp
     Lexer/Lexer.hpp
