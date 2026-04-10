@@ -3,7 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "Block.hpp"
+#include "BasicBlock.hpp"
 #include "NamedValue.hpp"
 namespace lbc {
 class Context;
@@ -29,14 +29,14 @@ public:
     }
 
     /** Get the block list forming the function body. */
-    [[nodiscard]] auto getBlocks() -> llvm::ilist<Block>& { return m_blocks; }
+    [[nodiscard]] auto getBlocks() -> llvm::ilist<BasicBlock>& { return m_blocks; }
 
     /** Get the frontend symbol associated with this function. */
     [[nodiscard]] auto getSymbol() const -> Symbol* { return m_symbol; }
 
 private:
-    Symbol* m_symbol;            ///< frontend symbol with type and linkage info
-    llvm::ilist<Block> m_blocks; ///< blocks forming the function body
+    Symbol* m_symbol;                 ///< frontend symbol with type and linkage info
+    llvm::ilist<BasicBlock> m_blocks; ///< blocks forming the function body
 };
 
 } // namespace lbc::ir::lib

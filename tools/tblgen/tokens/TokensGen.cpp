@@ -328,7 +328,7 @@ auto TokensGen::run() -> bool {
     line("template <>", "");
     block("struct std::formatter<lbc::TokenKind, char> final", true, [&] {
         // parse
-        block("constexpr static auto parse(std::format_parse_context& ctx)", [&] {
+        block("constexpr static auto parse(const std::format_parse_context& ctx)", [&] {
             line("return ctx.begin()");
         });
         newline();

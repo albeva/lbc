@@ -15,6 +15,9 @@ namespace lbc {
 class Type;
 class SymbolTable;
 class Symbol;
+namespace ir::lib {
+    class Value;
+}
 
 /**
  * Enumerates all concrete tree nodes
@@ -842,8 +845,19 @@ public:
         m_type = type;
     }
 
+    /// Get the operand
+    [[nodiscard]] constexpr auto getOperand() const -> ir::lib::Value* {
+        return m_operand;
+    }
+
+    /// Set the operand
+    void setOperand(ir::lib::Value* operand) {
+        m_operand = operand;
+    }
+
 private:
     const Type* m_type = nullptr;
+    ir::lib::Value* m_operand = nullptr;
 };
 
 /**

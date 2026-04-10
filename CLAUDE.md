@@ -1,25 +1,22 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working with this repo.
 
 ## Project Overview
 
-lbc is a BASIC compiler with an LLVM backend, written in clean, modern C++23. Targets GCC, Clang, and MSVC. No C++20
-modules or `import std;` — these features are too buggy. Exceptions and RTTI are disabled on GCC/Clang
-(`-fno-exceptions -fno-rtti`); left at defaults on MSVC. Uses CMake with Ninja as the build generator and Google Test
-for testing.
+lbc = BASIC compiler, LLVM backend, C++23. Targets GCC, Clang, MSVC. No C++20 modules/`import std;` — too buggy. Exceptions+RTTI disabled on GCC/Clang (`-fno-exceptions -fno-rtti`); MSVC defaults. CMake+Ninja build, Google Test.
 
 ## Your Role
 
-These are the rules I ask you to adhere to at all times:
+Rules always followed:
 
-- Your primary purpose is to help, advise and review code I write.
-- I write the code, you provide critique and feedback.
-- Do not generate any code unless I explicitly ask you to.
-- When asked to write code, do only the minimum viable scope to fulfill the request.
-- If asked coding task or refactor is a large task, stop and ask me how to proceed.
-- When committing, do not mention your co-authorships.
-- Never push to git repo, you commit only.
+- Primary purpose: help, advise, review code I write.
+- I write code, you critique/feedback.
+- No code generation unless explicitly asked.
+- When writing code, minimum viable scope only.
+- Large task/refactor → stop, ask how to proceed.
+- No co-authorship mentions in commits.
+- Never push to git repo, commit only.
 
 ## Build Commands
 
@@ -37,7 +34,7 @@ ninja -C build/claude lbc_lib
 ninja -C build/claude tests
 ```
 
-The main executable outputs to `bin/lbc`.
+Main executable → `bin/lbc`.
 
 ## Testing
 
@@ -49,118 +46,55 @@ The main executable outputs to `bin/lbc`.
 ./build/claude/tests/tests --gtest_filter="BasicTests.IsTrue"
 ```
 
-Tests use Google Test (v1.17.0), fetched automatically via CMake FetchContent.
+Google Test v1.17.0, fetched via CMake FetchContent.
 
 ## Code Formatting and Linting
 
-- **clang-format**: WebKit-based style (see `.clang-format`)
-- **clang-tidy**: Comprehensive checks with warnings as errors (see `.clang-tidy`)
+- **clang-format**: WebKit-based style (`.clang-format`)
+- **clang-tidy**: Comprehensive checks, warnings-as-errors (`.clang-tidy`)
 
 ## Architecture
 
-- `src/` — Main source code. Compiled into a static library (`lbc_lib`) and a thin
-  executable (`lbc`) that links against it.
-- `tests/` — Google Test suite, links against `lbc_lib`.
-- `tools/tblgen/` — Custom LLVM TableGen backends. Builds a single `lbc-tblgen` binary that
-  selects a generator via `--gen=<name>`. Shared infrastructure lives in `lib/` (namespace `lib`):
-  `Builder` provides C++ code-generation helpers; `GeneratorBase` extends it with `RecordKeeper`
-  access and common utilities (`sortedByDef`, `findRange`, `collect`, `contains`). `TreeGenBase`
-  handles Node/Group/Leaf record lookups and shared code generation (kind enum, forward
-  declarations, class definitions with constructors, RTTI classof, accessors, and data members);
-  `TreeGen<ClassT, ArgT>` is a template that builds the in-memory `TreeNode` tree from `.td`
-  definitions via virtual factory methods (`makeNode`, `makeArg`). `TreeNode` and `TreeNodeArg`
-  model the hierarchy and member fields; `TreeNode::getClassName()` and `getBaseClassName()` are
-  virtual, allowing subclasses (e.g., `IrNodeClass`) to override naming conventions. Concrete
-  generators live in subdirectories (`ast/`, `ir/`, `diag/`, `tokens/`, `type/`) and extend
-  `GeneratorBase` or `TreeGen`. Generated `.hpp` files are emitted alongside their source `.td`
-  files in the source tree (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`) and
-  are git-tracked.
-- `cmake/` — Build configuration modules: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors),
-  `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
-- `configured_files/` — CMake-generated headers (project version/metadata via `config.hpp.in`).
-- `src/pch.hpp` — Precompiled header shared across `lbc_lib`, `lbc`, and `tests`.
-  Common STL headers go here.
+- `src/` — Main source. Static library (`lbc_lib`) + thin executable (`lbc`) linking against it.
+- `tests/` — Google Test suite, links `lbc_lib`.
+- `tools/tblgen/` — Custom LLVM TableGen backends. Single `lbc-tblgen` binary, selects generator via `--gen=<name>`. Shared infra in `lib/` (namespace `lib`): `Builder` = C++ codegen helpers; `GeneratorBase` extends with `RecordKeeper` access + utilities (`sortedByDef`, `findRange`, `collect`, `contains`). `TreeGenBase` handles Node/Group/Leaf lookups + shared codegen (kind enum, forward decls, class defs w/ constructors, RTTI classof, accessors, data members); `TreeGen<ClassT, ArgT>` = template building in-memory `TreeNode` tree from `.td` defs via virtual factory methods (`makeNode`, `makeArg`). `TreeNode`/`TreeNodeArg` model hierarchy+fields; `TreeNode::getClassName()`/`getBaseClassName()` virtual, allowing subclass overrides (e.g., `IrNodeClass`). Concrete generators in subdirs (`ast/`, `ir/`, `diag/`, `tokens/`, `type/`) extend `GeneratorBase`/`TreeGen`. Generated `.hpp` emitted alongside source `.td` files (e.g., `src/Lexer/TokenKind.td` → `src/Lexer/TokenKind.hpp`), git-tracked.
+- `cmake/` — Build config: `options.cmake` (compiler flags), `warnings.cmake` (warnings-as-errors), `llvm.cmake` (LLVM integration), `tblgen.cmake` (TableGen custom command helper).
+- `configured_files/` — CMake-generated headers (version/metadata via `config.hpp.in`).
+- `src/pch.hpp` — Precompiled header shared across `lbc_lib`, `lbc`, `tests`. Common STL headers here.
 
 ### Compiler Pipeline
 
-Frontend (lexer, parser, AST, semantic analysis) → IR → Backend (LLVM IR → machine code).
+Frontend (lexer, parser, AST, sema) → IR → Backend (LLVM IR → machine code).
 
-- **LLVM usage** — prefer std C++ where it's the natural fit, but freely use LLVM tools and libraries throughout the
-  entire codebase (frontend, IR, backend). No artificial isolation boundaries.
-- **IR** — a typed, serializable, interpretable intermediate representation. Organised under `src/IR/` with two
-  subdirectories: `lib/` (namespace `lbc::ir::lib`) contains the core IR classes — values, blocks, instructions,
-  builder, and module; `gen/` (namespace `lbc::ir::gen`) contains the `IrGenerator` that lowers the analysed AST
-  into IR. Uses basic blocks with branch instructions for control flow (not structured if/loop). Preserves semantic
-  information (types, generics, module interfaces) and lexical scope boundaries (via `ScopedBlock`) that LLVM IR
-  discards. Retain/release are explicit instructions; destructors are implicit at scope boundaries from type metadata.
-  Value hierarchy: `Value` → `NamedValue` → `Temporary`/`Variable`/`Function`/`Block`. `Variable` and `Function`
-  hold a `Symbol*` back-reference for debug/diagnostic purposes. Blocks are `BasicBlock` (flat instruction list) or
-  `ScopedBlock` (child blocks + cleanup + `ValueTable`; parent-chained for scope resolution).
-  `SymbolTableBase<T>` is the generic name→value mapping used by both `SymbolTable` (frontend, maps to `Symbol`) and
-  `ValueTable` (IR, maps to `NamedValue`). Containers use `llvm::ilist` for ownership. Instruction classes and the
-  `Builder` are generated from `src/IR/lib/Instructions.td` via `lbc-tblgen`. No optimization passes — all
-  optimization is delegated to LLVM.
+- **LLVM usage** — prefer std C++ where natural, freely use LLVM tools/libs throughout entire codebase. No artificial isolation.
+- **IR** — typed, serializable, interpretable intermediate representation. `src/IR/` with two subdirs: `lib/` (namespace `lbc::ir::lib`) = core IR classes (values, blocks, instructions, builder, module); `gen/` (namespace `lbc::ir::gen`) = `IrGenerator` lowering analysed AST to IR. Basic blocks w/ branch instructions for control flow (not structured if/loop). Preserves semantic info (types, generics, module interfaces) + lexical scope boundaries (via `ScopedBlock`) LLVM IR discards. Retain/release = explicit instructions; destructors implicit at scope boundaries from type metadata. Value hierarchy: `Value` → `NamedValue` → `Temporary`/`Variable`/`Function`/`Block`. `Variable`/`Function` hold `Symbol*` back-reference for debug/diagnostics. Blocks: `BasicBlock` (flat instruction list) or `ScopedBlock` (child blocks + cleanup + `ValueTable`; parent-chained for scope resolution). `SymbolTableBase<T>` = generic name→value mapping used by `SymbolTable` (frontend, maps to `Symbol`) and `ValueTable` (IR, maps to `NamedValue`). Containers use `llvm::ilist` for ownership. Instruction classes + `Builder` generated from `src/IR/lib/Instructions.td` via `lbc-tblgen`. No optimization passes — all optimization delegated to LLVM.
 
 ## Code Conventions
 
-- C++23 standard, no exceptions, no RTTI, no modules/`import std;`
-- Do not use `noexcept` — redundant since exceptions are globally disabled
-- Target GCC, Clang and MSVC compilers.
-- Classes use `final` by default
-- Use `[[nodiscard]]` on function declarations where appropriate
-- Prefer `llvm::StringRef` for string references; use `std::string_view` / `"text"sv` when LLVM types are not available
-- PascalCase for classes, camelCase for functions, lowercase for namespaces
+- C++23, no exceptions, no RTTI, no modules/`import std;`
+- No `noexcept` — redundant, exceptions globally disabled
+- Target GCC, Clang, MSVC
+- Classes `final` by default
+- `[[nodiscard]]` on function decls where appropriate
+- Prefer `llvm::StringRef` for string refs; `std::string_view`/`"text"sv` when LLVM types unavailable
+- PascalCase classes, camelCase functions, lowercase namespaces
 - Root namespace: `lbc`
-- 4-space indentation, LF line endings
-- Max line length in documents and source code is 120 characters per line.
+- 4-space indent, LF endings
+- Max 120 chars/line in docs+source
 
 ## Documentation Style
 
-- Use `/** */` comments for functions, classes, enum types, and other declarations
-- Use `///` comments only for data members and enum cases
-- In doc comments, use `@`-style commands (`@param`, `@return`, etc.), never backslash style (`\p`, `\c`, `\a`, etc.)
+- `/** */` for functions, classes, enum types, other declarations
+- `///` only for data members + enum cases
+- `@`-style commands (`@param`, `@return`, etc.), never backslash style (`\p`, `\c`, `\a`, etc.)
 
 ## Important Patterns
 
-- Error handling: `DiagResult<T>` = `std::expected<T, DiagIndex>` for fallible operations. `DiagIndex` is an opaque
-  handle into `DiagEngine` storage — lightweight to propagate, while the engine owns all diagnostic details.
-  `TRY`/`TRY_ASSIGN`/`TRY_DECL`/`MUST` macros (inspired by SerenityOS/Ladybird) for ergonomic error propagation.
-  `LogProvider` is a CRTP-free mixin using C++23 deducing this — any class satisfying the `ContextAware` concept
-  (exposes `getContext() -> Context&`) inherits a `diag()` helper that logs and returns `DiagError`.
-- Diagnostics: generated from `src/Diag/Diagnostics.td` via `lbc-tblgen --gen=lbc-diag-def` into
-  `src/Diag/Diagnostics.hpp`. `DiagKind` is a smart enum struct: a `Value` enum lists every diagnostic, and constexpr
-  member functions (`getCategory()`, `getSeverity()`, `getCode()`) encode static metadata via switch tables.
-  `getSeverity()` returns `llvm::SourceMgr::DiagKind` directly (`DK_Error`, `DK_Warning`, `DK_Note`, `DK_Remark`).
-  `DiagMessage` is `std::pair<DiagKind, std::string>`. Factory functions in `namespace diagnostics` parse
-  `{name}` / `{name:type}` placeholders in `.td` message strings to generate typed parameters. Consteval collection
-  helpers (`allErrors()`, `allWarnings()`, `allNotes()`) group diagnostics by severity at compile time.
-- Memory: RAII everywhere, no manual new/delete. `Context` owns a `llvm::BumpPtrAllocator` arena — AST nodes and
-  spans are allocated via `Context::create<T>()` and `Context::span<T>()`. `Sequencer<T>` collects AST nodes into
-  an intrusive singly-linked list during parsing, then flattens them into a contiguous arena-allocated `std::span`
-  via `Sequencer::sequence(Context&)`.
-- Parser: single `Parser` class with implementation split across multiple `.cpp` files by concern
-  (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utilities).
-- Semantic Analyser: single `SemanticAnalyser` class, same split-file pattern as the parser
-  (`Sema.cpp`, `SemaDecl.cpp`, `SemaExpr.cpp`, `SemaStmt.cpp`, `SemaType.cpp`). Inherits `LogProvider` for
-  diagnostics and `AstVisitor<DiagResult<void>>` for dispatch. Each AST node type has a corresponding `accept()`
-  handler. Entry point is `analyse(AstModule&)`.
-- IR Generator: `IrGenerator` class in `lbc::ir::gen`, same split-file pattern (`Gen.cpp`, `GenDecl.cpp`,
-  `GenExpr.cpp`, `GenStmt.cpp`, `GenType.cpp`). Inherits `AstVisitor<DiagResult<void>>` for AST traversal,
-  `ir::lib::Builder` for instruction creation, and `LogProvider` for diagnostics. Entry point is
-  `generate(const AstModule&) -> DiagResult<lib::Module*>`.
-- AST: node classes are generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. The TableGen schema
-  uses three class types: `Node` (base), `Group` (abstract intermediate — types, statements, declarations,
-  expressions), and `Leaf` (concrete instantiable nodes). Each node has a `list<Member>` with two subtypes:
-  `Arg` (data fields — type, name, optional default and mutable flag) and `Func` (custom code blocks emitted
-  verbatim into the generated class). `Arg` fields without a default become constructor parameters; those with a
-  default are initialized fields. The `mutable` bit controls whether a setter is generated. `Func` blocks are
-  auto-dedented via `unindent()` so `.td` indentation doesn't leak into generated code. `AstKind` enum values are
-  grouped by parent so range checks can determine group membership.
-  All nodes inherit `llvm::SMRange` and a `next` pointer from `AstRoot`; the `next` pointer serves as an intrusive
-  linked list during parsing for collecting nodes before bulk-allocating into `std::span`.
-- AST Visitor: generated from `Ast.td` via `lbc-tblgen --gen=lbc-ast-visitor` into `src/Ast/AstVisitor.hpp`.
-  Uses C++23 deducing this (`this auto&`) for static dispatch — no CRTP needed. Generates a top-level `AstVisitor`
-  and per-group visitors (`AstExprVisitor`, `AstStmtVisitor`, `AstDeclVisitor`, `AstTypeVisitor`). Dispatch method
-  is `visit()` (switch on `AstKind`), handler methods are `accept()` (implemented by the derived class). Const
-  propagation is automatic through `auto&` parameters and `llvm::cast`. A generic `accept(const auto&)` catch-all
-  can handle unimplemented nodes. `AstVisitorGen` inherits from `AstGen` to reuse the AST class hierarchy.
+- **Error handling**: `DiagResult<T>` = `std::expected<T, DiagIndex>` for fallible ops. `DiagIndex` = opaque handle into `DiagEngine` storage — lightweight propagation, engine owns diagnostic details. `TRY`/`TRY_ASSIGN`/`TRY_DECL`/`MUST` macros (SerenityOS/Ladybird-inspired) for ergonomic error propagation. `LogProvider` = CRTP-free mixin using C++23 deducing this — any class satisfying `ContextAware` concept (exposes `getContext() -> Context&`) inherits `diag()` helper that logs+returns `DiagError`.
+- **Diagnostics**: generated from `src/Diag/Diagnostics.td` via `lbc-tblgen --gen=lbc-diag-def` → `src/Diag/Diagnostics.hpp`. `DiagKind` = smart enum struct: `Value` enum lists every diagnostic, constexpr member functions (`getCategory()`, `getSeverity()`, `getCode()`) encode static metadata via switch tables. `getSeverity()` returns `llvm::SourceMgr::DiagKind` directly (`DK_Error`, `DK_Warning`, `DK_Note`, `DK_Remark`). `DiagMessage` = `std::pair<DiagKind, std::string>`. Factory functions in `namespace diagnostics` parse `{name}`/`{name:type}` placeholders in `.td` message strings → typed parameters. Consteval helpers (`allErrors()`, `allWarnings()`, `allNotes()`) group diagnostics by severity at compile time.
+- **Memory**: RAII everywhere, no manual new/delete. `Context` owns `llvm::BumpPtrAllocator` arena — AST nodes+spans allocated via `Context::create<T>()`/`Context::span<T>()`. `Sequencer<T>` collects AST nodes into intrusive singly-linked list during parsing, flattens to contiguous arena-allocated `std::span` via `Sequencer::sequence(Context&)`.
+- **Parser**: single `Parser` class, impl split across `.cpp` files by concern (`ParseDecl.cpp`, `ParseExpr.cpp`, `ParseStmt.cpp`, `ParseType.cpp`, `Parser.cpp` for common utils).
+- **Semantic Analyser**: single `SemanticAnalyser` class, same split-file pattern (`Sema.cpp`, `SemaDecl.cpp`, `SemaExpr.cpp`, `SemaStmt.cpp`, `SemaType.cpp`). Inherits `LogProvider` for diagnostics + `AstVisitor<DiagResult<void>>` for dispatch. Each AST node type has `accept()` handler. Entry: `analyse(AstModule&)`.
+- **IR Generator**: `IrGenerator` in `lbc::ir::gen`, same split-file pattern (`Gen.cpp`, `GenDecl.cpp`, `GenExpr.cpp`, `GenStmt.cpp`, `GenType.cpp`). Inherits `AstVisitor<DiagResult<void>>` for AST traversal, `ir::lib::Builder` for instruction creation, `LogProvider` for diagnostics. Entry: `generate(const AstModule&) -> DiagResult<lib::Module*>`.
+- **AST**: nodes generated from `src/Ast/Ast.td` via `lbc-tblgen --gen=lbc-ast-def`. TableGen schema: `Node` (base), `Group` (abstract intermediate — types, stmts, decls, exprs), `Leaf` (concrete instantiable). Each node has `list<Member>` w/ two subtypes: `Arg` (data fields — type, name, optional default+mutable flag) and `Func` (custom code blocks emitted verbatim). `Arg` fields w/o default → constructor params; w/ default → initialized fields. `mutable` bit controls setter generation. `Func` blocks auto-dedented via `unindent()`. `AstKind` enum values grouped by parent for range-check group membership. All nodes inherit `llvm::SMRange` + `next` pointer from `AstRoot`; `next` = intrusive linked list during parsing for collecting nodes before bulk-allocating into `std::span`.
+- **AST Visitor**: generated from `Ast.td` via `lbc-tblgen --gen=lbc-ast-visitor` → `src/Ast/AstVisitor.hpp`. C++23 deducing this (`this auto&`) for static dispatch — no CRTP. Generates top-level `AstVisitor` + per-group visitors (`AstExprVisitor`, `AstStmtVisitor`, `AstDeclVisitor`, `AstTypeVisitor`). Dispatch = `visit()` (switch on `AstKind`), handlers = `accept()` (implemented by derived class). Const propagation automatic through `auto&` params + `llvm::cast`. Generic `accept(const auto&)` catch-all for unimplemented nodes. `AstVisitorGen` inherits `AstGen` to reuse AST class hierarchy.

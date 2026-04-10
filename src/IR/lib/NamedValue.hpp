@@ -17,7 +17,7 @@ class NamedValue : public Value {
 public:
     /** LLVM RTTI support. */
     [[nodiscard]] static auto classof(const Value* value) -> bool {
-        return value->getKind() >= Kind::Temporary && value->getKind() <= Kind::ScopedBlock;
+        return value->getKind() >= Kind::Temporary && value->getKind() <= Kind::BasicBlock;
     }
 
     /** Get the name of this value. */

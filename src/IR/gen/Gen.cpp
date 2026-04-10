@@ -3,7 +3,6 @@
 //
 #include "IR/lib/BasicBlock.hpp"
 #include "IR/lib/Module.hpp"
-#include "IR/lib/ScopedBlock.hpp"
 #include "IR/lib/Temporary.hpp"
 #include "IrGenerator.hpp"
 using namespace lbc::ir::gen;
@@ -33,12 +32,11 @@ void IrGenerator::emit(lib::Instruction* instr) const {
 }
 
 auto IrGenerator::createBlock(const llvm::StringRef name) const -> lib::BasicBlock* {
-    auto* block = getContext().create<lib::BasicBlock>(getContext(), name.str());
-    m_function->getBlocks().push_back(block);
-    return block;
+    return getContext().create<lib::BasicBlock>(getContext(), name.str());
 }
 
-void IrGenerator::setInsertPoint(lib::BasicBlock* block) {
+void IrGenerator::setBlock(lib::BasicBlock* block) {
+    m_function->getBlocks().push_back(block);
     m_block = block;
 }
 

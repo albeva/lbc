@@ -35,5 +35,8 @@ void AstGen::forwardDecls() {
     line("class Type");
     line("class SymbolTable");
     line("class Symbol");
+    block("namespace ir::lib", [&] {
+        line("class Value");
+    });
     newline();
 }

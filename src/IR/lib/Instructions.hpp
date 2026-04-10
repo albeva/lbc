@@ -15,7 +15,7 @@ namespace lbc {
 
 namespace lbc::ir::lib {
 
-class Block;
+class BasicBlock;
 class NamedValue;
 class Value;
 
@@ -276,7 +276,7 @@ public:
      * Construct a JmpInstr node
      */
     constexpr explicit JmpInstr(
-        Block* destination
+        BasicBlock* destination
     )
     : IrTerminator(IrKind::Jmp)
     , m_destination(destination) {}
@@ -287,12 +287,12 @@ public:
     }
 
     /// Get the destination
-    [[nodiscard]] constexpr auto getDestination() const -> Block* {
+    [[nodiscard]] constexpr auto getDestination() const -> BasicBlock* {
         return m_destination;
     }
 
 private:
-    Block* m_destination;
+    BasicBlock* m_destination;
 };
 
 /**
@@ -305,8 +305,8 @@ public:
      */
     constexpr CondJmpInstr(
         Value* condition,
-        Block* trueBlock,
-        Block* falseBlock
+        BasicBlock* trueBlock,
+        BasicBlock* falseBlock
     )
     : IrTerminator(IrKind::CondJmp)
     , m_condition(condition)
@@ -324,19 +324,19 @@ public:
     }
 
     /// Get the trueBlock
-    [[nodiscard]] constexpr auto getTrueBlock() const -> Block* {
+    [[nodiscard]] constexpr auto getTrueBlock() const -> BasicBlock* {
         return m_trueBlock;
     }
 
     /// Get the falseBlock
-    [[nodiscard]] constexpr auto getFalseBlock() const -> Block* {
+    [[nodiscard]] constexpr auto getFalseBlock() const -> BasicBlock* {
         return m_falseBlock;
     }
 
 private:
     Value* m_condition;
-    Block* m_trueBlock;
-    Block* m_falseBlock;
+    BasicBlock* m_trueBlock;
+    BasicBlock* m_falseBlock;
 };
 
 /**

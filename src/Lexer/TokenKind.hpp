@@ -579,7 +579,7 @@ struct std::hash<lbc::TokenKind> final {
  */
 template <>
 struct std::formatter<lbc::TokenKind, char> final {
-    constexpr static auto parse(std::format_parse_context& ctx) {
+    constexpr static auto parse(const std::format_parse_context& ctx) {
         return ctx.begin();
     }
 

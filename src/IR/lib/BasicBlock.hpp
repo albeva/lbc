@@ -3,21 +3,22 @@
 //
 #pragma once
 #include "pch.hpp"
-#include "Block.hpp"
 #include "Instructions.hpp"
+#include "NamedValue.hpp"
 namespace lbc {
 class Context;
 }
 namespace lbc::ir::lib {
 
 /**
- * A basic block — a labeled, straight-line sequence of instructions.
+ * Abstract base for IR blocks.
  *
- * The last instruction in the body is a terminator (branch, conditional
- * branch, or return). BasicBlocks contain no scope or cleanup information;
- * for scoped lifetime management, use ScopedBlock.
+ * A Block is a labeled unit within a function's control flow graph.
+ * Concrete subclasses are BasicBlock (a flat sequence of instructions)
+ * and ScopedBlock (a group of blocks sharing a lexical scope with an
+ * optional cleanup block). Blocks use the Label sentinel type.
  */
-class BasicBlock final : public Block {
+class BasicBlock : public NamedValue, public llvm::ilist_node<BasicBlock> {
 public:
     BasicBlock(Context& context, std::string label);
 

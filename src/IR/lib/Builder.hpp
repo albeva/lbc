@@ -45,12 +45,12 @@ public:
     }
 
     /// Unconditional branch
-    [[nodiscard]] auto makeJmp(Block* destination) const -> JmpInstr* {
+    [[nodiscard]] auto makeJmp(BasicBlock* destination) const -> JmpInstr* {
         return m_context.create<JmpInstr>(destination);
     }
 
     /// Conditional branch
-    [[nodiscard]] auto makeJmp(Value* condition, Block* trueBlock, Block* falseBlock) const -> CondJmpInstr* {
+    [[nodiscard]] auto makeJmp(Value* condition, BasicBlock* trueBlock, BasicBlock* falseBlock) const -> CondJmpInstr* {
         return m_context.create<CondJmpInstr>(condition, trueBlock, falseBlock);
     }
 

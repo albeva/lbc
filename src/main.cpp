@@ -11,16 +11,16 @@ auto main(int argc, const char* argv[]) -> int {
 
     lbc::Context context;
     std::string included;
-    auto id = context.getSourceMgr().AddIncludeFile("samples/hello.bas", {}, included);
+    const auto id = context.getSourceMgr().AddIncludeFile("samples/hello.bas", {}, included);
     lbc::Parser parser { context, id };
 
     const auto module = parser.parse();
-    if (!module) {
+    if (not module) {
         return EXIT_FAILURE;
     }
 
-    lbc::SemanticAnalyser sema(context);
-    if (!sema.analyse(*module.value())) {
+    lbc::SemanticAnalyser sema { context };
+    if (not sema.analyse(*module.value())) {
         return EXIT_FAILURE;
     }
 

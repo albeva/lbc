@@ -7,6 +7,9 @@
 #include "SymbolTable.hpp"
 namespace lbc {
 class Type;
+namespace ir::lib {
+    class Value;
+}
 
 /** Visibility of a symbol across module boundaries. */
 enum class SymbolVisibility : std::uint8_t {
@@ -72,6 +75,9 @@ public:
     [[nodiscard]] auto getRelatedSymbols() const -> std::span<Symbol*> { return m_relatedSymbols; }
     void setRelatedSymbols(const std::span<Symbol*> relatedSymbols) { m_relatedSymbols = relatedSymbols; }
 
+    [[nodiscard]] auto getOperand() const -> ir::lib::Value* { return m_operand; }
+    void setOperand(ir::lib::Value* operand) { m_operand = operand; }
+
 private:
     llvm::StringRef m_name;              ///< symbol name
     llvm::StringRef m_alias;             ///< optional alias
@@ -80,6 +86,7 @@ private:
     SymbolVisibility m_visibility;       ///< visibility of the symbol
     std::optional<LiteralValue> m_value; ///< constant value associated with the symbol
     std::span<Symbol*> m_relatedSymbols; ///< related symbols, e.g. function parameters, or UDT members
+    ir::lib::Value* m_operand;           ///< IR value for this symbol
 };
 
 /** Symbol table for the frontend, mapping names to Symbols. */

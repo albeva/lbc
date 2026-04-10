@@ -10,10 +10,10 @@ SemanticAnalyser::SemanticAnalyser(Context& context)
 
 SemanticAnalyser::~SemanticAnalyser() = default;
 
-auto SemanticAnalyser::analyse(AstModule& ast) -> Result {
+auto SemanticAnalyser::analyse(const AstModule& ast) -> Result {
     return accept(ast);
 }
 
-auto SemanticAnalyser::accept(AstModule& ast) -> Result {
+auto SemanticAnalyser::accept(const AstModule& ast) -> Result {
     return accept(*ast.getStmtList());
 }

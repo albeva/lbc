@@ -73,7 +73,7 @@ private:
     [[nodiscard]] auto accept(const AstExprStmt& ast) -> Result;
 
     /** Generate IR for a DECLARE statement. */
-    [[nodiscard]] auto accept(const AstDeclareStmt& ast) -> Result;
+    [[nodiscard]] static auto accept(const AstDeclareStmt& ast) -> Result;
 
     /** Generate IR for a function body statement. */
     [[nodiscard]] auto accept(const AstFuncStmt& ast) -> Result;
@@ -136,13 +136,15 @@ private:
     void emit(lib::Instruction* instr) const;
 
     /**
-     * Create a new BasicBlock in the current function.
+     * Create a new BasicBlock
      * Does NOT change the insertion point.
      */
     [[nodiscard]] auto createBlock(llvm::StringRef name) const -> lib::BasicBlock*;
 
-    /** Set the current basic block as the insertion point. */
-    void setInsertPoint(lib::BasicBlock* block);
+    /**
+     * Set given blcok as active
+     */
+    void setBlock(lib::BasicBlock* block);
 
     /** Check if the current block already ends with a terminator. */
     [[nodiscard]] auto isTerminated() const -> bool;
@@ -153,21 +155,14 @@ private:
      */
     [[nodiscard]] auto createTemporary(const Type* type) -> lib::Temporary*;
 
-    /** Get the last value produced by an expression handler. */
-    [[nodiscard]] auto getLastValue() const -> lib::Value* { return m_lastValue; }
-
-    /** Set the last value (called by expression handlers). */
-    void setLastValue(lib::Value* value) { m_lastValue = value; }
-
     // -------------------------------------------------------------------------
     // Data
     // -------------------------------------------------------------------------
     lib::Module* m_module = nullptr;     ///< the IR module being generated
     lib::Function* m_function = nullptr; ///< current function
     lib::BasicBlock* m_block = nullptr;  ///< current insertion point
-    lib::ScopedBlock* m_scope = nullptr; ///< current lexical scope
-    lib::Value* m_lastValue = nullptr;   ///< last value from expression visitor
     unsigned m_tempCounter = 0;          ///< temporary numbering (resets per function)
+    unsigned m_ifCounter = 0;
 };
 
 } // namespace lbc::ir::gen

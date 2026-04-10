@@ -5,8 +5,9 @@
 #include "Type/Type.hpp"
 using namespace lbc;
 
-Symbol::Symbol(llvm::StringRef name, const Type* type, llvm::SMRange origin)
+Symbol::Symbol(const llvm::StringRef name, const Type* type, const llvm::SMRange origin)
 : m_name(name)
 , m_type(type)
 , m_range(origin)
-, m_visibility(SymbolVisibility::Private) {}
+, m_visibility(SymbolVisibility::Private)
+, m_operand(nullptr) {}

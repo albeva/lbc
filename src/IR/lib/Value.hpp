@@ -28,10 +28,8 @@ public:
         Temporary,
         Variable,
         Function,
-        /// Block kinds
         BasicBlock,
-        ScopedBlock,
-        /// Non-named values
+        /// Unnamed value
         Literal
     };
 

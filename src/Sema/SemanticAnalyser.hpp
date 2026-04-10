@@ -46,7 +46,7 @@ public:
     /**
      * Run semantic analysis on the given AST module.
      */
-    [[nodiscard]] auto analyse(AstModule& ast) -> Result;
+    [[nodiscard]] auto analyse(const AstModule& ast) -> Result;
 
     /**
      * Get associated context object.
@@ -59,7 +59,7 @@ private:
     [[nodiscard]] auto getTypeFactory() const -> TypeFactory& { return m_context.getTypeFactory(); }
 
     /** Analyse the module root node. */
-    [[nodiscard]] auto accept(AstModule& ast) -> Result;
+    [[nodiscard]] auto accept(const AstModule& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Declarations (SemaDecl.cpp)
