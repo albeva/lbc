@@ -74,10 +74,10 @@ TEST(LexerTests, LineContinuation) {
 
 TEST(LexerTests, BooleanAndNullLiterals) {
     Context context;
-    auto tr = tok(makeLexer(context, "True").next());
+    const auto tr = tok(makeLexer(context, "True").next());
     EXPECT_EQ(tr.kind(), TokenKind::BooleanLiteral);
     EXPECT_EQ(tr.getValue().get<bool>(), true);
-    auto fl = tok(makeLexer(context, "FALSE").next());
+    const auto fl = tok(makeLexer(context, "FALSE").next());
     EXPECT_EQ(fl.kind(), TokenKind::BooleanLiteral);
     EXPECT_EQ(fl.getValue().get<bool>(), false);
     EXPECT_EQ(tok(makeLexer(context, "Null").next()).kind(), TokenKind::NullLiteral);
@@ -86,7 +86,7 @@ TEST(LexerTests, BooleanAndNullLiterals) {
 TEST(LexerTests, StringLiterals) {
     Context context;
     // basic string
-    auto t = tok(makeLexer(context, "\"hello world\"").next());
+    const auto t = tok(makeLexer(context, "\"hello world\"").next());
     EXPECT_EQ(t.kind(), TokenKind::StringLiteral);
     EXPECT_EQ(t.getValue().get<llvm::StringRef>(), "hello world");
     // unclosed string is an error
@@ -96,7 +96,7 @@ TEST(LexerTests, StringLiterals) {
 TEST(LexerTests, StringEscapeSequences) {
     Context context;
     // all valid escapes
-    auto t = tok(makeLexer(context, R"("\a\b\f\n\r\t\v\\\'\"\0")").next());
+    const auto t = tok(makeLexer(context, R"("\a\b\f\n\r\t\v\\\'\"\0")").next());
     EXPECT_EQ(t.kind(), TokenKind::StringLiteral);
     EXPECT_EQ(t.getValue().get<llvm::StringRef>(), R"(\a\b\f\n\r\t\v\\\'\"\0)");
     // escaped quote doesn't terminate
@@ -178,11 +178,11 @@ TEST(LexerTests, DotVariants) {
 TEST(LexerTests, TokenStringAndLexeme) {
     Context context;
     // identifier: string() uppercases, lexeme() preserves source
-    auto id = tok(makeLexer(context, "  myVar  ").next());
+    const auto id = tok(makeLexer(context, "  myVar  ").next());
     EXPECT_EQ(id.string(), "MYVAR");
     EXPECT_EQ(id.lexeme(), "myVar");
     // string literal: string() returns content, lexeme() includes quotes
-    auto str = tok(makeLexer(context, "\"hello\"").next());
+    const auto str = tok(makeLexer(context, "\"hello\"").next());
     EXPECT_EQ(str.string(), "hello");
     EXPECT_EQ(str.lexeme(), "\"hello\"");
     // keyword: string() returns kind name
@@ -202,7 +202,7 @@ TEST(LexerTests, Identifiers) {
     // case insensitive keyword match
     EXPECT_EQ(tok(makeLexer(context, "iF").next()).kind(), TokenKind::If);
     // underscore-prefixed identifier
-    auto t = tok(makeLexer(context, "_foo").next());
+    const auto t = tok(makeLexer(context, "_foo").next());
     EXPECT_EQ(t.kind(), TokenKind::Identifier);
     EXPECT_EQ(t.string(), "_FOO");
 }
@@ -214,8 +214,8 @@ TEST(LexerTests, Identifiers) {
 TEST(LexerTests, PeekDoesNotConsumeToken) {
     Context context;
     auto lexer = makeLexer(context, "42");
-    auto peeked = tok(lexer.peek());
-    auto next = tok(lexer.next());
+    const auto peeked = tok(lexer.peek());
+    const auto next = tok(lexer.next());
     EXPECT_EQ(peeked.kind(), next.kind());
     EXPECT_EQ(peeked.kind(), TokenKind::IntegerLiteral);
 }

@@ -25,7 +25,7 @@ TEST(TypeFactoryTests, SentinelTypes) {
 
 TEST(TypeFactoryTests, PrimitiveTypes) {
     Context context;
-    auto& tf = context.getTypeFactory();
+    const auto& tf = context.getTypeFactory();
 
     EXPECT_TRUE(tf.getBool()->isBool());
     EXPECT_TRUE(tf.getZString()->isZString());
@@ -35,7 +35,7 @@ TEST(TypeFactoryTests, PrimitiveTypes) {
 
 TEST(TypeFactoryTests, IntegralTypes) {
     Context context;
-    auto& tf = context.getTypeFactory();
+    const auto& tf = context.getTypeFactory();
 
     // Signed
     EXPECT_TRUE(tf.getByte()->isSigned());

@@ -1,5 +1,7 @@
 #include "pch.hpp"
 #include <llvm/Support/InitLLVM.h>
+
+#include <print>
 #include "Ast/AstCodePrinter.hpp"
 #include "Diag/DiagEngine.hpp"
 #include "Driver/Context.hpp"
@@ -9,6 +11,7 @@
 #include "Parser/Parser.hpp"
 #include "Sema/SemanticAnalyser.hpp"
 
+namespace {
 auto build(const std::string& source) -> lbc::DiagResult<void> {
     lbc::Context context;
     std::string included;
@@ -25,8 +28,8 @@ auto build(const std::string& source) -> lbc::DiagResult<void> {
 
     const lbc::ir::printer::Printer printer{};
     printer.print(*ir);
-
     return {};
+}
 }
 
 auto main(int argc, const char* argv[]) -> int {
