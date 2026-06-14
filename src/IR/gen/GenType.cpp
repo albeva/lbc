@@ -18,3 +18,8 @@ auto IrGenerator::accept(const AstReferenceType& /*ast*/) -> Result {
     // Types are resolved during semantic analysis; nothing to emit.
     return {};
 }
+
+auto IrGenerator::accept(const AstConstType& /*ast*/) -> Result {
+    // Types are resolved during semantic analysis; nothing to emit.
+    return {};
+}

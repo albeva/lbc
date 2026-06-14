@@ -127,6 +127,9 @@ private:
     /** Generate IR for a reference type expression. */
     [[nodiscard]] static auto accept(const AstReferenceType& ast) -> Result;
 
+    /** Generate IR for a const-qualified type expression. */
+    [[nodiscard]] static auto accept(const AstConstType& ast) -> Result;
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------

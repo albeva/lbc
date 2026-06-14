@@ -192,13 +192,3 @@ def Store : Leaf<"store", "Store value through pointer", Root, [
     Arg<"NamedValue*", "dest">,
     Arg<"Value*", "src">,
 ]>;
-
-// retain %operand
-def Retain : Leaf<"retain",  "Increment reference count", Root, [
-    Arg<"NamedValue*", "operand">,
-]>;
-
-// release %operand
-def Release : Leaf<"release", "Decrement reference count", Root, [
-    Arg<"NamedValue*", "operand">,
-]>;

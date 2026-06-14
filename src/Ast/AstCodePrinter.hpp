@@ -22,6 +22,7 @@ private:
     void accept(const AstBuiltInType& ast) const;
     void accept(const AstPointerType& ast);
     void accept(const AstReferenceType& ast);
+    void accept(const AstConstType& ast);
     void accept(const AstStmtList& ast);
     void accept(const AstExprStmt& ast);
     void accept(const AstDeclareStmt& ast);

@@ -30,6 +30,9 @@ public:
     /** Get or create a reference type to the given base type. */
     [[nodiscard]] auto getReference(const Type* type) -> const TypeReference*;
 
+    /** Get or create a const-qualified type wrapping the given base type. */
+    [[nodiscard]] auto getConst(const Type* type) -> const TypeConst*;
+
     /** Get or create a function type with the given parameter and return types. */
     [[nodiscard]] auto getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction*;
 
@@ -79,5 +82,6 @@ private:
     using Map = std::unordered_map<const Type*, T>;
     Map<const TypePointer*> m_pointers;     ///< Cached pointer types
     Map<const TypeReference*> m_references; ///< Cached reference types
+    Map<const TypeConst*> m_consts;         ///< Cached const-qualified types
 };
 } // namespace lbc

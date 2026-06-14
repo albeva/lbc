@@ -19,8 +19,6 @@ class JmpInstr;
 class Module;
 class RetInstr;
 class StoreInstr;
-class RetainInstr;
-class ReleaseInstr;
 class Value;
 class VarInstr;
 class CastInstr;

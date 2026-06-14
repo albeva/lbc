@@ -63,4 +63,32 @@ private:
     const Type* m_base {};
 };
 
+/**
+ * Const-qualified type (e.g. CONST INTEGER).
+ */
+class TypeConst final : public Type {
+public:
+    /** Get the unqualified type. */
+    [[nodiscard]] auto getBaseType() const -> const Type* override { return m_base; }
+
+    /// LLVM RTTI support
+    [[nodiscard]] constexpr static auto classof(const Type* type) -> bool {
+        return type->isConst();
+    }
+
+    /// Get type string
+    [[nodiscard]] auto string() const -> std::string override;
+
+protected:
+    friend class TypeFactory;
+
+    explicit constexpr TypeConst(const Type* base)
+    : Type(TypeKind::Const)
+    , m_base(base) {}
+
+private:
+    /// The unqualified type
+    const Type* m_base {};
+};
+
 } // namespace lbc

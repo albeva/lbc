@@ -24,6 +24,7 @@ struct DiagKind final {
         invalidNumber,
         unexpected,
         expected,
+        referenceNotLast,
         undeclaredIdentifier,
         useBeforeDefinition,
         redefinition,
@@ -41,6 +42,7 @@ struct DiagKind final {
         invalidUnaryOperand,
         dereferencingAnyPtr,
         invalidReferenceInit,
+        constToReference,
     };
 
     /**
@@ -56,7 +58,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 23;
+    static constexpr std::size_t COUNT = 25;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -101,6 +103,7 @@ struct DiagKind final {
                 return Category::Lex;
             case unexpected:
             case expected:
+            case referenceNotLast:
                 return Category::Parse;
             case undeclaredIdentifier:
             case useBeforeDefinition:
@@ -119,6 +122,7 @@ struct DiagKind final {
             case invalidUnaryOperand:
             case dereferencingAnyPtr:
             case invalidReferenceInit:
+            case constToReference:
                 return Category::Sema;
         }
         std::unreachable();
@@ -135,6 +139,7 @@ struct DiagKind final {
             case invalidNumber:
             case unexpected:
             case expected:
+            case referenceNotLast:
             case undeclaredIdentifier:
             case useBeforeDefinition:
             case redefinition:
@@ -152,6 +157,7 @@ struct DiagKind final {
             case invalidUnaryOperand:
             case dereferencingAnyPtr:
             case invalidReferenceInit:
+            case constToReference:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -168,6 +174,7 @@ struct DiagKind final {
             case invalidNumber: return "E0102";
             case unexpected: return "E0200";
             case expected: return "E0201";
+            case referenceNotLast: return "E0202";
             case undeclaredIdentifier: return "E0300";
             case useBeforeDefinition: return "E0301";
             case redefinition: return "E0302";
@@ -185,6 +192,7 @@ struct DiagKind final {
             case invalidUnaryOperand: return "E0314";
             case dereferencingAnyPtr: return "E0315";
             case invalidReferenceInit: return "E0316";
+            case constToReference: return "E0317";
         }
         std::unreachable();
     }
@@ -192,8 +200,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 23> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 25> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference };
     }
 
 private:
@@ -264,6 +272,11 @@ namespace diagnostics {
     /// Create expected message
     [[nodiscard]] inline auto expected(const auto& expected, const auto& found) -> DiagMessage {
         return { DiagKind::expected, std::format("expected {}, found {}", expected, found) };
+    }
+
+    /// Create referenceNotLast message
+    [[nodiscard]] inline auto referenceNotLast() -> DiagMessage {
+        return { DiagKind::referenceNotLast, "a reference must be the last qualifier in a type" };
     }
 
     // -------------------------------------------------------------------------
@@ -353,6 +366,11 @@ namespace diagnostics {
     /// Create invalidReferenceInit message
     [[nodiscard]] inline auto invalidReferenceInit() -> DiagMessage {
         return { DiagKind::invalidReferenceInit, "Cannot initialize reference from given expression" };
+    }
+
+    /// Create constToReference message
+    [[nodiscard]] inline auto constToReference() -> DiagMessage {
+        return { DiagKind::constToReference, "cannot apply CONST to a reference" };
     }
 
 }

@@ -90,6 +90,9 @@ def PointerType   : Leaf<"Pointer type", Type, [
 def ReferenceType   : Leaf<"Reference type", Type, [
     Arg<"AstType*", "typeExpr">
 ]>;
+def ConstType   : Leaf<"Const-qualified type", Type, [
+    Arg<"AstType*", "typeExpr">
+]>;
 
 // ============================================================================
 // Statements

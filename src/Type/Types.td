@@ -80,6 +80,7 @@ def Double : KeywordType<"DOUBLE", FloatingPoint, "TypeFloatingPoint">;
 
 def PointerType   : BaseType<Compound, "TypePointer">;
 def ReferenceType : BaseType<Compound, "TypeReference">;
+def ConstType     : BaseType<Compound, "TypeConst">;
 
 // -----------------------------------------------------------------------------
 // Aggregate types

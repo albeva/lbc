@@ -21,8 +21,9 @@ enough to lower cleanly to LLVM IR.
   extract a module's public interface, including inlineable function bodies and
   constants.
 - **LBC-specific optimizations** — the IR is the place for language-level
-  transformations such as reference counting (retain/release insertion), not
-  low-level optimizations like constant folding or dead code elimination.
+  transformations such as copy/move/destructor insertion (the C++-style value
+  semantics), not low-level optimizations like constant folding or dead code
+  elimination.
 - **Easy lowering to LLVM IR** — the IR is structured so that each instruction
   maps straightforwardly to LLVM IR.
 
@@ -62,9 +63,7 @@ Value (base — kind + type)
 │   ├── Temporary (%0, %1, ...)
 │   ├── Variable (named locals/globals)
 │   ├── Function (name, symbol, block list)
-│   └── Block (abstract — labeled unit of control flow)
-│       ├── BasicBlock (flat instruction list)
-│       └── ScopedBlock (child blocks + cleanup + value table)
+│   └── BasicBlock (labeled, flat instruction list)
 └── Literal (unnamed compile-time constant)
 ```
 
@@ -76,80 +75,40 @@ The IR has a layered container structure:
 Module
 ├── declarations (extern functions, global variables, type declarations)
 └── functions
-    └── blocks (BasicBlock | ScopedBlock)
-        └── instructions (flat, uniform — future TableGen candidates)
+    └── blocks (BasicBlock)
+        └── instructions (flat, uniform — TableGen-defined)
 ```
 
 - **Module** — root container, holds all top-level declarations and functions.
 - **Function** — name, parameters, return type, body as a list of blocks. The
   first block is the entry point.
-- **Block** — abstract base. Concrete subclasses:
-  - **BasicBlock** — a labeled, straight-line sequence of instructions ending
-    with a terminator (branch, conditional branch, or return).
-  - **ScopedBlock** — a group of child blocks sharing a lexical scope, with
-    an optional cleanup block and a ValueTable for named values. Used for
-    managing object lifetimes (retain/release, destructors).
-- **Instruction** — placeholder for individual IR instructions (future:
-  TableGen-defined with opcodes, operands, and visitor dispatch).
+- **BasicBlock** — a labeled, straight-line sequence of instructions ending
+  with a terminator (branch, conditional branch, or return). Blocks are flat:
+  the IR carries no lexical-scope nesting (see Value Semantics below).
+- **Instruction** — an individual IR operation with opcode, operands, and
+  visitor dispatch. TableGen-defined (see `src/IR/lib/Instructions.td`).
 
-### Scoped Blocks and Object Lifetimes
+### Value Semantics
 
-Unlike LLVM IR, the LBC IR preserves lexical scope information. This is
-essential for:
+LBC follows the **C++ object model** — value semantics with copy, move, and
+destructor special members, plus raw pointers and references — and does **not**
+aim for perfect memory safety. The full language-level model (type expressions,
+copy/move constructors, `consuming`/`consume`, and the use-after-consume check)
+is described on the @ref design "Design — Memory Model" page; this section
+covers only how the IR represents it.
 
-- **Reference counting** — retain/release are explicit IR instructions that
-  can be optimized (elide redundant pairs, sink releases, etc.).
-- **Destructors** — called implicitly at scope exit, derived from type
-  metadata. The IR does not emit explicit destructor calls; the VM and LLVM
-  lowering pass infer them from the scope structure and type information.
-- **Template instantiation** — scope structure is preserved through
-  serialization, allowing correct cleanup generation for instantiated types.
+The type system encodes `ref`, `ptr`, and `const` directly (`TypeReference`,
+`TypePointer`, `TypeConst`), so every IR value carries that information in its
+`Type*`. Lifetime operations are resolved during AST → IR lowering: the pass
+inserts the copy, move, and destructor calls dictated by the value semantics, so
+the IR reaching the backend already has explicit lifetime operations — flat
+basic blocks, no borrow checker, no provenance tracking.
 
-A ScopedBlock provides three layers of cleanup:
-
-1. **Explicit retain/release** — instructions within the body blocks that
-   manipulate reference counts at specific program points.
-2. **Cleanup block** — an optional block of instructions (e.g. release
-   operations) that runs before any scope exit (return, branch to outer block).
-3. **Implicit destructor/dealloc** — at the scope boundary, the VM/lowering
-   pass walks the scope's variables and calls destructors for types that have
-   them.
-
-Example:
-
-```
-func foo(z: bool): integer {
-entry:
-    cond_br z, @true, @false
-
-scoped true: {
-    var obj: Object
-    obj = call getObj()
-    retain obj
-    %0 = field obj, res
-    ret %0
-} cleanup {
-    release obj
-}
-
-scoped false: {
-    var obj2: Object
-    obj2 = call getObj2()
-    retain obj2
-    %1 = field obj2, res
-    ret %1
-} cleanup {
-    release obj2
-}
-}
-```
-
-### Value Table
-
-Each ScopedBlock owns a `ValueTable` — a `SymbolTableBase<NamedValue>` that
-maps names to IR values within that scope. Value tables chain via parent
-pointers, mirroring the nesting of scoped blocks, so name lookups walk
-outward through enclosing scopes.
+> **Status:** the lifetime instruction surface is **not yet implemented**. The
+> current instruction set has no copy/move/destroy operations. Planned: `copy`
+> (copy-constructor call), `move` (move-constructor call), and `destroy`
+> (destructor/dealloc), inserted by the lowering pass. Use-after-consume is a
+> sema check, not an IR concern.
 
 ### Type System
 
@@ -216,8 +175,8 @@ TableGen backend(s) generate:
 - Binary serialization / deserialization code
 - Text printer support
 
-Top-level containers (`Module`, `Function`, `Block`, `ScopedBlock`) are
-hand-written, as there are only a few of them and each has unique structure.
+Top-level containers (`Module`, `Function`, `BasicBlock`) are hand-written, as
+there are only a few of them and each has unique structure.
 
 ## Compiler Pipeline Integration
 
@@ -234,9 +193,8 @@ This pass:
 
 - Decomposes expressions into instruction sequences with temporaries
 - Lowers all control flow to basic blocks and branch instructions
-- Wraps lexical scopes in ScopedBlocks with cleanup blocks
+- Inserts copy, move, and destructor calls per the C++-style value semantics
 - Preserves full type information on every value and instruction
-- Emits explicit retain/release for reference-counted types
 
 ### Pass 2: IR → LLVM IR (Code Generation)
 
@@ -244,8 +202,7 @@ Walks IR containers and instructions, emitting LLVM IR:
 
 - Maps IR types to LLVM types
 - Maps IR instructions to LLVM instructions
-- Materializes cleanup blocks as real basic blocks with branch rewrites
-- Emits implicit destructor calls at scope boundaries
+- Lowers destroy instructions to concrete destructor/dealloc calls
 - Sets up target machine, data layout, calling conventions
 - Emits object files or LLVM IR text (`.ll`) for debugging
 
@@ -269,11 +226,11 @@ Swift also has a limited SIL-based interpreter for compile-time constant
 evaluation. Instructions are defined via C++ classes with X-macro `.def` files,
 not TableGen.
 
-A key difference: SIL resolves scope information entirely during SILGen
-(AST → SIL lowering) using an internal `CleanupStack`. By the time SIL exists,
-all cleanup is explicit instructions — no scope boundaries remain. LBC IR
-preserves scope structure because the VM, template instantiation, and
-serialization benefit from knowing scope boundaries.
+Like SIL, LBC resolves ownership during AST → IR lowering — SIL uses an
+internal `CleanupStack`; by the time the IR exists, cleanup is explicit destroy
+instructions and no scope boundaries remain. The chief difference is SSA form:
+SIL is SSA, whereas LBC IR is non-SSA with named variables and numbered
+temporaries.
 
 ### Rust MIR
 
@@ -311,27 +268,27 @@ classes.
 
 ### Design Choices in Context
 
-| | SIL | MIR | Zig | Kotlin | **LBC** |
-|---|---|---|---|---|---|
-| SSA | Yes | No | Yes | No | **No** |
-| Control flow | CFG | CFG | Structured | Structured | **CFG** |
-| Scope info | No (resolved at gen) | No | No | Yes (tree) | **Yes (ScopedBlock)** |
-| Variables | Registers | Indexed | Indexed | Named (tree) | **Named + %temps** |
-| Serializable | Yes | Partial | Yes (ZIR) | Yes | **Yes** |
-| Interpretable | Limited | Yes (Miri) | Yes | No | **Yes (planned)** |
-| Generics | Yes | Yes | Yes | Yes | **Yes (planned)** |
-| Instruction defs | C++ .def | Enums | Enums | Classes | **TableGen** |
-| Lang-level opts | ARC, devirt | Borrow ck | Comptime | Desugaring | **Refcount** |
+|                  | SIL                  | MIR        | Zig        | Kotlin       | **LBC**               |
+|------------------|----------------------|------------|------------|--------------|-----------------------|
+| SSA              | Yes                  | No         | Yes        | No           | **No**                |
+| Control flow     | CFG                  | CFG        | Structured | Structured   | **CFG**               |
+| Scope info       | No (resolved at gen) | No         | No         | Yes (tree)   | **No (resolved at gen)** |
+| Variables        | Registers            | Indexed    | Indexed    | Named (tree) | **Named + %temps**    |
+| Serializable     | Yes                  | Partial    | Yes (ZIR)  | Yes          | **Yes**               |
+| Interpretable    | Limited              | Yes (Miri) | Yes        | No           | **Yes (planned)**     |
+| Generics         | Yes                  | Yes        | Yes        | Yes          | **Yes (planned)**     |
+| Instruction defs | C++ .def             | Enums      | Enums      | Classes      | **TableGen**          |
+| Lang-level opts  | ARC, devirt          | Borrow ck  | Comptime   | Desugaring   | **Copy/move/destroy** |
 
 **Key takeaways that informed our design:**
 
 - **Non-SSA is well-precedented.** Rust and Kotlin both chose against SSA for
   good reasons. Our motivations (VM interpretability, serialization simplicity,
   readability) are equally valid — LLVM constructs SSA anyway.
-- **CFG with scope preservation** is our unique combination. Unlike SIL/MIR
-  (pure CFG, no scopes) and Kotlin/Zig (structured, no CFG), we use basic
-  blocks for control flow but preserve scope boundaries via ScopedBlock for
-  object lifetime management.
+- **Lifetime ops lowered to explicit instructions**, like SIL — copy, move, and
+  destruction become concrete IR (no scopes, no refcount). Paired with a
+  non-SSA CFG of named variables, this keeps the IR both VM-interpretable and
+  simple to serialize.
 - **TableGen for instruction definitions** is unique among these compilers —
   everyone else hand-writes their IR nodes. Our existing TableGen infrastructure
   makes this a natural fit and yields generated visitors, serialization, and
@@ -348,9 +305,9 @@ classes.
 ### Phase 1: Foundation (in progress)
 
 1. ~~Design and implement hand-written containers (`Module`, `Function`,
-   `Block`, `BasicBlock`, `ScopedBlock`).~~ Done.
+   `BasicBlock`).~~ Done.
 2. ~~Value hierarchy (`Value`, `NamedValue`, `Temporary`, `Literal`).~~ Done.
-3. ~~ValueTable for scoped name resolution.~~ Done.
+3. ~~ValueTable for scoped name resolution.~~ Removed (no scoped blocks).
 4. ~~Label sentinel type for block values.~~ Done.
 5. Design the instruction TableGen schema (`src/IR/Instructions.td`).
 6. Write tblgen backend(s) for instruction codegen (`--gen=lbc-ir-def`,
@@ -375,7 +332,8 @@ classes.
 
 15. Arithmetic / comparison instructions.
 16. Control flow instructions (branch, conditional branch).
-17. Reference counting (retain/release).
+17. Value semantics: copy/move/destroy instructions and their insertion; the
+    use-after-consume check lives in sema.
 18. Binary serialization (tblgen-generated for instructions, hand-written for
     containers).
 19. Module interface extraction.

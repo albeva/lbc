@@ -19,6 +19,7 @@ class AstType;
 class AstBuiltInType;
 class AstPointerType;
 class AstReferenceType;
+class AstConstType;
 class AstStmt;
 class AstStmtList;
 class AstExprStmt;

@@ -96,6 +96,17 @@ auto semaFails(const llvm::StringRef source) -> bool {
     return !sema.analyse(*module).has_value();
 }
 
+/**
+ * Parse the source, expecting parsing itself to fail.
+ */
+auto parseFails(const llvm::StringRef source) -> bool {
+    Context context;
+    auto buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "test");
+    const auto id = context.getSourceMgr().AddNewSourceBuffer(std::move(buffer), llvm::SMLoc {});
+    Parser parser { context, id };
+    return !parser.parse().has_value();
+}
+
 } // namespace
 
 // =============================================================================
@@ -270,3 +281,55 @@ TEST(SemaExprTests, LogicalAndIntegerRejected) {
 // TODO: enable once AS is parsed
 // TEST(SemaExprTests, CastIntegerToByte)
 // TEST(SemaExprTests, CastPropagatesInBinaryExpr)
+
+// =============================================================================
+// Type qualifier permutations (const / ptr / ref)
+// =============================================================================
+
+TEST(SemaExprTests, ConstPointerBaseResolves) {
+    // CONST INTEGER PTR = pointer to const integer
+    const auto* type = deduceTypedExpr("CONST INTEGER PTR", "null");
+    ASSERT_TRUE(type->isPointer());
+    const auto* pointee = type->getBaseType();
+    EXPECT_TRUE(pointee->isConst());
+    EXPECT_TRUE(pointee->getBaseType()->isInteger());
+}
+
+TEST(SemaExprTests, EastConstEqualsWestConst) {
+    // INTEGER CONST PTR == CONST INTEGER PTR
+    const auto* type = deduceTypedExpr("INTEGER CONST PTR", "null");
+    ASSERT_TRUE(type->isPointer());
+    EXPECT_TRUE(type->getBaseType()->isConst());
+}
+
+TEST(SemaExprTests, RedundantConstCollapses) {
+    // CONST INTEGER CONST PTR collapses to a single const on the pointee
+    const auto* type = deduceTypedExpr("CONST INTEGER CONST PTR", "null");
+    ASSERT_TRUE(type->isPointer());
+    const auto* pointee = type->getBaseType();
+    ASSERT_TRUE(pointee->isConst());
+    EXPECT_TRUE(pointee->getBaseType()->isInteger()); // not const-of-const
+}
+
+TEST(SemaExprTests, PointerToPointerResolves) {
+    const auto* type = deduceTypedExpr("INTEGER PTR PTR", "null");
+    ASSERT_TRUE(type->isPointer());
+    EXPECT_TRUE(type->getBaseType()->isPointer());
+}
+
+TEST(SemaExprTests, ReferenceToReferenceRejected) {
+    // REF must be the last qualifier — rejected by the parser.
+    EXPECT_TRUE(parseFails("DIM x AS INTEGER REF REF"));
+}
+
+TEST(SemaExprTests, PointerToReferenceRejected) {
+    EXPECT_TRUE(parseFails("DIM x AS INTEGER REF PTR"));
+}
+
+TEST(SemaExprTests, ConstToReferenceRejected) {
+    EXPECT_TRUE(parseFails("DIM x AS INTEGER REF CONST"));
+}
+
+TEST(SemaExprTests, DoubleConstPrefixRejected) {
+    EXPECT_TRUE(parseFails("DIM x AS CONST CONST INTEGER"));
+}

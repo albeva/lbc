@@ -57,6 +57,7 @@ protected:
  *     // void accept(const AstBuiltInType& ast) const;
  *     // void accept(const AstPointerType& ast) const;
  *     // void accept(const AstReferenceType& ast) const;
+ *     // void accept(const AstConstType& ast) const;
  *     // void accept(const AstStmtList& ast) const;
  *     // void accept(const AstExprStmt& ast) const;
  *     // void accept(const AstDeclareStmt& ast) const;
@@ -97,6 +98,8 @@ public:
                 return self.accept(llvm::cast<AstPointerType>(ast));
             case AstKind::ReferenceType:
                 return self.accept(llvm::cast<AstReferenceType>(ast));
+            case AstKind::ConstType:
+                return self.accept(llvm::cast<AstConstType>(ast));
             case AstKind::StmtList:
                 return self.accept(llvm::cast<AstStmtList>(ast));
             case AstKind::ExprStmt:
@@ -162,6 +165,7 @@ public:
  *     // void accept(const AstBuiltInType& ast) const;
  *     // void accept(const AstPointerType& ast) const;
  *     // void accept(const AstReferenceType& ast) const;
+ *     // void accept(const AstConstType& ast) const;
  * };
  * @endcode
  */
@@ -182,6 +186,8 @@ public:
                 return self.accept(llvm::cast<AstPointerType>(ast));
             case AstKind::ReferenceType:
                 return self.accept(llvm::cast<AstReferenceType>(ast));
+            case AstKind::ConstType:
+                return self.accept(llvm::cast<AstConstType>(ast));
             default:
                 std::unreachable();
         }
@@ -373,6 +379,7 @@ public:
  *     [&](const AstBuiltInType& ast) {},
  *     [&](const AstPointerType& ast) {},
  *     [&](const AstReferenceType& ast) {},
+ *     [&](const AstConstType& ast) {},
  *     /// Stmt
  *     [&](const AstStmtList& ast) {},
  *     [&](const AstExprStmt& ast) {},
@@ -409,6 +416,8 @@ template <typename Callable>
             return std::forward<Callable>(callable)(llvm::cast<AstPointerType>(ast));
         case AstKind::ReferenceType:
             return std::forward<Callable>(callable)(llvm::cast<AstReferenceType>(ast));
+        case AstKind::ConstType:
+            return std::forward<Callable>(callable)(llvm::cast<AstConstType>(ast));
         case AstKind::StmtList:
             return std::forward<Callable>(callable)(llvm::cast<AstStmtList>(ast));
         case AstKind::ExprStmt:

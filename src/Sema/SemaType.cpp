@@ -32,3 +32,16 @@ auto SemanticAnalyser::accept(AstReferenceType& ast) -> Result {
     ast.setType(type);
     return {};
 }
+
+auto SemanticAnalyser::accept(AstConstType& ast) -> Result {
+    auto& base = *ast.getTypeExpr();
+    TRY(visit(base));
+    const auto* baseType = base.getType();
+    if (baseType->isReference()) {
+        return diag(diagnostics::constToReference(), ast.getRange());
+    }
+    // Redundant CONST collapses (e.g. `INTEGER CONST CONST`, `CONST T CONST`).
+    const Type* type = baseType->isConst() ? baseType : getTypeFactory().getConst(baseType);
+    ast.setType(type);
+    return {};
+}

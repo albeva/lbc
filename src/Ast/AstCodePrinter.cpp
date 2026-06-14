@@ -31,6 +31,10 @@ void AstCodePrinter::accept(const AstReferenceType& ast) {
     emitType(ast);
 }
 
+void AstCodePrinter::accept(const AstConstType& ast) {
+    emitType(ast);
+}
+
 void AstCodePrinter::accept(const AstStmtList& ast) {
     for (const auto* stmt : ast.getStmts()) {
         space();

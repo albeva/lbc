@@ -33,6 +33,14 @@ auto TypeFactory::getReference(const Type* type) -> const TypeReference* {
     return m_references.insert(std::make_pair(type, create<TypeReference>(type))).first->second;
 }
 
+auto TypeFactory::getConst(const Type* type) -> const TypeConst* {
+    assert(not type->isConst() && "const of const");
+    if (const auto iter = m_consts.find(type); iter != m_consts.end()) {
+        return iter->second;
+    }
+    return m_consts.insert(std::make_pair(type, create<TypeConst>(type))).first->second;
+}
+
 auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction* {
     const auto hash = llvm::hash_combine(returnType, llvm::hash_combine_range(params.begin(), params.end()));
     auto& arr = m_functions[hash];
@@ -92,6 +100,7 @@ void TypeFactory::createSingletonTypes() {
             break;
         case TypeKind::Pointer:
         case TypeKind::Reference:
+        case TypeKind::Const:
         case TypeKind::Function:
             std::unreachable();
         }

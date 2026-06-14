@@ -27,6 +27,7 @@ enum class AstKind : std::uint8_t {
     BuiltInType,
     PointerType,
     ReferenceType,
+    ConstType,
     StmtList,
     ExprStmt,
     DeclareStmt,
@@ -57,6 +58,7 @@ class AstType;
 class AstBuiltInType;
 class AstPointerType;
 class AstReferenceType;
+class AstConstType;
 class AstStmt;
 class AstStmtList;
 class AstExprStmt;
@@ -108,7 +110,7 @@ public:
     }
 
     /// Number of leaf nodes
-    static constexpr std::size_t NODE_COUNT = 22;
+    static constexpr std::size_t NODE_COUNT = 23;
 
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
@@ -145,6 +147,7 @@ private:
         "AstBuiltInType",
         "AstPointerType",
         "AstReferenceType",
+        "AstConstType",
         "AstStmtList",
         "AstExprStmt",
         "AstDeclareStmt",
@@ -209,7 +212,7 @@ protected:
 public:
     /// LLVM RTTI support
     [[nodiscard]] static constexpr auto classof(const AstRoot* node) -> bool {
-        return node->getKind() >= AstKind::BuiltInType && node->getKind() <= AstKind::ReferenceType;
+        return node->getKind() >= AstKind::BuiltInType && node->getKind() <= AstKind::ConstType;
     }
 
     /// Get the type
@@ -302,6 +305,35 @@ public:
     /// LLVM RTTI support
     [[nodiscard]] static constexpr auto classof(const AstRoot* node) -> bool {
         return node->getKind() == AstKind::ReferenceType;
+    }
+
+    /// Get the typeExpr
+    [[nodiscard]] constexpr auto getTypeExpr() const -> AstType* {
+        return m_typeExpr;
+    }
+
+private:
+    AstType* m_typeExpr;
+};
+
+/**
+ * Const-qualified type
+ */
+class [[nodiscard]] AstConstType final : public AstType {
+public:
+    /**
+     * Construct an AstConstType node
+     */
+    constexpr AstConstType(
+        const llvm::SMRange range,
+        AstType* typeExpr
+    )
+    : AstType(AstKind::ConstType, range)
+    , m_typeExpr(typeExpr) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const AstRoot* node) -> bool {
+        return node->getKind() == AstKind::ConstType;
     }
 
     /// Get the typeExpr

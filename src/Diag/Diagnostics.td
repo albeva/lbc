@@ -69,6 +69,7 @@ def invalidNumber      : Error<Lex, "E0102", "invalid number">;
 
 def unexpected : Error<Parse, "E0200", "unexpected {found}">;
 def expected   : Error<Parse, "E0201", "expected {expected}, found {found}">;
+def referenceNotLast : Error<Parse, "E0202", "a reference must be the last qualifier in a type">;
 
 // =============================================================================
 // Semantic diagnostics
@@ -91,3 +92,4 @@ def notCallable            : Error<Sema, "E0313", "expression not a callable">;
 def invalidUnaryOperand    : Error<Sema, "E0314", "invalid operand to {op}: {type}">;
 def dereferencingAnyPtr    : Error<Sema, "E0315", "dereferencing any ptr">;
 def invalidReferenceInit   : Error<Sema, "E0316", "Cannot initialize reference from given expression">;
+def constToReference       : Error<Sema, "E0317", "cannot apply CONST to a reference">;

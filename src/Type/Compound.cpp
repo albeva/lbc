@@ -11,3 +11,7 @@ auto TypePointer::string() const -> std::string {
 auto TypeReference::string() const -> std::string {
     return m_base->string() + " REF";
 }
+
+auto TypeConst::string() const -> std::string {
+    return "CONST " + m_base->string();
+}

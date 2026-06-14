@@ -197,6 +197,9 @@ private:
     /** Analyse a reference type expression. */
     [[nodiscard]] auto accept(AstReferenceType& ast) -> Result;
 
+    /** Analyse a const-qualified type expression. */
+    [[nodiscard]] auto accept(AstConstType& ast) -> Result;
+
     // -------------------------------------------------------------------------
     // Data
     // -------------------------------------------------------------------------

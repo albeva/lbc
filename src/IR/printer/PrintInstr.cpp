@@ -19,8 +19,6 @@ using namespace lbc::ir::lib;
 
 namespace {
     void printStore(const Printer&, const StoreInstr&);
-    void printRetain(const Printer&, const RetainInstr&);
-    void printRelease(const Printer&, const ReleaseInstr&);
     void printJmp(const Printer&, const JmpInstr&);
     void printCondJmp(const Printer&, const CondJmpInstr&);
     void printRet(const Printer&, const RetInstr&);
@@ -50,12 +48,6 @@ void Printer::printInstruction(const Instruction& instr) const {
     switch (instr.getKind()) {
         case IrKind::Store:
             printStore(*this, llvm::cast<StoreInstr>(instr));
-            break;
-        case IrKind::Retain:
-            printRetain(*this, llvm::cast<RetainInstr>(instr));
-            break;
-        case IrKind::Release:
-            printRelease(*this, llvm::cast<ReleaseInstr>(instr));
             break;
         case IrKind::Jmp:
             printJmp(*this, llvm::cast<JmpInstr>(instr));
@@ -138,18 +130,6 @@ namespace {
         p.emitValue(*instr.getDest());
         p.output() << ", ";
         p.emitValue(*instr.getSrc());
-    }
-
-    void printRetain(const Printer& p, const RetainInstr& instr) {
-        p.emitMnemonic(instr);
-        p.output() << ' ';
-        p.emitValue(*instr.getOperand());
-    }
-
-    void printRelease(const Printer& p, const ReleaseInstr& instr) {
-        p.emitMnemonic(instr);
-        p.output() << ' ';
-        p.emitValue(*instr.getOperand());
     }
 
     void printJmp(const Printer& p, const JmpInstr& instr) {

@@ -34,16 +34,6 @@ public:
         return m_context.create<StoreInstr>(dest, src);
     }
 
-    /// Increment reference count
-    [[nodiscard]] auto makeRetain(NamedValue* operand) const -> RetainInstr* {
-        return m_context.create<RetainInstr>(operand);
-    }
-
-    /// Decrement reference count
-    [[nodiscard]] auto makeRelease(NamedValue* operand) const -> ReleaseInstr* {
-        return m_context.create<ReleaseInstr>(operand);
-    }
-
     /// Unconditional branch
     [[nodiscard]] auto makeJmp(BasicBlock* destination) const -> JmpInstr* {
         return m_context.create<JmpInstr>(destination);

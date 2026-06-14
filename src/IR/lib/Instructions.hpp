@@ -25,8 +25,6 @@ class Value;
  */
 enum class IrKind : std::uint8_t {
     Store,
-    Retain,
-    Release,
     Jmp,
     CondJmp,
     Ret,
@@ -79,7 +77,7 @@ public:
     }
 
     /// Number of leaf nodes
-    static constexpr std::size_t NODE_COUNT = 26;
+    static constexpr std::size_t NODE_COUNT = 24;
 
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> IrKind {
@@ -102,8 +100,6 @@ private:
     IrKind m_kind;
     static constexpr std::array<llvm::StringRef, NODE_COUNT> kClassNames {
         "StoreInstr",
-        "RetainInstr",
-        "ReleaseInstr",
         "JmpInstr",
         "CondJmpInstr",
         "RetInstr",
@@ -130,8 +126,6 @@ private:
     };
     static constexpr std::array<llvm::StringRef, NODE_COUNT> kMnemonics {
         "store",
-        "retain",
-        "release",
         "jmp",
         "jmp",
         "ret",
@@ -192,62 +186,6 @@ public:
 private:
     NamedValue* m_dest;
     Value* m_src;
-};
-
-/**
- * Increment reference count
- */
-class [[nodiscard]] RetainInstr final : public Instruction {
-public:
-    /**
-     * Construct a RetainInstr node
-     */
-    constexpr explicit RetainInstr(
-        NamedValue* operand
-    )
-    : Instruction(IrKind::Retain)
-    , m_operand(operand) {}
-
-    /// LLVM RTTI support
-    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
-        return node->getKind() == IrKind::Retain;
-    }
-
-    /// Get the operand
-    [[nodiscard]] constexpr auto getOperand() const -> NamedValue* {
-        return m_operand;
-    }
-
-private:
-    NamedValue* m_operand;
-};
-
-/**
- * Decrement reference count
- */
-class [[nodiscard]] ReleaseInstr final : public Instruction {
-public:
-    /**
-     * Construct a ReleaseInstr node
-     */
-    constexpr explicit ReleaseInstr(
-        NamedValue* operand
-    )
-    : Instruction(IrKind::Release)
-    , m_operand(operand) {}
-
-    /// LLVM RTTI support
-    [[nodiscard]] static constexpr auto classof(const Instruction* node) -> bool {
-        return node->getKind() == IrKind::Release;
-    }
-
-    /// Get the operand
-    [[nodiscard]] constexpr auto getOperand() const -> NamedValue* {
-        return m_operand;
-    }
-
-private:
-    NamedValue* m_operand;
 };
 
 // -----------------------------------------------------------------------------
