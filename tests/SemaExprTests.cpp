@@ -7,6 +7,7 @@
 #include "Driver/Context.hpp"
 #include "Parser/Parser.hpp"
 #include "Sema/SemanticAnalyser.hpp"
+#include "Symbol/Symbol.hpp"
 using namespace lbc;
 
 namespace {
@@ -544,4 +545,89 @@ TEST(SemaExprTests, ComparisonIsValue) {
     auto* expr = dimInitExpr(context, "DIM a = 1\nDIM b = a < 2", 1);
     ASSERT_NE(expr, nullptr);
     EXPECT_TRUE(expr->getValueCategory().isValue());
+}
+
+// =============================================================================
+// EXTERN "C" linkage block (AstExtern) — verbatim symbol alias
+// =============================================================================
+
+namespace {
+
+/** Analyse @p source and return the module's first statement. */
+auto firstStmt(Context& context, const llvm::StringRef source) -> AstStmt* {
+    auto* module = analyse(context, source);
+    EXPECT_NE(module, nullptr);
+    if (module == nullptr) {
+        return nullptr;
+    }
+    const auto stmts = module->getStmtList()->getStmts();
+    EXPECT_FALSE(stmts.empty());
+    return stmts.empty() ? nullptr : stmts[0];
+}
+
+} // namespace
+
+namespace {
+/** The Symbol of the i-th DECLARE inside an extern block. */
+auto externDeclSymbol(const AstExtern* ext, const std::size_t index) -> const Symbol* {
+    return llvm::cast<AstDeclareStmt>(ext->getStmts()[index])->getDecl()->getSymbol();
+}
+} // namespace
+
+TEST(SemaExprTests, ExternCSingleLineCreatesBlock) {
+    Context context;
+    auto* ext = llvm::dyn_cast_or_null<AstExtern>(
+        firstStmt(context, "EXTERN \"C\" DECLARE SUB puts(s AS ZSTRING)\nputs \"hi\"")
+    );
+    ASSERT_NE(ext, nullptr);
+    EXPECT_TRUE(ext->getExternKind() == ExternKind::C); // resolved linkage on the node
+    EXPECT_EQ(ext->getStmts().size(), 1u);
+}
+
+TEST(SemaExprTests, ExternCSetsVerbatimAlias) {
+    Context context;
+    auto* ext = llvm::dyn_cast_or_null<AstExtern>(
+        firstStmt(context, "EXTERN \"C\" DECLARE SUB puts(s AS ZSTRING)\nputs \"hi\"")
+    );
+    ASSERT_NE(ext, nullptr);
+    ASSERT_EQ(ext->getStmts().size(), 1u);
+    const auto* symbol = externDeclSymbol(ext, 0);
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_TRUE(symbol->getExternKind() == ExternKind::C); // linkage is a symbol attribute
+    EXPECT_EQ(symbol->getAlias(), "puts");                 // verbatim, case-preserved
+    EXPECT_EQ(symbol->getSymbolName(), "puts");            // emitted name prefers the alias
+    EXPECT_EQ(symbol->getName(), "PUTS");                  // canonical name is still upper-cased
+}
+
+TEST(SemaExprTests, ExternCBlockFormAliasesAll) {
+    Context context;
+    auto* ext = llvm::dyn_cast_or_null<AstExtern>(firstStmt(context, "EXTERN \"C\"\n"
+                                                                     "DECLARE SUB puts(s AS ZSTRING)\n"
+                                                                     "DECLARE FUNCTION getchar() AS INTEGER\n"
+                                                                     "END EXTERN\n"));
+    ASSERT_NE(ext, nullptr);
+    ASSERT_EQ(ext->getStmts().size(), 2u);
+    EXPECT_EQ(externDeclSymbol(ext, 0)->getAlias(), "puts");
+    EXPECT_EQ(externDeclSymbol(ext, 1)->getAlias(), "getchar");
+}
+
+TEST(SemaExprTests, ExternCLowercaseLanguageAccepted) {
+    // The language string is matched case-insensitively, so "c" works too.
+    EXPECT_FALSE(semaFails("EXTERN \"c\" DECLARE SUB puts(s AS ZSTRING)\nputs \"hi\""));
+}
+
+TEST(SemaExprTests, NonExternDeclareHasNoAlias) {
+    Context context;
+    auto* decl = llvm::dyn_cast_or_null<AstDeclareStmt>(firstStmt(context, "DECLARE SUB foo(x AS INTEGER)"));
+    ASSERT_NE(decl, nullptr);
+    const auto* symbol = decl->getDecl()->getSymbol();
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_TRUE(symbol->getAlias().empty());
+    EXPECT_TRUE(symbol->getExternKind() == ExternKind::Default);
+    EXPECT_EQ(symbol->getSymbolName(), "FOO"); // no alias → canonical upper-cased name
+}
+
+TEST(SemaExprTests, ExternUnsupportedLanguageRejected) {
+    // Unsupported linkage is rejected by the parser.
+    EXPECT_TRUE(parseFails("EXTERN \"Rust\" DECLARE SUB foo(x AS INTEGER)"));
 }

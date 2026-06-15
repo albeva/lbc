@@ -16,6 +16,12 @@ auto SemanticAnalyser::declare(AstDecl& ast) -> Result {
     auto* symbol = m_context.create<Symbol>(ast.getName(), ast.getType(), ast.getRange());
     m_symbolTable->insert(symbol);
     symbol->setVisibility(SymbolVisibility::Private);
+    // Record the active language linkage; under C the symbol keeps its verbatim
+    // (as-written) name as an alias — the name the IR and C ABI use.
+    symbol->setExternKind(m_externKind);
+    if (m_externKind == ExternKind::C) {
+        symbol->setAlias(ast.getSourceName());
+    }
 
     if (llvm::isa<AstFuncDecl>(&ast)) {
         symbol->setFlag(SymbolFlags::Function);

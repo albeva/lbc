@@ -110,6 +110,38 @@ void AstCodePrinter::accept(const AstIfStmt& ast) {
     m_output << "END IF";
 }
 
+void AstCodePrinter::accept(const AstExtern& ast) {
+    m_output << "EXTERN \"";
+    switch (ast.getExternKind()) {
+    case ExternKind::C:
+        m_output << "C";
+        break;
+    case ExternKind::Default:
+        break;
+    }
+    m_output << "\"";
+
+    const auto stmts = ast.getStmts();
+    if (stmts.size() == 1) {
+        // Single-line form: EXTERN "C" DECLARE ...
+        m_output << " ";
+        visit(*stmts.front());
+        return;
+    }
+
+    // Block form: EXTERN "C" ... END EXTERN
+    m_output << "\n";
+    m_indent++;
+    for (const auto* stmt : stmts) {
+        space();
+        visit(*stmt);
+        m_output << '\n';
+    }
+    m_indent--;
+    space();
+    m_output << "END EXTERN";
+}
+
 void AstCodePrinter::accept(const AstVarDecl& ast) {
     m_output << ast.getName();
     m_output << " AS ";

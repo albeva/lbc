@@ -138,12 +138,18 @@ def IfStmt : Leaf<"IF statement", Stmt, [
     Arg<"AstStmt*", "elseStmt">
 ]>;
 
+def Extern : Leaf<"EXTERN linkage block", Stmt, [
+    Arg<"ExternKind", "externKind">,
+    Arg<"std::span<AstStmt*>", "stmts">
+]>;
+
 // ============================================================================
 // Declarations
 // ============================================================================
 
 def Decl : Group<"declaration", Root, [
     Arg<"llvm::StringRef", "name">,
+    Arg<"llvm::StringRef", "sourceName", true, "{}">,
     Arg<"const Type*", "type", true, "nullptr">,
     Arg<"Symbol*", "symbol", true, "nullptr">
 ]>;

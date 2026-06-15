@@ -11,6 +11,7 @@
 #include "Symbol/LiteralValue.hpp"
 #include "Lexer/TokenKind.hpp"
 #include "Ast/ValueCategory.hpp"
+#include "Symbol/ExternKind.hpp"
 namespace lbc {
 
 class Type;
@@ -37,6 +38,7 @@ enum class AstKind : std::uint8_t {
     DimStmt,
     AssignStmt,
     IfStmt,
+    Extern,
     VarDecl,
     FuncDecl,
     FuncParamDecl,
@@ -69,6 +71,7 @@ class AstReturnStmt;
 class AstDimStmt;
 class AstAssignStmt;
 class AstIfStmt;
+class AstExtern;
 class AstDecl;
 class AstVarDecl;
 class AstFuncDecl;
@@ -111,7 +114,7 @@ public:
     }
 
     /// Number of leaf nodes
-    static constexpr std::size_t NODE_COUNT = 23;
+    static constexpr std::size_t NODE_COUNT = 24;
 
     /// Get the kind discriminator for this node
     [[nodiscard]] constexpr auto getKind() const -> AstKind {
@@ -157,6 +160,7 @@ private:
         "AstDimStmt",
         "AstAssignStmt",
         "AstIfStmt",
+        "AstExtern",
         "AstVarDecl",
         "AstFuncDecl",
         "AstFuncParamDecl",
@@ -360,7 +364,7 @@ protected:
 public:
     /// LLVM RTTI support
     [[nodiscard]] static constexpr auto classof(const AstRoot* node) -> bool {
-        return node->getKind() >= AstKind::StmtList && node->getKind() <= AstKind::IfStmt;
+        return node->getKind() >= AstKind::StmtList && node->getKind() <= AstKind::Extern;
     }
 };
 
@@ -672,6 +676,43 @@ private:
     AstStmt* m_elseStmt;
 };
 
+/**
+ * EXTERN linkage block
+ */
+class [[nodiscard]] AstExtern final : public AstStmt {
+public:
+    /**
+     * Construct an AstExtern node
+     */
+    constexpr AstExtern(
+        const llvm::SMRange range,
+        const ExternKind externKind,
+        const std::span<AstStmt*> stmts
+    )
+    : AstStmt(AstKind::Extern, range)
+    , m_externKind(externKind)
+    , m_stmts(stmts) {}
+
+    /// LLVM RTTI support
+    [[nodiscard]] static constexpr auto classof(const AstRoot* node) -> bool {
+        return node->getKind() == AstKind::Extern;
+    }
+
+    /// Get the externKind
+    [[nodiscard]] constexpr auto getExternKind() const -> ExternKind {
+        return m_externKind;
+    }
+
+    /// Get the stmts
+    [[nodiscard]] constexpr auto getStmts() const -> std::span<AstStmt*> {
+        return m_stmts;
+    }
+
+private:
+    ExternKind m_externKind;
+    std::span<AstStmt*> m_stmts;
+};
+
 // -----------------------------------------------------------------------------
 // Decl nodes
 // -----------------------------------------------------------------------------
@@ -703,6 +744,16 @@ public:
         return m_name;
     }
 
+    /// Get the sourceName
+    [[nodiscard]] constexpr auto getSourceName() const -> llvm::StringRef {
+        return m_sourceName;
+    }
+
+    /// Set the sourceName
+    void setSourceName(const llvm::StringRef sourceName) {
+        m_sourceName = sourceName;
+    }
+
     /// Get the type
     [[nodiscard]] constexpr auto getType() const -> const Type* {
         return m_type;
@@ -725,6 +776,7 @@ public:
 
 private:
     llvm::StringRef m_name;
+    llvm::StringRef m_sourceName = {};
     const Type* m_type = nullptr;
     Symbol* m_symbol = nullptr;
 };

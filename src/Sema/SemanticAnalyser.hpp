@@ -7,6 +7,7 @@
 #include "Ast/AstVisitor.hpp"
 #include "Diag/DiagEngine.hpp"
 #include "Diag/LogProvider.hpp"
+#include "Symbol/ExternKind.hpp"
 namespace lbc {
 class Context;
 class SymbolTable;
@@ -111,6 +112,9 @@ private:
 
     /** Analyse an IF statement. */
     [[nodiscard]] auto accept(AstIfStmt& ast) -> Result;
+
+    /** Analyse an EXTERN linkage block, resolving the linkage of its declarations. */
+    [[nodiscard]] auto accept(const AstExtern& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Expressions (SemaExpr.cpp)
@@ -222,6 +226,10 @@ private:
     /// where b is BYTE suggests BYTE, coercing the literal 2 to match.
     /// When multiple suggestions compete, their common type is used.
     const Type* m_suggestedType = nullptr;
+
+    /// Active language linkage. Set while analysing an EXTERN block; controls
+    /// whether declared symbols take their verbatim name as an alias.
+    ExternKind m_externKind = ExternKind::Default;
 };
 
 } // namespace lbc

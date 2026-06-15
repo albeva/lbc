@@ -29,6 +29,7 @@ class AstReturnStmt;
 class AstDimStmt;
 class AstAssignStmt;
 class AstIfStmt;
+class AstExtern;
 class AstDecl;
 class AstVarDecl;
 class AstFuncDecl;

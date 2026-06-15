@@ -89,6 +89,9 @@ private:
     /** Generate IR for an IF statement. */
     [[nodiscard]] auto accept(const AstIfStmt& ast) -> Result;
 
+    /** Generate IR for an EXTERN linkage block (lowers the declared functions). */
+    [[nodiscard]] auto accept(const AstExtern& ast) -> Result;
+
     // -------------------------------------------------------------------------
     // Expressions (GenExpr.cpp)
     // -------------------------------------------------------------------------

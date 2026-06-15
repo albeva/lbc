@@ -72,3 +72,20 @@ auto SemanticAnalyser::accept(AstAssignStmt& ast) -> Result {
 auto SemanticAnalyser::accept(AstIfStmt& /*ast*/) -> Result {
     return notImplemented();
 }
+
+auto SemanticAnalyser::accept(const AstExtern& ast) -> Result {
+    // Declare the block's declarations under its linkage — this is where each
+    // symbol's verbatim alias is set. Definitions then run with the default
+    // linkage, so nested parameters are not themselves aliased.
+    {
+        const ValueRestorer restore { m_externKind };
+        m_externKind = ast.getExternKind();
+        for (auto* stmt : ast.getStmts()) {
+            TRY(declare(*llvm::cast<AstDeclareStmt>(stmt)->getDecl()))
+        }
+    }
+    for (auto* stmt : ast.getStmts()) {
+        TRY(define(*llvm::cast<AstDeclareStmt>(stmt)->getDecl()))
+    }
+    return {};
+}

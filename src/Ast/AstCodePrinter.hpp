@@ -31,6 +31,7 @@ private:
     void accept(const AstDimStmt& ast);
     void accept(const AstAssignStmt& ast);
     void accept(const AstIfStmt& ast);
+    void accept(const AstExtern& ast);
     void accept(const AstVarDecl& ast);
     void accept(const AstFuncDecl& ast);
     void accept(const AstFuncParamDecl& ast);

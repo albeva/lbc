@@ -134,3 +134,12 @@ auto IrGenerator::accept(const AstIfStmt& ast) -> Result {
     setBlock(endBlock);
     return {};
 }
+
+auto IrGenerator::accept(const AstExtern& ast) -> Result {
+    // Lower the declared functions (creates their IR Function objects). The
+    // linkage alias was already resolved onto the symbol during sema.
+    for (auto* stmt : ast.getStmts()) {
+        TRY(visit(*llvm::cast<AstDeclareStmt>(stmt)->getDecl()));
+    }
+    return {};
+}

@@ -70,6 +70,7 @@ def invalidNumber      : Error<Lex, "E0102", "invalid number">;
 def unexpected : Error<Parse, "E0200", "unexpected {found}">;
 def expected   : Error<Parse, "E0201", "expected {expected}, found {found}">;
 def referenceNotLast : Error<Parse, "E0202", "a reference must be the last qualifier in a type">;
+def unsupportedLinkage : Error<Parse, "E0203", "unsupported language linkage {lang}; only C is supported">;
 
 // =============================================================================
 // Semantic diagnostics

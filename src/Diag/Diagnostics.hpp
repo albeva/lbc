@@ -25,6 +25,7 @@ struct DiagKind final {
         unexpected,
         expected,
         referenceNotLast,
+        unsupportedLinkage,
         undeclaredIdentifier,
         useBeforeDefinition,
         redefinition,
@@ -61,7 +62,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 28;
+    static constexpr std::size_t COUNT = 29;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -107,6 +108,7 @@ struct DiagKind final {
             case unexpected:
             case expected:
             case referenceNotLast:
+            case unsupportedLinkage:
                 return Category::Parse;
             case undeclaredIdentifier:
             case useBeforeDefinition:
@@ -146,6 +148,7 @@ struct DiagKind final {
             case unexpected:
             case expected:
             case referenceNotLast:
+            case unsupportedLinkage:
             case undeclaredIdentifier:
             case useBeforeDefinition:
             case redefinition:
@@ -184,6 +187,7 @@ struct DiagKind final {
             case unexpected: return "E0200";
             case expected: return "E0201";
             case referenceNotLast: return "E0202";
+            case unsupportedLinkage: return "E0203";
             case undeclaredIdentifier: return "E0300";
             case useBeforeDefinition: return "E0301";
             case redefinition: return "E0302";
@@ -212,8 +216,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 28> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 29> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
     }
 
 private:
@@ -289,6 +293,11 @@ namespace diagnostics {
     /// Create referenceNotLast message
     [[nodiscard]] inline auto referenceNotLast() -> DiagMessage {
         return { DiagKind::referenceNotLast, "a reference must be the last qualifier in a type" };
+    }
+
+    /// Create unsupportedLinkage message
+    [[nodiscard]] inline auto unsupportedLinkage(const auto& lang) -> DiagMessage {
+        return { DiagKind::unsupportedLinkage, std::format("unsupported language linkage {}; only C is supported", lang) };
     }
 
     // -------------------------------------------------------------------------

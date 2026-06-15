@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "ExternKind.hpp"
 #include "LiteralValue.hpp"
 #include "SymbolTable.hpp"
 namespace lbc {
@@ -54,6 +55,10 @@ public:
     [[nodiscard]] auto getAlias() const -> llvm::StringRef { return m_alias; }
     void setAlias(const llvm::StringRef alias) { m_alias = alias; }
 
+    /** Get the language linkage of this symbol (Default unless in an EXTERN block). */
+    [[nodiscard]] auto getExternKind() const -> ExternKind { return m_externKind; }
+    void setExternKind(const ExternKind kind) { m_externKind = kind; }
+
     /** Get the type associated with this symbol. */
     [[nodiscard]] auto getType() const -> const Type* { return m_type; }
     void setType(const Type* type) { m_type = type; }
@@ -79,14 +84,15 @@ public:
     void setOperand(ir::lib::Value* operand) { m_operand = operand; }
 
 private:
-    llvm::StringRef m_name;              ///< symbol name
-    llvm::StringRef m_alias;             ///< optional alias
-    const Type* m_type;                  ///< symbol type
-    llvm::SMRange m_range;               ///< declaration location
-    SymbolVisibility m_visibility;       ///< visibility of the symbol
-    std::optional<LiteralValue> m_value; ///< constant value associated with the symbol
-    std::span<Symbol*> m_relatedSymbols; ///< related symbols, e.g. function parameters, or UDT members
-    ir::lib::Value* m_operand;           ///< IR value for this symbol
+    llvm::StringRef m_name;                        ///< symbol name
+    llvm::StringRef m_alias;                       ///< optional alias
+    ExternKind m_externKind = ExternKind::Default; ///< language linkage
+    const Type* m_type;                            ///< symbol type
+    llvm::SMRange m_range;                         ///< declaration location
+    SymbolVisibility m_visibility;                 ///< visibility of the symbol
+    std::optional<LiteralValue> m_value;           ///< constant value associated with the symbol
+    std::span<Symbol*> m_relatedSymbols;           ///< related symbols, e.g. function parameters, or UDT members
+    ir::lib::Value* m_operand;                     ///< IR value for this symbol
 };
 
 /** Symbol table for the frontend, mapping names to Symbols. */

@@ -220,6 +220,9 @@ private:
     /** Parse a DECLARE forward-declaration statement. */
     [[nodiscard]] auto declareStmt() -> Result<AstStmt*>;
 
+    /** Parse an EXTERN linkage block — either a single-line or a blcok */
+    [[nodiscard]] auto externStmt() -> Result<AstStmt*>;
+
     // -------------------------------------------------------------------------
     // Expressions (ParseExpr.cpp)
     // -------------------------------------------------------------------------

@@ -66,6 +66,7 @@ protected:
  *     // void accept(const AstDimStmt& ast) const;
  *     // void accept(const AstAssignStmt& ast) const;
  *     // void accept(const AstIfStmt& ast) const;
+ *     // void accept(const AstExtern& ast) const;
  *     // void accept(const AstVarDecl& ast) const;
  *     // void accept(const AstFuncDecl& ast) const;
  *     // void accept(const AstFuncParamDecl& ast) const;
@@ -116,6 +117,8 @@ public:
                 return self.accept(llvm::cast<AstAssignStmt>(ast));
             case AstKind::IfStmt:
                 return self.accept(llvm::cast<AstIfStmt>(ast));
+            case AstKind::Extern:
+                return self.accept(llvm::cast<AstExtern>(ast));
             case AstKind::VarDecl:
                 return self.accept(llvm::cast<AstVarDecl>(ast));
             case AstKind::FuncDecl:
@@ -222,6 +225,7 @@ public:
  *     // void accept(const AstDimStmt& ast) const;
  *     // void accept(const AstAssignStmt& ast) const;
  *     // void accept(const AstIfStmt& ast) const;
+ *     // void accept(const AstExtern& ast) const;
  * };
  * @endcode
  */
@@ -252,6 +256,8 @@ public:
                 return self.accept(llvm::cast<AstAssignStmt>(ast));
             case AstKind::IfStmt:
                 return self.accept(llvm::cast<AstIfStmt>(ast));
+            case AstKind::Extern:
+                return self.accept(llvm::cast<AstExtern>(ast));
             default:
                 std::unreachable();
         }
@@ -389,6 +395,7 @@ public:
  *     [&](const AstDimStmt& ast) {},
  *     [&](const AstAssignStmt& ast) {},
  *     [&](const AstIfStmt& ast) {},
+ *     [&](const AstExtern& ast) {},
  *     /// Decl
  *     [&](const AstVarDecl& ast) {},
  *     [&](const AstFuncDecl& ast) {},
@@ -434,6 +441,8 @@ template <typename Callable>
             return std::forward<Callable>(callable)(llvm::cast<AstAssignStmt>(ast));
         case AstKind::IfStmt:
             return std::forward<Callable>(callable)(llvm::cast<AstIfStmt>(ast));
+        case AstKind::Extern:
+            return std::forward<Callable>(callable)(llvm::cast<AstExtern>(ast));
         case AstKind::VarDecl:
             return std::forward<Callable>(callable)(llvm::cast<AstVarDecl>(ast));
         case AstKind::FuncDecl:
