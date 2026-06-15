@@ -205,8 +205,8 @@ TEST(SemaExprTests, NullNotEqualNullDeducesBool) {
 
 TEST(SemaExprTests, NullComparedWithPointer) {
     Context context;
-    auto* module = analyse(context, "DIM ip AS INTEGER PTR\nDIM b = ip = null");
-    auto stmts = module->getStmtList()->getStmts();
+    const auto* module = analyse(context, "DIM ip AS INTEGER PTR\nDIM b = ip = null");
+    const auto stmts = module->getStmtList()->getStmts();
     ASSERT_EQ(stmts.size(), 2);
     auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[1]);
     ASSERT_NE(dim, nullptr);
