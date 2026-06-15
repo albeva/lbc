@@ -51,6 +51,7 @@ cl::opt<bool> debugInfo("g", cl::desc("Emit debug information"), cl::cat(lbcCate
 cl::opt<bool> dumpAst("dump-ast", cl::desc("Dump the parsed AST to stderr"), cl::cat(lbcCategory));
 cl::opt<bool> dumpIr("dump-ir", cl::desc("Dump the lbc IR to stderr"), cl::cat(lbcCategory));
 cl::opt<bool> dumpConfig("dump-config", cl::desc("Dump the options as a command line to stderr"), cl::cat(lbcCategory));
+cl::opt<bool> verbose("verbose", cl::desc("Enable verbose output"), cl::cat(lbcCategory));
 
 cl::opt<CompileOptions::OptimizationLevel> optLevel(
     cl::desc("Optimisation level:"),
@@ -127,6 +128,7 @@ cl::opt<CompileOptions::Bitness> targetBits(
     options.setDumpAst(dumpAst);
     options.setDumpIr(dumpIr);
     options.setDumpConfig(dumpConfig);
+    options.setVerbose(verbose);
     return options;
 }
 } // namespace

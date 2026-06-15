@@ -26,7 +26,9 @@ auto absolutize(const llvm::StringRef path, const llvm::Twine& base) -> std::str
 } // namespace
 
 Driver::Driver(CompileOptions options)
-: m_context(std::move(options)) {}
+: m_context(std::move(options)) {
+    m_context.getDiag().setVerbose(m_context.getOptions().isVerbose());
+}
 
 auto Driver::execute() -> bool {
     return run().has_value();

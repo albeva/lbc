@@ -73,7 +73,9 @@ auto DiagEngine::log(
 void DiagEngine::print() const {
     for (const auto& message : m_messages) {
         m_context.getSourceMgr().PrintMessage(llvm::outs(), message.diagnostic, true);
-        const auto& loc = m_messages.back().location;
-        llvm::outs() << std::format("{}\n", loc);
+        // The C++ call site is developer-facing noise; show it only in verbose mode.
+        if (m_verbose) {
+            llvm::outs() << std::format("{}\n", message.location);
+        }
     }
 }

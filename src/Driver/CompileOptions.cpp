@@ -149,6 +149,9 @@ auto CompileOptions::toCommandLine() const -> std::string {
     if (m_dumpConfig) {
         append("--dump-config");
     }
+    if (m_verbose) {
+        append("--verbose");
+    }
     if (!m_outputPath.empty()) {
         appendPath("-o", m_outputPath);
     }

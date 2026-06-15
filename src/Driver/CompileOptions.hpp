@@ -121,6 +121,9 @@ public:
     /** Toggle dumping the options as a command line (for debugging). */
     void setDumpConfig(const bool enable) { m_dumpConfig = enable; }
 
+    /** Toggle verbose output. */
+    void setVerbose(const bool enable) { m_verbose = enable; }
+
     // -------------------------------------------------------------------------
     // Observers
     // -------------------------------------------------------------------------
@@ -141,6 +144,7 @@ public:
     [[nodiscard]] auto isDumpAst() const -> bool { return m_dumpAst; }
     [[nodiscard]] auto isDumpIr() const -> bool { return m_dumpIr; }
     [[nodiscard]] auto isDumpConfig() const -> bool { return m_dumpConfig; }
+    [[nodiscard]] auto isVerbose() const -> bool { return m_verbose; }
 
     /** Render the options as an equivalent command-line string (for debugging). */
     [[nodiscard]] auto toCommandLine() const -> std::string;
@@ -160,6 +164,7 @@ private:
     bool m_dumpAst = false;                                        ///< dump the AST for debugging
     bool m_dumpIr = false;                                         ///< dump the lbc IR for debugging
     bool m_dumpConfig = false;                                     ///< dump the options as a command line
+    bool m_verbose = false;                                        ///< verbose diagnostics
 };
 
 } // namespace lbc

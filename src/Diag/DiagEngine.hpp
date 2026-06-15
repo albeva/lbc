@@ -85,6 +85,9 @@ public:
     [[nodiscard]] auto isAutoPrintEnabled() const -> bool { return m_autoPrint; }
     void setAutoPrint(const bool autoPrint) { m_autoPrint = autoPrint; }
 
+    [[nodiscard]] auto isVerbose() const -> bool { return m_verbose; }
+    void setVerbose(const bool verbose) { m_verbose = verbose; }
+
     /** Return the number of diagnostics with the given severity. */
     [[nodiscard]] auto count(llvm::SourceMgr::DiagKind kind) const -> std::size_t;
 
@@ -130,6 +133,7 @@ private:
     Context& m_context;
     std::vector<Entry> m_messages;
     bool m_autoPrint = true;
+    bool m_verbose = false;
 };
 
 } // namespace lbc
