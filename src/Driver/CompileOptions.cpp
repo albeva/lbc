@@ -25,25 +25,6 @@ auto quote(const llvm::StringRef token) -> std::string {
     return token.str();
 }
 
-auto optFlag(const CompileOptions::OptimizationLevel level) -> llvm::StringRef {
-    using Opt = CompileOptions::OptimizationLevel;
-    switch (level) {
-    case Opt::O0:
-        return "-O0";
-    case Opt::O1:
-        return "-O1";
-    case Opt::O2:
-        return "-O2";
-    case Opt::O3:
-        return "-O3";
-    case Opt::Os:
-        return "-Os";
-    case Opt::Oz:
-        return "-Oz";
-    }
-    return {};
-}
-
 auto emitFlag(const CompileOptions::OutputType type) -> llvm::StringRef {
     using Out = CompileOptions::OutputType;
     switch (type) {
@@ -94,10 +75,43 @@ auto bitnessFlag(const CompileOptions::Bitness bitness) -> llvm::StringRef {
     }
     return {};
 }
+
+auto platformFlag(const CompileOptions::Platform platform) -> llvm::StringRef {
+    using Platform = CompileOptions::Platform;
+    switch (platform) {
+    case Platform::Default:
+        return {};
+    case Platform::Linux:
+        return "--platform=linux";
+    case Platform::Windows:
+        return "--platform=windows";
+    case Platform::MacOS:
+        return "--platform=macos";
+    }
+    return {};
+}
 } // namespace
 
 void CompileOptions::addFile(const llvm::StringRef path) {
     addFile(detectFileType(path), path);
+}
+
+auto CompileOptions::getOptimizationFlag() const -> llvm::StringRef {
+    switch (m_optimizationLevel) {
+    case OptimizationLevel::O0:
+        return "-O0";
+    case OptimizationLevel::O1:
+        return "-O1";
+    case OptimizationLevel::O2:
+        return "-O2";
+    case OptimizationLevel::O3:
+        return "-O3";
+    case OptimizationLevel::Os:
+        return "-Os";
+    case OptimizationLevel::Oz:
+        return "-Oz";
+    }
+    return "-O0";
 }
 
 auto CompileOptions::toCommandLine() const -> std::string {
@@ -117,7 +131,7 @@ auto CompileOptions::toCommandLine() const -> std::string {
 
     // Only non-default settings are emitted, so the line reads like a real invocation.
     if (m_optimizationLevel != OptimizationLevel::O0) {
-        append(optFlag(m_optimizationLevel));
+        append(getOptimizationFlag());
     }
     if (m_debugInfo) {
         append("-g");
@@ -130,6 +144,9 @@ auto CompileOptions::toCommandLine() const -> std::string {
     }
     if (m_bitness != Bitness::Default) {
         append(bitnessFlag(m_bitness));
+    }
+    if (m_platform != Platform::Default) {
+        append(platformFlag(m_platform));
     }
     if (!m_workingDirectory.empty()) {
         appendPath("--working-dir", m_workingDirectory);

@@ -25,10 +25,12 @@ enum class TypeKind : std::uint8_t {
     UShort,
     UInteger,
     ULong,
+    ULongInt,
     Byte,
     Short,
     Integer,
     Long,
+    LongInt,
     Single,
     Double,
     Pointer,
@@ -71,21 +73,23 @@ public:
 
     /// UnsignedIntegral types
     [[nodiscard]] constexpr auto isUnsignedIntegral() const -> bool {
-        return m_kind >= TypeKind::UByte && m_kind <= TypeKind::ULong;
+        return m_kind >= TypeKind::UByte && m_kind <= TypeKind::ULongInt;
     }
     [[nodiscard]] constexpr auto isUByte() const -> bool { return m_kind == TypeKind::UByte; }
     [[nodiscard]] constexpr auto isUShort() const -> bool { return m_kind == TypeKind::UShort; }
     [[nodiscard]] constexpr auto isUInteger() const -> bool { return m_kind == TypeKind::UInteger; }
     [[nodiscard]] constexpr auto isULong() const -> bool { return m_kind == TypeKind::ULong; }
+    [[nodiscard]] constexpr auto isULongInt() const -> bool { return m_kind == TypeKind::ULongInt; }
 
     /// SignedIntegral types
     [[nodiscard]] constexpr auto isSignedIntegral() const -> bool {
-        return m_kind >= TypeKind::Byte && m_kind <= TypeKind::Long;
+        return m_kind >= TypeKind::Byte && m_kind <= TypeKind::LongInt;
     }
     [[nodiscard]] constexpr auto isByte() const -> bool { return m_kind == TypeKind::Byte; }
     [[nodiscard]] constexpr auto isShort() const -> bool { return m_kind == TypeKind::Short; }
     [[nodiscard]] constexpr auto isInteger() const -> bool { return m_kind == TypeKind::Integer; }
     [[nodiscard]] constexpr auto isLong() const -> bool { return m_kind == TypeKind::Long; }
+    [[nodiscard]] constexpr auto isLongInt() const -> bool { return m_kind == TypeKind::LongInt; }
 
     /// FloatingPoint types
     [[nodiscard]] constexpr auto isFloatingPoint() const -> bool {
@@ -125,6 +129,8 @@ public:
                 return TokenKind::UInteger;
             case TypeKind::ULong:
                 return TokenKind::ULong;
+            case TypeKind::ULongInt:
+                return TokenKind::ULongInt;
             case TypeKind::Byte:
                 return TokenKind::Byte;
             case TypeKind::Short:
@@ -133,6 +139,8 @@ public:
                 return TokenKind::Integer;
             case TypeKind::Long:
                 return TokenKind::Long;
+            case TypeKind::LongInt:
+                return TokenKind::LongInt;
             case TypeKind::Single:
                 return TokenKind::Single;
             case TypeKind::Double:
@@ -151,10 +159,12 @@ public:
             case TypeKind::UShort:
             case TypeKind::UInteger:
             case TypeKind::ULong:
+            case TypeKind::ULongInt:
             case TypeKind::Byte:
             case TypeKind::Short:
             case TypeKind::Integer:
             case TypeKind::Long:
+            case TypeKind::LongInt:
             case TypeKind::Single:
             case TypeKind::Double:
                 return true;

@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include <llvm/TargetParser/Triple.h>
 #include "CompileOptions.hpp"
 #include "Diag/DiagEngine.hpp"
 #include "Type/TypeFactory.hpp"
@@ -85,8 +86,14 @@ public:
      */
     [[nodiscard]] auto getOptions() const -> const CompileOptions& { return m_options; }
 
+    /**
+     * Get the resolved target triple for this compilation
+     */
+    [[nodiscard]] auto getTriple() const -> const llvm::Triple& { return m_triple; }
+
 private:
     const CompileOptions m_options;
+    llvm::Triple m_triple;
     llvm::SourceMgr m_sourceMgr;
     llvm::BumpPtrAllocator m_allocator;
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;

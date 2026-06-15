@@ -57,7 +57,9 @@ auto TypeFactory::allocate(const std::size_t size, const std::size_t alignment) 
 }
 
 void TypeFactory::createSingletonTypes() {
-    // TODO: Derive type info from current compilation target data layouts.
+    // INTEGER / UINTEGER follow the target pointer width (FreeBASIC semantics).
+    const auto pointerBytes = static_cast<std::uint8_t>(m_context.getTriple().isArch64Bit() ? 8 : 4);
+
     for (const auto kind : kSingletonKinds) {
         switch (kind) {
         case TypeKind::Label:
@@ -74,10 +76,13 @@ void TypeFactory::createSingletonTypes() {
         case TypeKind::UShort:
             setSingleton(create<TypeIntegral>(kind, size<std::uint16_t>, false));
             break;
-        case TypeKind::UInteger:
+        case TypeKind::ULong:
             setSingleton(create<TypeIntegral>(kind, size<std::uint32_t>, false));
             break;
-        case TypeKind::ULong:
+        case TypeKind::UInteger:
+            setSingleton(create<TypeIntegral>(kind, pointerBytes, false));
+            break;
+        case TypeKind::ULongInt:
             setSingleton(create<TypeIntegral>(kind, size<std::uint64_t>, false));
             break;
         case TypeKind::Byte:
@@ -86,10 +91,13 @@ void TypeFactory::createSingletonTypes() {
         case TypeKind::Short:
             setSingleton(create<TypeIntegral>(kind, size<std::int16_t>, true));
             break;
-        case TypeKind::Integer:
+        case TypeKind::Long:
             setSingleton(create<TypeIntegral>(kind, size<std::int32_t>, true));
             break;
-        case TypeKind::Long:
+        case TypeKind::Integer:
+            setSingleton(create<TypeIntegral>(kind, pointerBytes, true));
+            break;
+        case TypeKind::LongInt:
             setSingleton(create<TypeIntegral>(kind, size<std::int64_t>, true));
             break;
         case TypeKind::Single:

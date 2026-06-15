@@ -10,6 +10,11 @@ target_sources(lbc_lib
     Driver/CompileOptions.cpp
     Driver/Context.cpp
     Driver/Driver.cpp
+    Driver/Toolchain.cpp
+    Driver/tasks/CodeGenTask.cpp
+    Driver/tasks/CompileTask.cpp
+    Driver/tasks/EmitTask.cpp
+    Driver/tasks/OptimizeTask.cpp
     Gen/Gen.cpp
     Gen/GenInstr.cpp
     Gen/GenType.cpp
@@ -55,6 +60,12 @@ target_sources(lbc_lib
     Driver/CompileOptions.hpp
     Driver/Context.hpp
     Driver/Driver.hpp
+    Driver/Task.hpp
+    Driver/Toolchain.hpp
+    Driver/tasks/CodeGenTask.hpp
+    Driver/tasks/CompileTask.hpp
+    Driver/tasks/EmitTask.hpp
+    Driver/tasks/OptimizeTask.hpp
     Gen/Generator.hpp
     IR/gen/IrGenerator.hpp
     IR/lib/BasicBlock.hpp

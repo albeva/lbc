@@ -533,7 +533,9 @@ TEST(SemaExprTests, WideningConversionIsValue) {
     // Reading an Addressable variable into a wider type inserts an implicit
     // cast; the converted result is a pure Value (prvalue), not a place.
     Context context;
-    auto* expr = dimInitExpr(context, "DIM v = 1\nDIM x AS LONG = v", 1);
+    // SHORT (16-bit) widens to LONG (32-bit); INTEGER is now the pointer-wide
+    // type, so it would no longer widen to LONG.
+    auto* expr = dimInitExpr(context, "DIM v AS SHORT = 1\nDIM x AS LONG = v", 1);
     ASSERT_NE(expr, nullptr);
     EXPECT_TRUE(llvm::isa<AstCastExpr>(expr));
     EXPECT_TRUE(expr->getValueCategory().isValue());

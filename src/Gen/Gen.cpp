@@ -12,10 +12,11 @@
 using namespace lbc;
 using namespace lbc::gen;
 
-Generator::Generator()
-: m_builder(m_llvm) {}
+Generator::Generator(llvm::LLVMContext& context)
+: m_llvm(context)
+, m_builder(m_llvm) {}
 
-auto Generator::generate(const ir::lib::Module& module) -> llvm::Module& {
+auto Generator::generate(const ir::lib::Module& module) -> std::unique_ptr<llvm::Module> {
     m_module = std::make_unique<llvm::Module>("lbc", m_llvm);
 
     // Declare all defined functions first so calls between them resolve, then
@@ -30,7 +31,7 @@ auto Generator::generate(const ir::lib::Module& module) -> llvm::Module& {
     // Top-level code becomes the body of `main`.
     lowerGlobalInit(module);
 
-    return *m_module;
+    return std::move(m_module);
 }
 
 // =============================================================================

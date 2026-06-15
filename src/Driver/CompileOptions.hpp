@@ -70,6 +70,14 @@ public:
         Bits64,  ///< 64-bit
     };
 
+    /** Target operating-system platform. Default follows the host. */
+    enum class Platform : std::uint8_t {
+        Default, ///< follow the host platform
+        Linux,   ///< Linux
+        Windows, ///< Windows
+        MacOS,   ///< macOS / Darwin
+    };
+
     // -------------------------------------------------------------------------
     // Mutators
     // -------------------------------------------------------------------------
@@ -109,6 +117,9 @@ public:
     /** Select the target pointer width (Bitness::Default follows the host). */
     void setBitness(const Bitness bitness) { m_bitness = bitness; }
 
+    /** Select the target platform (Platform::Default follows the host). */
+    void setPlatform(const Platform platform) { m_platform = platform; }
+
     /** Toggle emission of debug information. */
     void setDebugInfo(const bool enable) { m_debugInfo = enable; }
 
@@ -138,8 +149,11 @@ public:
     [[nodiscard]] auto getToolchainPath() const -> llvm::StringRef { return m_toolchainPath; }
     [[nodiscard]] auto getOutputType() const -> OutputType { return m_outputType; }
     [[nodiscard]] auto getOptimizationLevel() const -> OptimizationLevel { return m_optimizationLevel; }
+    /** The `-O` flag for the selected optimisation level, e.g. "-O2". */
+    [[nodiscard]] auto getOptimizationFlag() const -> llvm::StringRef;
     [[nodiscard]] auto getArch() const -> Arch { return m_arch; }
     [[nodiscard]] auto getBitness() const -> Bitness { return m_bitness; }
+    [[nodiscard]] auto getPlatform() const -> Platform { return m_platform; }
     [[nodiscard]] auto hasDebugInfo() const -> bool { return m_debugInfo; }
     [[nodiscard]] auto isDumpAst() const -> bool { return m_dumpAst; }
     [[nodiscard]] auto isDumpIr() const -> bool { return m_dumpIr; }
@@ -158,6 +172,7 @@ private:
     std::string m_toolchainPath;                                   ///< dir holding the LLVM toolchain binaries
     Arch m_arch = Arch::Default;                                   ///< target architecture, host if Default
     Bitness m_bitness = Bitness::Default;                          ///< target pointer width, host if Default
+    Platform m_platform = Platform::Default;                       ///< target platform, host if Default
     OutputType m_outputType = OutputType::Executable;              ///< artifact to produce
     OptimizationLevel m_optimizationLevel = OptimizationLevel::O0; ///< optimisation level
     bool m_debugInfo = false;                                      ///< emit debug information

@@ -24,6 +24,8 @@ struct DiagKind final {
         ambiguousOutput,
         cannotOpenOutput,
         backendVerificationFailed,
+        optimizerFailed,
+        codegenFailed,
         invalid,
         unterminatedString,
         invalidNumber,
@@ -67,7 +69,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 34;
+    static constexpr std::size_t COUNT = 36;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -110,6 +112,8 @@ struct DiagKind final {
             case ambiguousOutput:
             case cannotOpenOutput:
             case backendVerificationFailed:
+            case optimizerFailed:
+            case codegenFailed:
                 return Category::System;
             case invalid:
             case unterminatedString:
@@ -157,6 +161,8 @@ struct DiagKind final {
             case ambiguousOutput:
             case cannotOpenOutput:
             case backendVerificationFailed:
+            case optimizerFailed:
+            case codegenFailed:
             case invalid:
             case unterminatedString:
             case invalidNumber:
@@ -201,6 +207,8 @@ struct DiagKind final {
             case ambiguousOutput: return "E0004";
             case cannotOpenOutput: return "E0005";
             case backendVerificationFailed: return "E0006";
+            case optimizerFailed: return "E0007";
+            case codegenFailed: return "E0008";
             case invalid: return "E0100";
             case unterminatedString: return "E0101";
             case invalidNumber: return "E0102";
@@ -236,8 +244,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 34> { // NOLINT(*-magic-numbers)
-        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 36> { // NOLINT(*-magic-numbers)
+        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
     }
 
 private:
@@ -300,6 +308,16 @@ namespace diagnostics {
     /// Create backendVerificationFailed message
     [[nodiscard]] inline auto backendVerificationFailed() -> DiagMessage {
         return { DiagKind::backendVerificationFailed, "internal error: generated LLVM module failed verification" };
+    }
+
+    /// Create optimizerFailed message
+    [[nodiscard]] inline auto optimizerFailed(const auto& reason) -> DiagMessage {
+        return { DiagKind::optimizerFailed, std::format("optimizer failed: {}", reason) };
+    }
+
+    /// Create codegenFailed message
+    [[nodiscard]] inline auto codegenFailed(const auto& reason) -> DiagMessage {
+        return { DiagKind::codegenFailed, std::format("code generation failed: {}", reason) };
     }
 
     // -------------------------------------------------------------------------

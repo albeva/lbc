@@ -100,6 +100,8 @@ struct TokenKind final {
         UInteger,
         Long,
         ULong,
+        LongInt,
+        ULongInt,
         Single,
         Double,
     };
@@ -133,7 +135,7 @@ struct TokenKind final {
     /**
      * Total number of token kinds
      */
-    static constexpr std::size_t COUNT = 84;
+    static constexpr std::size_t COUNT = 86;
 
     constexpr TokenKind() = default;
 
@@ -508,6 +510,8 @@ struct TokenKind final {
             case UInteger: return "UINTEGER";
             case Long: return "LONG";
             case ULong: return "ULONG";
+            case LongInt: return "LONGINT";
+            case ULongInt: return "ULONGINT";
             case Single: return "SINGLE";
             case Double: return "DOUBLE";
         }
@@ -552,8 +556,8 @@ struct TokenKind final {
     /**
      * Return all Type tokens
      */
-    [[nodiscard]] static consteval auto allTypes() -> std::array<TokenKind, 12> { // NOLINT(*-magic-numbers)
-        return {Bool, ZString, Byte, UByte, Short, UShort, Integer, UInteger, Long, ULong, Single, Double};
+    [[nodiscard]] static consteval auto allTypes() -> std::array<TokenKind, 14> { // NOLINT(*-magic-numbers)
+        return {Bool, ZString, Byte, UByte, Short, UShort, Integer, UInteger, Long, ULong, LongInt, ULongInt, Single, Double};
     }
 
     /**

@@ -36,10 +36,11 @@ class Generator final {
 public:
     NO_COPY_AND_MOVE(Generator)
 
-    Generator();
+    /** Construct over a caller-owned LLVM context that will own the result. */
+    explicit Generator(llvm::LLVMContext& context);
 
-    /** Lower the given IR module and return the resulting LLVM module. */
-    [[nodiscard]] auto generate(const ir::lib::Module& module) -> llvm::Module&;
+    /** Lower the given IR module and hand back the resulting LLVM module. */
+    [[nodiscard]] auto generate(const ir::lib::Module& module) -> std::unique_ptr<llvm::Module>;
 
 private:
     // -------------------------------------------------------------------------
@@ -87,7 +88,7 @@ private:
     // Data
     // -------------------------------------------------------------------------
 
-    llvm::LLVMContext m_llvm;
+    llvm::LLVMContext& m_llvm; ///< context that will own the produced module
     std::unique_ptr<llvm::Module> m_module;
     llvm::IRBuilder<> m_builder;
     llvm::Function* m_function = nullptr; ///< function currently being lowered

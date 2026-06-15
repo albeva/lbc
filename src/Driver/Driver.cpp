@@ -3,16 +3,14 @@
 //
 #include "Driver.hpp"
 #include <llvm/ADT/SmallString.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Verifier.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
-#include "Ast/AstCodePrinter.hpp"
-#include "Gen/Generator.hpp"
-#include "IR/gen/IrGenerator.hpp"
-#include "IR/printer/Printer.hpp"
-#include "Parser/Parser.hpp"
-#include "Sema/SemanticAnalyser.hpp"
+#include "Task.hpp"
+#include "Toolchain.hpp"
+#include "tasks/CodeGenTask.hpp"
+#include "tasks/CompileTask.hpp"
+#include "tasks/EmitTask.hpp"
+#include "tasks/OptimizeTask.hpp"
 using namespace lbc;
 
 namespace {
@@ -44,16 +42,48 @@ auto Driver::run() -> DiagResult<void> {
     resolvePaths();
     TRY(validate())
 
-    // The backend can currently only emit textual LLVM IR; richer outputs
-    // (object, assembly, executable) arrive with native codegen and linking.
-    if (options.getOutputType() != CompileOptions::OutputType::LlvmIr) {
+    // Everything but a linked executable (which needs the link stage) is wired:
+    // LLVM IR in-process, objects and assembly via llc.
+    if (options.getOutputType() == CompileOptions::OutputType::Executable) {
         return DiagError { m_context.getDiag().log(diagnostics::notImplemented()) };
     }
 
-    for (const auto& input : m_inputs) {
-        TRY(compile(input))
+    const auto pipeline = buildPipeline();
+    for (const auto& source : m_inputs) {
+        Unit unit { source, m_output };
+        for (const auto& task : pipeline) {
+            TRY(task->run(m_context, unit))
+        }
     }
     return {};
+}
+
+auto Driver::buildPipeline() const -> std::vector<std::unique_ptr<Task>> {
+    const auto& options = m_context.getOptions();
+    const Toolchain toolchain { options.getToolchainPath().str() };
+
+    std::vector<std::unique_ptr<Task>> pipeline;
+    pipeline.push_back(std::make_unique<CompileTask>());
+
+    // Optimise by shelling out to `opt` when any optimisation is requested.
+    if (options.getOptimizationLevel() != CompileOptions::OptimizationLevel::O0) {
+        pipeline.push_back(std::make_unique<OptimizeTask>(toolchain.getOptimizer()));
+    }
+
+    // Emit the requested artifact. Objects go through `llc`; the link stage
+    // (consuming each unit's object) slots in here as the backend grows.
+    switch (options.getOutputType()) {
+    case CompileOptions::OutputType::Object:
+    case CompileOptions::OutputType::Assembly:
+        pipeline.push_back(std::make_unique<CodeGenTask>(toolchain.getCodeGen()));
+        break;
+    case CompileOptions::OutputType::LlvmIr:
+        pipeline.push_back(std::make_unique<EmitTask>());
+        break;
+    default:
+        break; // executable rejected before this point
+    }
+    return pipeline;
 }
 
 void Driver::resolvePaths() {
@@ -94,13 +124,11 @@ auto Driver::validate() -> DiagResult<void> {
     auto& diag = m_context.getDiag();
     const auto& options = m_context.getOptions();
 
-    bool failed = false;
     DiagIndex firstError {};
     const auto report = [&](const DiagMessage& message) {
         const auto index = diag.log(message);
-        if (!failed) {
+        if (!firstError.isValid()) {
             firstError = index;
-            failed = true;
         }
     };
 
@@ -125,61 +153,8 @@ auto Driver::validate() -> DiagResult<void> {
         report(diagnostics::ambiguousOutput());
     }
 
-    if (failed) {
+    if (firstError.isValid()) {
         return DiagError { firstError };
     }
-    return {};
-}
-
-auto Driver::compile(const std::string& path) -> DiagResult<void> {
-    const auto& options = m_context.getOptions();
-
-    std::string included;
-    const auto id = m_context.getSourceMgr().AddIncludeFile(path, {}, included);
-    if (id == 0) {
-        return DiagError { m_context.getDiag().log(diagnostics::inputFileNotFound(path)) };
-    }
-
-    Parser parser { m_context, id };
-    TRY_DECL(module, parser.parse())
-
-    SemanticAnalyser sema { m_context };
-    TRY(sema.analyse(*module))
-
-    // Debug dumps go to stderr so they never pollute the artifact on stdout.
-    if (options.isDumpAst()) {
-        AstCodePrinter { llvm::errs() }.print(*module);
-    }
-
-    ir::gen::IrGenerator irGenerator { m_context };
-    TRY_DECL(ir, irGenerator.generate(*module))
-
-    if (options.isDumpIr()) {
-        ir::printer::Printer { llvm::errs() }.print(*ir);
-    }
-
-    gen::Generator generator {};
-    auto& llvmModule = generator.generate(*ir);
-    TRY(emit(llvmModule))
-
-    return {};
-}
-
-auto Driver::emit(llvm::Module& module) -> DiagResult<void> {
-    if (llvm::verifyModule(module, &llvm::errs())) {
-        return DiagError { m_context.getDiag().log(diagnostics::backendVerificationFailed()) };
-    }
-
-    if (m_output.empty()) {
-        module.print(llvm::outs(), nullptr);
-        return {};
-    }
-
-    std::error_code error;
-    llvm::raw_fd_ostream out { m_output, error };
-    if (error) {
-        return DiagError { m_context.getDiag().log(diagnostics::cannotOpenOutput(m_output, error.message())) };
-    }
-    module.print(out, nullptr);
     return {};
 }

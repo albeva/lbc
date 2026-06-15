@@ -107,6 +107,18 @@ cl::opt<CompileOptions::Bitness> targetBits(
     cl::cat(lbcCategory)
 );
 
+cl::opt<CompileOptions::Platform> targetPlatform(
+    "platform",
+    cl::desc("Target platform (default: host):"),
+    cl::values(
+        clEnumValN(CompileOptions::Platform::Linux, "linux", "Linux"),
+        clEnumValN(CompileOptions::Platform::Windows, "windows", "Windows"),
+        clEnumValN(CompileOptions::Platform::MacOS, "macos", "macOS")
+    ),
+    cl::init(CompileOptions::Platform::Default),
+    cl::cat(lbcCategory)
+);
+
 /** Assemble a CompileOptions from the parsed command-line state. */
 [[nodiscard]] auto buildOptions(const std::string& compilerPath) -> CompileOptions {
     CompileOptions options;
@@ -124,6 +136,7 @@ cl::opt<CompileOptions::Bitness> targetBits(
     options.setOptimizationLevel(optLevel);
     options.setArch(targetArch);
     options.setBitness(targetBits);
+    options.setPlatform(targetPlatform);
     options.setDebugInfo(debugInfo);
     options.setDumpAst(dumpAst);
     options.setDumpIr(dumpIr);

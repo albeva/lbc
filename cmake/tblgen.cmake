@@ -86,10 +86,14 @@ function(add_tblgen target tblgen_tool)
         cmake_path(RELATIVE_PATH td_abs BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE td_rel)
         cmake_path(RELATIVE_PATH inc_abs BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE inc_rel)
 
+        # TableGen emits a depfile listing every included .td, so edits to a
+        # shared include (e.g. Types.td included by TokenKind.td) regenerate it.
+        set(dep_file "${CMAKE_CURRENT_BINARY_DIR}/${gen_name}.d")
         add_custom_command(
             OUTPUT "${inc_abs}"
-            COMMAND ${tblgen_tool} "${td_abs}" --gen="${gen_name}" --write-if-changed -o "${inc_abs}" -I "${CMAKE_CURRENT_SOURCE_DIR}" ${define_flags}
+            COMMAND ${tblgen_tool} "${td_abs}" --gen="${gen_name}" --write-if-changed -o "${inc_abs}" -d "${dep_file}" -I "${CMAKE_CURRENT_SOURCE_DIR}" ${define_flags}
             DEPENDS ${tblgen_tool} "${td_abs}"
+            DEPFILE "${dep_file}"
             COMMENT "Generating ${inc_rel} (--gen=${gen_name})"
         )
         list(APPEND all_inc_files "${inc_abs}")

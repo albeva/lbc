@@ -21,11 +21,13 @@ protected:
     const TypeIntegral* shortTy = tf.getShort();
     const TypeIntegral* intTy = tf.getInteger();
     const TypeIntegral* longTy = tf.getLong();
+    const TypeIntegral* longIntTy = tf.getLongInt();
 
     const TypeIntegral* ubyteTy = tf.getUByte();
     const TypeIntegral* ushortTy = tf.getUShort();
     const TypeIntegral* uintTy = tf.getUInteger();
     const TypeIntegral* ulongTy = tf.getULong();
+    const TypeIntegral* ulongIntTy = tf.getULongInt();
 
     const TypeFloatingPoint* singleTy = tf.getSingle();
     const TypeFloatingPoint* doubleTy = tf.getDouble();
@@ -73,7 +75,7 @@ TEST_F(TypeComparisonTests, IdenticalTypes) {
 // =============================================================================
 
 TEST_F(TypeComparisonTests, SignedIntegralImplicit) {
-    const TypeIntegral* chain[] = { byteTy, shortTy, intTy, longTy };
+    const TypeIntegral* chain[] = { byteTy, shortTy, longTy, longIntTy };
     for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
             expectImplicit(chain[j], chain[i]);
@@ -87,7 +89,7 @@ TEST_F(TypeComparisonTests, SignedIntegralImplicit) {
 // =============================================================================
 
 TEST_F(TypeComparisonTests, UnsignedIntegralImplicit) {
-    const TypeIntegral* chain[] = { ubyteTy, ushortTy, uintTy, ulongTy };
+    const TypeIntegral* chain[] = { ubyteTy, ushortTy, ulongTy, ulongIntTy };
     for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
             expectImplicit(chain[j], chain[i]);
@@ -285,7 +287,7 @@ TEST_F(TypeComparisonTests, FunctionTypeComparisons) {
 
 TEST_F(TypeComparisonTests, CommonSameFamily) {
     // Signed: common is the wider type, symmetric
-    const TypeIntegral* signedChain[] = { byteTy, shortTy, intTy, longTy };
+    const TypeIntegral* signedChain[] = { byteTy, shortTy, longTy, longIntTy };
     for (int i = 0; i < 4; i++) {
         EXPECT_EQ(signedChain[i]->common(signedChain[i]), signedChain[i]);
         for (int j = i + 1; j < 4; j++) {
@@ -295,7 +297,7 @@ TEST_F(TypeComparisonTests, CommonSameFamily) {
     }
 
     // Unsigned: common is the wider type
-    const TypeIntegral* unsignedChain[] = { ubyteTy, ushortTy, uintTy, ulongTy };
+    const TypeIntegral* unsignedChain[] = { ubyteTy, ushortTy, ulongTy, ulongIntTy };
     for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
             EXPECT_EQ(unsignedChain[i]->common(unsignedChain[j]), unsignedChain[j]);

@@ -82,6 +82,10 @@ public:
         return static_cast<const TypeIntegral*>(getSingleton(TypeKind::ULong));
     }
 
+    [[nodiscard]] auto getULongInt() const -> const TypeIntegral* {
+        return static_cast<const TypeIntegral*>(getSingleton(TypeKind::ULongInt));
+    }
+
     // -------------------------------------------------------------------------
     // SignedIntegral types
     // -------------------------------------------------------------------------
@@ -100,6 +104,10 @@ public:
 
     [[nodiscard]] auto getLong() const -> const TypeIntegral* {
         return static_cast<const TypeIntegral*>(getSingleton(TypeKind::Long));
+    }
+
+    [[nodiscard]] auto getLongInt() const -> const TypeIntegral* {
+        return static_cast<const TypeIntegral*>(getSingleton(TypeKind::LongInt));
     }
 
     // -------------------------------------------------------------------------
@@ -133,6 +141,8 @@ public:
                 return getUInteger();
             case TokenKind::ULong:
                 return getULong();
+            case TokenKind::ULongInt:
+                return getULongInt();
             case TokenKind::Byte:
                 return getByte();
             case TokenKind::Short:
@@ -141,6 +151,8 @@ public:
                 return getInteger();
             case TokenKind::Long:
                 return getLong();
+            case TokenKind::LongInt:
+                return getLongInt();
             case TokenKind::Single:
                 return getSingle();
             case TokenKind::Double:
@@ -168,7 +180,7 @@ protected:
     }
 
     /// Number of singleton types
-    static constexpr std::size_t COUNT = 16;
+    static constexpr std::size_t COUNT = 18;
     /// TypeKind values for all singleton types
     static constexpr std::array<TypeKind, COUNT> kSingletonKinds {
         TypeKind::Label,
@@ -181,10 +193,12 @@ protected:
         TypeKind::UShort,
         TypeKind::UInteger,
         TypeKind::ULong,
+        TypeKind::ULongInt,
         TypeKind::Byte,
         TypeKind::Short,
         TypeKind::Integer,
         TypeKind::Long,
+        TypeKind::LongInt,
         TypeKind::Single,
         TypeKind::Double,
     };

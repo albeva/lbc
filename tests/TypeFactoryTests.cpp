@@ -40,24 +40,28 @@ TEST(TypeFactoryTests, IntegralTypes) {
     // Signed
     EXPECT_TRUE(tf.getByte()->isSigned());
     EXPECT_TRUE(tf.getShort()->isSigned());
-    EXPECT_TRUE(tf.getInteger()->isSigned());
     EXPECT_TRUE(tf.getLong()->isSigned());
+    EXPECT_TRUE(tf.getInteger()->isSigned());
+    EXPECT_TRUE(tf.getLongInt()->isSigned());
 
     // Unsigned
     EXPECT_FALSE(tf.getUByte()->isSigned());
     EXPECT_FALSE(tf.getUShort()->isSigned());
-    EXPECT_FALSE(tf.getUInteger()->isSigned());
     EXPECT_FALSE(tf.getULong()->isSigned());
+    EXPECT_FALSE(tf.getUInteger()->isSigned());
+    EXPECT_FALSE(tf.getULongInt()->isSigned());
 
-    // Sizes
+    // Sizes (FreeBASIC: LONG = 32-bit, INTEGER = pointer width, LONGINT = 64-bit)
     EXPECT_EQ(tf.getByte()->getBytes(), 1);
     EXPECT_EQ(tf.getShort()->getBytes(), 2);
-    EXPECT_EQ(tf.getInteger()->getBytes(), 4);
-    EXPECT_EQ(tf.getLong()->getBytes(), 8);
+    EXPECT_EQ(tf.getLong()->getBytes(), 4);
+    EXPECT_EQ(tf.getInteger()->getBytes(), sizeof(void*));
+    EXPECT_EQ(tf.getLongInt()->getBytes(), 8);
     EXPECT_EQ(tf.getUByte()->getBytes(), 1);
     EXPECT_EQ(tf.getUShort()->getBytes(), 2);
-    EXPECT_EQ(tf.getUInteger()->getBytes(), 4);
-    EXPECT_EQ(tf.getULong()->getBytes(), 8);
+    EXPECT_EQ(tf.getULong()->getBytes(), 4);
+    EXPECT_EQ(tf.getUInteger()->getBytes(), sizeof(void*));
+    EXPECT_EQ(tf.getULongInt()->getBytes(), 8);
 }
 
 TEST(TypeFactoryTests, FloatingPointTypes) {

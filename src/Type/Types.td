@@ -66,6 +66,8 @@ def Integer  : KeywordType<"INTEGER",  SignedIntegral,   "TypeIntegral">;
 def UInteger : KeywordType<"UINTEGER", UnsignedIntegral, "TypeIntegral">;
 def Long     : KeywordType<"LONG",     SignedIntegral,   "TypeIntegral">;
 def ULong    : KeywordType<"ULONG",    UnsignedIntegral, "TypeIntegral">;
+def LongInt  : KeywordType<"LONGINT",  SignedIntegral,   "TypeIntegral">;
+def ULongInt : KeywordType<"ULONGINT", UnsignedIntegral, "TypeIntegral">;
 
 // -----------------------------------------------------------------------------
 // Floating point values
