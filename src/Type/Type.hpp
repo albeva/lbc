@@ -4,6 +4,9 @@
 #pragma once
 #include "pch.hpp"
 #include "TypeBase.hpp"
+namespace llvm {
+class Type;
+}
 namespace lbc {
 class Context;
 class TypeFactory;
@@ -84,11 +87,28 @@ public:
 
     [[nodiscard]] virtual auto string() const -> std::string;
 
+    // -------------------------------------------------------------------------
+    // LLVM lowering cache
+    // -------------------------------------------------------------------------
+
+    /** Get the cached lowered LLVM type, or nullptr if not lowered yet. */
+    [[nodiscard]] auto getLlvmType() const -> llvm::Type* { return m_llvmType; }
+
+    /**
+     * Cache the lowered LLVM type. Marked const (and the field mutable) because
+     * types are handled everywhere as `const Type*`, yet the lowering memoises
+     * its result on the type.
+     */
+    void setLlvmType(llvm::Type* type) const { m_llvmType = type; }
+
 protected:
     friend class TypeFactory;
 
     constexpr explicit Type(const TypeKind kind)
     : TypeBase(kind) {}
+
+private:
+    mutable llvm::Type* m_llvmType = nullptr; ///< memoised LLVM lowering
 };
 
 } // namespace lbc

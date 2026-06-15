@@ -8,6 +8,9 @@ target_sources(lbc_lib
     Ast/AstCodePrinter.cpp
     Diag/DiagEngine.cpp
     Driver/Context.cpp
+    Gen/Gen.cpp
+    Gen/GenInstr.cpp
+    Gen/GenType.cpp
     IR/gen/Gen.cpp
     IR/gen/GenDecl.cpp
     IR/gen/GenExpr.cpp
@@ -48,6 +51,7 @@ target_sources(lbc_lib
     Diag/DiagEngine.hpp
     Diag/LogProvider.hpp
     Driver/Context.hpp
+    Gen/Generator.hpp
     IR/gen/IrGenerator.hpp
     IR/lib/BasicBlock.hpp
     IR/lib/Function.hpp

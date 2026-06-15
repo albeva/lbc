@@ -4,6 +4,9 @@
 #pragma once
 #include "pch.hpp"
 
+namespace llvm {
+class Value;
+}
 namespace lbc {
 class Type;
 }
@@ -44,9 +47,19 @@ public:
     /** LLVM RTTI support. */
     [[nodiscard]] static auto classof(const Value* /*unused*/) -> bool { return true; }
 
+    /** Get the cached lowered LLVM value (set by codegen), or nullptr. */
+    [[nodiscard]] auto getLlvm() const -> llvm::Value* { return m_llvm; }
+
+    /**
+     * Cache the lowered LLVM value. Marked const (and the field mutable) because
+     * codegen walks the IR as `const` yet memoises the lowering on each value.
+     */
+    void setLlvm(llvm::Value* value) const { m_llvm = value; }
+
 private:
-    Kind m_kind;        ///< RTTI discriminator
-    const Type* m_type; ///< type of this value
+    Kind m_kind;                           ///< RTTI discriminator
+    const Type* m_type;                    ///< type of this value
+    mutable llvm::Value* m_llvm = nullptr; ///< memoised LLVM lowering
 };
 
 } // namespace lbc::ir::lib
