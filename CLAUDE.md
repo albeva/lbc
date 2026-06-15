@@ -16,7 +16,7 @@ Rules always followed:
 - When writing code, minimum viable scope only.
 - Large task/refactor → stop, ask how to proceed.
 - No co-authorship mentions in commits.
-- Never push to git repo, commit only.
+- Commit only by default. Push only when I explicitly request it — never implicitly. Each request authorises a single push; prior approval is not future approval.
 
 ## Build Commands
 
