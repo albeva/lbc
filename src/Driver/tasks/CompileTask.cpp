@@ -38,9 +38,8 @@ auto CompileTask::run(Context& context, Unit& unit) -> DiagResult<void> {
         ir::printer::Printer { llvm::errs() }.print(*ir);
     }
 
-    gen::Generator generator { unit.llvmContext };
+    gen::Generator generator { context };
     unit.module = generator.generate(*ir);
-    unit.module->setTargetTriple(context.getTriple());
 
     return {};
 }

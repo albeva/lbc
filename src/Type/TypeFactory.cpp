@@ -57,7 +57,7 @@ auto TypeFactory::allocate(const std::size_t size, const std::size_t alignment) 
 }
 
 void TypeFactory::createSingletonTypes() {
-    // INTEGER / UINTEGER follow the target pointer width (FreeBASIC semantics).
+    // INTEGER / UINTEGER follow the target pointer width
     const auto pointerBytes = static_cast<std::uint8_t>(m_context.getTriple().isArch64Bit() ? 8 : 4);
 
     for (const auto kind : kSingletonKinds) {

@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include <llvm/IR/LLVMContext.h>
 #include <llvm/TargetParser/Triple.h>
 #include "CompileOptions.hpp"
 #include "Diag/DiagEngine.hpp"
@@ -91,9 +92,15 @@ public:
      */
     [[nodiscard]] auto getTriple() const -> const llvm::Triple& { return m_triple; }
 
+    /**
+     * Get the LLVM context owning this compilation's modules
+     */
+    [[nodiscard]] auto getLlvmContext() -> llvm::LLVMContext& { return m_llvm; }
+
 private:
     const CompileOptions m_options;
     llvm::Triple m_triple;
+    llvm::LLVMContext m_llvm;
     llvm::SourceMgr m_sourceMgr;
     llvm::BumpPtrAllocator m_allocator;
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;

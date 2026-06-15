@@ -8,7 +8,8 @@
 #include <llvm/IR/Module.h>
 namespace lbc {
 class Type;
-}
+class Context;
+} // namespace lbc
 namespace lbc::ir::lib {
 class Module;
 class Function;
@@ -36,8 +37,8 @@ class Generator final {
 public:
     NO_COPY_AND_MOVE(Generator)
 
-    /** Construct over a caller-owned LLVM context that will own the result. */
-    explicit Generator(llvm::LLVMContext& context);
+    /** Construct over the compilation context (supplies the LLVM context + triple). */
+    explicit Generator(Context& context);
 
     /** Lower the given IR module and hand back the resulting LLVM module. */
     [[nodiscard]] auto generate(const ir::lib::Module& module) -> std::unique_ptr<llvm::Module>;
@@ -88,7 +89,8 @@ private:
     // Data
     // -------------------------------------------------------------------------
 
-    llvm::LLVMContext& m_llvm; ///< context that will own the produced module
+    Context& m_context;        ///< owning compilation context (LLVM context + triple)
+    llvm::LLVMContext& m_llvm; ///< the LLVM context that owns the produced module
     std::unique_ptr<llvm::Module> m_module;
     llvm::IRBuilder<> m_builder;
     llvm::Function* m_function = nullptr; ///< function currently being lowered

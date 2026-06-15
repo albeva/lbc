@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "pch.hpp"
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include "Diag/DiagEngine.hpp"
 
@@ -13,10 +12,8 @@ class Context;
 /**
  * The evolving build state for a single input as it travels through the task
  * pipeline. Each Task reads the unit's current artifacts and advances them —
- * CompileTask fills @ref module, EmitTask consumes it, and so on.
- *
- * Owns its own LLVM context so the lowered module outlives the task that
- * produced it. Pinned in place (no copy/move) because LLVMContext is.
+ * CompileTask fills @ref module, CodeGenTask records @ref objectPath, and so on.
+ * The module lives in the Context's LLVM context, which outlives every unit.
  */
 struct Unit final {
     NO_COPY_AND_MOVE(Unit)
@@ -29,8 +26,7 @@ struct Unit final {
 
     std::string sourcePath;               ///< absolute path to the input source
     std::string outputPath;               ///< destination path, empty means stdout
-    std::string objectPath;               ///< emitted object file (set by EmitObjectTask)
-    llvm::LLVMContext llvmContext;        ///< context owning this unit's module
+    std::string objectPath;               ///< emitted object file (set by CodeGenTask)
     std::unique_ptr<llvm::Module> module; ///< lowered LLVM module (set by CompileTask)
 };
 

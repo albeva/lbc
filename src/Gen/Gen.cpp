@@ -1,6 +1,7 @@
 //
 // Created by Albert Varaksin on 15/06/2026.
 //
+#include "Driver/Context.hpp"
 #include "Generator.hpp"
 #include "IR/lib/BasicBlock.hpp"
 #include "IR/lib/Function.hpp"
@@ -12,12 +13,14 @@
 using namespace lbc;
 using namespace lbc::gen;
 
-Generator::Generator(llvm::LLVMContext& context)
-: m_llvm(context)
+Generator::Generator(Context& context)
+: m_context(context)
+, m_llvm(context.getLlvmContext())
 , m_builder(m_llvm) {}
 
 auto Generator::generate(const ir::lib::Module& module) -> std::unique_ptr<llvm::Module> {
     m_module = std::make_unique<llvm::Module>("lbc", m_llvm);
+    m_module->setTargetTriple(m_context.getTriple());
 
     // Declare all defined functions first so calls between them resolve, then
     // lower their bodies.

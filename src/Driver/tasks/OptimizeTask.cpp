@@ -56,7 +56,7 @@ auto OptimizeTask::run(Context& context, Unit& unit) -> DiagResult<void> {
     if (!buffer) {
         return fail(buffer.getError().message());
     }
-    auto parsed = llvm::parseBitcodeFile((*buffer)->getMemBufferRef(), unit.llvmContext);
+    auto parsed = llvm::parseBitcodeFile((*buffer)->getMemBufferRef(), context.getLlvmContext());
     if (!parsed) {
         return fail(llvm::toString(parsed.takeError()));
     }
