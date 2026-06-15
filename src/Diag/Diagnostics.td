@@ -53,7 +53,12 @@ class Note<Category cat, string id, string msg>    : Diag<note, cat, id, msg>;
 // System diagnostics
 // =============================================================================
 
-def notImplemented  : Error<System, "E0001", "Not implemented">;
+def notImplemented            : Error<System, "E0001", "Not implemented">;
+def noInputFiles              : Error<System, "E0002", "no input files">;
+def inputFileNotFound         : Error<System, "E0003", "input file not found: {path}">;
+def ambiguousOutput           : Error<System, "E0004", "cannot direct multiple input files to a single output file">;
+def cannotOpenOutput          : Error<System, "E0005", "cannot open output file {path}: {reason}">;
+def backendVerificationFailed : Error<System, "E0006", "internal error: generated LLVM module failed verification">;
 
 // =============================================================================
 // Lexer diagnostics

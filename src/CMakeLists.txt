@@ -7,7 +7,9 @@ target_sources(lbc_lib
     Ast/Ast.cpp
     Ast/AstCodePrinter.cpp
     Diag/DiagEngine.cpp
+    Driver/CompileOptions.cpp
     Driver/Context.cpp
+    Driver/Driver.cpp
     Gen/Gen.cpp
     Gen/GenInstr.cpp
     Gen/GenType.cpp
@@ -50,7 +52,9 @@ target_sources(lbc_lib
     Ast/AstCodePrinter.hpp
     Diag/DiagEngine.hpp
     Diag/LogProvider.hpp
+    Driver/CompileOptions.hpp
     Driver/Context.hpp
+    Driver/Driver.hpp
     Gen/Generator.hpp
     IR/gen/IrGenerator.hpp
     IR/lib/BasicBlock.hpp

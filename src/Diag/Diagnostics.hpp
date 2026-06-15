@@ -19,6 +19,11 @@ struct DiagKind final {
      */
     enum Value : std::uint8_t { // NOLINT(*-use-enum-class)
         notImplemented,
+        noInputFiles,
+        inputFileNotFound,
+        ambiguousOutput,
+        cannotOpenOutput,
+        backendVerificationFailed,
         invalid,
         unterminatedString,
         invalidNumber,
@@ -62,7 +67,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 29;
+    static constexpr std::size_t COUNT = 34;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -100,6 +105,11 @@ struct DiagKind final {
     [[nodiscard]] constexpr auto getCategory() const -> Category {
         switch (m_value) {
             case notImplemented:
+            case noInputFiles:
+            case inputFileNotFound:
+            case ambiguousOutput:
+            case cannotOpenOutput:
+            case backendVerificationFailed:
                 return Category::System;
             case invalid:
             case unterminatedString:
@@ -142,6 +152,11 @@ struct DiagKind final {
     [[nodiscard]] constexpr auto getSeverity() const -> llvm::SourceMgr::DiagKind {
         switch (m_value) {
             case notImplemented:
+            case noInputFiles:
+            case inputFileNotFound:
+            case ambiguousOutput:
+            case cannotOpenOutput:
+            case backendVerificationFailed:
             case invalid:
             case unterminatedString:
             case invalidNumber:
@@ -181,6 +196,11 @@ struct DiagKind final {
     [[nodiscard]] constexpr auto getCode() const -> llvm::StringRef {
         switch (m_value) {
             case notImplemented: return "E0001";
+            case noInputFiles: return "E0002";
+            case inputFileNotFound: return "E0003";
+            case ambiguousOutput: return "E0004";
+            case cannotOpenOutput: return "E0005";
+            case backendVerificationFailed: return "E0006";
             case invalid: return "E0100";
             case unterminatedString: return "E0101";
             case invalidNumber: return "E0102";
@@ -216,8 +236,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 29> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 34> { // NOLINT(*-magic-numbers)
+        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
     }
 
 private:
@@ -255,6 +275,31 @@ namespace diagnostics {
     /// Create notImplemented message
     [[nodiscard]] inline auto notImplemented() -> DiagMessage {
         return { DiagKind::notImplemented, "Not implemented" };
+    }
+
+    /// Create noInputFiles message
+    [[nodiscard]] inline auto noInputFiles() -> DiagMessage {
+        return { DiagKind::noInputFiles, "no input files" };
+    }
+
+    /// Create inputFileNotFound message
+    [[nodiscard]] inline auto inputFileNotFound(const auto& path) -> DiagMessage {
+        return { DiagKind::inputFileNotFound, std::format("input file not found: {}", path) };
+    }
+
+    /// Create ambiguousOutput message
+    [[nodiscard]] inline auto ambiguousOutput() -> DiagMessage {
+        return { DiagKind::ambiguousOutput, "cannot direct multiple input files to a single output file" };
+    }
+
+    /// Create cannotOpenOutput message
+    [[nodiscard]] inline auto cannotOpenOutput(const auto& path, const auto& reason) -> DiagMessage {
+        return { DiagKind::cannotOpenOutput, std::format("cannot open output file {}: {}", path, reason) };
+    }
+
+    /// Create backendVerificationFailed message
+    [[nodiscard]] inline auto backendVerificationFailed() -> DiagMessage {
+        return { DiagKind::backendVerificationFailed, "internal error: generated LLVM module failed verification" };
     }
 
     // -------------------------------------------------------------------------

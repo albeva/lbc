@@ -4,8 +4,9 @@
 #include "Context.hpp"
 using namespace lbc;
 
-Context::Context()
-: m_diagEngine(*this)
+Context::Context(CompileOptions options)
+: m_options(std::move(options))
+, m_diagEngine(*this)
 , m_typeFactory(*this) {}
 
 auto Context::retain(const llvm::StringRef string) -> llvm::StringRef {

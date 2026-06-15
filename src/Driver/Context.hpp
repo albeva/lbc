@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include "CompileOptions.hpp"
 #include "Diag/DiagEngine.hpp"
 #include "Type/TypeFactory.hpp"
 namespace lbc {
@@ -21,7 +22,9 @@ concept ContextAware = requires(const T& obj) {
 class Context final {
 public:
     NO_COPY_AND_MOVE(Context)
-    Context();
+
+    /** Construct a context that owns the (frozen) options for this compilation. */
+    explicit Context(CompileOptions options = {});
 
     /**
      * Intern given string in a set and return unique, shared copy.
@@ -77,7 +80,13 @@ public:
      */
     [[nodiscard]] auto getTypeFactory() -> TypeFactory& { return m_typeFactory; }
 
+    /**
+     * Get the (read-only) options driving this compilation
+     */
+    [[nodiscard]] auto getOptions() const -> const CompileOptions& { return m_options; }
+
 private:
+    const CompileOptions m_options;
     llvm::SourceMgr m_sourceMgr;
     llvm::BumpPtrAllocator m_allocator;
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;
