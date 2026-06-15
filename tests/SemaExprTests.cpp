@@ -333,3 +333,215 @@ TEST(SemaExprTests, ConstToReferenceRejected) {
 TEST(SemaExprTests, DoubleConstPrefixRejected) {
     EXPECT_TRUE(parseFails("DIM x AS CONST CONST INTEGER"));
 }
+
+// =============================================================================
+// Value categories
+// =============================================================================
+
+namespace {
+
+/** Analyse @p source and return the initialiser expression of the DIM at @p index. */
+auto dimInitExpr(Context& context, const llvm::StringRef source, const std::size_t index) -> AstExpr* {
+    auto* module = analyse(context, source);
+    EXPECT_NE(module, nullptr);
+    if (module == nullptr) {
+        return nullptr;
+    }
+    const auto stmts = module->getStmtList()->getStmts();
+    EXPECT_GT(stmts.size(), index);
+    if (stmts.size() <= index) {
+        return nullptr;
+    }
+    auto* dim = llvm::dyn_cast<AstDimStmt>(stmts[index]);
+    EXPECT_NE(dim, nullptr);
+    if (dim == nullptr) {
+        return nullptr;
+    }
+    return dim->getDecls().front()->getExpr();
+}
+
+} // namespace
+
+TEST(SemaExprTests, LiteralIsValue) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 42", 0);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isValue());
+}
+
+TEST(SemaExprTests, VariableIsAddressable) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 42\nDIM b = a", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isAddressable());
+}
+
+TEST(SemaExprTests, DereferenceIsAddressable) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM p AS INTEGER PTR\nDIM v = *p", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isAddressable());
+}
+
+TEST(SemaExprTests, AddressOfIsValue) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 42\nDIM p = @a", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isValue());
+}
+
+TEST(SemaExprTests, BinaryIsValue) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 1 + 2", 0);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isValue());
+}
+
+// =============================================================================
+// Assignability (requires a non-const Place on the left-hand side)
+// =============================================================================
+
+TEST(SemaExprTests, AssignToVariableAccepted) {
+    EXPECT_FALSE(semaFails("DIM a = 1\na = 2"));
+}
+
+TEST(SemaExprTests, AssignThroughPointerAccepted) {
+    // *p designates an object (Addressable), so it is assignable.
+    EXPECT_FALSE(semaFails("DIM p AS INTEGER PTR\n*p = 42"));
+}
+
+TEST(SemaExprTests, AssignToLiteralRejected) {
+    EXPECT_TRUE(semaFails("42 = 1"));
+}
+
+TEST(SemaExprTests, AssignToBinaryRejected) {
+    EXPECT_TRUE(semaFails("DIM a = 1\na + 1 = 2"));
+}
+
+TEST(SemaExprTests, AssignThroughConstPointerRejected) {
+    // *p has type CONST INTEGER: a Place, but const, so not assignable.
+    EXPECT_TRUE(semaFails("DIM p AS CONST INTEGER PTR = null\n*p = 1"));
+}
+
+// =============================================================================
+// Address-of (requires a Place operand)
+// =============================================================================
+
+TEST(SemaExprTests, AddressOfDereferenceAccepted) {
+    // @(*p) — dereference is addressable, so its address can be taken.
+    EXPECT_FALSE(semaFails("DIM p AS INTEGER PTR\nDIM q = @(*p)"));
+}
+
+TEST(SemaExprTests, AddressOfBinaryRejected) {
+    EXPECT_TRUE(semaFails("DIM a = 1\nDIM p = @(a + 1)"));
+}
+
+// =============================================================================
+// MOVE — produces an xvalue (Expiring)
+// =============================================================================
+
+TEST(SemaExprTests, MoveProducesExpiring) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 42\nDIM b = MOVE a", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isExpiring());
+}
+
+TEST(SemaExprTests, MoveIsMovableGlvalue) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 42\nDIM b = MOVE a", 1);
+    ASSERT_NE(expr, nullptr);
+    const auto cat = expr->getValueCategory();
+    EXPECT_TRUE(cat.isMovable());   // rvalue
+    EXPECT_TRUE(cat.hasIdentity()); // glvalue
+}
+
+TEST(SemaExprTests, MovePreservesType) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 42\nDIM b = MOVE a", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getType()->isInteger());
+}
+
+TEST(SemaExprTests, MoveOfTemporaryRejected) {
+    EXPECT_TRUE(semaFails("DIM x = MOVE 42"));
+}
+
+TEST(SemaExprTests, MoveOfBinaryRejected) {
+    EXPECT_TRUE(semaFails("DIM a = 1\nDIM x = MOVE (a + 1)"));
+}
+
+TEST(SemaExprTests, MoveResultNotAddressable) {
+    // The result of MOVE is an xvalue, not addressable — its address cannot be taken.
+    EXPECT_TRUE(semaFails("DIM a = 42\nDIM p = @(MOVE a)"));
+}
+
+TEST(SemaExprTests, AssignToMoveResultRejected) {
+    // The result of MOVE is an xvalue (Expiring), not addressable, so it cannot
+    // be the target of an assignment.
+    EXPECT_TRUE(semaFails("DIM a = 1\n(MOVE a) = 5"));
+}
+
+// =============================================================================
+// Call expressions — category derives from the return type
+// =============================================================================
+
+TEST(SemaExprTests, CallReturningValueIsValue) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DECLARE FUNCTION f() AS INTEGER\nDIM x = f()", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(llvm::isa<AstCallExpr>(expr));
+    EXPECT_TRUE(expr->getValueCategory().isValue());
+}
+
+TEST(SemaExprTests, CallReturningReferenceIsAddressable) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DECLARE FUNCTION f() AS INTEGER REF\nDIM x = f()", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(llvm::isa<AstCallExpr>(expr));
+    EXPECT_TRUE(expr->getValueCategory().isAddressable());
+}
+
+TEST(SemaExprTests, CallReturningReferenceStripsToReferentType) {
+    // The expression type is the referent (INTEGER), never a reference type;
+    // the reference manifests as the Addressable category instead.
+    Context context;
+    auto* expr = dimInitExpr(context, "DECLARE FUNCTION f() AS INTEGER REF\nDIM x = f()", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getType()->isInteger());
+    EXPECT_FALSE(expr->getType()->isReference());
+}
+
+// =============================================================================
+// Reference binding (DIM ... REF) requires an addressable initialiser
+// =============================================================================
+
+TEST(SemaExprTests, ReferenceBindsToAddressable) {
+    EXPECT_FALSE(semaFails("DIM a = 1\nDIM b AS INTEGER REF = a"));
+}
+
+TEST(SemaExprTests, ReferenceToBinaryRejected) {
+    EXPECT_TRUE(semaFails("DIM a = 1\nDIM b AS INTEGER REF = a + 1"));
+}
+
+// =============================================================================
+// Implicit conversion (the lvalue-to-rvalue load) yields a Value
+// =============================================================================
+
+TEST(SemaExprTests, WideningConversionIsValue) {
+    // Reading an Addressable variable into a wider type inserts an implicit
+    // cast; the converted result is a pure Value (prvalue), not a place.
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM v = 1\nDIM x AS LONG = v", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(llvm::isa<AstCastExpr>(expr));
+    EXPECT_TRUE(expr->getValueCategory().isValue());
+    EXPECT_TRUE(expr->getType()->isLong());
+}
+
+TEST(SemaExprTests, ComparisonIsValue) {
+    Context context;
+    auto* expr = dimInitExpr(context, "DIM a = 1\nDIM b = a < 2", 1);
+    ASSERT_NE(expr, nullptr);
+    EXPECT_TRUE(expr->getValueCategory().isValue());
+}

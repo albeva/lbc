@@ -26,7 +26,7 @@ public:
         StringRef generator = genName,
         StringRef ns = "lbc",
         std::vector<StringRef> includes = {
-            "pch.hpp", "Symbol/LiteralValue.hpp", "Lexer/TokenKind.hpp" }
+            "pch.hpp", "Symbol/LiteralValue.hpp", "Lexer/TokenKind.hpp", "Ast/ValueCategory.hpp" }
     );
 
     [[nodiscard]] auto run() -> bool override;

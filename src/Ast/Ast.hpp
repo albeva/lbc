@@ -10,6 +10,7 @@
 #include "pch.hpp"
 #include "Symbol/LiteralValue.hpp"
 #include "Lexer/TokenKind.hpp"
+#include "Ast/ValueCategory.hpp"
 namespace lbc {
 
 class Type;
@@ -877,6 +878,16 @@ public:
         m_type = type;
     }
 
+    /// Get the valueCategory
+    [[nodiscard]] constexpr auto getValueCategory() const -> ValueCategory {
+        return m_valueCategory;
+    }
+
+    /// Set the valueCategory
+    void setValueCategory(const ValueCategory valueCategory) {
+        m_valueCategory = valueCategory;
+    }
+
     /// Get the operand
     [[nodiscard]] constexpr auto getOperand() const -> ir::lib::Value* {
         return m_operand;
@@ -889,6 +900,7 @@ public:
 
 private:
     const Type* m_type = nullptr;
+    ValueCategory m_valueCategory = ValueCategory::Value;
     ir::lib::Value* m_operand = nullptr;
 };
 

@@ -52,6 +52,15 @@ auto IrGenerator::accept(AstLiteralExpr& ast) const -> Result {
 auto IrGenerator::accept(AstUnaryExpr& ast) -> Result {
     TRY(visit(*ast.getExpr()));
     auto* operand = ast.getExpr()->getOperand();
+
+    // No move constructors yet: MOVE forwards its operand unchanged at the IR
+    // level. The xvalue (Expiring) category is recorded in sema for future
+    // move-aware lowering.
+    if (ast.getOp() == TokenKind::Move) {
+        ast.setOperand(operand);
+        return {};
+    }
+
     auto* tmp = createTemporary(ast.getType());
 
     switch (ast.getOp().value()) {

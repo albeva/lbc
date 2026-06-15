@@ -64,6 +64,7 @@ auto SemanticAnalyser::accept(const AstDimStmt& ast) -> Result {
 
 auto SemanticAnalyser::accept(AstAssignStmt& ast) -> Result {
     TRY(visit(*ast.getAssignee()))
+    TRY(ensureAssignable(*ast.getAssignee()))
     TRY_EXPRESSION(ast, Expr, ast.getAssignee()->getType())
     return {};
 }

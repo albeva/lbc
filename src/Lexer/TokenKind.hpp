@@ -37,6 +37,7 @@ struct TokenKind final {
         PointerAccess,
         AddressOf,
         Dereference,
+        Move,
         Negate,
         LogicalNot,
         Is,
@@ -132,7 +133,7 @@ struct TokenKind final {
     /**
      * Total number of token kinds
      */
-    static constexpr std::size_t COUNT = 83;
+    static constexpr std::size_t COUNT = 84;
 
     constexpr TokenKind() = default;
 
@@ -242,6 +243,7 @@ struct TokenKind final {
             case PointerAccess:
             case AddressOf:
             case Dereference:
+            case Move:
                 return Category::Memory;
             default:
                 return Category::Invalid;
@@ -310,6 +312,7 @@ struct TokenKind final {
                 return 13;
             case AddressOf:
             case Dereference:
+            case Move:
                 return 12;
             case Negate:
             case LogicalNot:
@@ -442,6 +445,7 @@ struct TokenKind final {
             case PointerAccess: return "->";
             case AddressOf: return "@";
             case Dereference: return "*";
+            case Move: return "MOVE";
             case Negate: return "-";
             case LogicalNot: return "NOT";
             case Is: return "IS";
@@ -534,8 +538,8 @@ struct TokenKind final {
     /**
      * Return all Operator tokens
      */
-    [[nodiscard]] static consteval auto allOperators() -> std::array<TokenKind, 24> { // NOLINT(*-magic-numbers)
-        return {ParenOpen, MemberAccess, PointerAccess, AddressOf, Dereference, Negate, LogicalNot, Is, As, Multiply, Divide, Modulus, Plus, Minus, Equal, NotEqual, LessThan, LessOrEqual, GreaterThan, GreaterOrEqual, LogicalAnd, LogicalOr, Assign, ConditionAnd};
+    [[nodiscard]] static consteval auto allOperators() -> std::array<TokenKind, 25> { // NOLINT(*-magic-numbers)
+        return {ParenOpen, MemberAccess, PointerAccess, AddressOf, Dereference, Move, Negate, LogicalNot, Is, As, Multiply, Divide, Modulus, Plus, Minus, Equal, NotEqual, LessThan, LessOrEqual, GreaterThan, GreaterOrEqual, LogicalAnd, LogicalOr, Assign, ConditionAnd};
     }
 
     /**
@@ -555,8 +559,8 @@ struct TokenKind final {
     /**
      * Return all operators that look like keywords
      */
-    [[nodiscard]] static consteval auto allOperatorKeywords() -> std::array<TokenKind, 6> { // NOLINT(*-magic-numbers)
-        return { LogicalNot, Is, As, Modulus, LogicalAnd, LogicalOr };
+    [[nodiscard]] static consteval auto allOperatorKeywords() -> std::array<TokenKind, 7> { // NOLINT(*-magic-numbers)
+        return { Move, LogicalNot, Is, As, Modulus, LogicalAnd, LogicalOr };
     }
 
     private:

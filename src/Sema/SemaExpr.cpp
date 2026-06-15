@@ -135,10 +135,20 @@ void SemanticAnalyser::setSuggestedType(const Type* type) {
 }
 
 auto SemanticAnalyser::ensureAddressable(const AstExpr& ast) -> Result {
-    if (llvm::isa<AstVarExpr>(ast)) {
+    if (ast.getValueCategory().isAddressable()) {
         return {};
     }
     return diag(diagnostics::nonAddressableExpr(), ast.getRange());
+}
+
+auto SemanticAnalyser::ensureAssignable(const AstExpr& ast) -> Result {
+    if (not ast.getValueCategory().isAddressable()) {
+        return diag(diagnostics::notAssignable(), ast.getRange());
+    }
+    if (ast.getType()->isConst()) {
+        return diag(diagnostics::assignToConst(), ast.getRange());
+    }
+    return {};
 }
 
 // =============================================================================
@@ -190,6 +200,10 @@ auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
 
     ast.setSymbol(symbol);
     ast.setType(symbol->getType()->removeReference());
+    // A named variable designates an object: it is Addressable (lvalue). This
+    // holds whether or not the symbol is reference-bound — naming a reference
+    // yields the referent as an Addressable place.
+    ast.setValueCategory(ValueCategory::Addressable);
     setSuggestedType(ast.getType());
     return {};
 }
@@ -199,6 +213,7 @@ auto SemanticAnalyser::accept(AstVarExpr& ast) -> Result {
 // - LogicalNot: boolean only
 // - AddressOf: operand must be addressable (lvalue); produces a pointer
 // - Dereference: pointer types only; produces the pointee type
+// - Move: operand must designate an object (glvalue); produces an xvalue
 auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
     TRY_EXPRESSION(ast, Expr, nullptr)
 
@@ -227,6 +242,18 @@ auto SemanticAnalyser::accept(AstUnaryExpr& ast) -> Result {
             return diag(diagnostics::dereferencingAnyPtr(), ast.getRange());
         }
         ast.setType(operandType->getBaseType());
+        // Dereferencing a pointer yields an Addressable place (lvalue): the
+        // pointed-to object can be assigned, addressed, or bound to a reference.
+        ast.setValueCategory(ValueCategory::Addressable);
+    } else if (op == TokenKind::Move) {
+        // MOVE casts an object to an Expiring value (xvalue): it still names an
+        // object but may now be moved from. The operand must designate an
+        // object (a glvalue); a pure value has nothing to move.
+        if (not ast.getExpr()->getValueCategory().hasIdentity()) {
+            return diag(diagnostics::invalidMoveOperand(), ast.getRange());
+        }
+        ast.setType(operandType);
+        ast.setValueCategory(ValueCategory::Expiring);
     } else {
         std::unreachable();
     }
@@ -336,9 +363,14 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
         TRY_ASSIGN(args[i], expression(*args[i], params[i]));
     }
 
-    const Type* retType = funcType->getReturnType()->removeReference();
-    ast.setType(retType);
-    setSuggestedType(retType);
+    const Type* rawRetType = funcType->getReturnType();
+    ast.setType(rawRetType->removeReference());
+    // A call returning a reference yields an Addressable place (lvalue); a
+    // by-value return is a pure Value (prvalue), which is the default category.
+    if (rawRetType->isReference()) {
+        ast.setValueCategory(ValueCategory::Addressable);
+    }
+    setSuggestedType(ast.getType());
     return {};
 }
 

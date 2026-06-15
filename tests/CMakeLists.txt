@@ -19,6 +19,7 @@ add_executable(tests
     SemaExprTests.cpp
     TypeComparisonTests.cpp
     TypeFactoryTests.cpp
+    ValueCategoryTests.cpp
 )
 
 # Link

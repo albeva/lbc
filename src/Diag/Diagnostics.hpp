@@ -43,6 +43,9 @@ struct DiagKind final {
         dereferencingAnyPtr,
         invalidReferenceInit,
         constToReference,
+        notAssignable,
+        assignToConst,
+        invalidMoveOperand,
     };
 
     /**
@@ -58,7 +61,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 25;
+    static constexpr std::size_t COUNT = 28;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -123,6 +126,9 @@ struct DiagKind final {
             case dereferencingAnyPtr:
             case invalidReferenceInit:
             case constToReference:
+            case notAssignable:
+            case assignToConst:
+            case invalidMoveOperand:
                 return Category::Sema;
         }
         std::unreachable();
@@ -158,6 +164,9 @@ struct DiagKind final {
             case dereferencingAnyPtr:
             case invalidReferenceInit:
             case constToReference:
+            case notAssignable:
+            case assignToConst:
+            case invalidMoveOperand:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -193,6 +202,9 @@ struct DiagKind final {
             case dereferencingAnyPtr: return "E0315";
             case invalidReferenceInit: return "E0316";
             case constToReference: return "E0317";
+            case notAssignable: return "E0318";
+            case assignToConst: return "E0319";
+            case invalidMoveOperand: return "E0320";
         }
         std::unreachable();
     }
@@ -200,8 +212,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 25> { // NOLINT(*-magic-numbers)
-        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 28> { // NOLINT(*-magic-numbers)
+        return { notImplemented, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
     }
 
 private:
@@ -371,6 +383,21 @@ namespace diagnostics {
     /// Create constToReference message
     [[nodiscard]] inline auto constToReference() -> DiagMessage {
         return { DiagKind::constToReference, "cannot apply CONST to a reference" };
+    }
+
+    /// Create notAssignable message
+    [[nodiscard]] inline auto notAssignable() -> DiagMessage {
+        return { DiagKind::notAssignable, "expression is not assignable" };
+    }
+
+    /// Create assignToConst message
+    [[nodiscard]] inline auto assignToConst() -> DiagMessage {
+        return { DiagKind::assignToConst, "cannot assign to a constant value" };
+    }
+
+    /// Create invalidMoveOperand message
+    [[nodiscard]] inline auto invalidMoveOperand() -> DiagMessage {
+        return { DiagKind::invalidMoveOperand, "cannot MOVE a temporary value" };
     }
 
 }

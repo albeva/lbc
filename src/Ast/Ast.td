@@ -169,6 +169,7 @@ def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [
 
 def Expr : Group<"expression", Root, [
     Arg<"const Type*", "type", true, "nullptr">,
+    Arg<"ValueCategory", "valueCategory", true, "ValueCategory::Value">,
     Arg<"ir::lib::Value*", "operand", true, "nullptr">
 ]>;
 

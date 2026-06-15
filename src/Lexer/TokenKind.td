@@ -69,6 +69,7 @@ def MemberAccess   : Operator<".",   13, 1, 1, Memory>;
 def PointerAccess  : Operator<"->",  13, 1, 1, Memory>;
 def AddressOf      : Operator<"@",   12, 0, 0, Memory>;
 def Dereference    : Operator<"*",   12, 0, 0, Memory>;
+def Move           : Operator<"MOVE", 12, 0, 0, Memory>;
 def Negate         : Operator<"-",   11, 0, 0, Arithmetic>;
 def LogicalNot     : Operator<"NOT", 11, 0, 1, Logical>;
 def Is             : Operator<"IS",  10, 0, 0, Comparison>;

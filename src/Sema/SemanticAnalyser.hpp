@@ -179,10 +179,16 @@ private:
     void setSuggestedType(const Type* implicitType);
 
     /**
-     * Verify that an expression is addressable (can have its address taken).
-     * Currently only variable references are addressable.
+     * Verify that an expression is addressable (can have its address taken or
+     * be bound to a reference). Only Place expressions (C++ lvalues) qualify.
      */
     [[nodiscard]] auto ensureAddressable(const AstExpr& ast) -> Result;
+
+    /**
+     * Verify that an expression can be the target of an assignment: it must be
+     * a non-const Place expression (C++ modifiable lvalue).
+     */
+    [[nodiscard]] auto ensureAssignable(const AstExpr& ast) -> Result;
 
     // -------------------------------------------------------------------------
     // Types (SemaType.cpp)

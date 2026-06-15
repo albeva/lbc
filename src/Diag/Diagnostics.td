@@ -93,3 +93,6 @@ def invalidUnaryOperand    : Error<Sema, "E0314", "invalid operand to {op}: {typ
 def dereferencingAnyPtr    : Error<Sema, "E0315", "dereferencing any ptr">;
 def invalidReferenceInit   : Error<Sema, "E0316", "Cannot initialize reference from given expression">;
 def constToReference       : Error<Sema, "E0317", "cannot apply CONST to a reference">;
+def notAssignable          : Error<Sema, "E0318", "expression is not assignable">;
+def assignToConst          : Error<Sema, "E0319", "cannot assign to a constant value">;
+def invalidMoveOperand     : Error<Sema, "E0320", "cannot MOVE a temporary value">;
