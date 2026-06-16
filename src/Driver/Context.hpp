@@ -70,7 +70,7 @@ public:
     /**
      * Get LLVM SourceMgr
      */
-    [[nodiscard]] auto getSourceMgr() -> llvm::SourceMgr& { return m_sourceMgr; }
+    [[nodiscard]] auto getSourceMgr() -> llvm::SourceMgr& { return *m_sourceMgr; }
 
     /**
      * Get diagnostics engine
@@ -95,7 +95,7 @@ public:
     /**
      * Get the LLVM context owning this compilation's modules
      */
-    [[nodiscard]] auto getLlvmContext() -> llvm::LLVMContext& { return m_llvm; }
+    [[nodiscard]] auto getLlvmContext() -> llvm::LLVMContext& { return *m_llvmContext; }
 
     /**
      * Create a temporary file with the given @p suffix and return its path. The
@@ -107,11 +107,29 @@ public:
      */
     [[nodiscard]] auto createTempFile(llvm::StringRef suffix) -> std::string;
 
+    /**
+     * Swap context
+     *
+     * This will initialize a new empty context object.
+     *
+     * @return current llvm context instance
+     */
+    [[nodiscard]] auto replaceContext(std::unique_ptr<llvm::LLVMContext> replacement) -> std::unique_ptr<llvm::LLVMContext>;
+
+    /**
+     * Swap SourceMgr
+     *
+     * A new empty SourceMgr instance will be initialized
+     *
+     * @return current source manager instance
+     */
+    [[nodiscard]] auto replaceSourceManager(std::unique_ptr<llvm::SourceMgr> replacement) -> std::unique_ptr<llvm::SourceMgr>;
+
 private:
     const CompileOptions m_options;
     llvm::Triple m_triple;
-    llvm::LLVMContext m_llvm;
-    llvm::SourceMgr m_sourceMgr;
+    std::unique_ptr<llvm::LLVMContext> m_llvmContext;
+    std::unique_ptr<llvm::SourceMgr> m_sourceMgr;
     llvm::BumpPtrAllocator m_allocator;
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;
     DiagEngine m_diagEngine;

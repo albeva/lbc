@@ -80,6 +80,8 @@ auto buildTriple(const CompileOptions& options) -> llvm::Triple {
 Context::Context(CompileOptions options)
 : m_options(std::move(options))
 , m_triple(buildTriple(m_options))
+, m_llvmContext(std::make_unique<llvm::LLVMContext>())
+, m_sourceMgr(std::make_unique<llvm::SourceMgr>())
 , m_diagEngine(*this)
 , m_typeFactory(*this) {}
 
@@ -93,4 +95,12 @@ auto Context::createTempFile(const llvm::StringRef suffix) -> std::string {
         return {};
     }
     return std::string { path.data(), path.size() };
+}
+
+auto Context::replaceContext(std::unique_ptr<llvm::LLVMContext> replacement) -> std::unique_ptr<llvm::LLVMContext> {
+    return std::exchange(m_llvmContext, std::move(replacement));
+}
+
+auto Context::replaceSourceManager(std::unique_ptr<llvm::SourceMgr> replacement) -> std::unique_ptr<llvm::SourceMgr> {
+    return std::exchange(m_sourceMgr, std::move(replacement));
 }

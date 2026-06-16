@@ -5,10 +5,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <fstream>
-#include <llvm/Bitcode/BitcodeReader.h>
-#include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/raw_ostream.h>
@@ -107,29 +104,14 @@ auto CompilerBase::run() -> std::string {
     }
     m_failed = false;
 
-    // The module lives in `context`'s LLVMContext, which ORC cannot own. Move it
-    // into a JIT-owned context through an in-memory bitcode round-trip.
-    llvm::SmallVector<char> bitcode;
-    {
-        llvm::raw_svector_ostream os { bitcode };
-        llvm::WriteBitcodeToFile(*module, os);
-    }
-    auto llvmContext = std::make_unique<llvm::LLVMContext>();
-    auto reparsed = llvm::parseBitcodeFile(
-        llvm::MemoryBufferRef { llvm::StringRef { bitcode.data(), bitcode.size() }, "jit" },
-        *llvmContext
-    );
-    if (!reparsed) {
-        llvm::consumeError(reparsed.takeError());
-        m_failed = true;
-        return "bitcode round-trip failed";
-    }
-
     auto jit = llvm::cantFail(test::JIT::create());
-    (*reparsed)->setDataLayout(jit.getDataLayout());
+    module->setDataLayout(jit.getDataLayout());
     llvm::cantFail(jit.define("printf", &capturePrintf));
     llvm::cantFail(jit.define("puts", &capturePuts));
-    llvm::orc::ThreadSafeModule tsm { std::move(*reparsed), llvm::orc::ThreadSafeContext { std::move(llvmContext) } };
+    llvm::orc::ThreadSafeModule tsm {
+        std::move(module),
+        llvm::orc::ThreadSafeContext { context.replaceContext(nullptr) } // context looses llvm context!
+    };
     llvm::cantFail(jit.addModule(std::move(tsm)));
     llvm::cantFail(jit.initialize());
 
