@@ -64,6 +64,15 @@ auto buildTriple(const CompileOptions& options) -> llvm::Triple {
         break;
     }
 
+    // On Apple targets, pin a conservative macOS deployment target. The host
+    // triple carries the running Darwin kernel version, which LLVM maps to a
+    // macOS release that can be newer than the installed SDK — the emitted
+    // object would then be flagged "newer than being linked". A fixed minimum
+    // keeps the object's platform version compatible with any linking SDK.
+    if (triple.isOSDarwin()) {
+        triple.setOSName("macosx11.0.0");
+    }
+
     return triple;
 }
 } // namespace
