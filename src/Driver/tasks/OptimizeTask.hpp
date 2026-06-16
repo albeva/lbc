@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 15/06/2026.
 //
 #pragma once
+#include "Driver/Artefact.hpp"
 #include "Driver/Task.hpp"
 
 namespace lbc {
@@ -14,9 +15,15 @@ namespace lbc {
  *
  * The optimiser location and level are read from the context's options.
  */
-class OptimizeTask final : public Task<std::string, std::string> {
+class OptimizeTask final : public Task<Artefact, Artefact> {
 public:
-    [[nodiscard]] auto run(Context& context, std::string input) -> DiagResult<std::string> override;
+    explicit OptimizeTask(TaskOption option)
+    : m_option(std::move(option)) {}
+
+    [[nodiscard]] auto run(Context& context, Artefact input) -> DiagResult<Artefact> override;
+
+private:
+    TaskOption m_option;
 };
 
 } // namespace lbc

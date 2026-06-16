@@ -7,6 +7,7 @@ target_sources(lbc_lib
     Ast/Ast.cpp
     Ast/AstCodePrinter.cpp
     Diag/DiagEngine.cpp
+    Driver/Artefact.cpp
     Driver/CompileOptions.cpp
     Driver/Context.cpp
     Driver/Driver.cpp
@@ -59,6 +60,7 @@ target_sources(lbc_lib
     Ast/AstCodePrinter.hpp
     Diag/DiagEngine.hpp
     Diag/LogProvider.hpp
+    Driver/Artefact.hpp
     Driver/CompileOptions.hpp
     Driver/Context.hpp
     Driver/Driver.hpp

@@ -23,22 +23,6 @@ auto resolveDirectory(const llvm::StringRef path) -> std::string {
     return std::string { dir.data(), dir.size() };
 }
 
-/** File extension (with leading dot) for an output kind; empty for an executable. */
-auto outputExtension(const CompileOptions::OutputType type) -> llvm::StringRef {
-    using Out = CompileOptions::OutputType;
-    switch (type) {
-    case Out::Object:
-        return ".o";
-    case Out::Assembly:
-        return ".s";
-    case Out::LlvmIr:
-        return ".ll";
-    case Out::Executable:
-        return ""; // platform-specific naming is handled once linking lands
-    }
-    return "";
-}
-
 /** Classify a file by its path extension; anything unknown is treated as source. */
 auto detectFileType(const llvm::StringRef path) -> CompileOptions::FileType {
     using FileType = CompileOptions::FileType;
@@ -132,30 +116,35 @@ void CompileOptions::finalize() {
     // Resolve the working directory to an absolute, normalised path (CWD if unset).
     m_workingDirectory = resolveDirectory(m_workingDirectory);
 
-    // Derive the output path from the first input when none was given explicitly.
+    // An explicit -o supplies the build directory and the output stem; otherwise
+    // the build path defaults to the working directory and the stem is taken
+    // from the first input.
     if (m_outputPath.empty()) {
-        m_outputPath = deriveDefaultOutput();
+        m_buildPath = m_buildPath.empty() ? m_workingDirectory : resolveDirectory(m_buildPath);
+        m_outputStem = deriveOutputStem();
+    } else {
+        m_buildPath = resolveDirectory(llvm::sys::path::parent_path(m_outputPath));
+        m_outputStem = llvm::sys::path::stem(m_outputPath).str();
     }
 }
 
-auto CompileOptions::deriveDefaultOutput() const -> std::string {
+auto CompileOptions::deriveOutputStem() const -> std::string {
     const auto sources = getFiles(FileType::Source);
-    const auto objects = getFiles(FileType::Object);
-
-    llvm::StringRef first;
     if (!sources.empty()) {
-        first = sources.front();
-    } else if (!objects.empty()) {
-        first = objects.front();
-    } else {
-        return {}; // no input to derive from; the driver reports the missing input
+        return llvm::sys::path::stem(sources.front()).str();
     }
+    const auto objects = getFiles(FileType::Object);
+    if (!objects.empty()) {
+        return llvm::sys::path::stem(objects.front()).str();
+    }
+    return {}; // no input to derive from; the driver reports the missing input
+}
 
-    const std::string name = (llvm::Twine(llvm::sys::path::stem(first)) + outputExtension(m_outputType)).str();
-    if (m_workingDirectory.empty()) {
-        return name;
-    }
-    llvm::SmallString<256> path { m_workingDirectory };
+auto CompileOptions::artifactPath(const llvm::StringRef baseName, const llvm::StringRef extension) const -> std::string {
+    const std::string name = extension.empty()
+                               ? baseName.str()
+                               : (llvm::Twine(baseName) + "." + extension).str();
+    llvm::SmallString<256> path { m_buildPath };
     llvm::sys::path::append(path, name);
     return std::string { path.data(), path.size() };
 }

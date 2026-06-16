@@ -83,12 +83,6 @@ Context::Context(CompileOptions options)
 , m_diagEngine(*this)
 , m_typeFactory(*this) {}
 
-Context::~Context() {
-    for (const auto& path : m_tempFiles) {
-        std::ignore = llvm::sys::fs::remove(path);
-    }
-}
-
 auto Context::retain(const llvm::StringRef string) -> llvm::StringRef {
     return m_strings.insert(string).first->first();
 }
@@ -98,5 +92,5 @@ auto Context::createTempFile(const llvm::StringRef suffix) -> std::string {
     if (llvm::sys::fs::createTemporaryFile("lbc", suffix, path)) {
         return {};
     }
-    return m_tempFiles.emplace_back(path.data(), path.size());
+    return std::string { path.data(), path.size() };
 }

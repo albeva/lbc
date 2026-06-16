@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 16/06/2026.
 //
 #pragma once
+#include "Driver/Artefact.hpp"
 #include "Driver/Task.hpp"
 
 namespace lbc {
@@ -14,9 +15,15 @@ namespace lbc {
  *
  * Takes the object paths and returns the path to the linked executable.
  */
-class EmitBinaryTask final : public Task<std::vector<std::string>, std::string> {
+class EmitBinaryTask final : public Task<std::vector<Artefact>, Artefact> {
 public:
-    [[nodiscard]] auto run(Context& context, std::vector<std::string> objects) -> DiagResult<std::string> override;
+    explicit EmitBinaryTask(TaskOption option)
+    : m_option(std::move(option)) {}
+
+    [[nodiscard]] auto run(Context& context, std::vector<Artefact> objects) -> DiagResult<Artefact> override;
+
+private:
+    TaskOption m_option;
 };
 
 } // namespace lbc

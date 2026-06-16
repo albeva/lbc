@@ -10,6 +10,18 @@ namespace lbc {
 class Context;
 
 /**
+ * How a task names its output artefact. An empty @ref baseName requests a
+ * temporary (deleted once consumed); otherwise the output is written to the
+ * build path as `<baseName>.<ext>` — the task supplies the extension.
+ */
+struct TaskOption final {
+    std::string baseName; ///< output base name; empty requests a temporary
+
+    /** Whether the output should be a temporary (no base name was given). */
+    [[nodiscard]] auto isTemporary() const -> bool { return baseName.empty(); }
+};
+
+/**
  * A single compilation stage: transforms an @p Input artifact into an @p Output
  * artifact, or fails with a diagnostic. Stages read what they need from the
  * Context handed to @ref run, so @ref pipeline can thread one Context — and each

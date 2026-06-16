@@ -4,6 +4,7 @@
 #pragma once
 #include "pch.hpp"
 #include <vector>
+#include "Artefact.hpp"
 #include "Context.hpp"
 
 namespace lbc {
@@ -41,8 +42,8 @@ private:
     /** Reject an inconsistent configuration or unreachable inputs. */
     [[nodiscard]] auto validate() -> DiagResult<void>;
 
-    /** Drive one resolved source through the stages; returns the artifact it produced. */
-    [[nodiscard]] auto compileSource(const std::string& source) -> DiagResult<std::string>;
+    /** Drive one resolved source through the stages; returns the artefact it produced. */
+    [[nodiscard]] auto compileSource(const std::string& source) -> DiagResult<Artefact>;
 
     Context m_context;                 ///< owns the options and all per-compilation state
     std::vector<std::string> m_inputs; ///< resolved absolute input paths

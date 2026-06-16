@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 15/06/2026.
 //
 #pragma once
+#include "Driver/Artefact.hpp"
 #include "Driver/Task.hpp"
 
 namespace llvm {
@@ -18,9 +19,15 @@ namespace lbc {
  * object/assembly emission and linking are handled by separate stages that
  * shell out to the toolchain; only the in-process LLVM IR path lives here.
  */
-class EmitLlvmTask final : public Task<std::unique_ptr<llvm::Module>, std::string> {
+class EmitLlvmTask final : public Task<std::unique_ptr<llvm::Module>, Artefact> {
 public:
-    [[nodiscard]] auto run(Context& context, std::unique_ptr<llvm::Module> module) -> DiagResult<std::string> override;
+    explicit EmitLlvmTask(TaskOption option)
+    : m_option(std::move(option)) {}
+
+    [[nodiscard]] auto run(Context& context, std::unique_ptr<llvm::Module> module) -> DiagResult<Artefact> override;
+
+private:
+    TaskOption m_option;
 };
 
 } // namespace lbc

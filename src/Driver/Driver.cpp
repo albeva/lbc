@@ -43,32 +43,49 @@ auto Driver::run() -> DiagResult<void> {
     resolvePaths();
     TRY(validate())
 
-    // Compile each source to its artifact (an object file when an executable is
-    // being built), collecting the produced paths.
-    std::vector<std::string> artifacts;
-    artifacts.reserve(m_inputs.size());
+    // Compile each source to its artefact: a temporary object when building an
+    // executable, otherwise the final output.
+    std::vector<Artefact> objects;
+    objects.reserve(m_inputs.size());
     for (const auto& source : m_inputs) {
-        TRY_DECL(artifact, compileSource(source))
-        artifacts.push_back(std::move(artifact));
+        TRY_DECL(artefact, compileSource(source))
+        objects.push_back(std::move(artefact));
     }
 
-    // Link the generated objects into the final executable.
+    // Link an executable from the generated objects plus any pre-built object
+    // inputs (those we do not own, so they are kept rather than deleted).
     if (options.getOutputType() == CompileOptions::OutputType::Executable) {
-        EmitBinaryTask link {};
-        TRY(link.run(m_context, std::move(artifacts)))
+        for (const auto& object : options.getFiles(CompileOptions::FileType::Object)) {
+            objects.emplace_back(object, /*temporary=*/false);
+        }
+        EmitBinaryTask link { TaskOption { .baseName = options.getOutputStem().str() } };
+        TRY(link.run(m_context, std::move(objects)))
     }
     return {};
 }
 
-auto Driver::compileSource(const std::string& source) -> DiagResult<std::string> {
-    // LLVM IR is emitted straight from the in-memory module; native output
-    // serialises the module to bitcode once, then flows that file through the
-    // shell-out stages (OptimizeTask is a no-op at -O0). Either way the final
-    // stage returns the path it wrote.
-    if (m_context.getOptions().getOutputType() == CompileOptions::OutputType::LlvmIr) {
-        return pipeline(m_context, source, CompileTask {}, EmitLlvmTask {});
+auto Driver::compileSource(const std::string& source) -> DiagResult<Artefact> {
+    const auto& options = m_context.getOptions();
+    const std::string baseName = options.getOutputStem().str();
+
+    // LLVM IR is emitted straight from the in-memory module, into the build path.
+    if (options.getOutputType() == CompileOptions::OutputType::LlvmIr) {
+        return pipeline(m_context, source, CompileTask {}, EmitLlvmTask { TaskOption { .baseName = baseName } });
     }
-    return pipeline(m_context, source, CompileTask {}, WriteBitcodeTask {}, OptimizeTask {}, EmitNativeTask {});
+
+    // Native output: serialise to bitcode, optimise, then emit the object. The
+    // bitcode intermediates are temporaries (no base name); for an executable
+    // the object is a temporary too (linked afterwards), otherwise it is the
+    // final build-path artefact named after the output stem.
+    const bool toExecutable = options.getOutputType() == CompileOptions::OutputType::Executable;
+    return pipeline(
+        m_context,
+        source,
+        CompileTask {},
+        WriteBitcodeTask { TaskOption {} },
+        OptimizeTask { TaskOption {} },
+        EmitNativeTask { TaskOption { .baseName = toExecutable ? baseName : "" } }
+    );
 }
 
 void Driver::resolvePaths() {

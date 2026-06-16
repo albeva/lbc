@@ -2,6 +2,7 @@
 // Created by Albert Varaksin on 15/06/2026.
 //
 #pragma once
+#include "Driver/Artefact.hpp"
 #include "Driver/Task.hpp"
 
 namespace lbc {
@@ -17,9 +18,15 @@ namespace lbc {
  * Takes the input bitcode path and returns the path to the artifact it wrote
  * (for the linker). Assembly is emitted in Intel syntax.
  */
-class EmitNativeTask final : public Task<std::string, std::string> {
+class EmitNativeTask final : public Task<Artefact, Artefact> {
 public:
-    [[nodiscard]] auto run(Context& context, std::string input) -> DiagResult<std::string> override;
+    explicit EmitNativeTask(TaskOption option)
+    : m_option(std::move(option)) {}
+
+    [[nodiscard]] auto run(Context& context, Artefact input) -> DiagResult<Artefact> override;
+
+private:
+    TaskOption m_option;
 };
 
 } // namespace lbc

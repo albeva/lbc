@@ -79,10 +79,11 @@ public:
     };
 
     /**
-     * Resolve derived configuration in place: make the working directory
-     * absolute (defaulting to the current directory) and, when no output path
-     * was given, derive one from the first input and the output kind. Call once
-     * after populating the options and before handing them to the driver;
+     * Resolve derived configuration in place: make the working directory and
+     * build path absolute, and determine the output stem. An explicit `-o`
+     * supplies the build directory and stem; otherwise the build path defaults
+     * to the working directory and the stem is taken from the first input. Call
+     * once after populating the options and before handing them to the driver;
      * thereafter the options can be treated as const.
      */
     void finalize();
@@ -102,11 +103,14 @@ public:
     /** Append a directory to the include search hierarchy (highest precedence first). */
     void addIncludePath(const llvm::StringRef path) { m_includePaths.emplace_back(path); }
 
-    /** Set the explicit output path; empty means "derive a default". */
+    /** Set the explicit output path (`-o`); its directory and base name override the build path and stem. */
     void setOutputPath(const llvm::StringRef path) { m_outputPath = path; }
 
     /** Set the base directory for relative paths; resolved to absolute by @ref finalize. */
     void setWorkingDirectory(const llvm::StringRef path) { m_workingDirectory = path; }
+
+    /** Set the directory for generated artifacts; resolved to absolute by @ref finalize. */
+    void setBuildPath(const llvm::StringRef path) { m_buildPath = path; }
 
     /** Set the path to the compiler itself (used to locate bundled resources). */
     void setCompilerPath(const llvm::StringRef path) { m_compilerPath = path; }
@@ -154,6 +158,10 @@ public:
     [[nodiscard]] auto getIncludePaths() const -> llvm::ArrayRef<std::string> { return m_includePaths; }
     [[nodiscard]] auto getOutputPath() const -> llvm::StringRef { return m_outputPath; }
     [[nodiscard]] auto getWorkingDirectory() const -> llvm::StringRef { return m_workingDirectory; }
+    [[nodiscard]] auto getBuildPath() const -> llvm::StringRef { return m_buildPath; }
+    [[nodiscard]] auto getOutputStem() const -> llvm::StringRef { return m_outputStem; }
+    /** Path for a generated artefact: `<buildPath>/<baseName>.<extension>` (no dot when extension is empty). */
+    [[nodiscard]] auto artifactPath(llvm::StringRef baseName, llvm::StringRef extension) const -> std::string;
     [[nodiscard]] auto getCompilerPath() const -> llvm::StringRef { return m_compilerPath; }
     [[nodiscard]] auto getToolchainPath() const -> llvm::StringRef { return m_toolchainPath; }
     [[nodiscard]] auto getOutputType() const -> OutputType { return m_outputType; }
@@ -173,13 +181,15 @@ public:
     [[nodiscard]] auto toCommandLine() const -> std::string;
 
 private:
-    /** Derive the output path from the first input and the output kind (used by @ref finalize). */
-    [[nodiscard]] auto deriveDefaultOutput() const -> std::string;
+    /** The output stem (file name without extension) taken from the first input. */
+    [[nodiscard]] auto deriveOutputStem() const -> std::string;
 
     std::array<std::vector<std::string>, FileTypeCount> m_files;   ///< input files bucketed by FileType
     std::vector<std::string> m_includePaths;                       ///< include search hierarchy, highest precedence first
-    std::string m_outputPath;                                      ///< explicit output path, empty if defaulted
+    std::string m_outputPath;                                      ///< explicit output path (-o), empty if defaulted
     std::string m_workingDirectory;                                ///< base for relative paths, empty if CWD
+    std::string m_buildPath;                                       ///< resolved directory for generated artifacts
+    std::string m_outputStem;                                      ///< resolved output file name without extension
     std::string m_compilerPath;                                    ///< path to the lbc compiler itself
     std::string m_toolchainPath;                                   ///< dir holding the LLVM toolchain binaries
     Arch m_arch = Arch::Default;                                   ///< target architecture, host if Default

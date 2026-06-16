@@ -8,7 +8,7 @@
 #include "Driver/Toolchain.hpp"
 using namespace lbc;
 
-auto EmitNativeTask::run(Context& context, std::string input) -> DiagResult<std::string> {
+auto EmitNativeTask::run(Context& context, Artefact input) -> DiagResult<Artefact> {
     const auto& options = context.getOptions();
     auto& diag = context.getDiag();
     const auto fail = [&](const llvm::StringRef reason,
@@ -19,18 +19,16 @@ auto EmitNativeTask::run(Context& context, std::string input) -> DiagResult<std:
     const Toolchain toolchain { context };
     TRY_DECL(codegen, toolchain.getCodeGen())
 
+    // Object or assembly, written to a temporary (an intermediate for linking)
+    // or to the build path (the final artifact), per the configured file options.
     const bool assembly = options.getOutputType() == CompileOptions::OutputType::Assembly;
+    const llvm::StringRef extension = assembly ? "s" : "o";
 
-    // For an executable this object is an intermediate to be linked, so emit it
-    // to a temporary; otherwise it is the final artifact at the configured path.
-    std::string output;
-    if (options.getOutputType() == CompileOptions::OutputType::Executable) {
-        output = context.createTempFile("o");
-        if (output.empty()) {
-            return fail("failed to create temporary file");
-        }
-    } else {
-        output = options.getOutputPath().str();
+    // Own the output up front so a failure below deletes it (if temporary).
+    Artefact output { m_option.isTemporary() ? context.createTempFile(extension) : options.artifactPath(m_option.baseName, extension),
+                      m_option.isTemporary() };
+    if (output.path().empty()) {
+        return fail("failed to create output file");
     }
 
     // Run: llc -filetype=<asm|obj> [--output-asm-variant=1] -mtriple=<triple> <input.bc> -o <output>
@@ -43,9 +41,9 @@ auto EmitNativeTask::run(Context& context, std::string input) -> DiagResult<std:
         args.push_back("--output-asm-variant=1"); // Intel syntax for x86; ignored elsewhere
     }
     args.push_back(mtriple);
-    args.push_back(input);
+    args.push_back(input.path());
     args.push_back("-o");
-    args.push_back(output);
+    args.push_back(output.path());
 
     std::string error;
     const int code = llvm::sys::ExecuteAndWait(codegen, args, std::nullopt, {}, 0, 0, &error);
@@ -53,5 +51,6 @@ auto EmitNativeTask::run(Context& context, std::string input) -> DiagResult<std:
         return fail(error.empty() ? "llc exited with code " + std::to_string(code) : error);
     }
 
+    // The consumed input artefact is deleted here (if temporary) as it goes out of scope.
     return output;
 }
