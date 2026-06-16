@@ -93,6 +93,12 @@ auto SemanticAnalyser::accept(AstVarDecl& ast) -> Result {
 }
 
 auto SemanticAnalyser::accept(AstFuncDecl& ast) -> Result {
+    // C-style variadics are an ABI concern: only meaningful under C linkage. The
+    // symbol already carries its linkage (set during declare).
+    if (ast.getVariadic() && ast.getSymbol()->getExternKind() != ExternKind::C) {
+        return diag(diagnostics::variadicRequiresC(), ast.getRange());
+    }
+
     const auto count = ast.getParams().size();
 
     auto related = m_context.span<Symbol*>(count);
@@ -125,7 +131,7 @@ auto SemanticAnalyser::accept(AstFuncDecl& ast) -> Result {
     }
 
     // Get function type
-    const auto* funcType = getTypeFactory().getFunction(params, returnType);
+    const auto* funcType = getTypeFactory().getFunction(params, returnType, ast.getVariadic());
     ast.setType(funcType);
 
     // create symbol

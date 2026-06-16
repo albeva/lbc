@@ -42,13 +42,12 @@ auto Parser::subDecl() -> Result<AstFuncDecl*> {
     const auto sourceName = getContext().retain(m_token.lexeme());
     TRY_DECL(id, identifier())
 
-    std::span<AstFuncParamDecl*> params;
-    TRY_IF (accept(TokenKind::ParenOpen)) {
-        TRY_ASSIGN(params, paramList())
-        TRY(consume(TokenKind::ParenClose))
-    }
+    bool variadic = false;
+    TRY_DECL(params, paramList(false, variadic));
+
     auto* decl = make<AstFuncDecl>(range(start), id, params, nullptr);
     decl->setSourceName(sourceName);
+    decl->setVariadic(variadic);
     return decl;
 }
 
@@ -61,27 +60,52 @@ auto Parser::funcDecl() -> Result<AstFuncDecl*> {
     const auto sourceName = getContext().retain(m_token.lexeme());
     TRY_DECL(id, identifier())
 
-    TRY(consume(TokenKind::ParenOpen))
-    std::span<AstFuncParamDecl*> params;
-    TRY_IF_NOT (accept(TokenKind::ParenClose)) {
-        TRY_ASSIGN(params, paramList())
-        TRY(consume(TokenKind::ParenClose))
-    }
+    bool variadic = false;
+    TRY_DECL(params, paramList(true, variadic));
 
     TRY(consume(TokenKind::As))
     TRY_DECL(ty, type())
     auto* decl = make<AstFuncDecl>(range(start), id, params, ty);
     decl->setSourceName(sourceName);
+    decl->setVariadic(variadic);
     return decl;
 }
 
-// paramList = param { "," param } .
-auto Parser::paramList() -> Result<std::span<AstFuncParamDecl*>> {
-    Sequencer<AstFuncParamDecl> params {};
-    TRY_ADD(params, paramDecl())
-    TRY_WHILE (accept(TokenKind::Comma)) {
-        TRY_ADD(params, paramDecl())
+// paramList = ( param | "..." ) { "," ( param | "..." ) } .
+// A "..." marks a C-style variadic and must be the last entry — anything after it
+// fails the caller's ")" expectation. Whether "..." is permitted at all (extern "C"
+// only) is enforced during semantic analysis.
+auto Parser::paramList(const bool requireParens, bool& variadic) -> Result<std::span<AstFuncParamDecl*>> {
+    // Opening "(": required for functions; for subs its absence just means no
+    // parameters. (accept/expect return DiagResult<bool>/<void>, so their result
+    // must be unwrapped — a raw `if (accept(...))` would test the error state.)
+    if (requireParens) {
+        TRY(consume(TokenKind::ParenOpen))
+    } else {
+        TRY_IF_NOT(accept(TokenKind::ParenOpen)) {
+            return {};
+        }
     }
+
+    // Empty parameter list "()".
+    TRY_IF(accept(TokenKind::ParenClose)) {
+        return {};
+    }
+
+    // ( param | "..." ) { "," ( param | "..." ) } — a "..." ends the list.
+    Sequencer<AstFuncParamDecl> params {};
+    while (true) {
+        TRY_IF(accept(TokenKind::Ellipsis)) {
+            variadic = true;
+            break;
+        }
+        TRY_ADD(params, paramDecl())
+        TRY_IF_NOT(accept(TokenKind::Comma)) {
+            break;
+        }
+    }
+
+    TRY(consume(TokenKind::ParenClose))
     return sequence(params);
 }
 

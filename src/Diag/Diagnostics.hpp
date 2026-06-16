@@ -59,6 +59,7 @@ struct DiagKind final {
         returnOutsideFunction,
         returnValueInSub,
         returnMissingValue,
+        variadicRequiresC,
     };
 
     /**
@@ -74,7 +75,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 41;
+    static constexpr std::size_t COUNT = 42;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -155,6 +156,7 @@ struct DiagKind final {
             case returnOutsideFunction:
             case returnValueInSub:
             case returnMissingValue:
+            case variadicRequiresC:
                 return Category::Sema;
         }
         std::unreachable();
@@ -206,6 +208,7 @@ struct DiagKind final {
             case returnOutsideFunction:
             case returnValueInSub:
             case returnMissingValue:
+            case variadicRequiresC:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -257,6 +260,7 @@ struct DiagKind final {
             case returnOutsideFunction: return "E0321";
             case returnValueInSub: return "E0322";
             case returnMissingValue: return "E0323";
+            case variadicRequiresC: return "E0324";
         }
         std::unreachable();
     }
@@ -264,8 +268,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 41> { // NOLINT(*-magic-numbers)
-        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand, returnOutsideFunction, returnValueInSub, returnMissingValue };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 42> { // NOLINT(*-magic-numbers)
+        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand, returnOutsideFunction, returnValueInSub, returnMissingValue, variadicRequiresC };
     }
 
 private:
@@ -515,6 +519,11 @@ namespace diagnostics {
     /// Create returnMissingValue message
     [[nodiscard]] inline auto returnMissingValue() -> DiagMessage {
         return { DiagKind::returnMissingValue, "a function must return a value" };
+    }
+
+    /// Create variadicRequiresC message
+    [[nodiscard]] inline auto variadicRequiresC() -> DiagMessage {
+        return { DiagKind::variadicRequiresC, "variadic '...' parameters are only allowed on extern C declarations" };
     }
 
 }

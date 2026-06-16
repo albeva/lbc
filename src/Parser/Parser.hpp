@@ -200,8 +200,8 @@ private:
     /** Parse a function declaration (name, parameter list, and return type). */
     [[nodiscard]] auto funcDecl() -> Result<AstFuncDecl*>;
 
-    /** Parse a comma-separated parameter declaration list. */
-    [[nodiscard]] auto paramList() -> Result<std::span<AstFuncParamDecl*>>;
+    /** Parse a comma-separated parameter declaration list. Sets @p variadic if a trailing `...` is present. */
+    [[nodiscard]] auto paramList(bool requireParens, bool& variadic) -> Result<std::span<AstFuncParamDecl*>>;
 
     /** Parse a single parameter declaration (name and type). */
     [[nodiscard]] auto paramDecl() -> Result<AstFuncParamDecl*>;

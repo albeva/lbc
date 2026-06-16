@@ -109,3 +109,4 @@ def invalidMoveOperand     : Error<Sema, "E0320", "cannot MOVE a temporary value
 def returnOutsideFunction  : Error<Sema, "E0321", "RETURN outside of a function or subroutine">;
 def returnValueInSub       : Error<Sema, "E0322", "a subroutine cannot return a value">;
 def returnMissingValue     : Error<Sema, "E0323", "a function must return a value">;
+def variadicRequiresC      : Error<Sema, "E0324", "variadic '...' parameters are only allowed on extern C declarations">;

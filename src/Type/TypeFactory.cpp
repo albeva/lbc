@@ -41,15 +41,15 @@ auto TypeFactory::getConst(const Type* type) -> const TypeConst* {
     return m_consts.insert(std::make_pair(type, create<TypeConst>(type))).first->second;
 }
 
-auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction* {
-    const auto hash = llvm::hash_combine(returnType, llvm::hash_combine_range(params.begin(), params.end()));
+auto TypeFactory::getFunction(std::span<const Type*> params, const Type* returnType, bool variadic) -> const TypeFunction* {
+    const auto hash = llvm::hash_combine(returnType, variadic, llvm::hash_combine_range(params.begin(), params.end()));
     auto& arr = m_functions[hash];
     for (const auto* func : arr) {
-        if (func->getReturnType() == returnType && std::ranges::equal(params, func->getParams())) {
+        if (func->getReturnType() == returnType && func->isVariadic() == variadic && std::ranges::equal(params, func->getParams())) {
             return func;
         }
     }
-    return arr.emplace_back(create<TypeFunction>(params, returnType));
+    return arr.emplace_back(create<TypeFunction>(params, returnType, variadic));
 }
 
 auto TypeFactory::allocate(const std::size_t size, const std::size_t alignment) const -> void* {

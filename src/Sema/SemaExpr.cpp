@@ -352,15 +352,20 @@ auto SemanticAnalyser::accept(AstCallExpr& ast) -> Result {
     const auto params = funcType->getParams();
     const auto args = ast.getArgs();
 
-    if (args.size() > params.size()) {
-        return diag(diagnostics::tooManyArguments(params.size(), args.size()), ast.getRange());
-    }
+    // A variadic function accepts extra trailing arguments beyond its fixed
+    // parameters; every call must still supply all the fixed parameters.
     if (args.size() < params.size()) {
         return diag(diagnostics::tooFewArguments(params.size(), args.size()), ast.getRange());
     }
+    if (args.size() > params.size() && not funcType->isVariadic()) {
+        return diag(diagnostics::tooManyArguments(params.size(), args.size()), ast.getRange());
+    }
 
     for (std::size_t i = 0; i < args.size(); i++) {
-        TRY_ASSIGN(args[i], expression(*args[i], params[i]));
+        // Fixed parameters drive coercion; variadic arguments are passed with
+        // their natural type (no coercion target).
+        const Type* target = i < params.size() ? params[i] : nullptr;
+        TRY_ASSIGN(args[i], expression(*args[i], target));
     }
 
     const Type* rawRetType = funcType->getReturnType();

@@ -34,7 +34,7 @@ public:
     [[nodiscard]] auto getConst(const Type* type) -> const TypeConst*;
 
     /** Get or create a function type with the given parameter and return types. */
-    [[nodiscard]] auto getFunction(std::span<const Type*> params, const Type* returnType) -> const TypeFunction*;
+    [[nodiscard]] auto getFunction(std::span<const Type*> params, const Type* returnType, bool variadic = false) -> const TypeFunction*;
 
     /** Get the owning context. */
     [[nodiscard]] auto getContext() const -> Context& { return m_context; }

@@ -162,7 +162,8 @@ def VarDecl : Leaf<"Variable declaration", Decl, [
 def FuncDecl : Leaf<"Function or subroutine declaration", Decl, [
     Arg<"std::span<AstFuncParamDecl*>", "params">,
     Arg<"AstType*", "retTypeExpr">,
-    Arg<"AstFuncStmt*", "impl", true, "nullptr">
+    Arg<"AstFuncStmt*", "impl", true, "nullptr">,
+    Arg<"bool", "variadic", true, "false">
 ]>;
 
 def FuncParamDecl : Leaf<"Function parameter declaration", Decl, [

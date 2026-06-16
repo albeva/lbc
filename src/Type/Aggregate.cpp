@@ -17,6 +17,10 @@ auto TypeFunction::string() const -> std::string {
         commas();
         out += param->string();
     }
+    if (m_variadic) {
+        commas();
+        out += "...";
+    }
 
     if (m_returnType->isVoid()) {
         out += ")";

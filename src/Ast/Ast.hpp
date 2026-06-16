@@ -867,10 +867,21 @@ public:
         m_impl = impl;
     }
 
+    /// Get the variadic
+    [[nodiscard]] constexpr auto getVariadic() const -> bool {
+        return m_variadic;
+    }
+
+    /// Set the variadic
+    void setVariadic(const bool variadic) {
+        m_variadic = variadic;
+    }
+
 private:
     std::span<AstFuncParamDecl*> m_params;
     AstType* m_retTypeExpr;
     AstFuncStmt* m_impl = nullptr;
+    bool m_variadic = false;
 };
 
 /**

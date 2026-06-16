@@ -40,21 +40,31 @@ auto irGenSucceeds(const llvm::StringRef source) -> bool {
 // Tests
 // -------------------------------------------------------------------------
 
-TEST(IrGenTests, StubbedDeclareStmtFails) {
-    // DeclareStmt handler is notImplemented, so IR generation should fail
-    EXPECT_FALSE(irGenSucceeds("DECLARE SUB foo()\n"));
+TEST(IrGenTests, DeclareStmtSucceeds) {
+    EXPECT_TRUE(irGenSucceeds("DECLARE SUB foo()\n"));
 }
 
 TEST(IrGenTests, DimStmtSucceeds) {
     EXPECT_TRUE(irGenSucceeds("DIM x AS INTEGER\n"));
 }
 
-TEST(IrGenTests, StubbedFuncStmtFails) {
-    // FuncStmt handler is notImplemented
-    EXPECT_FALSE(irGenSucceeds(
+TEST(IrGenTests, FuncStmtSucceeds) {
+    EXPECT_TRUE(irGenSucceeds(
         "SUB foo()\n"
         "END SUB\n"
     ));
+}
+
+TEST(IrGenTests, FuncWithParamsSucceeds) {
+    EXPECT_TRUE(irGenSucceeds(
+        "FUNCTION add(a AS INTEGER, b AS INTEGER) AS INTEGER\n"
+        "    RETURN a + b\n"
+        "END FUNCTION\n"
+    ));
+}
+
+TEST(IrGenTests, ExternVariadicSucceeds) {
+    EXPECT_TRUE(irGenSucceeds("EXTERN \"C\" DECLARE FUNCTION printf(fmt AS ZSTRING, ...) AS INTEGER\n"));
 }
 
 } // namespace

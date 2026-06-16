@@ -45,7 +45,7 @@ auto Generator::lowerFunctionType(const Type* type) -> llvm::FunctionType* {
     for (const auto* param : fn->getParams()) {
         params.push_back(lowerType(param));
     }
-    return llvm::FunctionType::get(ret, params, false);
+    return llvm::FunctionType::get(ret, params, fn->isVariadic());
 }
 
 auto Generator::isSigned(const Type* type) -> bool {
