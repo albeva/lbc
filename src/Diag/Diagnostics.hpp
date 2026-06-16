@@ -29,9 +29,9 @@ struct DiagKind final {
         linkerFailed,
         toolNotFound,
         invalid,
-        unterminatedString,
         invalidNumber,
         invalidEscapeSequence,
+        unterminatedString,
         unexpected,
         expected,
         referenceNotLast,
@@ -125,9 +125,9 @@ struct DiagKind final {
             case toolNotFound:
                 return Category::System;
             case invalid:
-            case unterminatedString:
             case invalidNumber:
             case invalidEscapeSequence:
+            case unterminatedString:
                 return Category::Lex;
             case unexpected:
             case expected:
@@ -180,7 +180,6 @@ struct DiagKind final {
             case linkerFailed:
             case toolNotFound:
             case invalid:
-            case unterminatedString:
             case invalidNumber:
             case unexpected:
             case expected:
@@ -213,6 +212,7 @@ struct DiagKind final {
             case variadicRequiresC:
                 return llvm::SourceMgr::DK_Error;
             case invalidEscapeSequence:
+            case unterminatedString:
                 return llvm::SourceMgr::DK_Warning;
         }
         std::unreachable();
@@ -234,9 +234,9 @@ struct DiagKind final {
             case linkerFailed: return "E0009";
             case toolNotFound: return "E0010";
             case invalid: return "E0100";
-            case unterminatedString: return "E0101";
             case invalidNumber: return "E0102";
             case invalidEscapeSequence: return "W0100";
+            case unterminatedString: return "W0101";
             case unexpected: return "E0200";
             case expected: return "E0201";
             case referenceNotLast: return "E0202";
@@ -273,15 +273,15 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 42> { // NOLINT(*-magic-numbers)
-        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand, returnOutsideFunction, returnValueInSub, returnMissingValue, variadicRequiresC };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 41> { // NOLINT(*-magic-numbers)
+        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand, returnOutsideFunction, returnValueInSub, returnMissingValue, variadicRequiresC };
     }
 
     /**
      * Return all Warning diagnostics
      */
-    [[nodiscard]] static consteval auto allWarnings() -> std::array<DiagKind, 1> { // NOLINT(*-magic-numbers)
-        return { invalidEscapeSequence };
+    [[nodiscard]] static consteval auto allWarnings() -> std::array<DiagKind, 2> { // NOLINT(*-magic-numbers)
+        return { invalidEscapeSequence, unterminatedString };
     }
 
 private:
@@ -375,11 +375,6 @@ namespace diagnostics {
         return { DiagKind::invalid, "invalid input" };
     }
 
-    /// Create unterminatedString message
-    [[nodiscard]] inline auto unterminatedString() -> DiagMessage {
-        return { DiagKind::unterminatedString, "unterminated string literal" };
-    }
-
     /// Create invalidNumber message
     [[nodiscard]] inline auto invalidNumber() -> DiagMessage {
         return { DiagKind::invalidNumber, "invalid number" };
@@ -388,6 +383,11 @@ namespace diagnostics {
     /// Create invalidEscapeSequence message
     [[nodiscard]] inline auto invalidEscapeSequence() -> DiagMessage {
         return { DiagKind::invalidEscapeSequence, "invalid escape sequence" };
+    }
+
+    /// Create unterminatedString message
+    [[nodiscard]] inline auto unterminatedString() -> DiagMessage {
+        return { DiagKind::unterminatedString, "unterminated string literal" };
     }
 
     // -------------------------------------------------------------------------

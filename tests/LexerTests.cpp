@@ -89,8 +89,11 @@ TEST(LexerTests, StringLiterals) {
     const auto t = tok(makeLexer(context, "\"hello world\"").next());
     EXPECT_EQ(t.kind(), TokenKind::StringLiteral);
     EXPECT_EQ(t.getValue().get<llvm::StringRef>(), "hello world");
-    // unclosed string is an error
-    EXPECT_FALSE(makeLexer(context, "\"unclosed").next().has_value());
+    // unclosed string: warning, still yields a token
+    const auto u = tok(makeLexer(context, "\"unclosed").next());
+    EXPECT_EQ(u.getValue().get<llvm::StringRef>(), "unclosed");
+    EXPECT_EQ(context.getDiag().count(llvm::SourceMgr::DK_Warning), 1U);
+    EXPECT_FALSE(context.getDiag().hasErrors());
 }
 
 TEST(LexerTests, StringEscapeSequences) {
@@ -103,22 +106,27 @@ TEST(LexerTests, StringEscapeSequences) {
     EXPECT_EQ(tok(makeLexer(context, R"("plain text")").next()).getValue().get<llvm::StringRef>(), "plain text");
     // escaped quote doesn't terminate, and decodes to a bare quote
     EXPECT_EQ(tok(makeLexer(context, R"("say \"hi\"")").next()).getValue().get<llvm::StringRef>(), R"(say "hi")");
-    // an unknown escape is a warning, not a hard error: the character is kept
-    // verbatim and lexing continues
+    // unknown escape: warning, character kept
     Context warnCtx;
     const auto bad = tok(makeLexer(warnCtx, R"("bad\x")").next());
     EXPECT_EQ(bad.kind(), TokenKind::StringLiteral);
     EXPECT_EQ(bad.getValue().get<llvm::StringRef>(), "badx");
     EXPECT_EQ(warnCtx.getDiag().count(llvm::SourceMgr::DK_Warning), 1U);
     EXPECT_FALSE(warnCtx.getDiag().hasErrors());
-    // a backslash with nothing after it is still an unterminated-string error
-    EXPECT_FALSE(makeLexer(context, "\"trailing\\").next().has_value());
+    // dangling backslash: unterminated, warning only
+    Context untermCtx;
+    EXPECT_TRUE(makeLexer(untermCtx, "\"trailing\\").next().has_value());
+    EXPECT_EQ(untermCtx.getDiag().count(llvm::SourceMgr::DK_Warning), 1U);
+    EXPECT_FALSE(untermCtx.getDiag().hasErrors());
 }
 
 TEST(LexerTests, StringWithInvisibleChars) {
+    // control character: warning, literal cut off there
     Context context;
-    EXPECT_FALSE(makeLexer(context, std::string("\"a\x01z\"")).next().has_value());
-    EXPECT_FALSE(makeLexer(context, std::string("\"a\tz\"")).next().has_value());
+    EXPECT_EQ(tok(makeLexer(context, std::string("\"a\x01z\"")).next()).getValue().get<llvm::StringRef>(), "a");
+    EXPECT_EQ(tok(makeLexer(context, std::string("\"a\tz\"")).next()).getValue().get<llvm::StringRef>(), "a");
+    EXPECT_EQ(context.getDiag().count(llvm::SourceMgr::DK_Warning), 2U);
+    EXPECT_FALSE(context.getDiag().hasErrors());
 }
 
 TEST(LexerTests, NumberLiterals) {
