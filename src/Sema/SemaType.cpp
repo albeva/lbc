@@ -6,7 +6,7 @@ using namespace lbc;
 
 auto SemanticAnalyser::accept(AstBuiltInType& ast) const -> Result {
     const auto kind = ast.getTokenKind();
-    const auto* type = getTypeFactory().getType(kind);
+    const auto* type = kind == TokenKind::Any ? getTypeFactory().getAny() : getTypeFactory().getType(kind);
     ast.setType(type);
     return {};
 }

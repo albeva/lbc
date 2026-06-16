@@ -149,7 +149,11 @@ auto Parser::suffixExpr(AstExpr* lhs) -> Result<AstExpr*> {
     switch (m_token.kind().value()) {
     case TokenKind::Value::ParenOpen:
         return funcCallExpr(lhs);
-    case TokenKind::Value::As:
+    case TokenKind::Value::As: {
+        TRY(consume(TokenKind::As))
+        TRY_DECL(ty, type())
+        return make<AstCastExpr>(range(lhs, ty), lhs, ty, false);
+    }
     case TokenKind::Value::Is:
         return notImplemented();
     default:

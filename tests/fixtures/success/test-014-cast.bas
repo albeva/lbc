@@ -1,4 +1,3 @@
-'' SKIP: not yet supported: explicit AS cast
 ''------------------------------------------------------------------------------
 '' test-014-cast.bas
 '' - type cast

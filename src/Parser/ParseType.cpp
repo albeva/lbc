@@ -4,7 +4,7 @@
 #include "Parser.hpp"
 using namespace lbc;
 
-// type = [ "CONST" ] builtin { "CONST" | "PTR" } [ "REF" ] .
+// type = [ "CONST" ] ( builtin | "ANY" "PTR" ) { "CONST" | "PTR" } [ "REF" ] .
 //
 // CONST and PTR qualifiers may repeat in any order; a REF, if present, must be
 // the last (outermost) qualifier. Redundant CONST is collapsed, and the
@@ -17,7 +17,16 @@ auto Parser::type() -> Result<AstType*> {
     }
 
     AstType* ty {}; // NOLINT(*-const-correctness)
-    TRY_ASSIGN(ty, builtinType())
+    if (m_token.kind() == TokenKind::Any) {
+        // ANY is only meaningful behind a pointer: `ANY PTR`. Bare ANY is rejected.
+        const auto anyStart = startLoc();
+        TRY(advance())
+        auto* pointee = make<AstBuiltInType>(range(anyStart), TokenKind::Any);
+        TRY(consume(TokenKind::Ptr))
+        ty = make<AstPointerType>(range(anyStart), pointee);
+    } else {
+        TRY_ASSIGN(ty, builtinType())
+    }
     if (isConst) {
         ty = make<AstConstType>(range(start), ty);
     }

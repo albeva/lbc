@@ -1,4 +1,3 @@
-'' SKIP: not yet supported: explicit AS cast
 ''------------------------------------------------------------------------------
 '' test-007-conversions.bas
 '' - declare variables of different types
