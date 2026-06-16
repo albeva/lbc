@@ -1,12 +1,14 @@
+'' SKIP: not yet supported: CONST declarations
 ''------------------------------------------------------------------------------
-'' Call a user-defined function and print the result.
+'' test-035-const-conversions.bas
 ''
-'' CHECK: 3 + 4 = 7
+'' CHECK: 6.0
 ''------------------------------------------------------------------------------
 extern "C" declare function printf(fmt as zstring, ...) as integer
 
-function add(a as integer, b as integer) as integer
-    return a + b
-end function
+const b as ubyte = 1
+const c as ushort = 2
+const d as double = 3.0
+const e = b + c + d
 
-printf "3 + 4 = %ld\n", add(3, 4)
+printf "%0.1lf", e

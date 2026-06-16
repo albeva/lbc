@@ -3,10 +3,12 @@
 //
 // Each fixture is a `.bas` file under `tests/<dir>`; `'' CHECK:` comment lines
 // declare the expected compiler output (`__FILE__` expands to the fixture path).
+// A `'' SKIP:` line marks the fixture as not-yet-runnable (the reason follows).
 //
 #pragma once
 #include "pch.hpp"
 #include <filesystem>
+#include <optional>
 #include <gtest/gtest.h>
 namespace llvm {
 class Module;
@@ -32,6 +34,9 @@ protected:
 
     /** Expected output assembled from the fixture's `'' CHECK:` lines. */
     [[nodiscard]] auto expected() const -> std::string;
+
+    /** The reason from a `'' SKIP:` directive, or nullopt if the fixture has none. */
+    [[nodiscard]] auto skip() const -> std::optional<std::string>;
 
 private:
     [[nodiscard]] static auto basePath() -> std::filesystem::path {

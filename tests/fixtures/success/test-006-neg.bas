@@ -1,0 +1,16 @@
+''------------------------------------------------------------------------------
+'' test-006-neg.bas
+'' - declare negative value
+'' - negate values
+''
+'' CHECK: -3.141590, -5, 5
+''------------------------------------------------------------------------------
+extern "C" declare function printf(fmt as zstring, ...) as integer
+
+dim a = 3.14159
+dim b = -a
+
+dim c = -5
+dim d = -c
+
+printf "%lf, %d, %d", b, c, d

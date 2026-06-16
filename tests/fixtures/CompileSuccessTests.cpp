@@ -7,6 +7,9 @@ namespace {
 struct Success : CompilerBase {};
 
 TEST_P(Success, ProducesExpectedOutput) {
+    if (const auto reason = skip()) {
+        GTEST_SKIP() << *reason;
+    }
     const auto output = run();
     EXPECT_FALSE(failed()) << "expected compilation to succeed";
     EXPECT_EQ(output, expected());

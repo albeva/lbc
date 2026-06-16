@@ -147,3 +147,14 @@ auto CompilerBase::expected() const -> std::string {
     }
     return llvm::StringRef { result }.trim().str();
 }
+
+auto CompilerBase::skip() const -> std::optional<std::string> {
+    std::ifstream stream { GetParam() };
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (llvm::StringRef ref { line }; ref.consume_front("'' SKIP")) {
+            return ref.ltrim(": \t").trim().str();
+        }
+    }
+    return std::nullopt;
+}

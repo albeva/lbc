@@ -1,7 +1,10 @@
 ''------------------------------------------------------------------------------
-'' puts writes a line to stdout.
+'' test-001-hello.bas
+'' - extern C function
+'' - alias attribute
+'' - pass zstring argument
 ''
-'' CHECK: hello via puts
+'' CHECK: Hello World!
 ''------------------------------------------------------------------------------
 extern "C" declare sub puts(msg as zstring)
-puts "hello via puts"
+puts "Hello World!"
