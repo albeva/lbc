@@ -97,6 +97,13 @@ private:
     [[nodiscard]] auto stringLiteral() -> DiagResult<Token>;
 
     /**
+     * Resolve the character following a backslash to the byte its escape sequence
+     * denotes. An unknown escape is reported as a warning and kept verbatim, so
+     * this always yields a byte and lexing continues.
+     */
+    [[nodiscard]] auto escaped(Character ch) -> char;
+
+    /**
      * Lex an integer or floating-point number literal.
      */
     [[nodiscard]] auto numberLiteral() -> DiagResult<Token>;

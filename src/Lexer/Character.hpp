@@ -95,14 +95,6 @@ public:
         return m_char >= ' ';
     }
 
-    /**
-     * Check if this character is a valid escape sequence identifier
-     * (i.e., the character following a backslash in a string literal).
-     */
-    [[nodiscard]] constexpr auto isValidEscape() const -> bool {
-        return isOneOf('a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"', '0');
-    }
-
 private:
     char m_char;
 };

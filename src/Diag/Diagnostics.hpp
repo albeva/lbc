@@ -31,6 +31,7 @@ struct DiagKind final {
         invalid,
         unterminatedString,
         invalidNumber,
+        invalidEscapeSequence,
         unexpected,
         expected,
         referenceNotLast,
@@ -75,7 +76,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 42;
+    static constexpr std::size_t COUNT = 43;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -126,6 +127,7 @@ struct DiagKind final {
             case invalid:
             case unterminatedString:
             case invalidNumber:
+            case invalidEscapeSequence:
                 return Category::Lex;
             case unexpected:
             case expected:
@@ -210,6 +212,8 @@ struct DiagKind final {
             case returnMissingValue:
             case variadicRequiresC:
                 return llvm::SourceMgr::DK_Error;
+            case invalidEscapeSequence:
+                return llvm::SourceMgr::DK_Warning;
         }
         std::unreachable();
     }
@@ -232,6 +236,7 @@ struct DiagKind final {
             case invalid: return "E0100";
             case unterminatedString: return "E0101";
             case invalidNumber: return "E0102";
+            case invalidEscapeSequence: return "W0100";
             case unexpected: return "E0200";
             case expected: return "E0201";
             case referenceNotLast: return "E0202";
@@ -270,6 +275,13 @@ struct DiagKind final {
      */
     [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 42> { // NOLINT(*-magic-numbers)
         return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand, returnOutsideFunction, returnValueInSub, returnMissingValue, variadicRequiresC };
+    }
+
+    /**
+     * Return all Warning diagnostics
+     */
+    [[nodiscard]] static consteval auto allWarnings() -> std::array<DiagKind, 1> { // NOLINT(*-magic-numbers)
+        return { invalidEscapeSequence };
     }
 
 private:
@@ -371,6 +383,11 @@ namespace diagnostics {
     /// Create invalidNumber message
     [[nodiscard]] inline auto invalidNumber() -> DiagMessage {
         return { DiagKind::invalidNumber, "invalid number" };
+    }
+
+    /// Create invalidEscapeSequence message
+    [[nodiscard]] inline auto invalidEscapeSequence() -> DiagMessage {
+        return { DiagKind::invalidEscapeSequence, "invalid escape sequence" };
     }
 
     // -------------------------------------------------------------------------

@@ -68,9 +68,10 @@ def toolNotFound              : Error<System, "E0010", "cannot find tool {tool};
 // Lexer diagnostics
 // =============================================================================
 
-def invalid            : Error<Lex, "E0100", "invalid input">;
-def unterminatedString : Error<Lex, "E0101", "unterminated string literal">;
-def invalidNumber      : Error<Lex, "E0102", "invalid number">;
+def invalid               : Error<Lex, "E0100", "invalid input">;
+def unterminatedString    : Error<Lex, "E0101", "unterminated string literal">;
+def invalidNumber         : Error<Lex, "E0102", "invalid number">;
+def invalidEscapeSequence : Warning<Lex, "W0100", "invalid escape sequence">;
 
 // =============================================================================
 // Parser diagnostics

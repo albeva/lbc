@@ -95,14 +95,23 @@ TEST(LexerTests, StringLiterals) {
 
 TEST(LexerTests, StringEscapeSequences) {
     Context context;
-    // all valid escapes
+    // all valid escapes are decoded to their byte values (the last is a NUL)
     const auto t = tok(makeLexer(context, R"("\a\b\f\n\r\t\v\\\'\"\0")").next());
     EXPECT_EQ(t.kind(), TokenKind::StringLiteral);
-    EXPECT_EQ(t.getValue().get<llvm::StringRef>(), R"(\a\b\f\n\r\t\v\\\'\"\0)");
-    // escaped quote doesn't terminate
-    EXPECT_EQ(tok(makeLexer(context, R"("say \"hi\"")").next()).kind(), TokenKind::StringLiteral);
-    // invalid escapes
-    EXPECT_FALSE(makeLexer(context, R"("bad\x")").next().has_value());
+    EXPECT_EQ(t.getValue().get<llvm::StringRef>(), llvm::StringRef("\a\b\f\n\r\t\v\\'\"\0", 11));
+    // a literal with no escapes is returned verbatim
+    EXPECT_EQ(tok(makeLexer(context, R"("plain text")").next()).getValue().get<llvm::StringRef>(), "plain text");
+    // escaped quote doesn't terminate, and decodes to a bare quote
+    EXPECT_EQ(tok(makeLexer(context, R"("say \"hi\"")").next()).getValue().get<llvm::StringRef>(), R"(say "hi")");
+    // an unknown escape is a warning, not a hard error: the character is kept
+    // verbatim and lexing continues
+    Context warnCtx;
+    const auto bad = tok(makeLexer(warnCtx, R"("bad\x")").next());
+    EXPECT_EQ(bad.kind(), TokenKind::StringLiteral);
+    EXPECT_EQ(bad.getValue().get<llvm::StringRef>(), "badx");
+    EXPECT_EQ(warnCtx.getDiag().count(llvm::SourceMgr::DK_Warning), 1U);
+    EXPECT_FALSE(warnCtx.getDiag().hasErrors());
+    // a backslash with nothing after it is still an unterminated-string error
     EXPECT_FALSE(makeLexer(context, "\"trailing\\").next().has_value());
 }
 

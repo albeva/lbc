@@ -286,34 +286,84 @@ auto Lexer::identifier() -> DiagResult<Token> {
 auto Lexer::stringLiteral() -> DiagResult<Token> {
     // assume m_input[0] == '"'
     assert(m_input.current() == '"');
-    m_start = m_input;
+    m_start = m_input; // opening quote fixes the token's source range
     m_input.advance();
 
-    bool hasError = false;
-    m_input.advanceWhile([&](const Character ch) {
-        if (ch == '\\') {
-            if (m_input.peek().isValidEscape()) {
-                m_input.advance();
-                return true;
-            }
-            hasError = true;
-            return false;
-        }
-        if (!ch.isVisible()) {
-            hasError = true;
-            return false;
-        }
-        return !(ch == '"' || ch.isFileOrLineEnd());
-    });
+    // The decoded value is only assembled in m_buffer once an escape is seen;
+    // a literal with no escapes is a contiguous slice of the source and needs no
+    // copy. `segment` marks the start of the current unescaped run.
+    m_buffer.clear();
+    Cursor segment = m_input;
 
-    // unclosed string?
-    if (hasError || m_input.current() != '"') {
-        return diag(diagnostics::unterminatedString(), range());
+    while (true) {
+        const auto ch = m_input.current();
+        if (ch == '"') {
+            break;
+        }
+        if (ch == '\\') {
+            const auto esc = m_input.peek();
+            // A backslash with no character after it (line ending or end of
+            // input) is an unterminated string, not an escape.
+            if (esc.isFileOrLineEnd()) {
+                return diag(diagnostics::unterminatedString(), range());
+            }
+            // Flush the run up to the backslash, then the decoded escape byte. An
+            // unknown escape is reported (a warning) and the character is kept.
+            const auto run = segment.stringTo(m_input);
+            m_buffer.append(run.data(), run.size());
+            m_buffer.push_back(escaped(esc));
+            m_input.advance(2); // consume '\' and the escaped character
+            segment = m_input;
+            continue;
+        }
+        // Control characters, line endings, and end of input are all invalid here.
+        if (!ch.isVisible()) {
+            return diag(diagnostics::unterminatedString(), range());
+        }
+        m_input.advance();
     }
 
-    const auto str = m_start.next().stringTo(m_input);
-    m_input.advance();
+    // m_input is now at the closing quote.
+    llvm::StringRef str;
+    if (m_buffer.empty()) {
+        str = segment.stringTo(m_input); // no escapes: slice the source directly
+    } else {
+        const auto run = segment.stringTo(m_input); // trailing run after the last escape
+        m_buffer.append(run.data(), run.size());
+        str = m_context.retain(m_buffer); // stable arena copy of the decoded text
+    }
+
+    m_input.advance(); // consume closing quote
     return token(TokenKind::StringLiteral, LiteralValue::from(str));
+}
+
+auto Lexer::escaped(const Character ch) -> char {
+    switch (ch.getChar()) {
+    case 'a':
+        return '\a';
+    case 'b':
+        return '\b';
+    case 'f':
+        return '\f';
+    case 'n':
+        return '\n';
+    case 'r':
+        return '\r';
+    case 't':
+        return '\t';
+    case 'v':
+        return '\v';
+    case '0':
+        return '\0';
+    case '\\':
+    case '\'':
+    case '"':
+        return ch.getChar(); // these denote themselves
+    default:
+        // Unknown escape: warn and keep the character verbatim, then carry on.
+        std::ignore = diag(diagnostics::invalidEscapeSequence(), range());
+        return ch.getChar();
+    }
 }
 
 auto Lexer::numberLiteral() -> DiagResult<Token> {
