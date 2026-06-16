@@ -76,9 +76,6 @@ auto Parser::funcDecl() -> Result<AstFuncDecl*> {
 // fails the caller's ")" expectation. Whether "..." is permitted at all (extern "C"
 // only) is enforced during semantic analysis.
 auto Parser::paramList(const bool requireParens, bool& variadic) -> Result<std::span<AstFuncParamDecl*>> {
-    // Opening "(": required for functions; for subs its absence just means no
-    // parameters. (accept/expect return DiagResult<bool>/<void>, so their result
-    // must be unwrapped — a raw `if (accept(...))` would test the error state.)
     if (requireParens) {
         TRY(consume(TokenKind::ParenOpen))
     } else {
