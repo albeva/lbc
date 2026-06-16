@@ -3,14 +3,15 @@
 //
 #include "Driver.hpp"
 #include <llvm/ADT/SmallString.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
-#include "Task.hpp"
-#include "Toolchain.hpp"
-#include "tasks/CodeGenTask.hpp"
 #include "tasks/CompileTask.hpp"
-#include "tasks/EmitTask.hpp"
+#include "tasks/EmitBinaryTask.hpp"
+#include "tasks/EmitLlvmTask.hpp"
+#include "tasks/EmitNativeTask.hpp"
 #include "tasks/OptimizeTask.hpp"
+#include "tasks/WriteBitcodeTask.hpp"
 using namespace lbc;
 
 namespace {
@@ -42,72 +43,44 @@ auto Driver::run() -> DiagResult<void> {
     resolvePaths();
     TRY(validate())
 
-    // Everything but a linked executable (which needs the link stage) is wired:
-    // LLVM IR in-process, objects and assembly via llc.
-    if (options.getOutputType() == CompileOptions::OutputType::Executable) {
-        return DiagError { m_context.getDiag().log(diagnostics::notImplemented()) };
+    // Compile each source to its artifact (an object file when an executable is
+    // being built), collecting the produced paths.
+    std::vector<std::string> artifacts;
+    artifacts.reserve(m_inputs.size());
+    for (const auto& source : m_inputs) {
+        TRY_DECL(artifact, compileSource(source))
+        artifacts.push_back(std::move(artifact));
     }
 
-    const auto pipeline = buildPipeline();
-    for (const auto& source : m_inputs) {
-        Unit unit { source, m_output };
-        for (const auto& task : pipeline) {
-            TRY(task->run(m_context, unit))
-        }
+    // Link the generated objects into the final executable.
+    if (options.getOutputType() == CompileOptions::OutputType::Executable) {
+        EmitBinaryTask link { m_context };
+        TRY(link.run(std::move(artifacts)))
     }
     return {};
 }
 
-auto Driver::buildPipeline() const -> std::vector<std::unique_ptr<Task>> {
-    const auto& options = m_context.getOptions();
-    const Toolchain toolchain { options.getToolchainPath().str() };
-
-    std::vector<std::unique_ptr<Task>> pipeline;
-    pipeline.push_back(std::make_unique<CompileTask>());
-
-    // Optimise by shelling out to `opt` when any optimisation is requested.
-    if (options.getOptimizationLevel() != CompileOptions::OptimizationLevel::O0) {
-        pipeline.push_back(std::make_unique<OptimizeTask>(toolchain.getOptimizer()));
+auto Driver::compileSource(const std::string& source) -> DiagResult<std::string> {
+    // LLVM IR is emitted straight from the in-memory module; native output
+    // serialises the module to bitcode once, then flows that file through the
+    // shell-out stages (OptimizeTask is a no-op at -O0). Either way the final
+    // stage returns the path it wrote.
+    if (m_context.getOptions().getOutputType() == CompileOptions::OutputType::LlvmIr) {
+        return pipeline<CompileTask, EmitLlvmTask>(m_context, source);
     }
-
-    // Emit the requested artifact. Objects go through `llc`; the link stage
-    // (consuming each unit's object) slots in here as the backend grows.
-    switch (options.getOutputType()) {
-    case CompileOptions::OutputType::Object:
-    case CompileOptions::OutputType::Assembly:
-        pipeline.push_back(std::make_unique<CodeGenTask>(toolchain.getCodeGen()));
-        break;
-    case CompileOptions::OutputType::LlvmIr:
-        pipeline.push_back(std::make_unique<EmitTask>());
-        break;
-    default:
-        break; // executable rejected before this point
-    }
-    return pipeline;
+    return pipeline<CompileTask, WriteBitcodeTask, OptimizeTask, EmitNativeTask>(m_context, source);
 }
 
 void Driver::resolvePaths() {
     const auto& options = m_context.getOptions();
 
-    // Establish an absolute base directory for relative paths.
-    llvm::SmallString<256> base;
-    if (options.getWorkingDirectory().empty()) {
-        std::ignore = llvm::sys::fs::current_path(base);
-    } else {
-        base = options.getWorkingDirectory();
-        std::ignore = llvm::sys::fs::make_absolute(base);
-    }
-    llvm::sys::path::remove_dots(base, /*remove_dot_dot=*/true);
-    const std::string baseDir { base.data(), base.size() };
+    // The working directory is already resolved to an absolute path by the options.
+    const llvm::StringRef baseDir = options.getWorkingDirectory();
 
     const auto sources = options.getFiles(CompileOptions::FileType::Source);
     m_inputs.reserve(sources.size());
     for (const auto& file : sources) {
         m_inputs.push_back(absolutize(file, baseDir));
-    }
-
-    if (!options.getOutputPath().empty()) {
-        m_output = absolutize(options.getOutputPath(), baseDir);
     }
 
     // Hand the resolved include hierarchy to the source manager so includes are
@@ -146,9 +119,8 @@ auto Driver::validate() -> DiagResult<void> {
     }
 
     // Only an executable links several inputs into one artifact; any other
-    // output kind produces one artifact per input and cannot share a path.
+    // output kind has a single output path that multiple sources cannot share.
     if (options.getOutputType() != CompileOptions::OutputType::Executable
-        && !options.getOutputPath().empty()
         && options.getFiles(CompileOptions::FileType::Source).size() > 1) {
         report(diagnostics::ambiguousOutput());
     }

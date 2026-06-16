@@ -61,6 +61,8 @@ def cannotOpenOutput          : Error<System, "E0005", "cannot open output file 
 def backendVerificationFailed : Error<System, "E0006", "internal error: generated LLVM module failed verification">;
 def optimizerFailed           : Error<System, "E0007", "optimizer failed: {reason}">;
 def codegenFailed             : Error<System, "E0008", "code generation failed: {reason}">;
+def linkerFailed              : Error<System, "E0009", "linking failed: {reason}">;
+def toolNotFound              : Error<System, "E0010", "cannot find tool {tool}; pass --toolchain or add it to PATH">;
 
 // =============================================================================
 // Lexer diagnostics

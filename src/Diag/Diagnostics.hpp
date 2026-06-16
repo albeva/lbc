@@ -26,6 +26,8 @@ struct DiagKind final {
         backendVerificationFailed,
         optimizerFailed,
         codegenFailed,
+        linkerFailed,
+        toolNotFound,
         invalid,
         unterminatedString,
         invalidNumber,
@@ -69,7 +71,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 36;
+    static constexpr std::size_t COUNT = 38;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -114,6 +116,8 @@ struct DiagKind final {
             case backendVerificationFailed:
             case optimizerFailed:
             case codegenFailed:
+            case linkerFailed:
+            case toolNotFound:
                 return Category::System;
             case invalid:
             case unterminatedString:
@@ -163,6 +167,8 @@ struct DiagKind final {
             case backendVerificationFailed:
             case optimizerFailed:
             case codegenFailed:
+            case linkerFailed:
+            case toolNotFound:
             case invalid:
             case unterminatedString:
             case invalidNumber:
@@ -209,6 +215,8 @@ struct DiagKind final {
             case backendVerificationFailed: return "E0006";
             case optimizerFailed: return "E0007";
             case codegenFailed: return "E0008";
+            case linkerFailed: return "E0009";
+            case toolNotFound: return "E0010";
             case invalid: return "E0100";
             case unterminatedString: return "E0101";
             case invalidNumber: return "E0102";
@@ -244,8 +252,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 36> { // NOLINT(*-magic-numbers)
-        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 38> { // NOLINT(*-magic-numbers)
+        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
     }
 
 private:
@@ -318,6 +326,16 @@ namespace diagnostics {
     /// Create codegenFailed message
     [[nodiscard]] inline auto codegenFailed(const auto& reason) -> DiagMessage {
         return { DiagKind::codegenFailed, std::format("code generation failed: {}", reason) };
+    }
+
+    /// Create linkerFailed message
+    [[nodiscard]] inline auto linkerFailed(const auto& reason) -> DiagMessage {
+        return { DiagKind::linkerFailed, std::format("linking failed: {}", reason) };
+    }
+
+    /// Create toolNotFound message
+    [[nodiscard]] inline auto toolNotFound(const auto& tool) -> DiagMessage {
+        return { DiagKind::toolNotFound, std::format("cannot find tool {}; pass --toolchain or add it to PATH", tool) };
     }
 
     // -------------------------------------------------------------------------

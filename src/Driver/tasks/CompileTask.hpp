@@ -4,16 +4,21 @@
 #pragma once
 #include "Driver/Task.hpp"
 
+namespace llvm {
+class Module;
+} // namespace llvm
+
 namespace lbc {
 
 /**
- * Frontend stage: lex, parse, analyse, and lower one source file to an
- * in-memory LLVM module. Runs entirely in process. Honours the AST and lbc-IR
- * debug dumps.
+ * Frontend stage: lex, parse, analyse, and lower one source file (given by its
+ * path) to an in-memory LLVM module. Runs entirely in process. Honours the AST
+ * and lbc-IR debug dumps.
  */
-class CompileTask final : public Task {
+class CompileTask final : public Task<std::string, std::unique_ptr<llvm::Module>> {
 public:
-    [[nodiscard]] auto run(Context& context, Unit& unit) -> DiagResult<void> override;
+    using Task::Task;
+    [[nodiscard]] auto run(std::string source) -> DiagResult<std::unique_ptr<llvm::Module>> override;
 };
 
 } // namespace lbc

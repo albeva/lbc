@@ -3,45 +3,71 @@
 //
 #pragma once
 #include "pch.hpp"
-#include <llvm/IR/Module.h>
 #include "Diag/DiagEngine.hpp"
+#include "Utilities/Try.hpp"
 
 namespace lbc {
 class Context;
 
 /**
- * The evolving build state for a single input as it travels through the task
- * pipeline. Each Task reads the unit's current artifacts and advances them —
- * CompileTask fills @ref module, CodeGenTask records @ref objectPath, and so on.
- * The module lives in the Context's LLVM context, which outlives every unit.
+ * A single compilation stage: transforms an @p Input artifact into an @p Output
+ * artifact, or fails with a diagnostic. A stage holds only the Context it runs
+ * in (taken at construction) — everything else it needs is read from there — so
+ * @ref pipeline can compose stages by type (compile → write bitcode → optimise →
+ * codegen → link). @p Output may be `void` for a terminal stage that only emits.
  */
-struct Unit final {
-    NO_COPY_AND_MOVE(Unit)
-
-    Unit(std::string source, std::string output)
-    : sourcePath(std::move(source))
-    , outputPath(std::move(output)) {}
-
-    ~Unit() = default;
-
-    std::string sourcePath;               ///< absolute path to the input source
-    std::string outputPath;               ///< destination path, empty means stdout
-    std::string objectPath;               ///< emitted object file (set by CodeGenTask)
-    std::unique_ptr<llvm::Module> module; ///< lowered LLVM module (set by CompileTask)
-};
-
-/**
- * One stage of the compilation pipeline. Stages are stateless; all per-input
- * state lives in the Unit, so a single Task instance can drive many units.
- */
+template<typename Input, typename Output>
 class Task {
 public:
+    using InputType = Input;
+    using OutputType = Output;
+
     NO_COPY_AND_MOVE(Task)
-    Task() = default;
+    explicit Task(Context& context)
+    : m_context(context) {}
     virtual ~Task() = default;
 
-    /** Advance @p unit through this stage. */
-    [[nodiscard]] virtual auto run(Context& context, Unit& unit) -> DiagResult<void> = 0;
+    /** Run the stage on @p input, producing its output (or a diagnostic). */
+    [[nodiscard]] virtual auto run(Input input) -> DiagResult<Output> = 0;
+
+protected:
+    Context& m_context; ///< the compilation context this stage runs in
 };
+
+namespace detail {
+    /** The @ref Task::OutputType of the last task in the pack — a pipeline's result. */
+    template<typename... Tasks>
+    struct LastOutput;
+
+    template<typename Task>
+    struct LastOutput<Task> {
+        using type = typename Task::OutputType;
+    };
+
+    template<typename Task, typename... Rest>
+    struct LastOutput<Task, Rest...> : LastOutput<Rest...> {};
+} // namespace detail
+
+/**
+ * Run @p input through @p Tasks in order, default-constructing each stage and
+ * feeding its output into the next. The chain short-circuits on the first
+ * failure, propagating that diagnostic; otherwise the result is the last
+ * stage's output (`void` for a terminal stage).
+ *
+ * @code
+ * TRY_DECL(object, pipeline<CompileTask, WriteBitcodeTask, EmitNativeTask>(context, source))
+ * @endcode
+ */
+template<typename First, typename... Rest, typename Input>
+[[nodiscard]] auto pipeline(Context& context, Input input)
+    -> DiagResult<typename detail::LastOutput<First, Rest...>::type> {
+    First stage { context };
+    if constexpr (sizeof...(Rest) == 0) {
+        return stage.run(std::move(input));
+    } else {
+        TRY_DECL(next, stage.run(std::move(input)))
+        return pipeline<Rest...>(context, std::move(next));
+    }
+}
 
 } // namespace lbc

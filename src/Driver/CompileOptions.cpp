@@ -2,11 +2,43 @@
 // Created by Albert Varaksin on 15/06/2026.
 //
 #include "CompileOptions.hpp"
+#include <llvm/ADT/SmallString.h>
 #include <llvm/ADT/StringSwitch.h>
+#include <llvm/ADT/Twine.h>
+#include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
 using namespace lbc;
 
 namespace {
+/** Resolve @p path to an absolute, normalised directory; empty resolves to the CWD. */
+auto resolveDirectory(const llvm::StringRef path) -> std::string {
+    llvm::SmallString<256> dir;
+    if (path.empty()) {
+        std::ignore = llvm::sys::fs::current_path(dir);
+    } else {
+        dir = path;
+        std::ignore = llvm::sys::fs::make_absolute(dir);
+    }
+    llvm::sys::path::remove_dots(dir, /*remove_dot_dot=*/true);
+    return std::string { dir.data(), dir.size() };
+}
+
+/** File extension (with leading dot) for an output kind; empty for an executable. */
+auto outputExtension(const CompileOptions::OutputType type) -> llvm::StringRef {
+    using Out = CompileOptions::OutputType;
+    switch (type) {
+    case Out::Object:
+        return ".o";
+    case Out::Assembly:
+        return ".s";
+    case Out::LlvmIr:
+        return ".ll";
+    case Out::Executable:
+        return ""; // platform-specific naming is handled once linking lands
+    }
+    return "";
+}
+
 /** Classify a file by its path extension; anything unknown is treated as source. */
 auto detectFileType(const llvm::StringRef path) -> CompileOptions::FileType {
     using FileType = CompileOptions::FileType;
@@ -94,6 +126,38 @@ auto platformFlag(const CompileOptions::Platform platform) -> llvm::StringRef {
 
 void CompileOptions::addFile(const llvm::StringRef path) {
     addFile(detectFileType(path), path);
+}
+
+void CompileOptions::finalize() {
+    // Resolve the working directory to an absolute, normalised path (CWD if unset).
+    m_workingDirectory = resolveDirectory(m_workingDirectory);
+
+    // Derive the output path from the first input when none was given explicitly.
+    if (m_outputPath.empty()) {
+        m_outputPath = deriveDefaultOutput();
+    }
+}
+
+auto CompileOptions::deriveDefaultOutput() const -> std::string {
+    const auto sources = getFiles(FileType::Source);
+    const auto objects = getFiles(FileType::Object);
+
+    llvm::StringRef first;
+    if (!sources.empty()) {
+        first = sources.front();
+    } else if (!objects.empty()) {
+        first = objects.front();
+    } else {
+        return {}; // no input to derive from; the driver reports the missing input
+    }
+
+    const std::string name = (llvm::Twine(llvm::sys::path::stem(first)) + outputExtension(m_outputType)).str();
+    if (m_workingDirectory.empty()) {
+        return name;
+    }
+    llvm::SmallString<256> path { m_workingDirectory };
+    llvm::sys::path::append(path, name);
+    return std::string { path.data(), path.size() };
 }
 
 auto CompileOptions::getOptimizationFlag() const -> llvm::StringRef {

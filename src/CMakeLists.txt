@@ -11,10 +11,12 @@ target_sources(lbc_lib
     Driver/Context.cpp
     Driver/Driver.cpp
     Driver/Toolchain.cpp
-    Driver/tasks/CodeGenTask.cpp
     Driver/tasks/CompileTask.cpp
-    Driver/tasks/EmitTask.cpp
+    Driver/tasks/EmitBinaryTask.cpp
+    Driver/tasks/EmitLlvmTask.cpp
+    Driver/tasks/EmitNativeTask.cpp
     Driver/tasks/OptimizeTask.cpp
+    Driver/tasks/WriteBitcodeTask.cpp
     Gen/Gen.cpp
     Gen/GenInstr.cpp
     Gen/GenType.cpp
@@ -62,10 +64,12 @@ target_sources(lbc_lib
     Driver/Driver.hpp
     Driver/Task.hpp
     Driver/Toolchain.hpp
-    Driver/tasks/CodeGenTask.hpp
     Driver/tasks/CompileTask.hpp
-    Driver/tasks/EmitTask.hpp
+    Driver/tasks/EmitBinaryTask.hpp
+    Driver/tasks/EmitLlvmTask.hpp
+    Driver/tasks/EmitNativeTask.hpp
     Driver/tasks/OptimizeTask.hpp
+    Driver/tasks/WriteBitcodeTask.hpp
     Gen/Generator.hpp
     IR/gen/IrGenerator.hpp
     IR/lib/BasicBlock.hpp

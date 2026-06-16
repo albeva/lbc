@@ -78,6 +78,15 @@ public:
         MacOS,   ///< macOS / Darwin
     };
 
+    /**
+     * Resolve derived configuration in place: make the working directory
+     * absolute (defaulting to the current directory) and, when no output path
+     * was given, derive one from the first input and the output kind. Call once
+     * after populating the options and before handing them to the driver;
+     * thereafter the options can be treated as const.
+     */
+    void finalize();
+
     // -------------------------------------------------------------------------
     // Mutators
     // -------------------------------------------------------------------------
@@ -96,7 +105,7 @@ public:
     /** Set the explicit output path; empty means "derive a default". */
     void setOutputPath(const llvm::StringRef path) { m_outputPath = path; }
 
-    /** Set the base directory for relative paths; empty means the process CWD. */
+    /** Set the base directory for relative paths; resolved to absolute by @ref finalize. */
     void setWorkingDirectory(const llvm::StringRef path) { m_workingDirectory = path; }
 
     /** Set the path to the compiler itself (used to locate bundled resources). */
@@ -164,6 +173,9 @@ public:
     [[nodiscard]] auto toCommandLine() const -> std::string;
 
 private:
+    /** Derive the output path from the first input and the output kind (used by @ref finalize). */
+    [[nodiscard]] auto deriveDefaultOutput() const -> std::string;
+
     std::array<std::vector<std::string>, FileTypeCount> m_files;   ///< input files bucketed by FileType
     std::vector<std::string> m_includePaths;                       ///< include search hierarchy, highest precedence first
     std::string m_outputPath;                                      ///< explicit output path, empty if defaulted

@@ -3,24 +3,23 @@
 //
 #pragma once
 #include "pch.hpp"
-#include <memory>
 #include <vector>
 #include "Context.hpp"
 
 namespace lbc {
-class Task;
 
 /**
  * Orchestrates a single compilation.
  *
  * The Driver owns the Context (and through it the frozen CompileOptions). It
  * validates the configuration, resolves the input and include paths over the
- * configured search hierarchy, builds a pipeline of tasks from the options, and
- * drives every input source through it.
+ * configured search hierarchy, then drives every input source through the
+ * compilation stages.
  *
- * Each input flows through the stages compile → [optimise] → emit; producing an
- * executable additionally links the per-source artifacts together. Today only
- * the in-process compile → emit (LLVM IR) stages are wired.
+ * Each input flows through the stages compile → [write bitcode → optimise →
+ * emit native]; producing an executable then links the per-source objects
+ * together. The in-process LLVM IR path, the native object/assembly paths, and
+ * executable linking are all wired.
  */
 class Driver final {
 public:
@@ -42,12 +41,11 @@ private:
     /** Reject an inconsistent configuration or unreachable inputs. */
     [[nodiscard]] auto validate() -> DiagResult<void>;
 
-    /** Assemble the ordered stages each input is driven through. */
-    [[nodiscard]] auto buildPipeline() const -> std::vector<std::unique_ptr<Task>>;
+    /** Drive one resolved source through the stages; returns the artifact it produced. */
+    [[nodiscard]] auto compileSource(const std::string& source) -> DiagResult<std::string>;
 
     Context m_context;                 ///< owns the options and all per-compilation state
     std::vector<std::string> m_inputs; ///< resolved absolute input paths
-    std::string m_output;              ///< resolved output path, empty for stdout
 };
 
 } // namespace lbc

@@ -27,7 +27,7 @@ cl::list<std::string> includeDirs(
 
 cl::opt<std::string> outputPath(
     "o",
-    cl::desc("Write output to <file> (default: stdout)"),
+    cl::desc("Write output to <file> (default: derived from the first input)"),
     cl::value_desc("file"),
     cl::cat(lbcCategory)
 );
@@ -119,7 +119,7 @@ cl::opt<CompileOptions::Platform> targetPlatform(
     cl::cat(lbcCategory)
 );
 
-/** Assemble a CompileOptions from the parsed command-line state. */
+/** Assemble a CompileOptions from the parsed command-line state (unresolved). */
 [[nodiscard]] auto buildOptions(const std::string& compilerPath) -> CompileOptions {
     CompileOptions options;
     options.setCompilerPath(compilerPath);
@@ -155,6 +155,12 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto addr = reinterpret_cast<void*>(reinterpret_cast<std::intptr_t>(&buildOptions));
     const auto executable = llvm::sys::fs::getMainExecutable(argv[0], addr);
-    lbc::Driver driver { buildOptions(executable) };
+
+    // Populate from the command line, then resolve derived settings once; the
+    // driver and everything downstream then treats the options as const.
+    CompileOptions options = buildOptions(executable);
+    options.finalize();
+
+    lbc::Driver driver { std::move(options) };
     return driver.execute() ? 0 : 1;
 }

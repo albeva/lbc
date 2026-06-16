@@ -28,6 +28,9 @@ public:
     /** Construct a context that owns the (frozen) options for this compilation. */
     explicit Context(CompileOptions options = {});
 
+    /** Removes any temporary files created through @ref createTempFile. */
+    ~Context();
+
     /**
      * Intern given string in a set and return unique, shared copy.
      *
@@ -97,6 +100,16 @@ public:
      */
     [[nodiscard]] auto getLlvmContext() -> llvm::LLVMContext& { return m_llvm; }
 
+    /**
+     * Create a temporary file with the given @p suffix. The file is owned by the
+     * context and removed when it is destroyed; stages use these to hand
+     * intermediate artifacts (bitcode, ...) to the shelled-out tools.
+     *
+     * @param suffix file-name suffix (without a leading dot), e.g. "bc"
+     * @return absolute path to the new file, or empty on failure
+     */
+    [[nodiscard]] auto createTempFile(llvm::StringRef suffix) -> std::string;
+
 private:
     const CompileOptions m_options;
     llvm::Triple m_triple;
@@ -106,6 +119,7 @@ private:
     llvm::StringSet<llvm::BumpPtrAllocator> m_strings;
     DiagEngine m_diagEngine;
     TypeFactory m_typeFactory;
+    std::vector<std::string> m_tempFiles; ///< temporary files owned by this context, removed on destruction
 };
 
 } // namespace lbc
