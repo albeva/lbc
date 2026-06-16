@@ -71,11 +71,15 @@ auto DiagEngine::log(
 }
 
 void DiagEngine::print() const {
+    print(llvm::outs());
+}
+
+void DiagEngine::print(llvm::raw_ostream& os) const {
     for (const auto& message : m_messages) {
-        m_context.getSourceMgr().PrintMessage(llvm::outs(), message.diagnostic, true);
+        m_context.getSourceMgr().PrintMessage(os, message.diagnostic, os.has_colors());
         // The C++ call site is developer-facing noise; show it only in verbose mode.
         if (m_verbose) {
-            llvm::outs() << std::format("{}\n", message.location);
+            os << std::format("{}\n", message.location);
         }
     }
 }

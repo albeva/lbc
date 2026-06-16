@@ -4,6 +4,9 @@
 #pragma once
 #include "pch.hpp"
 #include "Diagnostics.hpp"
+namespace llvm {
+class raw_ostream;
+}
 namespace lbc {
 class Context;
 class DiagEngine;
@@ -121,6 +124,9 @@ public:
 
     /** Render all accumulated diagnostics to stdout. */
     void print() const;
+
+    /** Render all accumulated diagnostics to the given stream. */
+    void print(llvm::raw_ostream& os) const;
 
 private:
     /// Pairs the DiagKind with the rendered LLVM diagnostic and C++ call site.

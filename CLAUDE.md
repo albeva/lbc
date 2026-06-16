@@ -84,6 +84,10 @@ Frontend (lexer, parser, AST, sema) → IR → Backend (LLVM IR → machine code
 
 ## Documentation Style
 
+- Prefer self-documenting code over comments — let names and structure carry the meaning.
+- Add inline comments only for genuinely complex or unclear logic, or a known-issue workaround. Keep them rare, and explain the code's content, not the change that produced it.
+- Document interfaces (classes, methods, templates, types, enums) thoroughly, for both overview and code completion.
+- Keep comments concise and clear.
 - `/** */` for functions, classes, enum types, other declarations
 - `///` only for data members + enum cases
 - `@`-style commands (`@param`, `@return`, etc.), never backslash style (`\p`, `\c`, `\a`, etc.)
