@@ -8,16 +8,16 @@
 #include "Driver/Toolchain.hpp"
 using namespace lbc;
 
-auto EmitBinaryTask::run(std::vector<std::string> objects) -> DiagResult<std::string> {
-    const auto& options = m_context.getOptions();
-    auto& diag = m_context.getDiag();
+auto EmitBinaryTask::run(Context& context, std::vector<std::string> objects) -> DiagResult<std::string> {
+    const auto& options = context.getOptions();
+    auto& diag = context.getDiag();
     const auto fail = [&](const llvm::StringRef reason,
                           const std::source_location& loc = std::source_location::current()) -> DiagError {
         return DiagError { diag.log(diagnostics::linkerFailed(reason.str()), {}, {}, loc) };
     };
 
     const std::string output = options.getOutputPath().str();
-    const Toolchain toolchain { m_context };
+    const Toolchain toolchain { context };
     TRY_DECL(linker, toolchain.getLinker())
 
     // Run: cc <objects...> -o <output>

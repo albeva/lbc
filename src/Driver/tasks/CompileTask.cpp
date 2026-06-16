@@ -11,19 +11,19 @@
 #include "Sema/SemanticAnalyser.hpp"
 using namespace lbc;
 
-auto CompileTask::run(std::string source) -> DiagResult<std::unique_ptr<llvm::Module>> {
-    const auto& options = m_context.getOptions();
+auto CompileTask::run(Context& context, std::string source) -> DiagResult<std::unique_ptr<llvm::Module>> {
+    const auto& options = context.getOptions();
 
     std::string included;
-    const auto id = m_context.getSourceMgr().AddIncludeFile(source, {}, included);
+    const auto id = context.getSourceMgr().AddIncludeFile(source, {}, included);
     if (id == 0) {
-        return DiagError { m_context.getDiag().log(diagnostics::inputFileNotFound(source)) };
+        return DiagError { context.getDiag().log(diagnostics::inputFileNotFound(source)) };
     }
 
-    Parser parser { m_context, id };
+    Parser parser { context, id };
     TRY_DECL(module, parser.parse())
 
-    SemanticAnalyser sema { m_context };
+    SemanticAnalyser sema { context };
     TRY(sema.analyse(*module))
 
     // Debug dumps go to stderr so they never pollute the artifact on stdout.
@@ -31,13 +31,13 @@ auto CompileTask::run(std::string source) -> DiagResult<std::unique_ptr<llvm::Mo
         AstCodePrinter { llvm::errs() }.print(*module);
     }
 
-    ir::gen::IrGenerator irGenerator { m_context };
+    ir::gen::IrGenerator irGenerator { context };
     TRY_DECL(ir, irGenerator.generate(*module))
 
     if (options.isDumpIr()) {
         ir::printer::Printer { llvm::errs() }.print(*ir);
     }
 
-    gen::Generator generator { m_context };
+    gen::Generator generator { context };
     return generator.generate(*ir);
 }

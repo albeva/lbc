@@ -16,8 +16,7 @@ namespace lbc {
  */
 class OptimizeTask final : public Task<std::string, std::string> {
 public:
-    using Task::Task;
-    [[nodiscard]] auto run(std::string input) -> DiagResult<std::string> override;
+    [[nodiscard]] auto run(Context& context, std::string input) -> DiagResult<std::string> override;
 };
 
 } // namespace lbc

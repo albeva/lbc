@@ -17,8 +17,7 @@ namespace lbc {
  */
 class WriteBitcodeTask final : public Task<std::unique_ptr<llvm::Module>, std::string> {
 public:
-    using Task::Task;
-    [[nodiscard]] auto run(std::unique_ptr<llvm::Module> module) -> DiagResult<std::string> override;
+    [[nodiscard]] auto run(Context& context, std::unique_ptr<llvm::Module> module) -> DiagResult<std::string> override;
 };
 
 } // namespace lbc

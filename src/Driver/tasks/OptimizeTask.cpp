@@ -7,26 +7,26 @@
 #include "Driver/Toolchain.hpp"
 using namespace lbc;
 
-auto OptimizeTask::run(std::string input) -> DiagResult<std::string> {
-    const auto& options = m_context.getOptions();
+auto OptimizeTask::run(Context& context, std::string input) -> DiagResult<std::string> {
+    const auto& options = context.getOptions();
 
     // -O0 requests no optimisation: hand the bitcode straight through.
     if (options.getOptimizationLevel() == CompileOptions::OptimizationLevel::O0) {
         return input;
     }
 
-    auto& diag = m_context.getDiag();
+    auto& diag = context.getDiag();
     const auto fail = [&](const llvm::StringRef reason,
                           const std::source_location& loc = std::source_location::current()) -> DiagError {
         return DiagError { diag.log(diagnostics::optimizerFailed(reason.str()), {}, {}, loc) };
     };
 
-    const auto output = m_context.createTempFile("bc");
+    const auto output = context.createTempFile("bc");
     if (output.empty()) {
         return fail("failed to create temporary file");
     }
 
-    const Toolchain toolchain { m_context };
+    const Toolchain toolchain { context };
     TRY_DECL(optimizer, toolchain.getOptimizer())
 
     // opt -O<level> <input.bc> -o <output.bc>

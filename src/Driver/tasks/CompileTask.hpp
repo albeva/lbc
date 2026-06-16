@@ -17,8 +17,7 @@ namespace lbc {
  */
 class CompileTask final : public Task<std::string, std::unique_ptr<llvm::Module>> {
 public:
-    using Task::Task;
-    [[nodiscard]] auto run(std::string source) -> DiagResult<std::unique_ptr<llvm::Module>> override;
+    [[nodiscard]] auto run(Context& context, std::string source) -> DiagResult<std::unique_ptr<llvm::Module>> override;
 };
 
 } // namespace lbc

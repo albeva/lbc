@@ -8,15 +8,15 @@
 #include "Driver/Toolchain.hpp"
 using namespace lbc;
 
-auto EmitNativeTask::run(std::string input) -> DiagResult<std::string> {
-    const auto& options = m_context.getOptions();
-    auto& diag = m_context.getDiag();
+auto EmitNativeTask::run(Context& context, std::string input) -> DiagResult<std::string> {
+    const auto& options = context.getOptions();
+    auto& diag = context.getDiag();
     const auto fail = [&](const llvm::StringRef reason,
                           const std::source_location& loc = std::source_location::current()) -> DiagError {
         return DiagError { diag.log(diagnostics::codegenFailed(reason.str()), {}, {}, loc) };
     };
 
-    const Toolchain toolchain { m_context };
+    const Toolchain toolchain { context };
     TRY_DECL(codegen, toolchain.getCodeGen())
 
     const bool assembly = options.getOutputType() == CompileOptions::OutputType::Assembly;
@@ -25,7 +25,7 @@ auto EmitNativeTask::run(std::string input) -> DiagResult<std::string> {
     // to a temporary; otherwise it is the final artifact at the configured path.
     std::string output;
     if (options.getOutputType() == CompileOptions::OutputType::Executable) {
-        output = m_context.createTempFile("o");
+        output = context.createTempFile("o");
         if (output.empty()) {
             return fail("failed to create temporary file");
         }
@@ -34,7 +34,7 @@ auto EmitNativeTask::run(std::string input) -> DiagResult<std::string> {
     }
 
     // Run: llc -filetype=<asm|obj> [--output-asm-variant=1] -mtriple=<triple> <input.bc> -o <output>
-    const std::string mtriple = "-mtriple=" + m_context.getTriple().str();
+    const std::string mtriple = "-mtriple=" + context.getTriple().str();
 
     llvm::SmallVector<llvm::StringRef> args;
     args.push_back(codegen);

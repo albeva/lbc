@@ -16,8 +16,7 @@ namespace lbc {
  */
 class EmitBinaryTask final : public Task<std::vector<std::string>, std::string> {
 public:
-    using Task::Task;
-    [[nodiscard]] auto run(std::vector<std::string> objects) -> DiagResult<std::string> override;
+    [[nodiscard]] auto run(Context& context, std::vector<std::string> objects) -> DiagResult<std::string> override;
 };
 
 } // namespace lbc

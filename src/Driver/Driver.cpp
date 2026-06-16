@@ -54,8 +54,8 @@ auto Driver::run() -> DiagResult<void> {
 
     // Link the generated objects into the final executable.
     if (options.getOutputType() == CompileOptions::OutputType::Executable) {
-        EmitBinaryTask link { m_context };
-        TRY(link.run(std::move(artifacts)))
+        EmitBinaryTask link {};
+        TRY(link.run(m_context, std::move(artifacts)))
     }
     return {};
 }
@@ -66,9 +66,9 @@ auto Driver::compileSource(const std::string& source) -> DiagResult<std::string>
     // shell-out stages (OptimizeTask is a no-op at -O0). Either way the final
     // stage returns the path it wrote.
     if (m_context.getOptions().getOutputType() == CompileOptions::OutputType::LlvmIr) {
-        return pipeline<CompileTask, EmitLlvmTask>(m_context, source);
+        return pipeline(m_context, source, CompileTask {}, EmitLlvmTask {});
     }
-    return pipeline<CompileTask, WriteBitcodeTask, OptimizeTask, EmitNativeTask>(m_context, source);
+    return pipeline(m_context, source, CompileTask {}, WriteBitcodeTask {}, OptimizeTask {}, EmitNativeTask {});
 }
 
 void Driver::resolvePaths() {

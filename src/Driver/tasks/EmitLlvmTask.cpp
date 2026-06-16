@@ -8,12 +8,12 @@
 #include "Driver/Context.hpp"
 using namespace lbc;
 
-auto EmitLlvmTask::run(std::unique_ptr<llvm::Module> module) -> DiagResult<std::string> {
+auto EmitLlvmTask::run(Context& context, std::unique_ptr<llvm::Module> module) -> DiagResult<std::string> {
     if (llvm::verifyModule(*module, &llvm::errs())) {
-        return DiagError { m_context.getDiag().log(diagnostics::backendVerificationFailed()) };
+        return DiagError { context.getDiag().log(diagnostics::backendVerificationFailed()) };
     }
 
-    const std::string output = m_context.getOptions().getOutputPath().str();
+    const std::string output = context.getOptions().getOutputPath().str();
     if (output.empty()) {
         module->print(llvm::outs(), nullptr);
         return output; // empty: went to stdout, nothing to thread onward
@@ -22,7 +22,7 @@ auto EmitLlvmTask::run(std::unique_ptr<llvm::Module> module) -> DiagResult<std::
     std::error_code error;
     llvm::raw_fd_ostream out { output, error };
     if (error) {
-        return DiagError { m_context.getDiag().log(diagnostics::cannotOpenOutput(output, error.message())) };
+        return DiagError { context.getDiag().log(diagnostics::cannotOpenOutput(output, error.message())) };
     }
     module->print(out, nullptr);
 
