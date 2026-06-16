@@ -31,6 +31,9 @@ auto Parser::stmtList() -> Result<AstStmtList*> {
             [&](const AstDeclareStmt& ast) {
                 decls.add(ast.getDecl());
             },
+            [&](const AstFuncStmt& ast) {
+                decls.add(ast.getDecl());
+            },
             [](const auto&) {}
         };
         visit(*stmt, visitor);
@@ -41,8 +44,11 @@ auto Parser::stmtList() -> Result<AstStmtList*> {
 
 /**
  * statement = declareStmt
- *           | externDecl
+ *           | externStmt
+ *           | funcStmt
+ *           | returnStmt
  *           | dimStmt
+ *           | ( expression [ "=" expression ] )
  *           .
  */
 auto Parser::statement() -> Result<AstStmt*> {
@@ -51,6 +57,11 @@ auto Parser::statement() -> Result<AstStmt*> {
         return dimStmt();
     case TokenKind::Declare:
         return declareStmt();
+    case TokenKind::Sub:
+    case TokenKind::Function:
+        return funcStmt();
+    case TokenKind::Return:
+        return returnStmt();
     case TokenKind::Extern:
         return externStmt();
     default:
@@ -96,6 +107,51 @@ auto Parser::declareStmt() -> Result<AstStmt*> {
     }
 
     return make<AstDeclareStmt>(range(start), decl);
+}
+
+/**
+ * funcStmt = ( subDecl | funcDecl ) EOS stmtList "END" ( "SUB" | "FUNCTION" ) .
+ *
+ * Reuses the declaration parsers for the header, parses the body up to the
+ * matching END SUB / END FUNCTION, and links the definition onto its decl.
+ */
+auto Parser::funcStmt() -> Result<AstStmt*> {
+    const auto start = startLoc();
+    const bool isSub = m_token.kind() == TokenKind::Sub;
+
+    AstFuncDecl* decl {}; // NOLINT(*-const-correctness)
+    if (isSub) {
+        TRY_ASSIGN(decl, subDecl())
+    } else {
+        TRY_ASSIGN(decl, funcDecl())
+    }
+
+    // EOS stmtList "END" ( "SUB" | "FUNCTION" )
+    TRY(consume(TokenKind::EndOfStmt))
+    TRY_DECL(body, stmtList())
+    TRY(consume(TokenKind::End))
+    TRY(consume(isSub ? TokenKind::Sub : TokenKind::Function))
+
+    auto* stmt = make<AstFuncStmt>(range(start), decl, body);
+    decl->setImpl(stmt);
+    return stmt;
+}
+
+/**
+ * returnStmt = "RETURN" [ expression ] .
+ *
+ * A bare RETURN is terminated by the end-of-statement; the function-vs-subroutine
+ * return rules are enforced during semantic analysis.
+ */
+auto Parser::returnStmt() -> Result<AstStmt*> {
+    const auto start = startLoc();
+    TRY(consume(TokenKind::Return))
+
+    AstExpr* expr {}; // NOLINT(*-const-correctness)
+    if (m_token.kind() != TokenKind::EndOfStmt) {
+        TRY_ASSIGN(expr, expression())
+    }
+    return make<AstReturnStmt>(range(start), expr);
 }
 
 /**

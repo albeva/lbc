@@ -230,6 +230,10 @@ private:
     /// Active language linkage. Set while analysing an EXTERN block; controls
     /// whether declared symbols take their verbatim name as an alias.
     ExternKind m_externKind = ExternKind::Default;
+
+    /// Return type of the function/subroutine body currently being analysed, or
+    /// nullptr at module scope. Drives RETURN statement checking.
+    const Type* m_returnType = nullptr;
 };
 
 } // namespace lbc

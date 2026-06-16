@@ -1,10 +1,12 @@
 //
 // Created by Albert Varaksin on 15/06/2026.
 //
+#include <llvm/IR/GlobalVariable.h>
 #include "Driver/Context.hpp"
 #include "Generator.hpp"
 #include "IR/lib/BasicBlock.hpp"
 #include "IR/lib/Function.hpp"
+#include "IR/lib/Instructions.hpp"
 #include "IR/lib/Literal.hpp"
 #include "IR/lib/Module.hpp"
 #include "IR/lib/Variable.hpp"
@@ -21,6 +23,13 @@ Generator::Generator(Context& context)
 auto Generator::generate(const ir::lib::Module& module) -> std::unique_ptr<llvm::Module> {
     m_module = std::make_unique<llvm::Module>("lbc", m_llvm);
     m_module->setTargetTriple(m_context.getTriple());
+
+    // Materialise module-scope globals before anything references them: their
+    // initialiser stores live in the global-init block (lowered into `main`) and
+    // function bodies may read them.
+    for (const auto* decl : module.getDeclarations()) {
+        lowerGlobal(llvm::cast<ir::lib::VarInstr>(*decl));
+    }
 
     // Declare all defined functions first so calls between them resolve, then
     // lower their bodies.
@@ -48,11 +57,51 @@ void Generator::lowerFunction(const ir::lib::Function& fn) {
     for (const auto& block : fn.getBlocks()) {
         block.setLlvm(llvm::BasicBlock::Create(m_llvm, block.getName(), m_function));
     }
+
+    // Materialise the parameters into the entry block before the body runs.
+    bindParameters(fn);
+
     for (const auto& block : fn.getBlocks()) {
         lowerBlock(block);
     }
 
     m_function = nullptr;
+}
+
+void Generator::bindParameters(const ir::lib::Function& fn) {
+    const auto params = fn.getParams();
+    if (params.empty()) {
+        return;
+    }
+
+    // Parameters get the same alloca-backed storage as locals: allocate a slot
+    // for each, copy the incoming argument into it, and point the IR variable at
+    // the slot so body reads and writes load/store through it uniformly.
+    m_builder.SetInsertPoint(llvm::cast<llvm::BasicBlock>(fn.getBlocks().front().getLlvm()));
+    std::size_t index = 0;
+    for (auto& arg : m_function->args()) {
+        const auto* param = params[index++];
+        auto* slot = m_builder.CreateAlloca(lowerType(param->getType()), nullptr, param->getName());
+        m_builder.CreateStore(&arg, slot);
+        param->setLlvm(slot);
+    }
+}
+
+void Generator::lowerGlobal(const ir::lib::VarInstr& var) {
+    // A module-scope `dim` becomes an LLVM global. It is zero-initialised so the
+    // global is a definition; any user initialiser runs as a store in the
+    // global-init block (lowered into `main`), uniformly for constant and runtime
+    // values. The module takes ownership of the GlobalVariable on construction.
+    auto* type = lowerType(var.getType());
+    auto* global = new llvm::GlobalVariable(
+        *m_module,
+        type,
+        /*isConstant*/ false,
+        llvm::GlobalValue::InternalLinkage,
+        llvm::Constant::getNullValue(type),
+        var.getResult()->getName()
+    );
+    var.getResult()->setLlvm(global);
 }
 
 void Generator::lowerGlobalInit(const ir::lib::Module& module) {

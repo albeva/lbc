@@ -138,6 +138,9 @@ void Generator::lowerInstruction(const Instruction& instr) {
         const auto& i = llvm::cast<RetInstr>(instr);
         if (auto* val = i.getValue()) {
             m_builder.CreateRet(value(val));
+        } else if (auto* ret = m_function->getReturnType(); not ret->isVoidTy()) {
+            // A non-void function that falls through returns a zero/default value.
+            m_builder.CreateRet(llvm::Constant::getNullValue(ret));
         } else {
             m_builder.CreateRetVoid();
         }

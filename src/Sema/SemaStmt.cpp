@@ -3,6 +3,7 @@
 //
 #include "SemanticAnalyser.hpp"
 #include "Symbol/Symbol.hpp"
+#include "Type/Aggregate.hpp"
 using namespace lbc;
 
 auto SemanticAnalyser::accept(AstStmtList& ast) -> Result {
@@ -47,12 +48,36 @@ auto SemanticAnalyser::accept(AstDeclareStmt& /*ast*/) -> Result {
     return {};
 }
 
-auto SemanticAnalyser::accept(AstFuncStmt& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstFuncStmt& ast) -> Result {
+    const auto* funcType = llvm::cast<TypeFunction>(ast.getDecl()->getType());
+
+    // Track the active return type so RETURN statements within the body can be
+    // checked. The body's scope — already populated with the parameters by the
+    // function declaration — is analysed here.
+    const ValueRestorer restore { m_returnType };
+    m_returnType = funcType->getReturnType();
+
+    return accept(*ast.getStmtList());
 }
 
-auto SemanticAnalyser::accept(AstReturnStmt& /*ast*/) -> Result {
-    return notImplemented();
+auto SemanticAnalyser::accept(AstReturnStmt& ast) -> Result {
+    // RETURN is only valid inside a function or subroutine body.
+    if (m_returnType == nullptr) {
+        return diag(diagnostics::returnOutsideFunction(), ast.getRange());
+    }
+
+    if (ast.getExpr() != nullptr) {
+        // A subroutine has no value to return.
+        if (m_returnType->isVoid()) {
+            return diag(diagnostics::returnValueInSub(), ast.getRange());
+        }
+        TRY_EXPRESSION(ast, Expr, m_returnType)
+    } else if (not m_returnType->isVoid()) {
+        // A function must return a value.
+        return diag(diagnostics::returnMissingValue(), ast.getRange());
+    }
+
+    return {};
 }
 
 auto SemanticAnalyser::accept(const AstDimStmt& ast) -> Result {

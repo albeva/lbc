@@ -15,6 +15,7 @@ class Module;
 class Function;
 class BasicBlock;
 class Instruction;
+class VarInstr;
 class Value;
 class NamedValue;
 class Literal;
@@ -49,6 +50,8 @@ private:
     // -------------------------------------------------------------------------
 
     void lowerFunction(const ir::lib::Function& function);
+    void bindParameters(const ir::lib::Function& function);
+    void lowerGlobal(const ir::lib::VarInstr& var);
     void lowerGlobalInit(const ir::lib::Module& module);
     void lowerBlock(const ir::lib::BasicBlock& block);
 

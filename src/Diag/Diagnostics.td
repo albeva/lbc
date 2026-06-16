@@ -106,3 +106,6 @@ def constToReference       : Error<Sema, "E0317", "cannot apply CONST to a refer
 def notAssignable          : Error<Sema, "E0318", "expression is not assignable">;
 def assignToConst          : Error<Sema, "E0319", "cannot assign to a constant value">;
 def invalidMoveOperand     : Error<Sema, "E0320", "cannot MOVE a temporary value">;
+def returnOutsideFunction  : Error<Sema, "E0321", "RETURN outside of a function or subroutine">;
+def returnValueInSub       : Error<Sema, "E0322", "a subroutine cannot return a value">;
+def returnMissingValue     : Error<Sema, "E0323", "a function must return a value">;

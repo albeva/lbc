@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "pch.hpp"
+#include <llvm/ADT/SmallVector.h>
 #include "BasicBlock.hpp"
 #include "NamedValue.hpp"
 namespace lbc {
@@ -11,6 +12,7 @@ class Symbol;
 class TypeFunction;
 } // namespace lbc
 namespace lbc::ir::lib {
+class Variable;
 
 /**
  * An IR function.
@@ -31,12 +33,19 @@ public:
     [[nodiscard]] auto getBlocks() -> llvm::ilist<BasicBlock>& { return m_blocks; }
     [[nodiscard]] auto getBlocks() const -> const llvm::ilist<BasicBlock>& { return m_blocks; }
 
+    /** Get the parameter storage variables, in declaration order. */
+    [[nodiscard]] auto getParams() const -> llvm::ArrayRef<Variable*> { return m_params; }
+
+    /** Append a parameter storage variable (in declaration order). */
+    void addParam(Variable* param) { m_params.push_back(param); }
+
     /** Get the frontend symbol associated with this function. */
     [[nodiscard]] auto getSymbol() const -> Symbol* { return m_symbol; }
 
 private:
-    Symbol* m_symbol;                 ///< frontend symbol with type and linkage info
-    llvm::ilist<BasicBlock> m_blocks; ///< blocks forming the function body
+    Symbol* m_symbol;                         ///< frontend symbol with type and linkage info
+    llvm::SmallVector<Variable*, 4> m_params; ///< parameter storage variables, in order
+    llvm::ilist<BasicBlock> m_blocks;         ///< blocks forming the function body
 };
 
 } // namespace lbc::ir::lib

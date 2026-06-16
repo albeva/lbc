@@ -4,13 +4,19 @@
 #include "IR/lib/BasicBlock.hpp"
 #include "IR/lib/Function.hpp"
 #include "IR/lib/Module.hpp"
+#include "IR/lib/Variable.hpp"
 #include "IrGenerator.hpp"
 #include "Symbol/Symbol.hpp"
 using namespace lbc::ir::gen;
 
 auto IrGenerator::accept(const AstStmtList& ast) -> Result {
+    // Forward-declare functions so calls resolve regardless of definition order
+    // (mirrors sema's two-phase declare/define). Variables are lowered in place
+    // by their own statements, not here.
     for (auto* decl : ast.getDecls()) {
-        TRY(visit(*decl));
+        if (llvm::isa<AstFuncDecl>(decl)) {
+            TRY(visit(*decl));
+        }
     }
     for (auto* stmt : ast.getStmts()) {
         TRY(visit(*stmt));
@@ -41,9 +47,12 @@ auto IrGenerator::accept(const AstFuncStmt& ast) -> Result {
     m_ifCounter = 0;
     setBlock(createBlock("entry"));
 
-    // Process parameters
+    // Process parameters: visiting each creates its storage variable; record
+    // them on the function in order so the backend can bind the incoming
+    // arguments to them.
     for (auto* param : ast.getDecl()->getParams()) {
         TRY(visit(*param));
+        m_function->addParam(llvm::cast<lib::Variable>(param->getSymbol()->getOperand()));
     }
 
     // Process body

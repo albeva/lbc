@@ -23,7 +23,9 @@ class Context;
  * @code
  * module     = stmtList EOF .
  * stmtList   = { statement EOS } .
- * statement  = declareStmt | dimStmt .
+ * statement  = declareStmt | dimStmt | funcStmt | returnStmt .
+ * funcStmt   = ( subDecl | funcDecl ) EOS stmtList "END" ( "SUB" | "FUNCTION" ) .
+ * returnStmt = "RETURN" [ expression ] .
  * dimStmt    = "DIM" varDecl { "," varDecl } .
  * varDecl    = id ( "AS" typeExpr [ "=" expression ] | "=" expression ) .
  * expression = primary { <binary-op> primary } .
@@ -219,6 +221,12 @@ private:
 
     /** Parse a DECLARE forward-declaration statement. */
     [[nodiscard]] auto declareStmt() -> Result<AstStmt*>;
+
+    /** Parse a SUB / FUNCTION definition: header, body, and END SUB / END FUNCTION. */
+    [[nodiscard]] auto funcStmt() -> Result<AstStmt*>;
+
+    /** Parse a RETURN statement with an optional return expression. */
+    [[nodiscard]] auto returnStmt() -> Result<AstStmt*>;
 
     /** Parse an EXTERN linkage block — either a single-line or a blcok */
     [[nodiscard]] auto externStmt() -> Result<AstStmt*>;

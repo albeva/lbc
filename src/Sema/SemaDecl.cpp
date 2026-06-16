@@ -98,13 +98,21 @@ auto SemanticAnalyser::accept(AstFuncDecl& ast) -> Result {
     auto related = m_context.span<Symbol*>(count);
     auto params = m_context.span<const Type*>(count);
 
-    // Process parameters
-    std::size_t index = 0;
-    for (auto* param : ast.getParams()) {
-        TRY(visit(*param));
-        related[index] = param->getSymbol();
-        params[index] = param->getType();
-        index++;
+    // Parameters live in the function body's scope, not the enclosing one.
+    // Build that scope now and declare the parameters into it; a definition
+    // (one carrying a body) hands the scope to its body below so the parameters
+    // are visible there, while a forward declaration simply discards it.
+    auto* paramScope = m_context.create<SymbolTable>(m_symbolTable);
+    {
+        const ValueRestorer restore { m_symbolTable };
+        m_symbolTable = paramScope;
+        std::size_t index = 0;
+        for (auto* param : ast.getParams()) {
+            TRY(visit(*param));
+            related[index] = param->getSymbol();
+            params[index] = param->getType();
+            index++;
+        }
     }
 
     // Process return type
@@ -125,7 +133,11 @@ auto SemanticAnalyser::accept(AstFuncDecl& ast) -> Result {
     symbol->setType(funcType);
     symbol->setRelatedSymbols(related);
 
-    // done
+    // A definition analyses its body with the parameters already in scope.
+    if (auto* impl = ast.getImpl()) {
+        impl->getStmtList()->setSymbolTable(paramScope);
+    }
+
     return {};
 }
 

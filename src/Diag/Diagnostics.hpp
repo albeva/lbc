@@ -56,6 +56,9 @@ struct DiagKind final {
         notAssignable,
         assignToConst,
         invalidMoveOperand,
+        returnOutsideFunction,
+        returnValueInSub,
+        returnMissingValue,
     };
 
     /**
@@ -71,7 +74,7 @@ struct DiagKind final {
     /**
      * Total number of diagnostic kinds
      */
-    static constexpr std::size_t COUNT = 38;
+    static constexpr std::size_t COUNT = 41;
 
     /**
      * Default-construct to an uninitialized diagnostic kind
@@ -149,6 +152,9 @@ struct DiagKind final {
             case notAssignable:
             case assignToConst:
             case invalidMoveOperand:
+            case returnOutsideFunction:
+            case returnValueInSub:
+            case returnMissingValue:
                 return Category::Sema;
         }
         std::unreachable();
@@ -197,6 +203,9 @@ struct DiagKind final {
             case notAssignable:
             case assignToConst:
             case invalidMoveOperand:
+            case returnOutsideFunction:
+            case returnValueInSub:
+            case returnMissingValue:
                 return llvm::SourceMgr::DK_Error;
         }
         std::unreachable();
@@ -245,6 +254,9 @@ struct DiagKind final {
             case notAssignable: return "E0318";
             case assignToConst: return "E0319";
             case invalidMoveOperand: return "E0320";
+            case returnOutsideFunction: return "E0321";
+            case returnValueInSub: return "E0322";
+            case returnMissingValue: return "E0323";
         }
         std::unreachable();
     }
@@ -252,8 +264,8 @@ struct DiagKind final {
     /**
      * Return all Error diagnostics
      */
-    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 38> { // NOLINT(*-magic-numbers)
-        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand };
+    [[nodiscard]] static consteval auto allErrors() -> std::array<DiagKind, 41> { // NOLINT(*-magic-numbers)
+        return { notImplemented, noInputFiles, inputFileNotFound, ambiguousOutput, cannotOpenOutput, backendVerificationFailed, optimizerFailed, codegenFailed, linkerFailed, toolNotFound, invalid, unterminatedString, invalidNumber, unexpected, expected, referenceNotLast, unsupportedLinkage, undeclaredIdentifier, useBeforeDefinition, redefinition, circularDependency, typeMismatch, invalidOperands, tooManyArguments, tooFewArguments, uninitializedReference, referenceToReference, pointerToReference, nullVariable, nonAddressableExpr, notCallable, invalidUnaryOperand, dereferencingAnyPtr, invalidReferenceInit, constToReference, notAssignable, assignToConst, invalidMoveOperand, returnOutsideFunction, returnValueInSub, returnMissingValue };
     }
 
 private:
@@ -488,6 +500,21 @@ namespace diagnostics {
     /// Create invalidMoveOperand message
     [[nodiscard]] inline auto invalidMoveOperand() -> DiagMessage {
         return { DiagKind::invalidMoveOperand, "cannot MOVE a temporary value" };
+    }
+
+    /// Create returnOutsideFunction message
+    [[nodiscard]] inline auto returnOutsideFunction() -> DiagMessage {
+        return { DiagKind::returnOutsideFunction, "RETURN outside of a function or subroutine" };
+    }
+
+    /// Create returnValueInSub message
+    [[nodiscard]] inline auto returnValueInSub() -> DiagMessage {
+        return { DiagKind::returnValueInSub, "a subroutine cannot return a value" };
+    }
+
+    /// Create returnMissingValue message
+    [[nodiscard]] inline auto returnMissingValue() -> DiagMessage {
+        return { DiagKind::returnMissingValue, "a function must return a value" };
     }
 
 }
